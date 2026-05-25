@@ -1,6 +1,6 @@
 [project]
 name = "yoghurt"
-version = "0.2.0"
+version = "0.2.1"
 description = "LLM-friendly CLI for raw Yahoo Finance endpoint JSON."
 readme = "README.md"
 authors = [{ name = "Jocelyn Legault", email = "jocelynlegault@gmail.com" }]
