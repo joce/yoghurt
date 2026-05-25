@@ -801,50 +801,58 @@ def _params_for_query_command(namespace: argparse.Namespace) -> dict[str, ParamV
     return params
 
 
+async def _dispatch_command(
+    namespace: argparse.Namespace,
+    stdout: TextIO,
+    client: _YahooClientProtocol,
+) -> int:
+    if namespace.command_kind == "modeled":
+        command = COMMANDS_BY_NAME[namespace.command_name]
+        params = _params_for_command(command, namespace)
+        _validate_command_params(command, params)
+        _validate_parquet_request(namespace)
+        body = await client.get(
+            _path_for_command(command, namespace),
+            params,
+            use_crumb=command.use_crumb,
+            base_url=command.base_url,
+        )
+        if _wants_parquet(namespace):
+            _emit_chart_parquet(namespace, params, body, stdout)
+            return 0
+    elif namespace.command_kind == "raw":
+        body = await client.get(
+            namespace.path,
+            _params_for_raw(namespace.param),
+            use_crumb=not namespace.no_crumb,
+        )
+    elif namespace.command_kind == "query":
+        _validate_parquet_request(namespace)
+        request_body = _resolve_query_body(namespace)
+        wire_params = _params_for_query_command(namespace)
+        body = await client.post(
+            _QUERY_ROUTE_PATHS[namespace.query_route],
+            wire_params,
+            request_body,
+        )
+        if _wants_parquet(namespace):
+            _emit_tabular_parquet(namespace, body, wire_params, stdout)
+            return 0
+    else:
+        return 2
+    stdout.write(body)
+    if body and not body.endswith("\n"):
+        stdout.write("\n")
+    return 0
+
+
 async def _run_async(
     namespace: argparse.Namespace,
     stdout: TextIO,
     client: _YahooClientProtocol,
 ) -> int:
     try:
-        if namespace.command_kind == "modeled":
-            command = COMMANDS_BY_NAME[namespace.command_name]
-            params = _params_for_command(command, namespace)
-            _validate_command_params(command, params)
-            _validate_parquet_request(namespace)
-            body = await client.get(
-                _path_for_command(command, namespace),
-                params,
-                use_crumb=command.use_crumb,
-                base_url=command.base_url,
-            )
-            if _wants_parquet(namespace):
-                _emit_chart_parquet(namespace, params, body, stdout)
-                return 0
-        elif namespace.command_kind == "raw":
-            body = await client.get(
-                namespace.path,
-                _params_for_raw(namespace.param),
-                use_crumb=not namespace.no_crumb,
-            )
-        elif namespace.command_kind == "query":
-            _validate_parquet_request(namespace)
-            request_body = _resolve_query_body(namespace)
-            wire_params = _params_for_query_command(namespace)
-            body = await client.post(
-                _QUERY_ROUTE_PATHS[namespace.query_route],
-                wire_params,
-                request_body,
-            )
-            if _wants_parquet(namespace):
-                _emit_tabular_parquet(namespace, body, wire_params, stdout)
-                return 0
-        else:
-            return 2
-        stdout.write(body)
-        if body and not body.endswith("\n"):
-            stdout.write("\n")
-        return 0
+        return await _dispatch_command(namespace, stdout, client)
     finally:
         await client.aclose()
 
