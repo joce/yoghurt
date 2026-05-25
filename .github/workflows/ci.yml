@@ -70,6 +70,7 @@ jobs:
 
       - name: Upload test results to Codecov
         if: ${{ !cancelled() }}
-        uses: codecov/test-results-action@v1.2.1
+        uses: codecov/codecov-action@v6
         with:
-          file: junit.xml
+          files: junit.xml
+          report_type: test_results
