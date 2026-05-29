@@ -38,3 +38,6 @@ output/
 
 # Local Parquet smoke-test artifacts
 tmp/
+
+# Ad-hoc generated reports / scratch deliverables
+report/
