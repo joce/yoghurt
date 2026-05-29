@@ -1,6 +1,6 @@
 [project]
 name = "yoghurt"
-version = "0.2.1"
+dynamic = ["version"]
 description = "LLM-friendly CLI for raw Yahoo Finance endpoint JSON."
 readme = "README.md"
 authors = [{ name = "Jocelyn Legault", email = "jocelynlegault@gmail.com" }]
@@ -83,6 +83,7 @@ skip = ["__pycache__", ".venv", ".uv-cache", ".git", ".pytest_cache", ".tox"]
 
 [tool.pyright]
 include = ["src", "tests"]
+exclude = ["src/yoghurt/_version.py"]
 typeCheckingMode = "strict"
 
 [[tool.pyright.executionEnvironments]]
@@ -125,7 +126,7 @@ markers = [
 [tool.coverage.run]
 branch = true
 source = ["src"]
-omit = ["tests/*", "*/__main__.py", "src/yoghurt/types.py"]
+omit = ["tests/*", "*/__main__.py", "src/yoghurt/types.py", "src/yoghurt/_version.py"]
 
 [tool.coverage.report]
 show_missing = true
@@ -150,6 +151,7 @@ exclude = [
     ".uv-cache",
     ".venv",
     ".vscode",
+    "src/yoghurt/_version.py",
 ]
 line-length = 88
 indent-width = 4
@@ -240,12 +242,18 @@ preview = true
 [tool.ruff.lint.pydocstyle]
 convention = "google"
 
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "src/yoghurt/_version.py"
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/yoghurt"]
 
 [tool.hatch.build.targets.sdist]
-include = ["src", "tests", "AGENTS.md", "LICENSE", "README.md", "pyproject.toml"]
+include = ["src", "tests", "AGENTS.md", "CHANGELOG.md", "LICENSE", "README.md", "RELEASING.md", "pyproject.toml"]
 
 [build-system]
-requires = ["hatchling>=1.29,<2.0"]
+requires = ["hatchling>=1.29,<2.0", "hatch-vcs>=0.4,<1.0"]
 build-backend = "hatchling.build"
