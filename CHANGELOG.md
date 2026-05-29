@@ -6,6 +6,21 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-05-29
+
+Maintenance release — release tooling only, no user-facing changes.
+
+### Changed
+
+- Version is now derived from the git tag via `hatch-vcs`; the hardcoded
+  `__version__` (which had drifted to `0.2.0`) is gone.
+- The publish workflow runs `twine check` before upload, and CI/publish jobs
+  check out full history so the version can be derived from tags.
+
+### Added
+
+- `CHANGELOG.md` and `RELEASING.md`.
+
 ## [0.2.1] - 2026-05-27
 
 Maintenance release. No user-facing changes.
@@ -54,7 +69,8 @@ First PyPI release.
 - Reusable Yahoo session cache for faster one-shot calls.
 - `raw` escape hatch for query paths yoghurt doesn't model yet.
 
-[Unreleased]: https://github.com/joce/yoghurt/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/joce/yoghurt/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/joce/yoghurt/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/joce/yoghurt/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/joce/yoghurt/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/joce/yoghurt/releases/tag/v0.1.1
