@@ -1,4 +1,4 @@
-"""Run Yoghurt as a module."""
+"""Run yoghurt as a module."""
 
 from __future__ import annotations
 

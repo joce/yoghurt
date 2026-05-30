@@ -11,7 +11,7 @@ depends on the symbol, instrument type, exchange, region, and the current Yahoo
 response shape.
 
 `morningstarIndustry` is included because Yahoo returns it for some quote
-requests and Yoghurt uses it in quote examples.
+requests and yoghurt uses it in quote examples.
 
 | Field | Best-effort meaning |
 | --- | --- |

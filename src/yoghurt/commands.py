@@ -25,7 +25,7 @@ class ReferenceSection:
 
 @dataclass(frozen=True, slots=True)
 class CommandSpec:
-    """Describe one Yoghurt command backed by a Yahoo Finance endpoint."""
+    """Describe one yoghurt command backed by a Yahoo Finance endpoint."""
 
     name: str
     path: str
@@ -1131,7 +1131,7 @@ RECOMMENDATIONS_BY_SYMBOL_COMMAND = CommandSpec(
         ),
         (
             "Observed traffic sometimes includes an empty fields= parameter; "
-            "Yoghurt omits --fields by default because empty CSV values are rejected."
+            "yoghurt omits --fields by default because empty CSV values are rejected."
         ),
     ),
 )
@@ -1170,7 +1170,7 @@ STOCK_RECOMMENDER_COMMAND = CommandSpec(
         ),
         (
             "Hosted on finance.yahoo.com, not the query1 host used by most "
-            "Yoghurt commands; the query1 mirror returns 500."
+            "yoghurt commands; the query1 mirror returns 500."
         ),
     ),
 )
@@ -1521,7 +1521,7 @@ FUNDAMENTALS_TIMESERIES_COMMAND = CommandSpec(
             "or ISO datetimes."
         ),
         (
-            "When period arguments are omitted, Yoghurt requests a recent "
+            "When period arguments are omitted, yoghurt requests a recent "
             "quote-page-style window ending at the current Unix timestamp."
         ),
     ),
@@ -1870,11 +1870,11 @@ PREDEFINED_SCREENER_COMMAND = CommandSpec(
     notes=(
         (
             "Screener IDs are Yahoo-defined and open-ended; "
-            "Yoghurt does not validate them."
+            "yoghurt does not validate them."
         ),
         (
             "Observed Yahoo quote pages request MOST_ACTIVES with count=200, "
-            "start=0, and useRecordsResponse=true; Yoghurt defaults formatted=false."
+            "start=0, and useRecordsResponse=true; yoghurt defaults formatted=false."
         ),
         (
             "Yahoo's records-style response returns a fixed record field set; "
@@ -1882,7 +1882,7 @@ PREDEFINED_SCREENER_COMMAND = CommandSpec(
         ),
         (
             "Observed browser requests include empty sortField and sortType; "
-            "Yoghurt sends those empty values when the options are omitted."
+            "yoghurt sends those empty values when the options are omitted."
         ),
     ),
 )
@@ -1985,7 +1985,7 @@ CHART_COMMAND = CommandSpec(
     notes=(
         "period2 must be greater than period1.",
         (
-            "When period2 is omitted, Yoghurt sends the current Unix timestamp; "
+            "When period2 is omitted, yoghurt sends the current Unix timestamp; "
             "now is not accepted as a user-provided value."
         ),
         ("Yahoo can reject overlong windows for short intervals (1m, 5m, 15m)."),
@@ -2102,7 +2102,7 @@ MARKET_TIME_COMMAND = CommandSpec(
     ),
     notes=(
         (
-            "Observed Yahoo requests send formatted=true; Yoghurt defaults to "
+            "Observed Yahoo requests send formatted=true; yoghurt defaults to "
             "formatted=false for raw values."
         ),
     ),
