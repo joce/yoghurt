@@ -1,7 +1,7 @@
 """Parquet writers for the ``chart``, ``screener``, and ``visualization`` commands.
 
 This module is a documented, scoped exception to the ``AGENTS.md`` rule that
-Yoghurt prints Yahoo bodies to stdout exactly as returned. The exception
+yoghurt prints Yahoo bodies to stdout exactly as returned. The exception
 applies only when the user opts in to Parquet output on one of the three
 tabular commands.
 

@@ -29,7 +29,7 @@ class CachedSession:
 
 
 def default_cache_path() -> Path:
-    """Return Yoghurt's default Yahoo session cache path."""
+    """Return yoghurt's default Yahoo session cache path."""
 
     return Path.home() / ".cache" / "yoghurt" / "yahoo-session.json"
 

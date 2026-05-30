@@ -1,4 +1,4 @@
-"""Command-line interface for Yoghurt."""
+"""Command-line interface for yoghurt."""
 
 from __future__ import annotations
 
@@ -237,7 +237,7 @@ def _add_global_options(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--version",
         action="version",
-        version=f"Yoghurt {__version__}",
+        version=f"yoghurt {__version__}",
         help="Show the program version and exit.",
     )
     parser.add_argument(
@@ -385,7 +385,7 @@ def _add_parquet_negative_guards(parser: argparse.ArgumentParser) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    """Build Yoghurt's adaptive argument parser.
+    """Build yoghurt's adaptive argument parser.
 
     Returns:
         argparse.ArgumentParser: The configured root parser.
@@ -468,7 +468,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Send raw parameters to any Yahoo query path.",
         description=(
             "Pass NAME=VALUE query parameters through to any Yahoo Finance "
-            "query path. Useful for endpoints Yoghurt does not model yet."
+            "query path. Useful for endpoints yoghurt does not model yet."
         ),
         epilog=(
             "Example:\n"
@@ -1064,7 +1064,7 @@ def main(
     stderr: TextIO | None = None,
     client: _YahooClientProtocol | None = None,
 ) -> int:
-    """Run the Yoghurt CLI.
+    """Run the yoghurt CLI.
 
     Returns:
         int: Process-style exit code.

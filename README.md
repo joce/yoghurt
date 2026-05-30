@@ -1,4 +1,4 @@
-# Yoghurt
+# yoghurt
 
 [![CI](https://github.com/joce/yoghurt/actions/workflows/ci.yml/badge.svg)](https://github.com/joce/yoghurt/actions/workflows/ci.yml)
 [![Coverage](https://codecov.io/gh/joce/yoghurt/graph/badge.svg)](https://codecov.io/gh/joce/yoghurt)
@@ -23,7 +23,7 @@ help.
 - A SQL-flavored DSL (`screener`, `visualization`) for ad-hoc filters and
   cross-entity queries against Yahoo's data-platform endpoints.
 - Generated help that includes examples, parameters, field references, modules,
-  or types when Yoghurt knows them.
+  or types when yoghurt knows them.
 - Reusable Yahoo session cache for faster one-shot CLI calls.
 - A `raw` command for Yahoo query paths that do not have dedicated metadata yet.
 
@@ -367,10 +367,10 @@ requesting a crumb:
 uv run yoghurt chart AAPL
 ```
 
-When period arguments are omitted, Yoghurt uses a recent quote-page-shaped
+When period arguments are omitted, yoghurt uses a recent quote-page-shaped
 window: `period1` defaults to three days before execution time, `period2`
 defaults to execution time, `--interval` defaults to `1m`, and `--events`
-defaults to `div,split,earn`. User-provided events are comma-separated; Yoghurt
+defaults to `div,split,earn`. User-provided events are comma-separated; yoghurt
 packs them for Yahoo internally. Extended-hours data is opt-in with
 `--include-pre-post`.
 
@@ -384,7 +384,7 @@ uv run yoghurt timeseries AAPL
 
 Its default type list matches the Yahoo quote/analysis page request for
 earnings-release, analyst-rating, and economic-event timeseries data. When
-period arguments are omitted, Yoghurt uses a recent quote-page-style window:
+period arguments are omitted, yoghurt uses a recent quote-page-style window:
 `period1` defaults to three days before execution time and `period2` defaults
 to execution time.
 
@@ -402,7 +402,7 @@ Date and datetime parameters accept:
 Date-only values are converted at UTC midnight before they are sent to Yahoo.
 For endpoints with `period1` and `period2`, documented defaults let ticker-only
 requests run, `period2` defaults to the current Unix timestamp when omitted, and
-Yoghurt rejects windows where `period2` is not greater than `period1`. Supplying
+yoghurt rejects windows where `period2` is not greater than `period1`. Supplying
 `period2` without `period1` is also rejected.
 
 Boolean parameters accept common true and false forms such as `true`, `false`,

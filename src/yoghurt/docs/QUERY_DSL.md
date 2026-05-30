@@ -20,7 +20,7 @@ the grammar here mirrors what that parser accepts.
 Both routes accept either naming form on **input**. Output reflects the route's
 native convention. Yoghurt prints both bodies verbatim.
 
-The screener route only responds when `formatted=true`; Yoghurt sets that by
+The screener route only responds when `formatted=true`; yoghurt sets that by
 default. Pass `--no-records-response` to ask Yahoo for its raw documents
 shape instead of records.
 

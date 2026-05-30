@@ -1,4 +1,4 @@
-"""Tests for the Yoghurt CLI."""
+"""Tests for the yoghurt CLI."""
 
 from __future__ import annotations
 
@@ -146,17 +146,17 @@ def test_endpoint_help_action_text_is_capitalized(
     assert "show this help message and exit" not in captured.out
 
 
-def test_version_output_is_capitalized(
+def test_version_output_is_lowercase(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """Version output starts with Yoghurt's capitalized product name."""
+    """Version output starts with yoghurt's lowercase product name."""
 
     with pytest.raises(SystemExit) as exc_info:
         main(["--version"])
 
     assert exc_info.value.code == 0
     captured = capsys.readouterr()
-    assert captured.out.startswith("Yoghurt ")
+    assert captured.out.startswith("yoghurt ")
 
 
 def test_quote_help_includes_endpoint_params_and_examples(

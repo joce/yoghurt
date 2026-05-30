@@ -4,7 +4,7 @@ from __future__ import annotations
 
 
 class YoghurtError(Exception):
-    """Base exception for all Yoghurt errors."""
+    """Base exception for all yoghurt errors."""
 
 
 class YahooRequestError(YoghurtError):
