@@ -41,3 +41,6 @@ tmp/
 
 # Ad-hoc generated reports / scratch deliverables
 report/
+
+# Local brainstorming specs / plans (not committed)
+docs/superpowers/
