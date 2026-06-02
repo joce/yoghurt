@@ -72,7 +72,7 @@ Records may include fields you did **not** ask for. Most common:
 - `logoUrl` — included on records for which Yahoo has a brand image.
 
 These show up as Parquet columns. If you do not want them, post-process
-the Parquet file with pyarrow / pandas to drop them.
+the Parquet file with polars / pandas to drop them.
 
 ## Edge cases
 
