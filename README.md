@@ -240,13 +240,9 @@ uv run yoghurt raw /v7/finance/quote --param symbols=AAPL,MSFT --param formatted
 ## Parquet output
 
 `chart`, `screener`, and `visualization` can write a typed Parquet table
-instead of raw JSON. Install with the `parquet` extra to pull in `pyarrow`:
+instead of raw JSON. Parquet is built in — no extra install step needed.
 
-```powershell
-uv sync --extra parquet
-```
-
-Then pass `--format parquet --out PATH`:
+Pass `--format parquet --out PATH`:
 
 ```powershell
 uv run yoghurt chart AAPL --interval 1d --format parquet --out aapl_1d.parquet

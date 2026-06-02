@@ -6,6 +6,9 @@ Yoghurt exposes Yahoo Finance HTTP endpoints as an LLM-friendly CLI that prints 
 ## Stack
 Python 3.10+, uv, httpx, argparse, pytest, pytest-httpx, ruff, pyright, tox, hatchling.
 
+## Parquet
+Parquet is written with **polars** (a core dependency); chart/screener/visualization only.
+
 ## Commands
 - Install/sync: `uv sync --all-groups`
 - Run CLI: `uv run yoghurt --help`

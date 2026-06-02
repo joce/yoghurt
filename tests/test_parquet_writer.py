@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 import json
-import sys
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
-import pyarrow.parquet as pq
+import polars as pl
 import pytest
 
 from yoghurt import __version__
@@ -99,27 +98,26 @@ def test_chart_writer_happy_path(tmp_path: Path) -> None:
     assert isinstance(descriptor["bytes"], int)
     assert descriptor["bytes"] > 0
 
-    table = pq.read_table(out_path)
-    assert table.num_rows == len(_FIVE_BARS_TIMESTAMPS)
-    names = table.schema.names
-    assert names == ["ts", "open", "high", "low", "close", "volume", "adj_close"]
-    ts_type = table.schema.field("ts").type
-    assert str(ts_type) == "timestamp[ns, tz=UTC]"
-    assert str(table.schema.field("open").type) == "double"
-    assert str(table.schema.field("high").type) == "double"
-    assert str(table.schema.field("low").type) == "double"
-    assert str(table.schema.field("close").type) == "double"
-    assert str(table.schema.field("volume").type) == "int64"
-    assert str(table.schema.field("adj_close").type) == "double"
+    df = pl.read_parquet(out_path)
+    assert df.height == len(_FIVE_BARS_TIMESTAMPS)
+    assert df.columns == ["ts", "open", "high", "low", "close", "volume", "adj_close"]
+    assert df.schema["ts"] == pl.Datetime("ns", "UTC")
+    assert df.schema["open"] == pl.Float64
+    assert df.schema["high"] == pl.Float64
+    assert df.schema["low"] == pl.Float64
+    assert df.schema["close"] == pl.Float64
+    assert df.schema["volume"] == pl.Int64
+    assert df.schema["adj_close"] == pl.Float64
 
-    metadata = table.schema.metadata or {}
-    assert metadata[b"yoghurt_command"] == b"chart"
-    assert metadata[b"yoghurt_version"] == __version__.encode("utf-8")
-    assert metadata[b"ticker"] == b"AAPL"
-    assert metadata[b"interval"] == b"1d"
-    assert metadata[b"period1"] == b"1703980800"
-    assert metadata[b"period2"] == b"1704499200"
-    meta_json = json.loads(metadata[b"yahoo_response_meta_json"])
+    raw_meta = pl.read_parquet_metadata(out_path)
+    meta = {k: v for k, v in raw_meta.items() if k != "ARROW:schema"}
+    assert meta["yoghurt_command"] == "chart"
+    assert meta["yoghurt_version"] == __version__
+    assert meta["ticker"] == "AAPL"
+    assert meta["interval"] == "1d"
+    assert meta["period1"] == "1703980800"
+    assert meta["period2"] == "1704499200"
+    meta_json = json.loads(meta["yahoo_response_meta_json"])
     assert meta_json["symbol"] == "AAPL"
 
     # The ``ts`` column round-trips as tz-aware UTC datetimes that match the
@@ -131,7 +129,7 @@ def test_chart_writer_happy_path(tmp_path: Path) -> None:
         datetime(2024, 1, 4, tzinfo=timezone.utc),
         datetime(2024, 1, 5, tzinfo=timezone.utc),
     ]
-    assert table.column("ts").to_pylist() == expected_datetimes
+    assert df.get_column("ts").to_list() == expected_datetimes
 
 
 def test_chart_writer_preserves_nulls(tmp_path: Path) -> None:
@@ -150,9 +148,9 @@ def test_chart_writer_preserves_nulls(tmp_path: Path) -> None:
         period2=1,
     )
 
-    table = pq.read_table(out_path)
-    opens = table.column("open").to_pylist()
-    volumes = table.column("volume").to_pylist()
+    df = pl.read_parquet(out_path)
+    opens = df.get_column("open").to_list()
+    volumes = df.get_column("volume").to_list()
     assert opens == [100.0, None, 102.0, None, 104.0]
     assert volumes == [1000, 2000, None, 4000, 5000]
 
@@ -170,10 +168,10 @@ def test_chart_writer_missing_adjclose(tmp_path: Path) -> None:
         period2=1,
     )
 
-    table = pq.read_table(out_path)
-    assert table.column_names[-1] == "adj_close"
-    assert str(table.schema.field("adj_close").type) == "double"
-    assert table.column("adj_close").to_pylist() == [None, None, None, None, None]
+    df = pl.read_parquet(out_path)
+    assert df.columns[-1] == "adj_close"
+    assert df.schema["adj_close"] == pl.Float64
+    assert df.get_column("adj_close").to_list() == [None, None, None, None, None]
 
 
 def test_chart_writer_length_mismatch_raises(tmp_path: Path) -> None:
@@ -214,9 +212,9 @@ def test_chart_writer_empty_timestamp(tmp_path: Path) -> None:
         period2=1,
     )
 
-    table = pq.read_table(out_path)
-    assert table.num_rows == 0
-    assert table.column_names == [
+    df = pl.read_parquet(out_path)
+    assert df.height == 0
+    assert df.columns == [
         "ts",
         "open",
         "high",
@@ -288,7 +286,7 @@ def _documents_body(
 
     The real shape Yahoo's ``/visualization`` returns for SELECT is
     ``finance.result[0].documents[0]`` with ``columns`` (``id``, ``label``,
-    ``type``) and ``rows`` (each row a positional array). Pinning this
+    ``type``) and ``rows`` (positional arrays). Pinning this
     structure here guards against drift in the writer.
     """
 
@@ -354,13 +352,13 @@ def test_tabular_writer_screener_happy_path(tmp_path: Path) -> None:
         },
     )
 
-    table = pq.read_table(out_path)
-    assert table.num_rows == _SCREENER_HAPPY_PATH_ROWS
-    assert table.column_names == ["ticker", "marketCap", "peRatio", "sector"]
-    assert str(table.schema.field("ticker").type) == "string"
-    assert str(table.schema.field("marketCap").type) == "int64"
-    assert str(table.schema.field("peRatio").type) == "double"
-    assert str(table.schema.field("sector").type) == "string"
+    df = pl.read_parquet(out_path)
+    assert df.height == _SCREENER_HAPPY_PATH_ROWS
+    assert df.columns == ["ticker", "marketCap", "peRatio", "sector"]
+    assert df.schema["ticker"] == pl.Utf8
+    assert df.schema["marketCap"] == pl.Int64
+    assert df.schema["peRatio"] == pl.Float64
+    assert df.schema["sector"] == pl.Utf8
 
     assert descriptor["format"] == "parquet"
     assert descriptor["command"] == "screener"
@@ -368,15 +366,16 @@ def test_tabular_writer_screener_happy_path(tmp_path: Path) -> None:
     assert descriptor["columns"] == ["ticker", "marketCap", "peRatio", "sector"]
     assert isinstance(descriptor["bytes"], int)
 
-    metadata = table.schema.metadata or {}
-    assert metadata[b"yoghurt_command"] == b"screener"
-    assert metadata[b"yoghurt_version"] == __version__.encode("utf-8")
-    assert metadata[b"route"] == b"screener"
-    assert metadata[b"query"].startswith(b"SELECT ticker")
-    wire_params = json.loads(metadata[b"wire_params_json"])
+    raw_meta = pl.read_parquet_metadata(out_path)
+    meta = {k: v for k, v in raw_meta.items() if k != "ARROW:schema"}
+    assert meta["yoghurt_command"] == "screener"
+    assert meta["yoghurt_version"] == __version__
+    assert meta["route"] == "screener"
+    assert meta["query"].startswith("SELECT ticker")
+    wire_params = json.loads(meta["wire_params_json"])
     assert wire_params["formatted"] is False
     assert wire_params["useRecordsResponse"] is True
-    assert metadata[b"total_rows"] == b"3"
+    assert meta["total_rows"] == "3"
 
 
 def test_tabular_writer_null_cells_preserved(tmp_path: Path) -> None:
@@ -399,9 +398,9 @@ def test_tabular_writer_null_cells_preserved(tmp_path: Path) -> None:
         wire_params={"formatted": False, "useRecordsResponse": True},
     )
 
-    table = pq.read_table(out_path)
-    assert table.column("ticker").to_pylist() == ["AAPL", "MSFT", None]
-    assert table.column("marketCap").to_pylist() == [
+    df = pl.read_parquet(out_path)
+    assert df.get_column("ticker").to_list() == ["AAPL", "MSFT", None]
+    assert df.get_column("marketCap").to_list() == [
         3_000_000_000_000,
         None,
         1_800_000_000_000,
@@ -427,9 +426,9 @@ def test_tabular_writer_all_null_column_is_string(tmp_path: Path) -> None:
         wire_params={"formatted": False, "useRecordsResponse": True},
     )
 
-    table = pq.read_table(out_path)
-    assert str(table.schema.field("stockStory").type) == "string"
-    assert table.column("stockStory").to_pylist() == [None, None]
+    df = pl.read_parquet(out_path)
+    assert df.schema["stockStory"] == pl.Utf8
+    assert df.get_column("stockStory").to_list() == [None, None]
 
 
 def test_tabular_writer_mixed_type_column_falls_back_to_string(tmp_path: Path) -> None:
@@ -451,9 +450,9 @@ def test_tabular_writer_mixed_type_column_falls_back_to_string(tmp_path: Path) -
         wire_params={"formatted": False, "useRecordsResponse": True},
     )
 
-    table = pq.read_table(out_path)
-    assert str(table.schema.field("value").type) == "string"
-    assert table.column("value").to_pylist() == ["1", "two"]
+    df = pl.read_parquet(out_path)
+    assert df.schema["value"] == pl.Utf8
+    assert df.get_column("value").to_list() == ["1", "two"]
 
 
 def test_tabular_writer_empty_records_with_query_is_empty_schema(
@@ -477,9 +476,9 @@ def test_tabular_writer_empty_records_with_query_is_empty_schema(
         wire_params={"formatted": False, "useRecordsResponse": True},
     )
 
-    table = pq.read_table(out_path)
-    assert table.num_rows == 0
-    assert table.column_names == []
+    df = pl.read_parquet(out_path)
+    assert df.height == 0
+    assert df.columns == []
 
 
 def test_tabular_writer_empty_records_no_query_is_empty_schema(tmp_path: Path) -> None:
@@ -496,9 +495,9 @@ def test_tabular_writer_empty_records_no_query_is_empty_schema(tmp_path: Path) -
         wire_params={"formatted": False, "useRecordsResponse": True},
     )
 
-    table = pq.read_table(out_path)
-    assert table.num_rows == 0
-    assert table.column_names == []
+    df = pl.read_parquet(out_path)
+    assert df.height == 0
+    assert df.columns == []
 
 
 def test_tabular_writer_rejects_nested_struct_cell(tmp_path: Path) -> None:
@@ -551,12 +550,12 @@ def test_tabular_writer_visualization_uses_documents(tmp_path: Path) -> None:
     )
 
     assert descriptor["rows"] == _VISUALIZATION_HAPPY_PATH_ROWS
-    table = pq.read_table(out_path)
-    assert table.num_rows == _VISUALIZATION_HAPPY_PATH_ROWS
-    assert table.column_names == ["ticker", "startdatetime"]
-    assert str(table.schema.field("ticker").type) == "string"
-    assert str(table.schema.field("startdatetime").type) == "string"
-    assert table.column("ticker").to_pylist() == ["AAPL", "MSFT"]
+    df = pl.read_parquet(out_path)
+    assert df.height == _VISUALIZATION_HAPPY_PATH_ROWS
+    assert df.columns == ["ticker", "startdatetime"]
+    assert df.schema["ticker"] == pl.Utf8
+    assert df.schema["startdatetime"] == pl.Utf8
+    assert df.get_column("ticker").to_list() == ["AAPL", "MSFT"]
 
 
 def test_tabular_writer_visualization_handles_empty_rows(tmp_path: Path) -> None:
@@ -579,9 +578,9 @@ def test_tabular_writer_visualization_handles_empty_rows(tmp_path: Path) -> None
         wire_params={"lang": "en-US", "region": "US"},
     )
 
-    table = pq.read_table(out_path)
-    assert table.num_rows == 0
-    assert table.column_names == ["ticker", "startdatetime"]
+    df = pl.read_parquet(out_path)
+    assert df.height == 0
+    assert df.columns == ["ticker", "startdatetime"]
 
 
 def test_tabular_writer_boolean_column(tmp_path: Path) -> None:
@@ -602,9 +601,9 @@ def test_tabular_writer_boolean_column(tmp_path: Path) -> None:
         query="SELECT ticker, isActive FROM EQUITY",
         wire_params={"formatted": False, "useRecordsResponse": True},
     )
-    table = pq.read_table(out_path)
-    assert str(table.schema.field("isActive").type) == "bool"
-    assert table.column("isActive").to_pylist() == [True, False]
+    df = pl.read_parquet(out_path)
+    assert df.schema["isActive"] == pl.Boolean
+    assert df.get_column("isActive").to_list() == [True, False]
 
 
 def test_tabular_writer_preserves_yahoo_column_order(tmp_path: Path) -> None:
@@ -625,8 +624,8 @@ def test_tabular_writer_preserves_yahoo_column_order(tmp_path: Path) -> None:
         query=None,
         wire_params={"formatted": False, "useRecordsResponse": True},
     )
-    table = pq.read_table(out_path)
-    assert table.column_names == ["sector", "ticker", "marketCap"]
+    df = pl.read_parquet(out_path)
+    assert df.columns == ["sector", "ticker", "marketCap"]
 
 
 def test_tabular_writer_uses_response_keys_not_select_clause(tmp_path: Path) -> None:
@@ -663,10 +662,10 @@ def test_tabular_writer_uses_response_keys_not_select_clause(tmp_path: Path) -> 
         wire_params={"formatted": False, "useRecordsResponse": True},
     )
 
-    table = pq.read_table(out_path)
-    assert table.column_names == ["ticker", "logoUrl", "marketCap"]
-    assert "intradaymarketcap" not in table.column_names
-    assert table.column("marketCap").to_pylist() == [
+    df = pl.read_parquet(out_path)
+    assert df.columns == ["ticker", "logoUrl", "marketCap"]
+    assert "intradaymarketcap" not in df.columns
+    assert df.get_column("marketCap").to_list() == [
         5_400_000_000_000,
         4_400_000_000_000,
     ]
@@ -886,56 +885,6 @@ def test_chart_writer_wraps_oserror_on_write(tmp_path: Path) -> None:
     assert "failed to write parquet" in str(exc_info.value).lower()
 
 
-def test_chart_writer_missing_pyarrow_is_user_facing(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-    """Missing pyarrow raises a directed ParquetWriterError, not ImportError.
-
-    Regression for Issue #6.
-    """
-
-    monkeypatch.setitem(sys.modules, "pyarrow", None)
-    monkeypatch.setitem(sys.modules, "pyarrow.parquet", None)
-
-    out_path = tmp_path / "any.parquet"
-    with pytest.raises(ParquetWriterError) as exc_info:
-        write_chart_parquet(
-            _chart_body(),
-            out_path,
-            ticker="AAPL",
-            interval="1d",
-            period1=0,
-            period2=1,
-        )
-    msg = str(exc_info.value)
-    assert "parquet extra" in msg.lower() or "pip install" in msg.lower()
-    assert "yoghurt[parquet]" in msg or "--extra parquet" in msg
-
-
-def test_tabular_writer_missing_pyarrow_is_user_facing(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-    """The tabular writer also surfaces a directed message when pyarrow is missing."""
-
-    monkeypatch.setitem(sys.modules, "pyarrow", None)
-    monkeypatch.setitem(sys.modules, "pyarrow.parquet", None)
-
-    out_path = tmp_path / "any.parquet"
-    body = _records_body([{"ticker": "AAPL"}])
-    with pytest.raises(ParquetWriterError) as exc_info:
-        write_tabular_parquet(
-            body,
-            out_path,
-            command="screener",
-            route="screener",
-            query=None,
-            wire_params={"formatted": False, "useRecordsResponse": True},
-        )
-    msg = str(exc_info.value)
-    assert "parquet extra" in msg.lower() or "pip install" in msg.lower()
-    assert "yoghurt[parquet]" in msg or "--extra parquet" in msg
-
-
 def test_tabular_writer_screener_total_rows_from_result(tmp_path: Path) -> None:
     """Screener: ``total_rows`` metadata reads ``finance.result[0].total``.
 
@@ -968,9 +917,9 @@ def test_tabular_writer_screener_total_rows_from_result(tmp_path: Path) -> None:
         query=None,
         wire_params={"formatted": False, "useRecordsResponse": True},
     )
-    table = pq.read_table(out_path)
-    metadata = table.schema.metadata or {}
-    assert metadata[b"total_rows"] == b"5000"
+    raw_meta = pl.read_parquet_metadata(out_path)
+    meta = {k: v for k, v in raw_meta.items() if k != "ARROW:schema"}
+    assert meta["total_rows"] == "5000"
 
 
 def test_tabular_writer_visualization_total_rows_from_result(tmp_path: Path) -> None:
@@ -1014,6 +963,6 @@ def test_tabular_writer_visualization_total_rows_from_result(tmp_path: Path) -> 
         query=None,
         wire_params={},
     )
-    table = pq.read_table(out_path)
-    metadata = table.schema.metadata or {}
-    assert metadata[b"total_rows"] == b"742"
+    raw_meta = pl.read_parquet_metadata(out_path)
+    meta = {k: v for k, v in raw_meta.items() if k != "ARROW:schema"}
+    assert meta["total_rows"] == "742"

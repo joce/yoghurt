@@ -5,8 +5,8 @@ yoghurt prints Yahoo bodies to stdout exactly as returned. The exception
 applies only when the user opts in to Parquet output on one of the three
 tabular commands.
 
-PyArrow is imported lazily inside each writer so JSON-path users do not pay
-the import cost or require the optional ``pyarrow`` dependency.
+Polars is the Parquet engine; the CLI imports this module lazily so the JSON
+path never loads it.
 """
 
 from __future__ import annotations
@@ -14,6 +14,8 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Final
+
+import polars as pl
 
 from yoghurt import __version__
 from yoghurt.exceptions import YoghurtError
@@ -59,56 +61,39 @@ def write_chart_parquet(  # noqa: PLR0913 - keyword-only context fields.
         dict[str, Any]: The single-line stdout descriptor for the write.
     """
 
-    pa, pq = _import_pyarrow()
     result = _parse_chart_result(chart_json_text)
     timestamps, indicator_columns = _extract_chart_columns(result)
     context = _ChartContext(
         ticker=ticker, interval=interval, period1=period1, period2=period2
     )
-    table = _build_chart_table(timestamps, indicator_columns, result, context, pa)
-    _write_table(pq, table, out_path)
+    frame = _build_chart_frame(timestamps, indicator_columns)
+    metadata = {
+        "yoghurt_command": "chart",
+        "yoghurt_version": __version__,
+        "ticker": context.ticker,
+        "interval": context.interval,
+        "period1": str(context.period1),
+        "period2": str(context.period2),
+        "yahoo_response_meta_json": json.dumps(result.get("meta", {})),
+    }
+    _write_frame(frame, out_path, metadata)
     return {
         "format": "parquet",
         "out": str(out_path),
         "command": "chart",
         "ticker": ticker,
         "interval": interval,
-        "rows": table.num_rows,
+        "rows": frame.height,
         "bytes": out_path.stat().st_size,
     }
 
 
-_MISSING_PYARROW_MESSAGE: Final[str] = (
-    "--format parquet requires the parquet extra: "
-    "pip install 'yoghurt[parquet]' (or uv sync --extra parquet)"
-)
-
-
-def _import_pyarrow() -> tuple[Any, Any]:
-    """Lazily import pyarrow + pyarrow.parquet.
-
-    Returns:
-        tuple[Any, Any]: ``(pyarrow_module, pyarrow_parquet_module)``.
-
-    Raises:
-        ParquetWriterError: If pyarrow is not installed. The error
-            message directs the user at the ``[parquet]`` extra.
-    """
-
-    try:
-        import pyarrow as pa  # noqa: PLC0415 - lazy import keeps JSON path free.
-        import pyarrow.parquet as pq  # noqa: PLC0415
-    except ImportError as exc:
-        raise ParquetWriterError(_MISSING_PYARROW_MESSAGE) from exc
-    return pa, pq
-
-
-def _write_table(
-    pq: Any,  # noqa: ANN401 - pyarrow.parquet module.
-    table: Any,  # noqa: ANN401 - pyarrow.Table instance.
+def _write_frame(
+    frame: pl.DataFrame,
     out_path: Path,
+    metadata: dict[str, str],
 ) -> None:
-    """Write ``table`` to ``out_path`` and translate OS errors.
+    """Write ``frame`` to ``out_path`` and translate OS errors.
 
     Raises:
         ParquetWriterError: If writing fails (missing directory, permission
@@ -117,7 +102,7 @@ def _write_table(
 
     try:
         out_path.parent.mkdir(parents=True, exist_ok=True)
-        pq.write_table(table, out_path)
+        frame.write_parquet(out_path, compression="snappy", metadata=metadata)
     except OSError as exc:
         message = f"failed to write Parquet file {out_path}: {exc}"
         raise ParquetWriterError(message) from exc
@@ -203,55 +188,41 @@ def _extract_chart_columns(
     return list(timestamps), columns
 
 
-def _build_chart_table(
+def _build_chart_frame(
     timestamps: list[int],
     columns: dict[str, list[Any]],
-    result: dict[str, Any],
-    context: _ChartContext,
-    pa: Any,  # noqa: ANN401 - pyarrow module is intentionally untyped here.
-) -> Any:  # noqa: ANN401
-    """Construct the chart Parquet ``pa.Table`` with schema metadata.
+) -> pl.DataFrame:
+    """Construct the chart Parquet ``pl.DataFrame`` with the required schema.
 
     Returns:
-        Any: A populated ``pyarrow.Table`` instance.
+        pl.DataFrame: A typed DataFrame ready to write.
     """
 
     volume_ints = _coerce_volume_to_int(columns["volume"])
-    ts_array = pa.array(
-        [int(ts) * 1_000_000_000 for ts in timestamps],
-        type=pa.timestamp("ns", tz="UTC"),
+    ts = (
+        pl.Series("ts", [int(t) * 1_000_000_000 for t in timestamps], dtype=pl.Int64)
+        .cast(pl.Datetime("ns"))
+        .dt.replace_time_zone("UTC")
     )
-    schema = pa.schema(
-        [
-            pa.field("ts", pa.timestamp("ns", tz="UTC")),
-            pa.field("open", pa.float64()),
-            pa.field("high", pa.float64()),
-            pa.field("low", pa.float64()),
-            pa.field("close", pa.float64()),
-            pa.field("volume", pa.int64()),
-            pa.field("adj_close", pa.float64()),
-        ],
-        metadata={
-            "yoghurt_command": "chart",
-            "yoghurt_version": __version__,
-            "ticker": context.ticker,
-            "interval": context.interval,
-            "period1": str(context.period1),
-            "period2": str(context.period2),
-            "yahoo_response_meta_json": json.dumps(result.get("meta", {})),
+    return pl.DataFrame(
+        {
+            "ts": ts,
+            "open": columns["open"],
+            "high": columns["high"],
+            "low": columns["low"],
+            "close": columns["close"],
+            "volume": pl.Series("volume", volume_ints, dtype=pl.Int64),
+            "adj_close": columns["adj_close"],
         },
-    )
-    return pa.Table.from_arrays(
-        [
-            ts_array,
-            pa.array(columns["open"], type=pa.float64()),
-            pa.array(columns["high"], type=pa.float64()),
-            pa.array(columns["low"], type=pa.float64()),
-            pa.array(columns["close"], type=pa.float64()),
-            pa.array(volume_ints, type=pa.int64()),
-            pa.array(columns["adj_close"], type=pa.float64()),
-        ],
-        schema=schema,
+        schema={
+            "ts": pl.Datetime("ns", "UTC"),
+            "open": pl.Float64,
+            "high": pl.Float64,
+            "low": pl.Float64,
+            "close": pl.Float64,
+            "volume": pl.Int64,
+            "adj_close": pl.Float64,
+        },
     )
 
 
@@ -292,7 +263,7 @@ def _coerce_volume_to_int(volumes: list[Any]) -> list[int | None]:
     return result
 
 
-_TABULAR_ROUTE_RECORD_KEY: dict[str, str] = {
+_TABULAR_ROUTE_RECORD_KEY: Final[dict[str, str]] = {
     "screener": "records",
     "visualization": "documents",
 }
@@ -387,29 +358,27 @@ def write_tabular_parquet(  # noqa: PLR0913 - keyword-only metadata.
         dict[str, Any]: The single-line stdout descriptor for the write.
     """
 
-    pa, pq = _import_pyarrow()
     records, total_rows, schema_hint = _parse_tabular_response(
         response_json_text, command, route
     )
     columns = _resolve_column_order(records, schema_hint)
     column_data = _collect_column_data(records, columns)
     _reject_nested_cells(column_data)
-    table = _build_tabular_table(
-        column_data,
-        columns,
-        pa,
-        command=command,
-        route=route,
-        query=query,
-        wire_params=wire_params,
-        total_rows=total_rows,
-    )
-    _write_table(pq, table, out_path)
+    frame = _build_tabular_frame(column_data, columns)
+    metadata = {
+        "yoghurt_command": command,
+        "yoghurt_version": __version__,
+        "query": query if query is not None else "<body-json>",
+        "route": route,
+        "wire_params_json": json.dumps(wire_params, sort_keys=True),
+        "total_rows": str(total_rows),
+    }
+    _write_frame(frame, out_path, metadata)
     return {
         "format": "parquet",
         "out": str(out_path),
         "command": command,
-        "rows": table.num_rows,
+        "rows": frame.height,
         "columns": list(columns),
         "bytes": out_path.stat().st_size,
     }
@@ -514,41 +483,59 @@ def _reject_nested_cells(column_data: dict[str, list[Any]]) -> None:
                 raise ParquetWriterError(message)
 
 
-def _build_tabular_table(  # noqa: PLR0913 - keyword-only metadata bundle.
-    column_data: dict[str, list[Any]],
-    columns: list[str],
-    pa: Any,  # noqa: ANN401
-    *,
-    command: str,
-    route: str,
-    query: str | None,
-    wire_params: dict[str, Any],
-    total_rows: int,
-) -> Any:  # noqa: ANN401
-    """Assemble the tabular Parquet table and attach key-value metadata.
+def _infer_polars_dtype(values: list[Any]) -> Any:  # noqa: ANN401
+    """Pick the most specific common polars dtype for ``values``.
 
     Returns:
-        Any: A populated ``pyarrow.Table`` instance.
+        Any: The chosen polars dtype class. Defaults to ``Utf8`` for empty,
+        all-null, or mixed-type columns.
     """
 
-    schema_fields: list[Any] = []
-    arrays: list[Any] = []
-    for name in columns:
-        values = column_data[name]
-        pa_type = _infer_arrow_type(values, pa)
-        schema_fields.append(pa.field(name, pa_type))
-        arrays.append(_build_array(values, pa_type, pa))
+    non_null = [v for v in values if v is not None]
+    if not non_null:
+        return pl.Utf8
+    if all(isinstance(v, bool) for v in non_null):
+        return pl.Boolean
+    if all(isinstance(v, int) and not isinstance(v, bool) for v in non_null):
+        return pl.Int64
+    if all(isinstance(v, (int, float)) and not isinstance(v, bool) for v in non_null):
+        return pl.Float64
+    return pl.Utf8
 
-    metadata = {
-        "yoghurt_command": command,
-        "yoghurt_version": __version__,
-        "query": query if query is not None else "<body-json>",
-        "route": route,
-        "wire_params_json": json.dumps(wire_params, sort_keys=True),
-        "total_rows": str(total_rows),
-    }
-    schema = pa.schema(schema_fields, metadata=metadata)
-    return pa.Table.from_arrays(arrays, schema=schema)
+
+def _build_column(values: list[Any], dtype: Any) -> list[Any]:  # noqa: ANN401
+    """Coerce ``values`` to match ``dtype`` for safe Series construction.
+
+    Returns:
+        list[Any]: Coerced values suitable for the given dtype.
+    """
+
+    if dtype == pl.Utf8:
+        return [None if v is None else _coerce_to_string(v) for v in values]
+    if dtype == pl.Float64:
+        return [None if v is None else float(v) for v in values]
+    return values  # Boolean / Int64 pass through
+
+
+def _build_tabular_frame(
+    column_data: dict[str, list[Any]],
+    columns: list[str],
+) -> pl.DataFrame:
+    """Assemble the tabular Parquet DataFrame with inferred dtypes.
+
+    Returns:
+        pl.DataFrame: A typed DataFrame ready to write.
+    """
+
+    if not columns:
+        return pl.DataFrame()
+    schema: dict[str, Any] = {}
+    data: dict[str, list[Any]] = {}
+    for name in columns:
+        dtype = _infer_polars_dtype(column_data[name])
+        schema[name] = dtype
+        data[name] = _build_column(column_data[name], dtype)
+    return pl.DataFrame(data, schema=schema)
 
 
 def _resolve_column_order(
@@ -580,67 +567,6 @@ def _resolve_column_order(
     if schema_hint is not None:
         return list(schema_hint)
     return []
-
-
-def _infer_arrow_type(
-    values: list[Any],
-    pa: Any,  # noqa: ANN401 - pyarrow module is intentionally untyped here.
-) -> Any:  # noqa: ANN401
-    """Pick the most specific common Arrow type for ``values``.
-
-    Returns:
-        Any: The chosen ``pyarrow`` type. Defaults to ``string`` for empty,
-        all-null, or mixed-type columns.
-    """
-
-    non_null = [value for value in values if value is not None]
-    if not non_null:
-        return pa.string()
-    if all(isinstance(value, bool) for value in non_null):
-        return pa.bool_()
-    if all(
-        isinstance(value, int) and not isinstance(value, bool) for value in non_null
-    ):
-        return pa.int64()
-    if all(
-        isinstance(value, (int, float)) and not isinstance(value, bool)
-        for value in non_null
-    ):
-        return pa.float64()
-    return pa.string()
-
-
-def _build_array(
-    values: list[Any],
-    pa_type: Any,  # noqa: ANN401
-    pa: Any,  # noqa: ANN401
-) -> Any:  # noqa: ANN401
-    """Coerce ``values`` to ``pa_type`` and build an Arrow array.
-
-    Returns:
-        Any: A ``pyarrow`` array typed for the resolved column dtype.
-
-    Raises:
-        ParquetWriterError: If ``pa_type`` is not one produced by
-            :func:`_infer_arrow_type` (string / bool / int64 / float64).
-    """
-
-    if pa_type == pa.string():
-        coerced = [
-            None if value is None else _coerce_to_string(value) for value in values
-        ]
-        return pa.array(coerced, type=pa.string())
-    if pa_type == pa.bool_():
-        return pa.array(values, type=pa.bool_())
-    if pa_type == pa.int64():
-        return pa.array(values, type=pa.int64())
-    if pa_type == pa.float64():
-        coerced_floats: list[float | None] = [
-            None if value is None else float(value) for value in values
-        ]
-        return pa.array(coerced_floats, type=pa.float64())
-    message = f"unsupported inferred Arrow type: {pa_type}"
-    raise ParquetWriterError(message)
 
 
 def _coerce_to_string(

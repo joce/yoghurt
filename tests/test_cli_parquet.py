@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 import json
-import sys
 from io import StringIO
 from typing import TYPE_CHECKING, Any
 
-import pyarrow.parquet as pq
+import polars as pl
 import pytest
 
 from yoghurt.cli import main
@@ -149,9 +148,9 @@ def test_chart_parquet_writes_file_and_prints_descriptor(tmp_path: Path) -> None
     assert descriptor["rows"] == EXPECTED_ROW_COUNT
     assert descriptor["out"] == str(out_path)
 
-    table = pq.read_table(out_path)
-    assert table.num_rows == EXPECTED_ROW_COUNT
-    assert "ts" in table.column_names
+    df = pl.read_parquet(out_path)
+    assert df.height == EXPECTED_ROW_COUNT
+    assert "ts" in df.columns
 
 
 def test_chart_parquet_without_out_is_argparse_error() -> None:
@@ -451,10 +450,10 @@ def test_chart_parquet_accepts_iso_date_periods(tmp_path: Path) -> None:
     # 2024-01-01 UTC = epoch 1_704_067_200; 2024-01-05 UTC = 1_704_412_800.
     expected_period1 = 1_704_067_200
     expected_period2 = 1_704_412_800
-    table = pq.read_table(out_path)
-    metadata = table.schema.metadata or {}
-    assert metadata[b"period1"] == str(expected_period1).encode("utf-8")
-    assert metadata[b"period2"] == str(expected_period2).encode("utf-8")
+    raw_meta = pl.read_parquet_metadata(out_path)
+    meta = {k: v for k, v in raw_meta.items() if k != "ARROW:schema"}
+    assert meta["period1"] == str(expected_period1)
+    assert meta["period2"] == str(expected_period2)
     # The wire call to Yahoo also used integer seconds.
     assert client.calls[0][1]["period1"] == expected_period1
     assert client.calls[0][1]["period2"] == expected_period2
@@ -481,10 +480,10 @@ def test_chart_parquet_default_periods_match_wire_values(
     expected_period1 = expected_period2 - 3 * 24 * 60 * 60
     assert client.calls[0][1]["period1"] == expected_period1
     assert client.calls[0][1]["period2"] == expected_period2
-    table = pq.read_table(out_path)
-    metadata = table.schema.metadata or {}
-    assert metadata[b"period1"] == str(expected_period1).encode("utf-8")
-    assert metadata[b"period2"] == str(expected_period2).encode("utf-8")
+    raw_meta = pl.read_parquet_metadata(out_path)
+    meta = {k: v for k, v in raw_meta.items() if k != "ARROW:schema"}
+    assert meta["period1"] == str(expected_period1)
+    assert meta["period2"] == str(expected_period2)
 
 
 def test_visualization_aggregate_body_json_is_rejected(
@@ -581,10 +580,11 @@ def test_visualization_body_json_select_writes_parquet_with_response_columns(
     )
 
     assert exit_code == 0, stderr.getvalue()
-    table = pq.read_table(out_path)
-    assert table.column_names == ["ticker", "startdatetime"]
-    metadata = table.schema.metadata or {}
-    assert metadata[b"query"] == b"<body-json>"
+    df = pl.read_parquet(out_path)
+    assert df.columns == ["ticker", "startdatetime"]
+    raw_meta = pl.read_parquet_metadata(out_path)
+    meta = {k: v for k, v in raw_meta.items() if k != "ARROW:schema"}
+    assert meta["query"] == "<body-json>"
 
 
 def test_chart_parquet_creates_missing_parent_dir(tmp_path: Path) -> None:
@@ -657,51 +657,6 @@ def test_chart_parquet_unwritable_path_is_user_facing_error(
     err = stderr.getvalue().lower()
     assert "failed to write parquet" in err or "parquet" in err
     assert not out_path.exists()
-
-
-def test_chart_parquet_missing_pyarrow_extra_is_user_facing_error(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-    """When pyarrow is unavailable, the writer raises a directed YoghurtError.
-
-    Regression for Issue #6 — users without the ``[parquet]`` extra
-    previously hit a bare ``ImportError`` traceback.
-    """
-
-    monkeypatch.setitem(sys.modules, "pyarrow", None)
-    monkeypatch.setitem(sys.modules, "pyarrow.parquet", None)
-
-    out_path = tmp_path / "missing.parquet"
-    client = StubClient(body=_chart_body_json())
-    stdout = StringIO()
-    stderr = StringIO()
-
-    exit_code = main(
-        [
-            "chart",
-            "AAPL",
-            "--period1",
-            "1703980800",
-            "--period2",
-            "1704499200",
-            "--interval",
-            "1d",
-            "--format",
-            "parquet",
-            "--out",
-            str(out_path),
-        ],
-        stdout=stdout,
-        stderr=stderr,
-        client=client,
-    )
-
-    assert exit_code != 0
-    err = stderr.getvalue().lower()
-    assert "parquet extra" in err or "pip install" in err or "uv sync" in err
-    assert "yoghurt[parquet]" in stderr.getvalue() or "--extra parquet" in (
-        stderr.getvalue()
-    )
 
 
 # --- Negative guards ---------------------------------------------------------
