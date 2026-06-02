@@ -6,6 +6,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- Parquet output is now written with **polars** instead of pyarrow, and polars is
+  a core dependency. The `parquet` optional extra is removed — parquet works with a
+  plain install. **Breaking:** `pip install "yoghurt[parquet]"` no longer resolves.
+
 ## [0.2.2] - 2026-05-29
 
 Maintenance release — release tooling only, no user-facing changes.
