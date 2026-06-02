@@ -6,11 +6,17 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.0]
+
 ### Changed
 
 - Parquet output is now written with **polars** instead of pyarrow, and polars is
   a core dependency. The `parquet` optional extra is removed — parquet works with a
   plain install. **Breaking:** `pip install "yoghurt[parquet]"` no longer resolves.
+
+### Internal
+
+- Dependency bumps (uv-dependencies group).
 
 ## [0.2.2] - 2026-05-29
 
@@ -75,7 +81,8 @@ First PyPI release.
 - Reusable Yahoo session cache for faster one-shot calls.
 - `raw` escape hatch for query paths yoghurt doesn't model yet.
 
-[Unreleased]: https://github.com/joce/yoghurt/compare/v0.2.2...HEAD
+[Unreleased]: https://github.com/joce/yoghurt/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/joce/yoghurt/compare/v0.2.2...v0.3.0
 [0.2.2]: https://github.com/joce/yoghurt/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/joce/yoghurt/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/joce/yoghurt/compare/v0.1.1...v0.2.0
