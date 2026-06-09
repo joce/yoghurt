@@ -6,6 +6,17 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-06-09
+
+Maintenance release — internal tooling bumps only, no user-facing changes.
+
+### Internal
+
+- Bump `tox` from 4.55.0 to 4.55.1 (config-override propagation fix).
+- Bump `ruff` from 0.15.15 to 0.15.16 (bug fixes, rule tweaks).
+- Bump `astral-sh/setup-uv` GitHub Action from 8.1.0 to 8.2.0 (new `quiet` and
+  `download-from-astral-mirror` inputs, security and reliability fixes).
+
 ## [0.3.0]
 
 ### Changed
@@ -81,7 +92,8 @@ First PyPI release.
 - Reusable Yahoo session cache for faster one-shot calls.
 - `raw` escape hatch for query paths yoghurt doesn't model yet.
 
-[Unreleased]: https://github.com/joce/yoghurt/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/joce/yoghurt/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/joce/yoghurt/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/joce/yoghurt/compare/v0.2.2...v0.3.0
 [0.2.2]: https://github.com/joce/yoghurt/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/joce/yoghurt/compare/v0.2.0...v0.2.1
