@@ -6,6 +6,16 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-06-16
+
+Maintenance release — internal tooling and CI dependency bumps only. No user-facing or behavioral changes.
+
+### Internal
+
+- Bump `codecov/codecov-action` GitHub Action from 6 to 7 (signing key migrated to
+  `codecovsecops` account).
+- Bump `ruff` from 0.15.16 to 0.15.17 (bug fixes, rule tweaks).
+
 ## [0.3.1] - 2026-06-09
 
 Maintenance release — internal tooling bumps only, no user-facing changes.
@@ -92,7 +102,8 @@ First PyPI release.
 - Reusable Yahoo session cache for faster one-shot calls.
 - `raw` escape hatch for query paths yoghurt doesn't model yet.
 
-[Unreleased]: https://github.com/joce/yoghurt/compare/v0.3.1...HEAD
+[Unreleased]: https://github.com/joce/yoghurt/compare/v0.3.2...HEAD
+[0.3.2]: https://github.com/joce/yoghurt/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/joce/yoghurt/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/joce/yoghurt/compare/v0.2.2...v0.3.0
 [0.2.2]: https://github.com/joce/yoghurt/compare/v0.2.1...v0.2.2
