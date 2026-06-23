@@ -6,15 +6,18 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-## [0.3.2] - 2026-06-16
+## [0.3.2] - 2026-06-23
 
 Maintenance release — internal tooling and CI dependency bumps only. No user-facing or behavioral changes.
 
 ### Internal
 
 - Bump `codecov/codecov-action` GitHub Action from 6 to 7 (signing key migrated to
-  `codecovsecops` account).
-- Bump `ruff` from 0.15.16 to 0.15.17 (bug fixes, rule tweaks).
+  `codecovsecops` account); add `codecovsecops` to the spell-check wordlist.
+- Bump `actions/checkout` GitHub Action from 6 to 7.
+- Bump `ruff` from 0.15.16 to 0.15.18 (bug fixes, rule tweaks, performance improvements).
+- Bump `pylint` from 4.0.5 to 4.0.6 (crash fixes in decorator, enum, and typecheck checkers).
+- Bump `pytest` from 9.0.3 to 9.1.1 (bug fixes for `RaisesGroup`, parametrize, and conftest loading).
 
 ## [0.3.1] - 2026-06-09
 
@@ -33,7 +36,7 @@ Maintenance release — internal tooling bumps only, no user-facing changes.
 
 - Parquet output is now written with **polars** instead of pyarrow, and polars is
   a core dependency. The `parquet` optional extra is removed — parquet works with a
-  plain install. **Breaking:** `pip install "yoghurt[parquet]"` no longer resolves.
+    plain install. **Breaking:** `pip install "yoghurt[parquet]"` no longer resolves.
 
 ### Internal
 
