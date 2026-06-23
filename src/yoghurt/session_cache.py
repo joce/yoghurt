@@ -22,7 +22,7 @@ class CachedSession:
 
     @property
     def is_valid(self) -> bool:
-        """Return whether the cache is still usable."""
+        """Whether the cache is still usable."""
 
         one_minute: Final[float] = 60.0
         return bool(self.crumb) and self.expiry - time.time() >= one_minute
