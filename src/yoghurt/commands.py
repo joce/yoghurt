@@ -44,7 +44,7 @@ class CommandSpec:
 
     @property
     def yahoo_url(self) -> str:
-        """Return the full Yahoo URL for this endpoint."""
+        """Full Yahoo URL for this endpoint."""
 
         return f"{self.base_url}{self.path}"
 

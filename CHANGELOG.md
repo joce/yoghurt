@@ -13,11 +13,11 @@ Maintenance release — internal tooling and CI dependency bumps only. No user-f
 ### Internal
 
 - Bump `codecov/codecov-action` GitHub Action from 6 to 7 (signing key migrated to
-  `codecovsecops` account); add `codecovsecops` to the spell-check wordlist.
+  `codecovsecops` account); add `codecovsecops` to the spell-check word list.
 - Bump `actions/checkout` GitHub Action from 6 to 7.
 - Bump `ruff` from 0.15.16 to 0.15.18 (bug fixes, rule tweaks, performance improvements).
 - Bump `pylint` from 4.0.5 to 4.0.6 (crash fixes in decorator, enum, and typecheck checkers).
-- Bump `pytest` from 9.0.3 to 9.1.1 (bug fixes for `RaisesGroup`, parametrize, and conftest loading).
+- Bump `pytest` from 9.0.3 to 9.1.1 (bug fixes for `RaisesGroup`, parametrize, and test configuration loading).
 
 ## [0.3.1] - 2026-06-09
 

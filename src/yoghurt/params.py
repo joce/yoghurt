@@ -43,7 +43,7 @@ class ParamSpec:
 
     @property
     def option(self) -> str:
-        """Return this parameter's long CLI option."""
+        """This parameter's long CLI option."""
 
         if self.positional:
             return self.name
