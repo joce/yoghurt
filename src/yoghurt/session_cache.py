@@ -9,7 +9,7 @@ from http.cookiejar import Cookie
 from pathlib import Path
 from typing import Any, Final
 
-import httpx
+import httpx2 as httpx
 
 
 @dataclass(frozen=True, slots=True)

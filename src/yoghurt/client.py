@@ -7,7 +7,7 @@ import logging
 import time
 from typing import TYPE_CHECKING, Any, Final, Literal
 
-import httpx
+import httpx2 as httpx
 
 from yoghurt.exceptions import YahooRequestError, YahooUnavailableError
 from yoghurt.session_cache import (
@@ -53,6 +53,7 @@ class YahooClient:
         self,
         *,
         timeout: httpx.Timeout | None = None,
+        transport: httpx.AsyncBaseTransport | None = None,
         use_session_cache: bool = True,
         refresh_session: bool = False,
         session_cache_path: Path | None = None,
@@ -69,6 +70,7 @@ class YahooClient:
                 "user-agent": self._USER_AGENT,
             },
             timeout=self._timeout,
+            transport=transport,
         )
         self._expiry = 0.0
         self._crumb = ""

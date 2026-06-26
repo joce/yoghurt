@@ -4,7 +4,7 @@
 Yoghurt exposes Yahoo Finance HTTP endpoints as an LLM-friendly CLI that prints the raw JSON Yahoo returns.
 
 ## Stack
-Python 3.10+, uv, httpx, argparse, pytest, pytest-httpx, ruff, pyright, tox, hatchling.
+Python 3.10+, uv, httpx2, argparse, pytest, ruff, pyright, tox, hatchling.
 
 ## Parquet
 Parquet is written with **polars** (a core dependency); chart/screener/visualization only.
