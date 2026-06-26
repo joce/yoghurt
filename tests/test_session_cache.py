@@ -5,7 +5,7 @@ from __future__ import annotations
 import time
 from pathlib import Path
 
-import httpx
+import httpx2 as httpx
 
 from yoghurt.session_cache import (
     default_cache_path,
