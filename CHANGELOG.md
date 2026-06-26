@@ -6,12 +6,14 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-## [0.3.2] - 2026-06-23
+## [0.3.2] - 2026-06-26
 
-Maintenance release — internal tooling and CI dependency bumps only. No user-facing or behavioral changes.
+Maintenance release — runtime HTTP and tooling dependency updates. No CLI output changes.
 
 ### Internal
 
+- Replace `httpx` with `httpx2` for Yahoo HTTP requests and use `httpx2.MockTransport`
+  in client tests.
 - Bump `codecov/codecov-action` GitHub Action from 6 to 7 (signing key migrated to
   `codecovsecops` account); add `codecovsecops` to the spell-check word list.
 - Bump `actions/checkout` GitHub Action from 6 to 7.
