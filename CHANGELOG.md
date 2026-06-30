@@ -6,6 +6,19 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.3] - 2026-06-30
+
+Maintenance release — dependency updates only; no user-facing changes.
+
+### Internal
+
+- Bump `polars` from 1.41.2 to 1.42.0 (performance improvements: cloud IO
+  concurrency control, streaming struct unnest optimization).
+- Bump `tox` from 4.55.1 to 4.56.1.
+- Bump `coverage` from 7.14.1 to 7.14.3.
+- Bump `pyright` from 1.1.410 to 1.1.411.
+- Bump `ruff` from 0.15.18 to 0.15.20.
+
 ## [0.3.2] - 2026-06-26
 
 Maintenance release — runtime HTTP and tooling dependency updates. No CLI output changes.
@@ -107,7 +120,8 @@ First PyPI release.
 - Reusable Yahoo session cache for faster one-shot calls.
 - `raw` escape hatch for query paths yoghurt doesn't model yet.
 
-[Unreleased]: https://github.com/joce/yoghurt/compare/v0.3.2...HEAD
+[Unreleased]: https://github.com/joce/yoghurt/compare/v0.3.3...HEAD
+[0.3.3]: https://github.com/joce/yoghurt/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/joce/yoghurt/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/joce/yoghurt/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/joce/yoghurt/compare/v0.2.2...v0.3.0
