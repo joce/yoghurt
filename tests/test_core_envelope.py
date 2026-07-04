@@ -91,22 +91,22 @@ def test_all_enveloped_404_corpora_map_to_symbol_error(rel: str) -> None:
         map_http_error(command, request_error, symbol="ZZZZXYZQ")
 
 
+# Manifest-"ok" captures kept byte-for-byte as evidence of Yahoo-side
+# corruption; they do not parse as JSON (see tests/fixtures/corpus/README.md).
+_KNOWN_MALFORMED = frozenset({"timeseries/AAPL_types_00.json"})
+
+
 def _first_ok_corpus_file(command: str) -> str | None:
-    """Return the first alphabetical corpus filename with manifest status "ok"."""
+    """Return the first alphabetical ok-status corpus file, minus known-bad ones."""
     manifest = json.loads((CORPUS / "manifest.json").read_text(encoding="utf-8"))
     candidates = sorted(
         entry["file"]
         for key, entry in manifest.items()
-        if key.startswith(f"{command}/") and entry.get("status") == "ok"
+        if key.startswith(f"{command}/")
+        and entry.get("status") == "ok"
+        and entry["file"] not in _KNOWN_MALFORMED
     )
-    for candidate in candidates:
-        text = (CORPUS / candidate).read_text(encoding="utf-8")
-        try:
-            json.loads(text)
-        except json.JSONDecodeError:
-            continue
-        return candidate
-    return None
+    return candidates[0] if candidates else None
 
 
 _ENVELOPED_COMMANDS = sorted(

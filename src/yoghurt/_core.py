@@ -98,6 +98,9 @@ def interpret_body(
 ) -> dict[str, Any]:
     """Parse a Yahoo response body and enforce the error contract.
 
+    When ``symbol`` is given and the envelope reports a not-found error, the
+    error raised is ``SymbolNotFoundError``, a ``YahooApiError`` subclass.
+
     Returns:
         dict[str, Any]: The full parsed payload (envelope included).
 
