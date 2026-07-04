@@ -84,12 +84,21 @@ typeCheckingMode = "strict"
 
 [[tool.pyright.executionEnvironments]]
 root = "src/yoghurt/parquet_writer.py"
+reportPrivateUsage = false
+
+[[tool.pyright.executionEnvironments]]
+root = "src/yoghurt/tabular.py"
 reportUnknownArgumentType = false
 reportUnknownMemberType = false
 reportUnknownVariableType = false
 reportUnknownLambdaType = false
 reportUnknownParameterType = false
 reportMissingTypeStubs = false
+# `_collect_column_data`, `_reject_nested_cells`, and `_resolve_column_order`
+# stay private (parquet_writer.py is a closely-coupled sibling, not a public
+# consumer) but are imported cross-module, which pyright's strict mode does
+# not count as a "use" of a private symbol.
+reportUnusedFunction = false
 
 [[tool.pyright.executionEnvironments]]
 root = "tools"
