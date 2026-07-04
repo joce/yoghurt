@@ -2,8 +2,9 @@
 
 Yahoo's shared ``lang``/``region`` wire params ride their CommandSpec
 defaults; per-call overrides are deliberately deferred (they will arrive
-with the typed-model layer). Every other endpoint parameter is mirrored
-1:1 from the CLI's command metadata.
+with the typed-model layer). Parameter names mirror the CLI's command
+metadata, except booleans whose CLI flag inverts the wire value — those
+use the wire name so the kwarg's meaning matches its effect.
 """
 
 from __future__ import annotations
@@ -53,14 +54,17 @@ class Ticker:
         *,
         fields: list[str] | None = None,
         formatted: bool | None = None,
-        disable_private_company: bool | None = None,
-        no_overnight_price: bool | None = None,
+        enable_private_company: bool | None = None,
+        overnight_price: bool | None = None,
         top_pick_this_month: bool | None = None,
         img_heights: int | None = None,
         img_labels: list[str] | None = None,
         img_widths: int | None = None,
     ) -> dict[str, Any]:
         """Fetch this symbol's quote record.
+
+        ``enable_private_company=True`` includes private-company quote
+        matches; ``overnight_price=True`` requests overnight price fields.
 
         Returns:
             dict[str, Any]: The single quote record.
@@ -77,8 +81,8 @@ class Ticker:
                     symbols=self.symbol,
                     fields=fields,
                     formatted=formatted,
-                    enablePrivateCompany=disable_private_company,
-                    overnightPrice=no_overnight_price,
+                    enablePrivateCompany=enable_private_company,
+                    overnightPrice=overnight_price,
                     topPickThisMonth=top_pick_this_month,
                     imgHeights=img_heights,
                     imgLabels=img_labels,
@@ -170,10 +174,13 @@ class Ticker:
         self,
         *,
         formatted: bool | None = None,
-        disable_private_company: bool | None = None,
-        no_overnight_price: bool | None = None,
+        enable_private_company: bool | None = None,
+        overnight_price: bool | None = None,
     ) -> dict[str, Any]:
         """Fetch instrument classification metadata for this symbol.
+
+        ``enable_private_company=True`` includes private-company data;
+        ``overnight_price=True`` requests overnight price fields.
 
         Returns:
             dict[str, Any]: The single quoteType record.
@@ -189,8 +196,8 @@ class Ticker:
                 values=_values(
                     symbol=self.symbol,
                     formatted=formatted,
-                    enablePrivateCompany=disable_private_company,
-                    overnightPrice=no_overnight_price,
+                    enablePrivateCompany=enable_private_company,
+                    overnightPrice=overnight_price,
                 ),
             )
         )
@@ -204,11 +211,16 @@ class Ticker:
         *,
         modules: list[str] | None = None,
         formatted: bool | None = None,
-        disable_private_company: bool | None = None,
-        disable_qsp_expanded_earnings: bool | None = None,
-        no_overnight_price: bool | None = None,
+        enable_private_company: bool | None = None,
+        enable_qsp_expanded_earnings: bool | None = None,
+        overnight_price: bool | None = None,
     ) -> dict[str, Any]:
         """Fetch quoteSummary modules for this symbol.
+
+        ``enable_private_company=True`` includes private-company data;
+        ``enable_qsp_expanded_earnings=True`` requests Yahoo's expanded
+        earnings fields; ``overnight_price=True`` requests overnight price
+        fields.
 
         Returns:
             dict[str, Any]: The full parsed response payload.
@@ -222,9 +234,9 @@ class Ticker:
                     symbol=self.symbol,
                     modules=modules,
                     formatted=formatted,
-                    enablePrivateCompany=disable_private_company,
-                    enableQSPExpandedEarnings=disable_qsp_expanded_earnings,
-                    overnightPrice=no_overnight_price,
+                    enablePrivateCompany=enable_private_company,
+                    enableQSPExpandedEarnings=enable_qsp_expanded_earnings,
+                    overnightPrice=overnight_price,
                 ),
             )
         )
@@ -262,9 +274,11 @@ class Ticker:
         period1: DateLike | None = None,
         period2: DateLike | None = None,
         merge: bool | None = None,
-        no_pad_time_series: bool | None = None,
+        pad_time_series: bool | None = None,
     ) -> dict[str, Any]:
         """Fetch fundamentals timeseries for this symbol.
+
+        ``pad_time_series=True`` asks Yahoo to pad missing timeseries values.
 
         Returns:
             dict[str, Any]: The full parsed response payload.
@@ -280,7 +294,7 @@ class Ticker:
                     period1=period1,
                     period2=period2,
                     merge=merge,
-                    padTimeSeries=no_pad_time_series,
+                    padTimeSeries=pad_time_series,
                 ),
             )
         )
@@ -292,10 +306,13 @@ class Ticker:
         count_per_day: int | None = None,
         start_date: DateLike | None = None,
         end_date: DateLike | None = None,
-        include_all_economic_events: bool | None = None,
+        economic_events_high_importance_only: bool | None = None,
         economic_events_region_filter: str | None = None,
     ) -> dict[str, Any]:
         """Fetch earnings, IPO, economic, and SEC filing events for this symbol.
+
+        ``economic_events_high_importance_only=True`` limits economic events
+        to high-importance ones.
 
         Returns:
             dict[str, Any]: The full parsed response payload.
@@ -311,7 +328,9 @@ class Ticker:
                     countPerDay=count_per_day,
                     startDate=start_date,
                     endDate=end_date,
-                    economicEventsHighImportanceOnly=include_all_economic_events,
+                    economicEventsHighImportanceOnly=(
+                        economic_events_high_importance_only
+                    ),
                     economicEventsRegionFilter=economic_events_region_filter,
                 ),
             )
@@ -332,8 +351,11 @@ class Ticker:
             )
         )
 
-    def ratings_top(self, *, include_noncurrent: bool | None = None) -> dict[str, Any]:
+    def ratings_top(self, *, exclude_noncurrent: bool | None = None) -> dict[str, Any]:
         """Fetch top analyst rating buckets for this symbol.
+
+        ``exclude_noncurrent=True`` drops non-current analyst records from
+        the top scored buckets.
 
         Returns:
             dict[str, Any]: The full parsed response payload.
@@ -344,7 +366,7 @@ class Ticker:
                 "ratings-top",
                 symbol=self.symbol,
                 values=_values(
-                    symbol=self.symbol, exclude_noncurrent=include_noncurrent
+                    symbol=self.symbol, exclude_noncurrent=exclude_noncurrent
                 ),
             )
         )
@@ -378,13 +400,17 @@ class Ticker:
     def insights(
         self,
         *,
-        enable_related_reports: bool | None = None,
+        disable_related_reports: bool | None = None,
         formatted: bool | None = None,
-        skip_all_research_reports: bool | None = None,
+        get_all_research_reports: bool | None = None,
         reports_count: int | None = None,
-        no_ssl: bool | None = None,
+        ssl: bool | None = None,
     ) -> dict[str, Any]:
         """Fetch research reports and insights for this symbol.
+
+        ``disable_related_reports=True`` omits related research reports;
+        ``get_all_research_reports=True`` requests all available research
+        reports; ``ssl=True`` requests SSL URLs in Yahoo response fields.
 
         Returns:
             dict[str, Any]: The full parsed response payload.
@@ -396,11 +422,11 @@ class Ticker:
                 symbol=self.symbol,
                 values=_values(
                     symbols=self.symbol,
-                    disableRelatedReports=enable_related_reports,
+                    disableRelatedReports=disable_related_reports,
                     formatted=formatted,
-                    getAllResearchReports=skip_all_research_reports,
+                    getAllResearchReports=get_all_research_reports,
                     reportsCount=reports_count,
-                    ssl=no_ssl,
+                    ssl=ssl,
                 ),
             )
         )

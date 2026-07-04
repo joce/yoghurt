@@ -176,10 +176,10 @@ def test_ticker_quote_summary_passes_modules(monkeypatch: pytest.MonkeyPatch) ->
 def test_ticker_quote_summary_passes_boolean_wire_names(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Inverse-named boolean kwargs land under their Yahoo wire names."""
+    """Boolean kwargs pass their values through to matching wire names."""
     fake = _install_fake(monkeypatch, _corpus_text("quote-summary/AAPL.json"))
     Ticker("AAPL").quote_summary(
-        disable_qsp_expanded_earnings=False, no_overnight_price=False
+        enable_qsp_expanded_earnings=False, overnight_price=False
     )
     _, params = fake.calls[0]
     assert params["enableQSPExpandedEarnings"] is False
