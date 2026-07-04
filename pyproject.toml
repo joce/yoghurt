@@ -94,7 +94,6 @@ reportMissingTypeStubs = false
 [[tool.pyright.executionEnvironments]]
 root = "tools"
 reportPrivateUsage = false
-reportUnusedFunction = false
 
 [tool.pytest.ini_options]
 pythonpath = ["src", "."]
