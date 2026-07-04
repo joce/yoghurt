@@ -16,6 +16,7 @@
     "Makefile",
     "node_modules",
     "pyproject.toml",
+    "tests/fixtures/corpus",
     "tox.ini",
     "uv.lock"
   ],
