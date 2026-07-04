@@ -4,17 +4,22 @@ from __future__ import annotations
 
 import pytest
 
+from yoghurt.commands import COMMANDS_BY_NAME
 from yoghurt.params import (
     ParamKind,
     ParamSpec,
+    build_params,
+    build_path,
     coerce_param,
     parse_boolean,
     parse_datetime,
+    validate_params,
 )
 
 IMAGE_SIZE = 50
 NOV_17_2017 = 1510876800
 NOV_17_2017_MS = NOV_17_2017 * 1000
+JAN_1_2026 = 1767225600
 
 
 @pytest.mark.parametrize(
@@ -165,3 +170,35 @@ def test_coerce_csv_param_can_pack_with_custom_separator() -> None:
     )
 
     assert coerce_param(spec, "div, split,earn") == "div|split|earn"
+
+
+def test_build_params_applies_dynamic_date_defaults() -> None:
+    """Ticker-only chart calls get the documented recent window."""
+    command = COMMANDS_BY_NAME["chart"]
+    params = build_params(command, {})
+    period1 = params["period1"]
+    period2 = params["period2"]
+    assert isinstance(period1, int)
+    assert isinstance(period2, int)
+    assert period2 - period1 == 3 * 24 * 60 * 60
+
+
+def test_build_params_present_key_wins_over_default() -> None:
+    """An explicitly provided value suppresses the dynamic default."""
+    command = COMMANDS_BY_NAME["chart"]
+    params = build_params(command, {"period1": "2026-01-01", "period2": "2026-01-05"})
+    assert params["period1"] == JAN_1_2026
+
+
+def test_build_path_formats_and_quotes_path_params() -> None:
+    """Path templating URL-quotes the symbol."""
+    command = COMMANDS_BY_NAME["chart"]
+    assert build_path(command, {"symbol": "ES=F"}) == "/v8/finance/chart/ES%3DF"
+
+
+def test_validate_params_rejects_reversed_window() -> None:
+    """period2 <= period1 is rejected with the CLI's exact message."""
+    command = COMMANDS_BY_NAME["chart"]
+    params = build_params(command, {"period1": "2026-01-05", "period2": "2026-01-01"})
+    with pytest.raises(ValueError, match="--period2 must be greater"):
+        validate_params(command, params)

@@ -8,13 +8,9 @@ import json
 import logging
 import sys
 import textwrap
-import time
-from datetime import datetime, timezone
 from importlib.resources import files
 from pathlib import Path
-from string import Formatter
 from typing import TYPE_CHECKING, Any, Final, Protocol, TextIO, cast
-from urllib.parse import quote
 
 # ``override`` lives in :mod:`typing` from 3.12 and in
 # :mod:`typing_extensions` on older interpreters. typing_extensions
@@ -27,7 +23,14 @@ from yoghurt import __version__
 from yoghurt.client import YahooClient
 from yoghurt.commands import COMMANDS, COMMANDS_BY_NAME, CommandSpec, FieldReference
 from yoghurt.exceptions import YoghurtError
-from yoghurt.params import ParamKind, ParamSpec, coerce_param
+from yoghurt.params import (
+    ParamKind,
+    ParamSpec,
+    build_params,
+    build_path,
+    default_for_param,
+    validate_params,
+)
 from yoghurt.query import QueryError
 from yoghurt.query import parse as parse_query
 
@@ -36,16 +39,10 @@ if TYPE_CHECKING:
 
     from yoghurt.types import ParamValue
 
-_THREE_DAYS_SECONDS = 3 * 24 * 60 * 60
 _HELP_WIDTH = 100
 _HELP_MAX_POSITION = 32
 _REFERENCE_INDENT = "  "
 _REFERENCE_LABEL_WIDTH = _HELP_MAX_POSITION - len(_REFERENCE_INDENT) - 2
-_DATE_PAIR_NAMES: Final[dict[str, tuple[str, str]]] = {
-    "chart": ("period1", "period2"),
-    "timeseries": ("period1", "period2"),
-    "calendar-events": ("startDate", "endDate"),
-}
 
 
 class _YahooClientProtocol(Protocol):
@@ -263,31 +260,6 @@ def _add_global_options(parser: argparse.ArgumentParser) -> None:
     )
 
 
-def _default_for_param(param: ParamSpec) -> object:
-    if param.default in {"now", "now-3d"}:
-        return argparse.SUPPRESS
-    if param.default == "today":
-        return datetime.now(timezone.utc).date().isoformat()
-    if (
-        param.allow_empty_default
-        and isinstance(param.default, str)
-        and len(param.default) == 0
-    ):
-        return argparse.SUPPRESS
-    return param.default
-
-
-def _dynamic_default_for_param(
-    spec: ParamSpec, current_timestamp: int
-) -> ParamValue | None:
-    multiplier = 1000 if spec.kind is ParamKind.DATETIME_MILLISECONDS else 1
-    if spec.default == "now":
-        return current_timestamp * multiplier
-    if spec.default == "now-3d":
-        return (current_timestamp - _THREE_DAYS_SECONDS) * multiplier
-    return None
-
-
 def _add_command_param(parser: argparse.ArgumentParser, param: ParamSpec) -> None:
     if param.positional:
         parser.add_argument(
@@ -302,7 +274,7 @@ def _add_command_param(parser: argparse.ArgumentParser, param: ParamSpec) -> Non
             param.option,
             dest=param.name,
             required=param.required,
-            default=_default_for_param(param),
+            default=default_for_param(param),
             action="store_const",
             const=const,
             help=param.help,
@@ -312,7 +284,7 @@ def _add_command_param(parser: argparse.ArgumentParser, param: ParamSpec) -> Non
         param.option,
         dest=param.name,
         required=param.required,
-        default=_default_for_param(param),
+        default=default_for_param(param),
         metavar=param.metavar,
         help=param.help,
     )
@@ -653,95 +625,22 @@ def _configure_logging(*, verbose: bool) -> None:
     logging.basicConfig(level=level, format="%(levelname)s:%(name)s:%(message)s")
 
 
-def _params_for_command(
+def _values_from_namespace(
     command: CommandSpec, namespace: argparse.Namespace
-) -> dict[str, ParamValue]:
-    params: dict[str, ParamValue] = {}
-    date_pair = _date_pair_for_command(command)
-    if date_pair is not None:
-        start_spec, end_spec = date_pair
-        explicit_start = hasattr(namespace, start_spec.name)
-        explicit_end = hasattr(namespace, end_spec.name)
-        if explicit_end and not explicit_start:
-            message = (
-                f"{end_spec.option} cannot be provided without {start_spec.option}"
-            )
-            raise ValueError(message)
-    current_timestamp = int(time.time())
-    for spec in command.params:
-        if not hasattr(namespace, spec.name):
-            dynamic_default = _dynamic_default_for_param(spec, current_timestamp)
-            if dynamic_default is not None:
-                params[spec.name] = dynamic_default
-                continue
-            if (
-                spec.allow_empty_default
-                and isinstance(spec.default, str)
-                and len(spec.default) == 0
-            ):
-                params[spec.name] = ""
-            continue
-        value = getattr(namespace, spec.name)
-        if value is None:
-            continue
-        if spec.path_param:
-            continue
-        if isinstance(value, bool | int | float):
-            params[spec.name] = value
-            continue
-        params[spec.name] = coerce_param(spec, value)
-    return params
+) -> dict[str, object]:
+    """Extract the present-key values a command's params saw from argparse.
 
+    Returns:
+        dict[str, object]: Mapping of param name to raw namespace value,
+        containing only the keys that argparse actually set (mirroring
+        ``hasattr(namespace, spec.name)`` present-keys semantics).
+    """
 
-def _date_pair_for_command(command: CommandSpec) -> tuple[ParamSpec, ParamSpec] | None:
-    names = _DATE_PAIR_NAMES.get(command.name)
-    if names is None:
-        return None
-    start = next(spec for spec in command.params if spec.name == names[0])
-    end = next(spec for spec in command.params if spec.name == names[1])
-    return start, end
-
-
-def _validate_command_params(
-    command: CommandSpec, params: dict[str, ParamValue]
-) -> None:
-    date_pair = _date_pair_for_command(command)
-    if date_pair is not None:
-        start_spec, end_spec = date_pair
-        if start_spec.name in params and end_spec.name in params:
-            start = params[start_spec.name]
-            end = params[end_spec.name]
-            if not isinstance(start, int) or not isinstance(end, int):
-                message = (
-                    f"{start_spec.option} and {end_spec.option} must be datetime values"
-                )
-                raise ValueError(message)
-            if end <= start:
-                message = f"{end_spec.option} must be greater than {start_spec.option}"
-                raise ValueError(message)
-
-    if command.name == "chart":
-        interval = params.get("interval")
-        allowed_intervals = {"1m", "5m", "15m", "1d", "1wk", "1mo"}
-        if interval not in allowed_intervals:
-            allowed_text = ", ".join(sorted(allowed_intervals))
-            message = (
-                f"--interval unsupported value {interval!r}; "
-                f"expected one of: {allowed_text}"
-            )
-            raise ValueError(message)
-
-
-def _path_for_command(command: CommandSpec, namespace: argparse.Namespace) -> str:
-    path_values: dict[str, str] = {}
-    for _, field_name, _, _ in Formatter().parse(command.path):
-        if field_name is None:
-            continue
-        spec = next(param for param in command.params if param.name == field_name)
-        raw_value = getattr(namespace, spec.name)
-        coerced_value = coerce_param(spec, raw_value)
-        path_values[field_name] = quote(str(coerced_value), safe="")
-    return command.path.format(**path_values)
+    return {
+        spec.name: getattr(namespace, spec.name)
+        for spec in command.params
+        if hasattr(namespace, spec.name)
+    }
 
 
 def _params_for_raw(raw_params: Sequence[str]) -> dict[str, ParamValue]:
@@ -808,11 +707,12 @@ async def _dispatch_command(
 ) -> int:
     if namespace.command_kind == "modeled":
         command = COMMANDS_BY_NAME[namespace.command_name]
-        params = _params_for_command(command, namespace)
-        _validate_command_params(command, params)
+        values = _values_from_namespace(command, namespace)
+        params = build_params(command, values)
+        validate_params(command, params)
         _validate_parquet_request(namespace)
         body = await client.get(
-            _path_for_command(command, namespace),
+            build_path(command, values),
             params,
             use_crumb=command.use_crumb,
             base_url=command.base_url,
@@ -994,8 +894,8 @@ def _emit_chart_parquet(
     """Write the chart response to Parquet and emit the descriptor line.
 
     ``params`` is the already-coerced wire-params dict produced by
-    :func:`_params_for_command`. Reusing it (rather than re-reading the raw
-    ``namespace`` attributes) means Parquet metadata records the exact
+    :func:`yoghurt.params.build_params`. Reusing it (rather than re-reading
+    the raw ``namespace`` attributes) means Parquet metadata records the exact
     epoch-second values sent to Yahoo, regardless of whether the user
     passed an int, a ``YYYY-MM-DD`` date, or an ISO datetime.
     """

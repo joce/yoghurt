@@ -464,7 +464,7 @@ def test_chart_parquet_default_periods_match_wire_values(
 ) -> None:
     """Default period1/period2 stamped in Parquet metadata equal the wire values."""
 
-    monkeypatch.setattr("yoghurt.cli.time.time", lambda: 1_777_903_200.9)
+    monkeypatch.setattr("yoghurt.params.time.time", lambda: 1_777_903_200.9)
     out_path = tmp_path / "default.parquet"
     client = StubClient(body=_chart_body_json())
     stdout = StringIO()
