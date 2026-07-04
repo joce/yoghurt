@@ -16,6 +16,7 @@ class YahooRequestError(YoghurtError):
         url: str,
         *,
         reason: str | None = None,
+        body: str | None = None,
     ) -> None:
         """Initialize the request error."""
 
@@ -26,6 +27,7 @@ class YahooRequestError(YoghurtError):
         self.status_code = status_code
         self.url = url
         self.reason = reason
+        self.body = body
 
 
 class YahooUnavailableError(YoghurtError):

@@ -78,6 +78,37 @@ async def test_get_redacts_crumb_from_request_error(
 
 
 @pytest.mark.asyncio
+async def test_get_request_error_includes_response_body(
+    tmp_path: Path,
+) -> None:
+    """A failed API request carries the Yahoo response body on the error."""
+
+    cache_path = tmp_path / "session.json"
+    cookies = httpx.Cookies()
+    cookies.set("A3", "token", domain=".yahoo.com", path="/")
+    save_session_cache(cache_path, cookies, "crumb-token", time.time() + 3600)
+    error_body = '{"finance": {"error": {"code": "Not Found"}}}'
+    httpx_mock = Httpx2Mock()
+    httpx_mock.add(
+        "GET",
+        "https://query1.finance.yahoo.com/v7/finance/quote?symbols=AAPL&crumb=crumb-token",
+        httpx.Response(404, text=error_body),
+    )
+    client = YahooClient(
+        session_cache_path=cache_path,
+        transport=httpx_mock.transport,
+    )
+
+    try:
+        with pytest.raises(YahooRequestError) as exc_info:
+            await client.get("/v7/finance/quote", {"symbols": "AAPL"})
+    finally:
+        await client.aclose()
+
+    assert exc_info.value.body == error_body
+
+
+@pytest.mark.asyncio
 async def test_get_retries_retryable_status_codes(
     tmp_path: Path,
 ) -> None:
