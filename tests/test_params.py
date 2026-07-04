@@ -190,6 +190,13 @@ def test_build_params_present_key_wins_over_default() -> None:
     assert params["period1"] == JAN_1_2026
 
 
+def test_build_params_applies_static_defaults_for_absent_keys() -> None:
+    """Library callers that omit a param get the spec's plain static default."""
+    command = COMMANDS_BY_NAME["chart"]
+    params = build_params(command, {"symbol": "AAPL"})
+    assert params["interval"] == "1m"
+
+
 def test_build_path_formats_and_quotes_path_params() -> None:
     """Path templating URL-quotes the symbol."""
     command = COMMANDS_BY_NAME["chart"]

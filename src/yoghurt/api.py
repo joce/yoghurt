@@ -1,4 +1,10 @@
-"""Public synchronous yoghurt API."""
+"""Public synchronous yoghurt API.
+
+Yahoo's shared ``lang``/``region`` wire params ride their CommandSpec
+defaults; per-call overrides are deliberately deferred (they will arrive
+with the typed-model layer). Every other endpoint parameter is mirrored
+1:1 from the CLI's command metadata.
+"""
 
 from __future__ import annotations
 
@@ -42,7 +48,18 @@ class Ticker:
     def __repr__(self) -> str:
         return f"Ticker({self.symbol!r})"
 
-    def quote(self, *, fields: list[str] | None = None) -> dict[str, Any]:
+    def quote(  # noqa: PLR0913 - one keyword-only arg per quote wire param.
+        self,
+        *,
+        fields: list[str] | None = None,
+        formatted: bool | None = None,
+        disable_private_company: bool | None = None,
+        no_overnight_price: bool | None = None,
+        top_pick_this_month: bool | None = None,
+        img_heights: int | None = None,
+        img_labels: list[str] | None = None,
+        img_widths: int | None = None,
+    ) -> dict[str, Any]:
         """Fetch this symbol's quote record.
 
         Returns:
@@ -56,7 +73,17 @@ class Ticker:
             _core.call_endpoint(
                 "quote",
                 symbol=self.symbol,
-                values=_values(symbols=self.symbol, fields=fields),
+                values=_values(
+                    symbols=self.symbol,
+                    fields=fields,
+                    formatted=formatted,
+                    enablePrivateCompany=disable_private_company,
+                    overnightPrice=no_overnight_price,
+                    topPickThisMonth=top_pick_this_month,
+                    imgHeights=img_heights,
+                    imgLabels=img_labels,
+                    imgWidths=img_widths,
+                ),
             )
         )
         results = payload["quoteResponse"]["result"]
@@ -139,22 +166,48 @@ class Ticker:
             )
         )
 
-    def quote_type(self) -> dict[str, Any]:
+    def quote_type(
+        self,
+        *,
+        formatted: bool | None = None,
+        disable_private_company: bool | None = None,
+        no_overnight_price: bool | None = None,
+    ) -> dict[str, Any]:
         """Fetch instrument classification metadata for this symbol.
 
         Returns:
-            dict[str, Any]: The full parsed response payload.
+            dict[str, Any]: The single quoteType record.
+
+        Raises:
+            SymbolNotFoundError: If Yahoo returns no record for the symbol.
         """
 
-        return run(
+        payload = run(
             _core.call_endpoint(
                 "quote-type",
                 symbol=self.symbol,
-                values=_values(symbol=self.symbol),
+                values=_values(
+                    symbol=self.symbol,
+                    formatted=formatted,
+                    enablePrivateCompany=disable_private_company,
+                    overnightPrice=no_overnight_price,
+                ),
             )
         )
+        results = payload["quoteType"]["result"]
+        if not results:
+            raise SymbolNotFoundError(self.symbol)
+        return results[0]
 
-    def quote_summary(self, *, modules: list[str] | None = None) -> dict[str, Any]:
+    def quote_summary(
+        self,
+        *,
+        modules: list[str] | None = None,
+        formatted: bool | None = None,
+        disable_private_company: bool | None = None,
+        disable_qsp_expanded_earnings: bool | None = None,
+        no_overnight_price: bool | None = None,
+    ) -> dict[str, Any]:
         """Fetch quoteSummary modules for this symbol.
 
         Returns:
@@ -165,7 +218,14 @@ class Ticker:
             _core.call_endpoint(
                 "quote-summary",
                 symbol=self.symbol,
-                values=_values(symbol=self.symbol, modules=modules),
+                values=_values(
+                    symbol=self.symbol,
+                    modules=modules,
+                    formatted=formatted,
+                    enablePrivateCompany=disable_private_company,
+                    enableQSPExpandedEarnings=disable_qsp_expanded_earnings,
+                    overnightPrice=no_overnight_price,
+                ),
             )
         )
 
@@ -173,6 +233,7 @@ class Ticker:
         self,
         *,
         date: DateLike | None = None,
+        formatted: bool | None = None,
         straddle: bool | None = None,
     ) -> dict[str, Any]:
         """Fetch the option chain for this symbol.
@@ -185,7 +246,12 @@ class Ticker:
             _core.call_endpoint(
                 "options",
                 symbol=self.symbol,
-                values=_values(symbol=self.symbol, date=date, straddle=straddle),
+                values=_values(
+                    symbol=self.symbol,
+                    date=date,
+                    formatted=formatted,
+                    straddle=straddle,
+                ),
             )
         )
 

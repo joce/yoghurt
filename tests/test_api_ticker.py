@@ -21,6 +21,7 @@ if TYPE_CHECKING:
 _Invoke: TypeAlias = "Callable[[Ticker], object]"
 
 _CORPUS_ROOT = Path(__file__).parent / "fixtures" / "corpus"
+_IMG_SIZE = 50
 
 
 def _corpus_text(relative_path: str) -> str:
@@ -108,6 +109,36 @@ def test_ticker_quote_empty_result_raises_symbol_error(
         Ticker("ZZZZXYZQ").quote()
 
 
+def test_ticker_quote_passes_new_wire_params(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Typed quote kwargs land under their Yahoo wire names and forms."""
+    fake = _install_fake(monkeypatch, _corpus_text("quote/AAPL_default.json"))
+    Ticker("AAPL").quote(formatted=True, img_labels=["logoUrl"], img_heights=_IMG_SIZE)
+    _, params = fake.calls[0]
+    assert params["formatted"] is True
+    assert params["imgLabels"] == "logoUrl"
+    assert params["imgHeights"] == _IMG_SIZE
+
+
+def test_ticker_quote_type_returns_single_record(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """quote_type() unwraps the one-record result list."""
+    fake = _install_fake(monkeypatch, _corpus_text("quote-type/AAPL.json"))
+    record = Ticker("AAPL").quote_type()
+    assert record["symbol"] == "AAPL"
+    path, _ = fake.calls[0]
+    assert path == "/v1/finance/quoteType/AAPL"
+
+
+def test_ticker_quote_type_empty_result_raises_symbol_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Yahoo's 200-with-empty-result quoteType shape becomes SymbolNotFoundError."""
+    _install_fake(monkeypatch, _corpus_text("quote-type/ZZZZXYZQ.json"))
+    with pytest.raises(SymbolNotFoundError):
+        Ticker("ZZZZXYZQ").quote_type()
+
+
 def test_ticker_chart_builds_typed_bars(monkeypatch: pytest.MonkeyPatch) -> None:
     """chart() returns a Chart whose frame has the fixed schema."""
     _install_fake(monkeypatch, _corpus_text("chart/AAPL.json"))
@@ -124,12 +155,35 @@ def test_ticker_chart_builds_typed_bars(monkeypatch: pytest.MonkeyPatch) -> None
     assert chart.meta["currency"] == "USD"
 
 
+def test_ticker_chart_all_defaults_sends_interval(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """An all-defaults chart() call still sends the spec's static interval."""
+    fake = _install_fake(monkeypatch, _corpus_text("chart/AAPL.json"))
+    Ticker("AAPL").chart()
+    _, params = fake.calls[0]
+    assert params["interval"] == "1m"
+
+
 def test_ticker_quote_summary_passes_modules(monkeypatch: pytest.MonkeyPatch) -> None:
     """Modules list serializes to the CSV wire form."""
     fake = _install_fake(monkeypatch, _corpus_text("quote-summary/AAPL.json"))
     Ticker("AAPL").quote_summary(modules=["price", "summaryDetail"])
     _, params = fake.calls[0]
     assert params["modules"] == "price,summaryDetail"
+
+
+def test_ticker_quote_summary_passes_boolean_wire_names(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Inverse-named boolean kwargs land under their Yahoo wire names."""
+    fake = _install_fake(monkeypatch, _corpus_text("quote-summary/AAPL.json"))
+    Ticker("AAPL").quote_summary(
+        disable_qsp_expanded_earnings=False, no_overnight_price=False
+    )
+    _, params = fake.calls[0]
+    assert params["enableQSPExpandedEarnings"] is False
+    assert params["overnightPrice"] is False
 
 
 def test_ticker_repr() -> None:
@@ -144,10 +198,6 @@ def test_ticker_strips_symbol_whitespace() -> None:
 
 def _invoke_spark(ticker: Ticker) -> object:
     return ticker.spark()
-
-
-def _invoke_quote_type(ticker: Ticker) -> object:
-    return ticker.quote_type()
 
 
 def _invoke_options(ticker: Ticker) -> object:
@@ -188,12 +238,6 @@ def _invoke_stock_recommender(ticker: Ticker) -> object:
 
 _METHOD_CASES = (
     pytest.param(_invoke_spark, "spark/AAPL.json", "/v7/finance/spark", id="spark"),
-    pytest.param(
-        _invoke_quote_type,
-        "quote-type/AAPL.json",
-        "/v1/finance/quoteType/AAPL",
-        id="quote_type",
-    ),
     pytest.param(
         _invoke_options,
         "options/AAPL.json",
