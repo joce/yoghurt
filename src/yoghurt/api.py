@@ -18,13 +18,14 @@ from yoghurt import _core
 from yoghurt._bridge import run
 from yoghurt.commands import COMMANDS_BY_NAME
 from yoghurt.exceptions import SymbolNotFoundError, YahooApiError
-from yoghurt.frames import Chart, Frame, Spark
+from yoghurt.frames import Chart, Frame, Spark, Timeseries
 from yoghurt.models import ChartEvents, ChartMeta, OptionChain, Quote, validate_model
 from yoghurt.tabular import (
     TabularShapeError,
     build_chart_frame,
     build_spark_frame,
     build_tabular_frame,
+    build_timeseries_frames,
     collect_column_data,
     extract_chart_columns,
     parse_tabular_payload,
@@ -338,16 +339,29 @@ class Ticker:
         period2: DateLike | None = None,
         merge: bool | None = None,
         pad_time_series: bool | None = None,
-    ) -> dict[str, Any]:
-        """Fetch fundamentals timeseries for this symbol.
+    ) -> Timeseries:
+        """Fetch fundamentals timeseries for this symbol as typed frames.
 
         ``pad_time_series=True`` asks Yahoo to pad missing timeseries values.
 
+        Known Yahoo-side bug: requesting the ``spEarningsReleaseEvents``
+        type currently fails with ``YahooApiError`` (code
+        ``"malformed-response"``) because Yahoo serves invalid JSON for
+        this type — for every symbol, even when it is requested alone. A
+        request bundling it with other types fails wholesale, so keep it
+        out of ``type`` lists until Yahoo fixes the feed.
+
         Returns:
-            dict[str, Any]: The full parsed response payload.
+            Timeseries: Four typed frames (fundamentals, geographic
+            segments, economic events, analyst ratings) plus the
+            ``empty_types``/``unrecognized_types`` bookkeeping tuples.
+
+        Raises:
+            YahooApiError: If the response cannot be flattened into the
+                fixed timeseries schemas (code ``"malformed-response"``).
         """
 
-        return run(
+        payload = run(
             _core.call_endpoint(
                 "timeseries",
                 symbol=self.symbol,
@@ -360,6 +374,24 @@ class Ticker:
                     padTimeSeries=pad_time_series,
                 ),
             )
+        )
+        try:
+            tables = build_timeseries_frames(payload)
+        except TabularShapeError as exc:
+            raise YahooApiError(
+                code="malformed-response", description=str(exc)
+            ) from exc
+        fetched_at = _now_utc()
+        return Timeseries(
+            fundamentals=Frame(df=tables.fundamentals, fetched_at=fetched_at),
+            geographic_segments=Frame(
+                df=tables.geographic_segments, fetched_at=fetched_at
+            ),
+            economic_events=Frame(df=tables.economic_events, fetched_at=fetched_at),
+            analyst_ratings=Frame(df=tables.analyst_ratings, fetched_at=fetched_at),
+            empty_types=tables.empty_types,
+            unrecognized_types=tables.unrecognized_types,
+            fetched_at=fetched_at,
         )
 
     def calendar_events(  # noqa: PLR0913 - one keyword-only arg per event filter.

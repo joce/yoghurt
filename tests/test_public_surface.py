@@ -29,6 +29,7 @@ def test_expected_surface() -> None:
         "QuoteType",
         "Spark",
         "Ticker",
+        "Timeseries",
         "YahooClient",
         "SymbolNotFoundError",
         "YahooApiError",

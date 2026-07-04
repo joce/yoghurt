@@ -12,7 +12,7 @@ import pytest
 import yoghurt._core as core
 from yoghurt.api import Ticker
 from yoghurt.exceptions import SymbolNotFoundError, YahooApiError
-from yoghurt.frames import Spark
+from yoghurt.frames import Spark, Timeseries
 from yoghurt.models import ChartEvents, ChartMeta, OptionChain, Quote, QuoteType
 from yoghurt.tabular import TabularShapeError
 
@@ -357,6 +357,78 @@ def test_ticker_options_passes_new_wire_params(
     assert params["straddle"] is True
 
 
+_TIMESERIES_DEFAULT_ECONOMIC_ROWS = 2
+
+
+def test_ticker_timeseries_returns_typed_frames(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """timeseries() flattens the payload into a typed Timeseries container."""
+    fake = _install_fake(monkeypatch, _corpus_text("timeseries/AAPL.json"))
+    result = Ticker("AAPL").timeseries()
+    assert isinstance(result, Timeseries)
+    path, _ = fake.calls[0]
+    assert path == "/ws/fundamentals-timeseries/v1/finance/timeseries/AAPL"
+    economic = result.economic_events.to_polars()
+    assert economic.height == _TIMESERIES_DEFAULT_ECONOMIC_ROWS
+    assert economic["country_code"].to_list() == ["US", "US"]
+    assert result.empty_types == ("spEarningsReleaseEvents", "analystRatings")
+    assert result.unrecognized_types == ()
+    assert result.fundamentals.to_polars().is_empty()
+    assert result.fundamentals.fetched_at == result.fetched_at
+
+
+def test_ticker_timeseries_invalid_symbol_yields_all_empty_container(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The ZZZZXYZQ capture (meta-only entries) yields an all-empty container."""
+    _install_fake(monkeypatch, _corpus_text("timeseries/ZZZZXYZQ.json"))
+    result = Ticker("ZZZZXYZQ").timeseries()
+    assert result.empty_types == (
+        "economicEvents",
+        "spEarningsReleaseEvents",
+        "analystRatings",
+    )
+    assert result.unrecognized_types == ()
+    for frame in (
+        result.fundamentals,
+        result.geographic_segments,
+        result.economic_events,
+        result.analyst_ratings,
+    ):
+        df = frame.to_polars()
+        assert df.height == 0
+        assert df.columns  # the declared schema survives empty results
+
+
+def test_ticker_timeseries_shape_mismatch_raises_yahoo_api_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A malformed result shape surfaces as YahooApiError, not TabularShapeError."""
+    _install_fake(monkeypatch, json.dumps({"timeseries": {"result": [1]}}))
+    with pytest.raises(YahooApiError) as exc_info:
+        Ticker("AAPL").timeseries()
+    assert exc_info.value.code == "malformed-response"
+    assert type(exc_info.value) is YahooApiError
+    assert isinstance(exc_info.value.__cause__, TabularShapeError)
+
+
+def test_ticker_timeseries_passes_wire_params(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Typed timeseries kwargs land under their Yahoo wire names."""
+    fake = _install_fake(monkeypatch, _corpus_text("timeseries/AAPL.json"))
+    Ticker("AAPL").timeseries(
+        type=["annualTotalRevenue", "economicEvents"],
+        merge=False,
+        pad_time_series=True,
+    )
+    _, params = fake.calls[0]
+    assert params["type"] == "annualTotalRevenue,economicEvents"
+    assert params["merge"] is False
+    assert params["padTimeSeries"] is True
+
+
 def test_ticker_quote_summary_passes_modules(monkeypatch: pytest.MonkeyPatch) -> None:
     """Modules list serializes to the CSV wire form."""
     fake = _install_fake(monkeypatch, _corpus_text("quote-summary/AAPL.json"))
@@ -388,10 +460,6 @@ def test_ticker_strips_symbol_whitespace() -> None:
     assert Ticker(" AAPL ").symbol == "AAPL"
 
 
-def _invoke_timeseries(ticker: Ticker) -> object:
-    return ticker.timeseries()
-
-
 def _invoke_calendar_events(ticker: Ticker) -> object:
     return ticker.calendar_events()
 
@@ -421,12 +489,6 @@ def _invoke_stock_recommender(ticker: Ticker) -> object:
 
 
 _METHOD_CASES = (
-    pytest.param(
-        _invoke_timeseries,
-        "timeseries/AAPL.json",
-        "/ws/fundamentals-timeseries/v1/finance/timeseries/AAPL",
-        id="timeseries",
-    ),
     pytest.param(
         _invoke_calendar_events,
         "calendar-events/AAPL.json",

@@ -26,6 +26,13 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   the `options` endpoint, corpus-verified against 3 option chain captures
   (365 call+put contracts); `OptionChain.quote` embeds the typed `Quote`
   model for the underlying security.
+- `yoghurt.Timeseries`, a frozen container of four typed frames built from
+  the `timeseries` endpoint: long-format `fundamentals` (with
+  `reportedValue.raw` as `value`), `geographic_segments` (the per-region
+  breakdowns some fundamentals rows attach), `economic_events`, and
+  `analyst_ratings` (corpus-verified against an 830-row capture), plus
+  `empty_types`/`unrecognized_types` bookkeeping so no returned type is
+  silently dropped. Every frame keeps its declared schema even when empty.
 
 ### Changed
 
@@ -37,6 +44,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `ts`, `close`; `Spark.meta` is `ChartMeta`) instead of the raw parsed
   payload.
 - `Ticker.options()` now returns a typed `OptionChain` instead of a raw dict.
+- `Ticker.timeseries()` now returns a typed `Timeseries` instead of the raw
+  parsed payload. Known Yahoo-side bug: requesting the
+  `spEarningsReleaseEvents` type currently fails with
+  `YahooApiError("malformed-response")` because Yahoo serves invalid JSON
+  for that type (every symbol, even requested alone); keep it out of `type`
+  lists until Yahoo fixes the feed.
 
 ### Internal
 
