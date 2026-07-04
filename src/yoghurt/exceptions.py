@@ -38,3 +38,41 @@ class YahooUnavailableError(YoghurtError):
 
         super().__init__(f"Yahoo Finance unavailable while processing {context}")
         self.context = context
+
+
+class YahooApiError(YoghurtError):
+    """Raised when Yahoo reports an application-level error payload."""
+
+    def __init__(
+        self,
+        *,
+        code: str,
+        description: str,
+        http_status: int | None = None,
+    ) -> None:
+        """Initialize the API error."""
+
+        super().__init__(f"Yahoo API error {code}: {description}")
+        self.code = code
+        self.description = description
+        self.http_status = http_status
+
+
+class SymbolNotFoundError(YahooApiError):
+    """Raised when Yahoo indicates a symbol does not exist."""
+
+    def __init__(
+        self,
+        symbol: str,
+        *,
+        description: str | None = None,
+        http_status: int | None = None,
+    ) -> None:
+        """Initialize the symbol lookup error."""
+
+        super().__init__(
+            code="Not Found",
+            description=description or f"symbol not found: {symbol}",
+            http_status=http_status,
+        )
+        self.symbol = symbol
