@@ -195,7 +195,7 @@ async def test_run_all_records_validation_error_in_manifest(
     fake = _FakeClient()
     monkeypatch.setattr("tools.probe.YahooClient", lambda: fake)
     monkeypatch.setattr("tools.probe.POLITENESS_DELAY_SECONDS", 0.0)
-    # Reversed date window: parses fine, then _validate_command_params
+    # Reversed date window: parses fine, then validate_params
     # raises ValueError (not a YoghurtError) at dispatch time.
     bad = ProbeCase(
         "chart",

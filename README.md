@@ -8,13 +8,50 @@
 
 Yahoo!-Originated Graphs, Histories, Updates, Returns & Tickers.
 
-Yoghurt brings Yahoo Finance's HTTP endpoints to the command line. It is built
-for scripts, agents, and quick terminal work that needs the JSON returned by
-Yahoo's finance endpoints.
+Yoghurt brings Yahoo Finance's HTTP endpoints to the command line and to
+Python. It is built for scripts, agents, and quick terminal work that needs
+the JSON returned by Yahoo's finance endpoints.
 
-The project stays deliberately close to the source. It does not reshape Yahoo
+The CLI stays deliberately close to the source: it does not reshape Yahoo
 responses, define finance domain models, or add a discovery API beyond CLI
-help.
+help. The library layer (below) does return typed structures for tabular
+results, but the same no-modeling promise holds for the raw dicts every
+other call returns.
+
+## Library
+
+Yoghurt is also an importable, typed Python library:
+
+```python
+import yoghurt
+
+bars = yoghurt.Ticker("AAPL").chart(interval="1d").to_polars()
+quote = yoghurt.Ticker("AAPL").quote()
+tech = yoghurt.screener(
+    "SELECT ticker, intradaymarketcap FROM EQUITY "
+    "WHERE region = 'us' AND sector = 'Technology' "
+    "ORDER BY intradaymarketcap DESC LIMIT 25"
+).to_polars()
+```
+
+Three tiers, all sharing one Yahoo session (cookies and crumb cached exactly
+like the CLI):
+
+1. **Typed** — `Ticker` methods and module-level functions. Tabular results
+   (`chart`, `screener`, `visualization`) return `Chart`/`Frame` with
+   `to_polars()`, `to_pandas()` (`pip install yoghurt[pandas]`), `to_arrow()`,
+   `to_dicts()`, and `save_parquet()`. Other endpoints return parsed `dict`s
+   today; typed response models land endpoint by endpoint.
+2. **Parsed raw** — `yoghurt.raw(path, params)` for any Yahoo query path.
+3. **Raw async** — `yoghurt.YahooClient`, the async client the CLI itself
+   uses.
+
+Errors follow one contract: symbol lookups raise `SymbolNotFoundError`
+(carrying `.symbol`), Yahoo-reported failures raise `YahooApiError`
+(`.code`, `.description`), queries with zero matches return empty frames,
+and transport failures raise `YahooRequestError` or `YahooUnavailableError`.
+The library never prints and never prompts; `yoghurt.configure(...)` adjusts
+session-cache behavior before first use.
 
 ## Features
 

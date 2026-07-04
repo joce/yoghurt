@@ -1,7 +1,7 @@
 # AGENTS.md
 
 ## Project
-Yoghurt exposes Yahoo Finance HTTP endpoints as an LLM-friendly CLI that prints the raw JSON Yahoo returns.
+Yoghurt exposes Yahoo Finance HTTP endpoints as a typed Python library and an LLM-friendly CLI that prints the raw JSON Yahoo returns.
 
 ## Stack
 Python 3.10+, uv, httpx2, argparse, pytest, ruff, pyright, tox, hatchling.
@@ -25,15 +25,20 @@ Parquet is written with **polars** (a core dependency); chart/screener/visualiza
 - `src/yoghurt/client.py` -> Yahoo HTTP session, cookies, crumbs, retries, raw response retrieval.
 - `src/yoghurt/session_cache.py` -> persisted Yahoo cookie/crumb cache for one-shot CLI reuse.
 - `src/yoghurt/commands.py` -> command metadata used to build CLI commands, validation, and help.
-- `src/yoghurt/params.py` -> CLI parameter coercion and validation helpers.
+- `src/yoghurt/params.py` -> endpoint parameter metadata, coercion, and request (params/path) building.
 - `src/yoghurt/cli.py` -> argparse command tree and stdout/stderr behavior.
+- `src/yoghurt/_bridge.py` -> background-loop sync bridge.
+- `src/yoghurt/_core.py` -> async endpoint core: envelopes, error mapping, shared client.
+- `src/yoghurt/api.py` -> public sync Ticker + module functions.
+- `src/yoghurt/frames.py` -> Frame/Chart result types.
+- `src/yoghurt/tabular.py` -> response flattening shared by frames and parquet.
+- `src/yoghurt/__init__.py` -> lazy public surface, py.typed.
 - `tests/` -> pytest tests mirroring `src/yoghurt/`.
 
 ## Rules
 - IMPORTANT: `--help` is the primary product surface; keep it complete, adaptive, and generated from command metadata where practical.
 - Do not add `describe`, `endpoints`, `params`, or other discovery commands; discovery belongs under `yoghurt --help` and `yoghurt <endpoint> --help`.
-- Print Yahoo response bodies to stdout exactly as returned; do not model, reshape, pretty-print, or interpret endpoint JSON.
-- Keep Yahoo endpoint knowledge in metadata and validation only; do not create response classes.
+- CLI: Print Yahoo response bodies to stdout exactly as returned; do not model, reshape, pretty-print, or interpret endpoint JSON.
 - Use `uv run python` for Python scripts; never use bare `python` or `python3`.
 - Never log or print Yahoo cookies, crumbs, or full session-cache contents.
 - Keep runtime dependencies narrow; do not add TUI, ORM, web framework, or rich formatting libraries.
@@ -45,6 +50,15 @@ When adding or editing a CLI command:
 3. **Notes**: real clarifications only — Yahoo quirks (typos, 500s, paywalled empties), switch-behavior surprises, instrument-type dependencies. Drop live-probe diary entries and redundant restatements.
 4. **Order in `COMMANDS` tuple by importance**: daily-driver → discovery → symbol-bound analysis → market-wide state → schema introspection → `raw`. The DSL parsers (`visualization`, `screener`) slot inside the loop after `screener-predefined` in `cli.py`. Never append to the end.
 5. **Param boilerplate is shared** (`--lang`, `--region`, `--formatted` use exact strings — copy them). Run `pytest -k help` before and after. Pinned-string assertions guard things like `INSIDER_TRANSACTION`, `snake_case`, `Module availability depends on instrument type`. Negative guards (`Calls Yahoo`, `Output:`) forbid implementation leak — do not reintroduce.
+
+## Library rules
+- The library never prints, never prompts, never reads stdin; missing config raises immediately.
+- Error contract: symbol lookups raise SymbolNotFoundError; Yahoo error payloads raise YahooApiError; empty query results return empty Frames (never None, never raise); transport failures raise YahooRequestError/YahooUnavailableError.
+- One conversion vocabulary on every tabular result: to_polars, to_pandas, to_arrow, to_dicts, save_parquet. Conversions take no shaping arguments.
+- One name per concept; no aliases; no value-dependent return types.
+- Kwargs mirror CLI command metadata 1:1 (wire-name keys); booleans whose CLI flag inverts the wire value are named after the wire param. lang/region ride their defaults until the typed-model layer.
+- Response models (Part 3+) are frozen pydantic models with extra="allow"; internal metadata records are frozen dataclasses; orchestrators are plain classes.
+- The corpus at tests/fixtures/corpus/ is the evidence for response shapes; parser code and tests reference corpus files, not hand-invented JSON, wherever a real capture exists.
 
 ## Workflow
 - Make minimal changes and avoid unrelated refactors.
@@ -73,6 +87,5 @@ When adding or editing a CLI command:
 - Add targeted probes when an endpoint is symbol-sensitive, but keep this baseline for broad API-surface discovery and for checking whether an observed endpoint applies across asset classes.
 
 ## Out of scope
-- Mapping Yahoo JSON into Python domain models.
 - Separate documentation/discovery subcommands.
 - Secrets, API keys, or checked-in session-cache files.

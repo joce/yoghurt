@@ -6,6 +6,15 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Yoghurt is now also an importable Python library: `yoghurt.Ticker` plus
+  module-level functions (`quotes`, `screener`, `visualization`, `trending`,
+  etc.), typed `Frame`/`Chart` results with `to_polars`/`to_pandas`/
+  `to_arrow`/`to_dicts`/`save_parquet`, a `SymbolNotFoundError`/`YahooApiError`/
+  `YahooRequestError`/`YahooUnavailableError` error contract, `configure()`,
+  `py.typed`, and an optional `yoghurt[pandas]` extra.
+
 ### Internal
 
 - `YahooRequestError` now exposes a public `body` attribute with Yahoo's raw

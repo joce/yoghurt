@@ -1,4 +1,4 @@
-"""Endpoint parameter metadata and coercion."""
+"""Endpoint parameter metadata, coercion, and request building."""
 
 from __future__ import annotations
 
