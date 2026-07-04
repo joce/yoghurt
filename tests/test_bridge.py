@@ -4,7 +4,7 @@ import asyncio
 
 import pytest
 
-from yoghurt._bridge import run  # pyright: ignore[reportPrivateUsage]
+from yoghurt._bridge import run
 
 _DOUBLED = 42
 
