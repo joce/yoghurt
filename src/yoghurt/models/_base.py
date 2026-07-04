@@ -18,7 +18,9 @@ class YahooModel(BaseModel):
     - ``extra="allow"``: unknown fields are preserved on ``model_extra``,
       never dropped — and the corpus coverage gate asserts ``model_extra``
       is EMPTY for every corpus capture, so any Yahoo drift fails loudly.
-    - ``str_strip_whitespace=True``: Yahoo pads some string fields.
+    - ``str_strip_whitespace=True``: Yahoo pads some string fields. This is
+      a quote-informed default carried into the shared base — future
+      endpoint families must confirm, not assume, that it holds.
     """
 
     model_config = ConfigDict(

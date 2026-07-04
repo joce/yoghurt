@@ -1,8 +1,10 @@
-"""Typed Yahoo response models.
+"""Typed Yahoo response models and quote enums.
 
 Every model here is a frozen pydantic model built on :class:`YahooModel`:
 snake_case fields, camelCase wire aliases, unknown fields preserved rather
-than dropped. See :mod:`yoghurt.models._base` for the full template.
+than dropped. See :mod:`yoghurt.models._base` for the full template. The
+package also carries the corpus-verified quote enums (:class:`QuoteType`,
+:class:`MarketState`, :class:`OptionType`, :class:`PriceAlertConfidence`).
 """
 
 from __future__ import annotations

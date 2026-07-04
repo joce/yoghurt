@@ -2,22 +2,20 @@
 
 from __future__ import annotations
 
-import json
-from pathlib import Path
-
 from yoghurt.models import MarketState, OptionType, PriceAlertConfidence, QuoteType
 
-_CORPUS_QUOTE_DIR = (
-    Path(__file__).resolve().parents[2] / "tests" / "fixtures" / "corpus" / "quote"
-)
 
+def _records_with_key(
+    records: list[dict[str, object]], key: str
+) -> list[dict[str, object]]:
+    """Filter to records carrying ``key``, asserting the key is universal."""
 
-def _quote_records() -> list[dict[str, object]]:
-    records: list[dict[str, object]] = []
-    for path in sorted(_CORPUS_QUOTE_DIR.glob("*.json")):
-        payload = json.loads(path.read_text(encoding="utf-8"))
-        records.extend(payload.get("quoteResponse", {}).get("result", []))
-    return records
+    with_key = [r for r in records if key in r]
+    message = (
+        f"{key} present on {len(with_key)}/{len(records)} records, expected universal"
+    )
+    assert len(with_key) == len(records), message
+    return with_key
 
 
 def test_quote_type_is_str_enum() -> None:
@@ -26,37 +24,34 @@ def test_quote_type_is_str_enum() -> None:
     assert QuoteType.EQUITY == "EQUITY"
 
 
-def test_corpus_quote_type_values_all_construct() -> None:
+def test_corpus_quote_type_values_all_construct(
+    quote_corpus_records: list[dict[str, object]],
+) -> None:
     """Every quoteType value seen in the corpus maps to a QuoteType member."""
 
-    records = _quote_records()
-    assert records, "expected at least one quote corpus record"
-    with_key = [r for r in records if "quoteType" in r]
-    assert len(with_key) == len(records), "quoteType is not universal in corpus"
-    for record in with_key:
+    assert quote_corpus_records, "expected at least one quote corpus record"
+    for record in _records_with_key(quote_corpus_records, "quoteType"):
         QuoteType(record["quoteType"])
 
 
-def test_corpus_market_state_values_all_construct() -> None:
+def test_corpus_market_state_values_all_construct(
+    quote_corpus_records: list[dict[str, object]],
+) -> None:
     """Every marketState value seen in the corpus maps to a MarketState member."""
 
-    records = _quote_records()
-    assert records, "expected at least one quote corpus record"
-    with_key = [r for r in records if "marketState" in r]
-    assert len(with_key) == len(records), "marketState is not universal in corpus"
-    for record in with_key:
+    assert quote_corpus_records, "expected at least one quote corpus record"
+    for record in _records_with_key(quote_corpus_records, "marketState"):
         MarketState(record["marketState"])
 
 
-def test_corpus_price_alert_confidence_values_all_construct() -> None:
+def test_corpus_price_alert_confidence_values_all_construct(
+    quote_corpus_records: list[dict[str, object]],
+) -> None:
     """Every customPriceAlertConfidence value maps to a PriceAlertConfidence."""
 
-    records = _quote_records()
-    assert records, "expected at least one quote corpus record"
+    assert quote_corpus_records, "expected at least one quote corpus record"
     key = "customPriceAlertConfidence"
-    with_key = [r for r in records if key in r]
-    assert len(with_key) == len(records), f"{key} is not universal in corpus"
-    for record in with_key:
+    for record in _records_with_key(quote_corpus_records, key):
         PriceAlertConfidence(record[key])
 
 
