@@ -830,10 +830,14 @@ def raw(
     """Call an arbitrary Yahoo path with pre-serialized wire params.
 
     This is the escape hatch: no path template, no param coercion or
-    validation, and no envelope lookup or error-code mapping — the response
-    body is parsed and returned exactly as Yahoo sent it. A malformed body
-    raises ``YahooApiError`` (code ``"malformed-response"``) via
-    :func:`yoghurt._core.call_raw`.
+    validation, and no envelope lookup on a *successful* response — a
+    200 body is parsed and returned exactly as Yahoo sent it (a malformed
+    body still raises ``YahooApiError``, code ``"malformed-response"``).
+    HTTP-level failures are, however, still routed through the library's
+    usual error mapping (:func:`yoghurt._core.map_http_error`): an HTTP
+    error response whose body carries a recognizable Yahoo error envelope
+    or a ``{"detail": ...}`` shape raises ``YahooApiError``; other HTTP
+    failures raise ``YahooRequestError``.
 
     Returns:
         dict[str, Any]: The parsed response payload.

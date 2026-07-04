@@ -206,6 +206,11 @@ def configure(
 
     Must be called before the first data call; raises RuntimeError after.
 
+    Each call replaces the *entire* option set, not just the kwargs you
+    pass: any kwarg you omit reverts to its default shown above, even if a
+    previous call set it explicitly. There is no merging across calls.
+    Prefer a single ``configure()`` call with every option you need.
+
     Raises:
         RuntimeError: If the shared client has already been created.
     """

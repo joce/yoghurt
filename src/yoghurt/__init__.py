@@ -84,13 +84,18 @@ def __getattr__(name: str) -> Any:  # noqa: ANN401 - PEP 562 module __getattr__
 
 
 def __dir__() -> list[str]:
-    """List the full public surface, including not-yet-resolved lazy names.
+    """List the public surface plus module dunders, hiding internal imports.
+
+    Module-level helpers such as ``importlib`` and ``TYPE_CHECKING`` live in
+    ``globals()`` too, but they are implementation details, not public API;
+    only ``__all__`` and the module's own dunder attributes are surfaced for
+    ``dir()`` and tab completion.
 
     Returns:
         list[str]: Sorted module attributes for ``dir()`` and tab completion.
     """
 
-    return sorted(set(globals()) | set(__all__))
+    return sorted(set(__all__) | {name for name in globals() if name.startswith("__")})
 
 
 __all__ = [

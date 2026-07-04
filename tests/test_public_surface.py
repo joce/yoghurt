@@ -7,6 +7,8 @@ import sys
 import zipfile
 from pathlib import Path
 
+import pytest
+
 import yoghurt
 
 
@@ -57,6 +59,16 @@ def test_all_is_sorted_and_unique() -> None:
     assert names == sorted(names)
 
 
+def test_dir_hides_internal_imports() -> None:
+    """dir() surfaces the public API and dunders, not internal module imports."""
+
+    names = dir(yoghurt)
+    assert "importlib" not in names
+    assert "TYPE_CHECKING" not in names
+    assert set(yoghurt.__all__) <= set(names)
+
+
+@pytest.mark.timeout(60)
 def test_py_typed_ships_in_wheel(tmp_path: Path) -> None:
     """PEP 561 marker must reach the wheel."""
 
