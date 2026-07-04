@@ -30,6 +30,9 @@ if TYPE_CHECKING:
     # lazily via __getattr__ below so importing the yoghurt package does not
     # pay polars' import cost just to run the CLI (which imports the package
     # by virtue of yoghurt.cli being a submodule).
+    # Keep this block in manual parity with __all__ and __getattr__'s routing:
+    # a name in one but not the other diverges pyright's view from runtime
+    # (test_all_names_are_importable is the runtime drift gate).
     from yoghurt.api import (
         Ticker,
         market_info,
@@ -65,14 +68,29 @@ def __getattr__(name: str) -> Any:  # noqa: ANN401 - PEP 562 module __getattr__
         AttributeError: If ``name`` is not a lazily-exported attribute.
     """
 
-    if name not in __all__ or name == "__version__":
+    frames_names = {"Chart", "Frame"}
+    lazy_names = set(__all__) - {"__version__"} - set(globals())
+    if name in frames_names:
+        module_name = "yoghurt.frames"
+    elif name in lazy_names:
+        module_name = "yoghurt.api"
+    else:
         message = f"module {__name__!r} has no attribute {name!r}"
         raise AttributeError(message)
-    module_name = "yoghurt.frames" if name in {"Chart", "Frame"} else "yoghurt.api"
     module = importlib.import_module(module_name)
     value = getattr(module, name)
     globals()[name] = value
     return value
+
+
+def __dir__() -> list[str]:
+    """List the full public surface, including not-yet-resolved lazy names.
+
+    Returns:
+        list[str]: Sorted module attributes for ``dir()`` and tab completion.
+    """
+
+    return sorted(set(globals()) | set(__all__))
 
 
 __all__ = [
