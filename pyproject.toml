@@ -78,7 +78,7 @@ py_version = "auto"
 skip = ["__pycache__", ".venv", ".uv-cache", ".git", ".pytest_cache", ".tox"]
 
 [tool.pyright]
-include = ["src", "tests"]
+include = ["src", "tests", "tools"]
 exclude = ["src/yoghurt/_version.py"]
 typeCheckingMode = "strict"
 
@@ -91,8 +91,12 @@ reportUnknownLambdaType = false
 reportUnknownParameterType = false
 reportMissingTypeStubs = false
 
+[[tool.pyright.executionEnvironments]]
+root = "tools"
+reportPrivateUsage = false
+
 [tool.pytest.ini_options]
-pythonpath = "src"
+pythonpath = ["src", "."]
 testpaths = ["tests"]
 timeout = 10
 asyncio_mode = "auto"
@@ -215,6 +219,11 @@ preview = true
     "PLC2701",
     "S101",
     "SLF001",
+]
+"tools/*" = [
+    "T201",     # print: probe is a console tool
+    "PLC2701",  # private import: deliberately reuses yoghurt.cli internals
+    "SLF001",   # same
 ]
 
 [tool.ruff.lint.pydocstyle]
