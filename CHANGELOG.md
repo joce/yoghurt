@@ -50,6 +50,18 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `YahooApiError("malformed-response")` because Yahoo serves invalid JSON
   for that type (every symbol, even requested alone); keep it out of `type`
   lists until Yahoo fixes the feed.
+- Epoch fields on the option and chart models now carry date/datetime
+  meaning instead of bare wire ints: `OptionContract.expiration`,
+  `OptionExpiration.expiration_date`, and `OptionChain.expiration_dates`
+  are `datetime.date`/`list[datetime.date]`; `OptionContract.last_trade_date`
+  and `ChartDividend.date` are aware UTC `datetime.datetime`. `ChartMeta`
+  gained `regular_market_datetime`/`first_trade_datetime` and
+  `TradingPeriod` gained `start_datetime`/`end_datetime` `cached_property`
+  conveniences (the latter localized via a fixed `gmtoffset`, since its
+  `timezone` field is a short abbreviation `ZoneInfo` cannot resolve).
+  `Quote` gained matching `earnings_call_datetime_start`/
+  `earnings_call_datetime_end` conveniences for parity with its other
+  epoch fields.
 
 ### Internal
 

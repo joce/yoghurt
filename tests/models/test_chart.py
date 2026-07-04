@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import datetime
 import json
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import pytest
 
@@ -28,7 +30,10 @@ _AAPL_POST_END = 1783036800
 _AAPL_SPARK_PERIOD_START = 1782999000
 _AAPL_SPARK_PERIOD_END = 1783022400
 _AAPL_SPARK_PERIOD_GMTOFFSET = -14400
-_MSFT_FIRST_DIVIDEND_DATE = 1755783000
+_MSFT_FIRST_DIVIDEND_DATE_EPOCH = 1755783000
+_MSFT_FIRST_DIVIDEND_DATE = datetime.datetime.fromtimestamp(
+    _MSFT_FIRST_DIVIDEND_DATE_EPOCH, tz=datetime.timezone.utc
+)
 
 
 def _load_chart_meta(filename: str) -> dict[str, object]:
@@ -116,6 +121,81 @@ def test_chart_events_validates_msft_dividends_block() -> None:
     assert first.amount == pytest.approx(0.83)
     assert first.date == _MSFT_FIRST_DIVIDEND_DATE
     assert chart_events.model_extra in (None, {})
+
+
+def test_chart_meta_datetime_conveniences_match_quote_style_localization() -> None:
+    """regular_market_datetime/first_trade_datetime localize like Quote's conveniences.
+
+    Computes the expected values independently with ``zoneinfo`` against the
+    raw epoch fields, rather than trusting the implementation under test.
+    """
+
+    meta = _load_chart_meta("AAPL.json")
+    chart_meta = ChartMeta.model_validate(meta)
+    tz = ZoneInfo(chart_meta.exchange_timezone_name)
+
+    assert chart_meta.regular_market_datetime == datetime.datetime.fromtimestamp(
+        chart_meta.regular_market_time, tz
+    )
+    assert chart_meta.regular_market_datetime.tzinfo is not None
+    assert chart_meta.first_trade_datetime == datetime.datetime.fromtimestamp(
+        chart_meta.first_trade_date, tz
+    )
+    assert chart_meta.first_trade_datetime.tzinfo is not None
+
+
+def test_chart_meta_datetime_conveniences_are_cached() -> None:
+    """Repeated access returns the identical object, proving caching."""
+
+    meta = _load_chart_meta("AAPL.json")
+    chart_meta = ChartMeta.model_validate(meta)
+
+    assert chart_meta.regular_market_datetime is chart_meta.regular_market_datetime
+    assert chart_meta.first_trade_datetime is chart_meta.first_trade_datetime
+
+
+def test_chart_meta_model_dump_excludes_datetime_convenience_properties() -> None:
+    """The convenience properties must never leak into the wire-shaped dump."""
+
+    meta = _load_chart_meta("AAPL.json")
+    chart_meta = ChartMeta.model_validate(meta)
+
+    # Access every property first so caching can't hide a leak.
+    _ = (chart_meta.regular_market_datetime, chart_meta.first_trade_datetime)
+
+    dumped = chart_meta.model_dump()
+
+    assert "regularMarketDatetime" not in dumped
+    assert "regular_market_datetime" not in dumped
+    assert "firstTradeDatetime" not in dumped
+    assert "first_trade_datetime" not in dumped
+
+
+def test_trading_period_datetimes_carry_fixed_gmtoffset() -> None:
+    """TradingPeriod's start_datetime/end_datetime use a fixed gmtoffset, not ZoneInfo.
+
+    The wire ``timezone`` field is a short abbreviation ("EDT") that
+    ZoneInfo cannot resolve, so the conveniences must localize via a fixed
+    offset built from ``gmtoffset`` instead.
+    """
+
+    meta = _load_chart_meta("AAPL.json")
+    chart_meta = ChartMeta.model_validate(meta)
+    period = chart_meta.current_trading_period.pre
+
+    expected_tzinfo = datetime.timezone(datetime.timedelta(seconds=period.gmtoffset))
+
+    assert period.start_datetime == datetime.datetime.fromtimestamp(
+        period.start, expected_tzinfo
+    )
+    assert period.start_datetime.utcoffset() == datetime.timedelta(
+        seconds=period.gmtoffset
+    )
+    assert period.end_datetime == datetime.datetime.fromtimestamp(
+        period.end, expected_tzinfo
+    )
+    assert period.start_datetime is period.start_datetime
+    assert period.end_datetime is period.end_datetime
 
 
 def test_chart_meta_repr_is_compact_and_symbol_forward() -> None:

@@ -133,6 +133,35 @@ def test_datetime_conveniences_convert_epoch_to_aware_datetime() -> None:
     assert quote.regular_market_datetime.tzinfo is not None
 
 
+def test_earnings_call_datetime_conveniences_match_quote_style_localization() -> None:
+    """earnings_call_datetime_start/end mirror the other seven conveniences' pattern.
+
+    Computes the expected values independently with ``zoneinfo`` against
+    AAPL_default.json's raw epoch fields, rather than trusting the
+    implementation under test.
+    """
+
+    record = _load_record("AAPL_default.json")
+    quote = Quote.model_validate(record)
+    tz = ZoneInfo(quote.exchange_timezone_name)
+
+    assert quote.earnings_call_timestamp_start is not None
+    assert quote.earnings_call_datetime_start is not None
+    assert quote.earnings_call_datetime_start == datetime.datetime.fromtimestamp(
+        quote.earnings_call_timestamp_start, tz
+    )
+    assert quote.earnings_call_datetime_start.tzinfo is not None
+    assert quote.earnings_call_timestamp_end is not None
+    assert quote.earnings_call_datetime_end is not None
+    assert quote.earnings_call_datetime_end == datetime.datetime.fromtimestamp(
+        quote.earnings_call_timestamp_end, tz
+    )
+    assert quote.earnings_call_datetime_end.tzinfo is not None
+
+    assert quote.earnings_call_datetime_start is quote.earnings_call_datetime_start
+    assert quote.earnings_call_datetime_end is quote.earnings_call_datetime_end
+
+
 def test_pre_market_datetime_is_none_when_source_field_absent() -> None:
     """AAPL's record has no preMarketTime key; the convenience must propagate that."""
 
@@ -178,11 +207,13 @@ def test_model_dump_excludes_datetime_convenience_properties() -> None:
     specifically so ``model_dump()`` stays wire-shaped.
     """
 
-    record = _load_record("AAPL.json")
+    record = _load_record("AAPL_default.json")
     quote = Quote.model_validate(record)
 
     # Access every property first so caching can't hide a leak.
     _ = (
+        quote.earnings_call_datetime_end,
+        quote.earnings_call_datetime_start,
         quote.earnings_datetime,
         quote.earnings_datetime_end,
         quote.earnings_datetime_start,
@@ -200,6 +231,10 @@ def test_model_dump_excludes_datetime_convenience_properties() -> None:
     assert "regular_market_datetime" not in dumped
     assert "firstTradeDatetime" not in dumped
     assert "first_trade_datetime" not in dumped
+    assert "earningsCallDatetimeStart" not in dumped
+    assert "earnings_call_datetime_start" not in dumped
+    assert "earningsCallDatetimeEnd" not in dumped
+    assert "earnings_call_datetime_end" not in dumped
 
 
 def test_repr_is_compact_and_symbol_forward() -> None:

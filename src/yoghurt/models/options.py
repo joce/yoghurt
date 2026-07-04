@@ -17,16 +17,28 @@ refresh. Reconciliation notes:
   sample: ``ask``, ``bid``, ``change``, ``impliedVolatility``,
   ``lastPrice``, ``percentChange``, and ``strike`` are consistently
   ``float``; ``contractSize``, ``contractSymbol``, and ``currency`` are
-  ``str``; ``expiration``, ``lastTradeDate``, ``openInterest``, and
-  ``volume`` are epoch/count ``int``; ``inTheMoney`` is ``bool``.
+  ``str``; ``openInterest`` and ``volume`` are ``int``; ``inTheMoney`` is
+  ``bool``.
+- Per the coordinator ruling on epoch fields (see ``AGENTS.md``):
+  ``expiration`` is a calendar-date epoch, verified midnight-UTC-aligned
+  on every one of the 365 corpus contracts, and is typed
+  ``datetime.date``. ``lastTradeDate`` is a point-in-time epoch with no
+  in-model timezone context (unlike ``Quote``, ``OptionContract`` carries
+  no exchange timezone field), so it is typed an aware UTC
+  ``datetime.datetime``.
 - ``OptionExpiration``'s four keys (``calls``, ``expirationDate``,
   ``hasMiniOptions``, ``puts``) are universal across all 3 captures'
   ``options[]`` entries (each capture carries exactly one).
+  ``expirationDate`` is the same calendar-date epoch shape as
+  ``OptionContract.expiration`` (verified midnight-UTC-aligned) and is
+  likewise typed ``datetime.date``.
 - ``OptionChain``'s six top-level keys are universal across all 3
   captures' ``optionChain.result[0]`` records, including the embedded
   ``quote``, which validates as :class:`~yoghurt.models.quote.Quote` with
   zero extras on every capture — the first cross-model reuse in this
-  package.
+  package. ``expirationDates`` is a list of the same calendar-date epoch
+  shape (verified midnight-UTC-aligned) and is typed
+  ``list[datetime.date]``.
 - Applicability-line wording: this family's "kinds" (call/put contracts,
   or the chain as a whole) are not instrument types the way quoteType or
   instrumentType are elsewhere in this package. Contract fields use
@@ -38,6 +50,8 @@ refresh. Reconciliation notes:
 """
 
 from __future__ import annotations
+
+import datetime  # noqa: TC003 - required at runtime for pydantic field resolution
 
 from yoghurt.models._base import YahooModel
 from yoghurt.models.quote import Quote  # noqa: TC001 - required for serialization
@@ -88,9 +102,13 @@ class OptionContract(YahooModel):
     Observed on: call, put contracts.
     """
 
-    expiration: int
+    expiration: datetime.date
     """
-    Expiration date of the contract, as an epoch timestamp in seconds.
+    Expiration date of the contract.
+
+    Wire value is a midnight-UTC-aligned epoch timestamp in seconds;
+    pydantic converts it to a UTC calendar date (verified against every
+    corpus contract).
 
     Observed on: call, put contracts.
     """
@@ -117,10 +135,13 @@ class OptionContract(YahooModel):
     Observed on: call, put contracts.
     """
 
-    last_trade_date: int
+    last_trade_date: datetime.datetime
     """
-    Date and time of the contract's most recent trade, as an epoch
-    timestamp in seconds.
+    Date and time of the contract's most recent trade.
+
+    Wire value is an epoch timestamp in seconds with no in-model timezone
+    context to localize against; pydantic converts it to an aware UTC
+    datetime.
 
     Observed on: call, put contracts.
     """
@@ -167,10 +188,13 @@ class OptionExpiration(YahooModel):
     Observed on option chain expirations.
     """
 
-    expiration_date: int
+    expiration_date: datetime.date
     """
-    Expiration date for this set of contracts, as an epoch timestamp in
-    seconds.
+    Expiration date for this set of contracts.
+
+    Wire value is a midnight-UTC-aligned epoch timestamp in seconds;
+    pydantic converts it to a UTC calendar date (verified against every
+    corpus expiration).
 
     Observed on option chain expirations.
     """
@@ -194,10 +218,13 @@ class OptionExpiration(YahooModel):
 class OptionChain(YahooModel):
     """The ``optionChain.result[0]`` record: a symbol's full option chain."""
 
-    expiration_dates: list[int]
+    expiration_dates: list[datetime.date]
     """
-    Every expiration date Yahoo offers for this symbol, as epoch
-    timestamps in seconds.
+    Every expiration date Yahoo offers for this symbol.
+
+    Wire values are midnight-UTC-aligned epoch timestamps in seconds;
+    pydantic converts each to a UTC calendar date (verified against every
+    corpus value).
 
     Observed on option chains.
     """

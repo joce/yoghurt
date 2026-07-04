@@ -74,6 +74,7 @@ When adding or editing a CLI command:
 - Fields are declared in alphabetical order; the coverage gate asserts it.
 - Nested payload objects become nested YahooModel sub-models — never dict fields; keyed collections are dict[str, SubModel].
 - Convenience accessors are plain functools.cached_property, never pydantic computed_field: model_dump() stays wire-shaped.
+- Epoch fields are never bare ints in meaning: calendar-date epochs (midnight-UTC-aligned) type as `datetime.date` directly; point-in-time epochs with in-model timezone context keep the wire `int` plus a localized `@cached_property` datetime; point-in-time epochs without in-model timezone context type as aware-UTC `datetime.datetime` directly.
 - Every model ships a corpus coverage gate: every relevant corpus record validates with EMPTY extras at EVERY nesting level (tests/conftest.py::collect_nested_extras), and the required-field set is pinned to the presence report.
 - Validation failures surface as YahooApiError(code="model-validation") via yoghurt.models.validate_model(); pydantic never leaks through the public API.
 - Large models get a compact custom __repr__ (symbol-forward); __str__ only if it adds real value.

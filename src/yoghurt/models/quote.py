@@ -28,6 +28,12 @@ Overall reconciliation notes:
   wire values are title-cased (``"Call"``, ``"Put"``), so the field is
   typed with the dedicated :class:`OptionsType` enum, which carries that
   casing.
+- ``earnings_call_datetime_start``/``earnings_call_datetime_end`` were
+  added for parity with this model's other epoch fields (per the
+  three-tier epoch ruling in ``AGENTS.md``): ``earnings_call_timestamp_start``/
+  ``_end`` are point-in-time epochs with in-model timezone context
+  (``exchange_timezone_name``), the same shape as ``earnings_timestamp``,
+  so they get the same ``@cached_property`` treatment.
 """
 
 from __future__ import annotations
@@ -1068,6 +1074,24 @@ class Quote(YahooModel):
     """
 
     # --- Convenience accessors (not part of the wire model) ---
+
+    @cached_property
+    def earnings_call_datetime_end(self) -> datetime.datetime | None:
+        """Date and time of the end of the company's earnings call.
+
+        Availability mirrors ``earnings_call_timestamp_end``.
+        """
+
+        return self._get_datetime(self.earnings_call_timestamp_end)
+
+    @cached_property
+    def earnings_call_datetime_start(self) -> datetime.datetime | None:
+        """Date and time of the start of the company's earnings call.
+
+        Availability mirrors ``earnings_call_timestamp_start``.
+        """
+
+        return self._get_datetime(self.earnings_call_timestamp_start)
 
     @cached_property
     def earnings_datetime(self) -> datetime.datetime | None:

@@ -22,20 +22,39 @@ corpus refresh. Reconciliation notes:
 - ``instrument_type`` is typed :class:`~yoghurt.models.enums.QuoteType`: every
   observed ``instrumentType`` value (CRYPTOCURRENCY, CURRENCY, EQUITY, ETF,
   FUTURE, INDEX, MUTUALFUND) is a ``QuoteType`` member.
-- ``first_trade_date`` and ``regular_market_time`` are epoch seconds; kept as
-  plain ``int`` per the :class:`~yoghurt.models.quote.Quote` template
-  (datetime conveniences are derived, not stored).
+- ``first_trade_date`` and ``regular_market_time`` are point-in-time epochs
+  with in-model timezone context (``exchange_timezone_name``): per the
+  three-tier epoch ruling (see ``AGENTS.md``), the wire ``int`` stays and
+  each gets a ``first_trade_datetime``/``regular_market_datetime``
+  ``@cached_property`` convenience localized via
+  :class:`~zoneinfo.ZoneInfo`, mirroring the
+  :class:`~yoghurt.models.quote.Quote` template.
+- ``TradingPeriod.start``/``end`` are point-in-time epochs whose only
+  in-model timezone context is a short abbreviation (``timezone``, for
+  example ``"EDT"``) that :class:`~zoneinfo.ZoneInfo` cannot resolve, so
+  their ``start_datetime``/``end_datetime`` conveniences localize via a
+  fixed-offset timezone built from ``gmtoffset`` instead.
 - Chart events (``chart.result[0].events``) are observed only as a
   ``dividends`` block keyed by epoch-second string
   (``MSFT_1y_events.json``, ``BAC-PL.json``); no capture has ever shown
   ``splits`` or ``earnings``, so ``ChartSplit`` is modeled from prior use
   only and earnings events are deliberately not modeled at all.
+  ``ChartDividend.date`` is confirmed (against every observed entry) to be
+  a session timestamp rather than a midnight-aligned calendar date, and
+  carries no in-model timezone context, so it is typed an aware UTC
+  ``datetime.datetime`` despite its wire name — the ruling's Tier 3.
+  ``ChartSplit.date`` is unobserved and out of the ruling's scope, so it
+  stays a plain epoch ``int`` pending real evidence.
 - The applicability lines below use "Observed on: <types> charts." rather
   than "quotes.", since the evidence stream here is chart/spark meta
   records (kind = instrumentType), not quoteResponse records.
 """
 
 from __future__ import annotations
+
+import datetime
+from functools import cached_property
+from zoneinfo import ZoneInfo
 
 from pydantic import Field
 
@@ -58,6 +77,9 @@ class TradingPeriod(YahooModel):
     """
     End of the trading period, as an epoch timestamp in seconds.
 
+    See ``end_datetime`` for a timezone-aware convenience localized via a
+    fixed offset built from ``gmtoffset``.
+
     Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
     MUTUALFUND charts.
     """
@@ -74,6 +96,9 @@ class TradingPeriod(YahooModel):
     """
     Start of the trading period, as an epoch timestamp in seconds.
 
+    See ``start_datetime`` for a timezone-aware convenience localized via a
+    fixed offset built from ``gmtoffset``.
+
     Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
     MUTUALFUND charts.
     """
@@ -85,6 +110,46 @@ class TradingPeriod(YahooModel):
     Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
     MUTUALFUND charts.
     """
+
+    # --- Convenience accessors (not part of the wire model) ---
+
+    @cached_property
+    def start_datetime(self) -> datetime.datetime:
+        """Start of the trading period as an aware datetime.
+
+        ``timezone`` is a short abbreviation (for example ``"EDT"``) that
+        :class:`~zoneinfo.ZoneInfo` cannot resolve, so this localizes via a
+        fixed-offset timezone built from ``gmtoffset`` instead of anchoring
+        to a named zone.
+
+        Availability mirrors ``start``.
+        """
+
+        return datetime.datetime.fromtimestamp(self.start, self._fixed_offset())
+
+    @cached_property
+    def end_datetime(self) -> datetime.datetime:
+        """End of the trading period as an aware datetime.
+
+        ``timezone`` is a short abbreviation (for example ``"EDT"``) that
+        :class:`~zoneinfo.ZoneInfo` cannot resolve, so this localizes via a
+        fixed-offset timezone built from ``gmtoffset`` instead of anchoring
+        to a named zone.
+
+        Availability mirrors ``end``.
+        """
+
+        return datetime.datetime.fromtimestamp(self.end, self._fixed_offset())
+
+    def _fixed_offset(self) -> datetime.timezone:
+        """Build the fixed-offset timezone backing this period's datetimes.
+
+        Returns:
+            A fixed-offset timezone built from ``gmtoffset``, since
+            ``timezone`` is a short abbreviation ZoneInfo cannot resolve.
+        """
+
+        return datetime.timezone(datetime.timedelta(seconds=self.gmtoffset))
 
 
 class CurrentTradingPeriod(YahooModel):
@@ -192,6 +257,9 @@ class ChartMeta(YahooModel):
     """
     Epoch timestamp in seconds of the first trade of this security.
 
+    See ``first_trade_datetime`` for a timezone-aware convenience localized
+    via ``exchange_timezone_name``.
+
     Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
     MUTUALFUND charts.
     """
@@ -293,6 +361,9 @@ class ChartMeta(YahooModel):
     Epoch timestamp in seconds of the most recent trade in the regular
     trading session.
 
+    See ``regular_market_datetime`` for a timezone-aware convenience
+    localized via ``exchange_timezone_name``.
+
     Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
     MUTUALFUND charts.
     """
@@ -359,6 +430,39 @@ class ChartMeta(YahooModel):
     MUTUALFUND charts.
     """
 
+    # --- Convenience accessors (not part of the wire model) ---
+
+    @cached_property
+    def regular_market_datetime(self) -> datetime.datetime:
+        """Date and time of the most recent trade in the regular trading session.
+
+        Availability mirrors ``regular_market_time``.
+        """
+
+        return self._get_datetime(self.regular_market_time)
+
+    @cached_property
+    def first_trade_datetime(self) -> datetime.datetime:
+        """Date and time of the first trade of this security.
+
+        Availability mirrors ``first_trade_date``.
+        """
+
+        return self._get_datetime(self.first_trade_date)
+
+    def _get_datetime(self, timestamp: int) -> datetime.datetime:
+        """Convert an epoch timestamp in seconds to an aware datetime.
+
+        Args:
+            timestamp: Epoch timestamp in UTC seconds.
+
+        Returns:
+            Timezone-aware datetime anchored to ``exchange_timezone_name``.
+        """
+
+        tz_info = ZoneInfo(self.exchange_timezone_name)
+        return datetime.datetime.fromtimestamp(timestamp, tz_info)
+
     def __repr__(self) -> str:
         """Return a compact developer-friendly representation."""
 
@@ -379,11 +483,18 @@ class ChartDividend(YahooModel):
     Not observed in the corpus; known from prior use on EQUITY charts.
     """
 
-    date: int
+    date: datetime.datetime
     """
-    Epoch timestamp in seconds of the dividend event.
+    Date and time of the dividend event.
 
-    Not observed in the corpus; known from prior use on EQUITY charts.
+    Despite the wire name ``date``, the value is a session timestamp (for
+    example, 13:30 UTC on a US market day), not a midnight-aligned
+    calendar date — confirmed against every observed dividend entry in the
+    corpus. There is no in-model timezone context to localize against, so
+    pydantic converts the epoch-seconds wire value to an aware UTC
+    datetime; the field keeps its wire name despite the type.
+
+    Observed on: EQUITY charts.
     """
 
 
