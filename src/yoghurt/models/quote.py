@@ -1073,7 +1073,7 @@ class Quote(YahooModel):
     def earnings_datetime(self) -> datetime.datetime | None:
         """Date and time of the company's earnings announcement.
 
-        Applies to EQUITY quotes.
+        Availability mirrors ``earnings_timestamp``.
         """
 
         return self._get_datetime(self.earnings_timestamp)
@@ -1082,7 +1082,7 @@ class Quote(YahooModel):
     def earnings_datetime_end(self) -> datetime.datetime | None:
         """Date and time of the end of the company's earnings announcement.
 
-        Applies to EQUITY quotes.
+        Availability mirrors ``earnings_timestamp_end``.
         """
 
         return self._get_datetime(self.earnings_timestamp_end)
@@ -1091,7 +1091,7 @@ class Quote(YahooModel):
     def earnings_datetime_start(self) -> datetime.datetime | None:
         """Date and time of the start of the company's earnings announcement.
 
-        Applies to EQUITY quotes.
+        Availability mirrors ``earnings_timestamp_start``.
         """
 
         return self._get_datetime(self.earnings_timestamp_start)

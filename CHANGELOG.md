@@ -20,8 +20,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
-- `Ticker.quote()` and `Ticker.quotes()` now return typed `Quote` models
-  instead of raw dicts.
+- `Ticker.quote()` and the module-level `quotes()` now return typed `Quote`
+  models instead of raw dicts.
 
 ### Internal
 
