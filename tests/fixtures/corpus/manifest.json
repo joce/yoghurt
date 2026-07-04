@@ -1,0 +1,2469 @@
+{
+  "_meta": {
+    "case_count": 242,
+    "fetched_at": "2026-07-04T04:19:33.191324+00:00"
+  },
+  "analyst/AAPL": {
+    "argv": [
+      "analyst",
+      "AAPL"
+    ],
+    "file": "analyst/AAPL.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "analyst/MSFT": {
+    "argv": [
+      "analyst",
+      "MSFT"
+    ],
+    "file": "analyst/MSFT.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "analyst/RY.TO": {
+    "argv": [
+      "analyst",
+      "RY.TO"
+    ],
+    "detail": "Yahoo request rejected with HTTP 404 for https://query1.finance.yahoo.com/ws/mad/v2/analyst/symbol/RY.TO?debug_flag=false&lang=en-US&region=US",
+    "file": "analyst/RY.TO.json",
+    "http_status": 404,
+    "status": "http_error"
+  },
+  "analyst/ZZZZXYZQ": {
+    "argv": [
+      "analyst",
+      "ZZZZXYZQ"
+    ],
+    "detail": "Yahoo request rejected with HTTP 404 for https://query1.finance.yahoo.com/ws/mad/v2/analyst/symbol/ZZZZXYZQ?debug_flag=false&lang=en-US&region=US",
+    "file": "analyst/ZZZZXYZQ.json",
+    "http_status": 404,
+    "status": "http_error"
+  },
+  "calendar-events/0700.HK": {
+    "argv": [
+      "calendar-events",
+      "0700.HK"
+    ],
+    "file": "calendar-events/0700.HK.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "calendar-events/7203.T": {
+    "argv": [
+      "calendar-events",
+      "7203.T"
+    ],
+    "file": "calendar-events/7203.T.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "calendar-events/AAPL": {
+    "argv": [
+      "calendar-events",
+      "AAPL"
+    ],
+    "file": "calendar-events/AAPL.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "calendar-events/AAPL_economicEvents": {
+    "argv": [
+      "calendar-events",
+      "AAPL",
+      "--modules",
+      "economicEvents"
+    ],
+    "file": "calendar-events/AAPL_economicEvents.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "calendar-events/AAPL_ipoEvents": {
+    "argv": [
+      "calendar-events",
+      "AAPL",
+      "--modules",
+      "ipoEvents"
+    ],
+    "file": "calendar-events/AAPL_ipoEvents.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "calendar-events/AAPL_secReports": {
+    "argv": [
+      "calendar-events",
+      "AAPL",
+      "--modules",
+      "secReports"
+    ],
+    "file": "calendar-events/AAPL_secReports.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "calendar-events/BABA": {
+    "argv": [
+      "calendar-events",
+      "BABA"
+    ],
+    "file": "calendar-events/BABA.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "calendar-events/BAC-PL": {
+    "argv": [
+      "calendar-events",
+      "BAC-PL"
+    ],
+    "file": "calendar-events/BAC-PL.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "calendar-events/BTC-USD": {
+    "argv": [
+      "calendar-events",
+      "BTC-USD"
+    ],
+    "file": "calendar-events/BTC-USD.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "calendar-events/CL=F": {
+    "argv": [
+      "calendar-events",
+      "CL=F"
+    ],
+    "file": "calendar-events/CL_F.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "calendar-events/ES=F": {
+    "argv": [
+      "calendar-events",
+      "ES=F"
+    ],
+    "file": "calendar-events/ES_F.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "calendar-events/EURUSD=X": {
+    "argv": [
+      "calendar-events",
+      "EURUSD=X"
+    ],
+    "file": "calendar-events/EURUSD_X.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "calendar-events/MSFT": {
+    "argv": [
+      "calendar-events",
+      "MSFT"
+    ],
+    "file": "calendar-events/MSFT.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "calendar-events/OKLO": {
+    "argv": [
+      "calendar-events",
+      "OKLO"
+    ],
+    "file": "calendar-events/OKLO.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "calendar-events/QQQ": {
+    "argv": [
+      "calendar-events",
+      "QQQ"
+    ],
+    "file": "calendar-events/QQQ.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "calendar-events/RY.TO": {
+    "argv": [
+      "calendar-events",
+      "RY.TO"
+    ],
+    "file": "calendar-events/RY.TO.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "calendar-events/SHEL.L": {
+    "argv": [
+      "calendar-events",
+      "SHEL.L"
+    ],
+    "file": "calendar-events/SHEL.L.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "calendar-events/SPY": {
+    "argv": [
+      "calendar-events",
+      "SPY"
+    ],
+    "file": "calendar-events/SPY.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "calendar-events/VT": {
+    "argv": [
+      "calendar-events",
+      "VT"
+    ],
+    "file": "calendar-events/VT.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "calendar-events/VTSAX": {
+    "argv": [
+      "calendar-events",
+      "VTSAX"
+    ],
+    "file": "calendar-events/VTSAX.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "calendar-events/^DJI": {
+    "argv": [
+      "calendar-events",
+      "^DJI"
+    ],
+    "file": "calendar-events/_DJI.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "calendar-events/^GSPC": {
+    "argv": [
+      "calendar-events",
+      "^GSPC"
+    ],
+    "file": "calendar-events/_GSPC.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "calendar-events/^IRX": {
+    "argv": [
+      "calendar-events",
+      "^IRX"
+    ],
+    "file": "calendar-events/_IRX.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "calendar-events/^IXIC": {
+    "argv": [
+      "calendar-events",
+      "^IXIC"
+    ],
+    "file": "calendar-events/_IXIC.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "calendar-events/^TNX": {
+    "argv": [
+      "calendar-events",
+      "^TNX"
+    ],
+    "file": "calendar-events/_TNX.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "chart/0700.HK": {
+    "argv": [
+      "chart",
+      "0700.HK",
+      "--period1",
+      "2026-06-29",
+      "--period2",
+      "2026-07-03",
+      "--interval",
+      "1d"
+    ],
+    "file": "chart/0700.HK.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "chart/7203.T": {
+    "argv": [
+      "chart",
+      "7203.T",
+      "--period1",
+      "2026-06-29",
+      "--period2",
+      "2026-07-03",
+      "--interval",
+      "1d"
+    ],
+    "file": "chart/7203.T.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "chart/AAPL": {
+    "argv": [
+      "chart",
+      "AAPL",
+      "--period1",
+      "2026-06-29",
+      "--period2",
+      "2026-07-03",
+      "--interval",
+      "1d"
+    ],
+    "file": "chart/AAPL.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "chart/AAPL_1m": {
+    "argv": [
+      "chart",
+      "AAPL",
+      "--period1",
+      "2026-07-03T15:00:00Z",
+      "--period2",
+      "2026-07-03T16:00:00Z",
+      "--interval",
+      "1m"
+    ],
+    "file": "chart/AAPL_1m.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "chart/BABA": {
+    "argv": [
+      "chart",
+      "BABA",
+      "--period1",
+      "2026-06-29",
+      "--period2",
+      "2026-07-03",
+      "--interval",
+      "1d"
+    ],
+    "file": "chart/BABA.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "chart/BAC-PL": {
+    "argv": [
+      "chart",
+      "BAC-PL",
+      "--period1",
+      "2026-06-29",
+      "--period2",
+      "2026-07-03",
+      "--interval",
+      "1d"
+    ],
+    "file": "chart/BAC-PL.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "chart/BTC-USD": {
+    "argv": [
+      "chart",
+      "BTC-USD",
+      "--period1",
+      "2026-06-29",
+      "--period2",
+      "2026-07-03",
+      "--interval",
+      "1d"
+    ],
+    "file": "chart/BTC-USD.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "chart/CL=F": {
+    "argv": [
+      "chart",
+      "CL=F",
+      "--period1",
+      "2026-06-29",
+      "--period2",
+      "2026-07-03",
+      "--interval",
+      "1d"
+    ],
+    "file": "chart/CL_F.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "chart/ES=F": {
+    "argv": [
+      "chart",
+      "ES=F",
+      "--period1",
+      "2026-06-29",
+      "--period2",
+      "2026-07-03",
+      "--interval",
+      "1d"
+    ],
+    "file": "chart/ES_F.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "chart/EURUSD=X": {
+    "argv": [
+      "chart",
+      "EURUSD=X",
+      "--period1",
+      "2026-06-29",
+      "--period2",
+      "2026-07-03",
+      "--interval",
+      "1d"
+    ],
+    "file": "chart/EURUSD_X.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "chart/MSFT": {
+    "argv": [
+      "chart",
+      "MSFT",
+      "--period1",
+      "2026-06-29",
+      "--period2",
+      "2026-07-03",
+      "--interval",
+      "1d"
+    ],
+    "file": "chart/MSFT.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "chart/MSFT_1y_events": {
+    "argv": [
+      "chart",
+      "MSFT",
+      "--period1",
+      "2025-07-03",
+      "--period2",
+      "2026-07-03",
+      "--interval",
+      "1d",
+      "--events",
+      "div,split,earn"
+    ],
+    "file": "chart/MSFT_1y_events.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "chart/OKLO": {
+    "argv": [
+      "chart",
+      "OKLO",
+      "--period1",
+      "2026-06-29",
+      "--period2",
+      "2026-07-03",
+      "--interval",
+      "1d"
+    ],
+    "file": "chart/OKLO.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "chart/QQQ": {
+    "argv": [
+      "chart",
+      "QQQ",
+      "--period1",
+      "2026-06-29",
+      "--period2",
+      "2026-07-03",
+      "--interval",
+      "1d"
+    ],
+    "file": "chart/QQQ.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "chart/RY.TO": {
+    "argv": [
+      "chart",
+      "RY.TO",
+      "--period1",
+      "2026-06-29",
+      "--period2",
+      "2026-07-03",
+      "--interval",
+      "1d"
+    ],
+    "file": "chart/RY.TO.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "chart/SHEL.L": {
+    "argv": [
+      "chart",
+      "SHEL.L",
+      "--period1",
+      "2026-06-29",
+      "--period2",
+      "2026-07-03",
+      "--interval",
+      "1d"
+    ],
+    "file": "chart/SHEL.L.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "chart/SPY": {
+    "argv": [
+      "chart",
+      "SPY",
+      "--period1",
+      "2026-06-29",
+      "--period2",
+      "2026-07-03",
+      "--interval",
+      "1d"
+    ],
+    "file": "chart/SPY.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "chart/VT": {
+    "argv": [
+      "chart",
+      "VT",
+      "--period1",
+      "2026-06-29",
+      "--period2",
+      "2026-07-03",
+      "--interval",
+      "1d"
+    ],
+    "file": "chart/VT.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "chart/VTSAX": {
+    "argv": [
+      "chart",
+      "VTSAX",
+      "--period1",
+      "2026-06-29",
+      "--period2",
+      "2026-07-03",
+      "--interval",
+      "1d"
+    ],
+    "file": "chart/VTSAX.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "chart/ZZZZXYZQ": {
+    "argv": [
+      "chart",
+      "ZZZZXYZQ",
+      "--period1",
+      "2026-06-29",
+      "--period2",
+      "2026-07-03",
+      "--interval",
+      "1d"
+    ],
+    "detail": "Yahoo request rejected with HTTP 404 for https://query1.finance.yahoo.com/v8/finance/chart/ZZZZXYZQ?period1=1782691200&period2=1783036800&interval=1d&includePrePost=false&events=div%7Csplit%7Cearn&lang=en-US&region=US",
+    "file": "chart/ZZZZXYZQ.json",
+    "http_status": 404,
+    "status": "http_error"
+  },
+  "chart/^DJI": {
+    "argv": [
+      "chart",
+      "^DJI",
+      "--period1",
+      "2026-06-29",
+      "--period2",
+      "2026-07-03",
+      "--interval",
+      "1d"
+    ],
+    "file": "chart/_DJI.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "chart/^GSPC": {
+    "argv": [
+      "chart",
+      "^GSPC",
+      "--period1",
+      "2026-06-29",
+      "--period2",
+      "2026-07-03",
+      "--interval",
+      "1d"
+    ],
+    "file": "chart/_GSPC.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "chart/^IRX": {
+    "argv": [
+      "chart",
+      "^IRX",
+      "--period1",
+      "2026-06-29",
+      "--period2",
+      "2026-07-03",
+      "--interval",
+      "1d"
+    ],
+    "file": "chart/_IRX.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "chart/^IXIC": {
+    "argv": [
+      "chart",
+      "^IXIC",
+      "--period1",
+      "2026-06-29",
+      "--period2",
+      "2026-07-03",
+      "--interval",
+      "1d"
+    ],
+    "file": "chart/_IXIC.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "chart/^TNX": {
+    "argv": [
+      "chart",
+      "^TNX",
+      "--period1",
+      "2026-06-29",
+      "--period2",
+      "2026-07-03",
+      "--interval",
+      "1d"
+    ],
+    "file": "chart/_TNX.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "insights/AAPL": {
+    "argv": [
+      "insights",
+      "AAPL"
+    ],
+    "file": "insights/AAPL.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "insights/MSFT": {
+    "argv": [
+      "insights",
+      "MSFT"
+    ],
+    "file": "insights/MSFT.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "insights/RY.TO": {
+    "argv": [
+      "insights",
+      "RY.TO"
+    ],
+    "file": "insights/RY.TO.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "market-info/default": {
+    "argv": [
+      "market-info"
+    ],
+    "file": "market-info/default.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "market-summary/default": {
+    "argv": [
+      "market-summary"
+    ],
+    "file": "market-summary/default.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "market-time/default": {
+    "argv": [
+      "market-time"
+    ],
+    "file": "market-time/default.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "options/AAPL": {
+    "argv": [
+      "options",
+      "AAPL"
+    ],
+    "file": "options/AAPL.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "options/MSFT": {
+    "argv": [
+      "options",
+      "MSFT"
+    ],
+    "file": "options/MSFT.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "options/SPY": {
+    "argv": [
+      "options",
+      "SPY"
+    ],
+    "file": "options/SPY.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "price-insights/AAPL": {
+    "argv": [
+      "price-insights",
+      "AAPL"
+    ],
+    "file": "price-insights/AAPL.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "price-insights/AAPL_ai": {
+    "argv": [
+      "price-insights",
+      "AAPL",
+      "--modules",
+      "ai"
+    ],
+    "file": "price-insights/AAPL_ai.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "price-insights/AAPL_anomaly": {
+    "argv": [
+      "price-insights",
+      "AAPL",
+      "--check-anomaly"
+    ],
+    "file": "price-insights/AAPL_anomaly.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "price-insights/MSFT": {
+    "argv": [
+      "price-insights",
+      "MSFT"
+    ],
+    "file": "price-insights/MSFT.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "price-insights/RY.TO": {
+    "argv": [
+      "price-insights",
+      "RY.TO"
+    ],
+    "file": "price-insights/RY.TO.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote-summary/0700.HK": {
+    "argv": [
+      "quote-summary",
+      "0700.HK",
+      "--modules",
+      "assetProfile,balanceSheetHistory,balanceSheetHistoryQuarterly,calendarEvents,corporateActions,cashflowStatementHistory,cashflowStatementHistoryQuarterly,defaultKeyStatistics,earnings,earningsCallTranscripts,earningsGaap,earningsHistory,earningsNonGaap,earningsTrend,equityPerformance,financialData,financialsTemplate,fundOwnership,fundPerformance,fundProfile,incomeStatementHistory,incomeStatementHistoryQuarterly,indexTrend,industryTrend,insiderHolders,insiderTransactions,institutionOwnership,majorDirectHolders,majorHoldersBreakdown,netSharePurchaseActivity,pageViews,price,quoteType,quoteUnadjustedPerformanceOverview,recommendationTrend,secFilings,sectorTrend,summaryDetail,summaryProfile,topHoldings,upgradeDowngradeHistory"
+    ],
+    "file": "quote-summary/0700.HK.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote-summary/7203.T": {
+    "argv": [
+      "quote-summary",
+      "7203.T",
+      "--modules",
+      "assetProfile,balanceSheetHistory,balanceSheetHistoryQuarterly,calendarEvents,corporateActions,cashflowStatementHistory,cashflowStatementHistoryQuarterly,defaultKeyStatistics,earnings,earningsCallTranscripts,earningsGaap,earningsHistory,earningsNonGaap,earningsTrend,equityPerformance,financialData,financialsTemplate,fundOwnership,fundPerformance,fundProfile,incomeStatementHistory,incomeStatementHistoryQuarterly,indexTrend,industryTrend,insiderHolders,insiderTransactions,institutionOwnership,majorDirectHolders,majorHoldersBreakdown,netSharePurchaseActivity,pageViews,price,quoteType,quoteUnadjustedPerformanceOverview,recommendationTrend,secFilings,sectorTrend,summaryDetail,summaryProfile,topHoldings,upgradeDowngradeHistory"
+    ],
+    "file": "quote-summary/7203.T.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote-summary/AAPL": {
+    "argv": [
+      "quote-summary",
+      "AAPL",
+      "--modules",
+      "assetProfile,balanceSheetHistory,balanceSheetHistoryQuarterly,calendarEvents,corporateActions,cashflowStatementHistory,cashflowStatementHistoryQuarterly,defaultKeyStatistics,earnings,earningsCallTranscripts,earningsGaap,earningsHistory,earningsNonGaap,earningsTrend,equityPerformance,financialData,financialsTemplate,fundOwnership,fundPerformance,fundProfile,incomeStatementHistory,incomeStatementHistoryQuarterly,indexTrend,industryTrend,insiderHolders,insiderTransactions,institutionOwnership,majorDirectHolders,majorHoldersBreakdown,netSharePurchaseActivity,pageViews,price,quoteType,quoteUnadjustedPerformanceOverview,recommendationTrend,secFilings,sectorTrend,summaryDetail,summaryProfile,topHoldings,upgradeDowngradeHistory"
+    ],
+    "file": "quote-summary/AAPL.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote-summary/BABA": {
+    "argv": [
+      "quote-summary",
+      "BABA",
+      "--modules",
+      "assetProfile,balanceSheetHistory,balanceSheetHistoryQuarterly,calendarEvents,corporateActions,cashflowStatementHistory,cashflowStatementHistoryQuarterly,defaultKeyStatistics,earnings,earningsCallTranscripts,earningsGaap,earningsHistory,earningsNonGaap,earningsTrend,equityPerformance,financialData,financialsTemplate,fundOwnership,fundPerformance,fundProfile,incomeStatementHistory,incomeStatementHistoryQuarterly,indexTrend,industryTrend,insiderHolders,insiderTransactions,institutionOwnership,majorDirectHolders,majorHoldersBreakdown,netSharePurchaseActivity,pageViews,price,quoteType,quoteUnadjustedPerformanceOverview,recommendationTrend,secFilings,sectorTrend,summaryDetail,summaryProfile,topHoldings,upgradeDowngradeHistory"
+    ],
+    "file": "quote-summary/BABA.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote-summary/BAC-PL": {
+    "argv": [
+      "quote-summary",
+      "BAC-PL",
+      "--modules",
+      "assetProfile,balanceSheetHistory,balanceSheetHistoryQuarterly,calendarEvents,corporateActions,cashflowStatementHistory,cashflowStatementHistoryQuarterly,defaultKeyStatistics,earnings,earningsCallTranscripts,earningsGaap,earningsHistory,earningsNonGaap,earningsTrend,equityPerformance,financialData,financialsTemplate,fundOwnership,fundPerformance,fundProfile,incomeStatementHistory,incomeStatementHistoryQuarterly,indexTrend,industryTrend,insiderHolders,insiderTransactions,institutionOwnership,majorDirectHolders,majorHoldersBreakdown,netSharePurchaseActivity,pageViews,price,quoteType,quoteUnadjustedPerformanceOverview,recommendationTrend,secFilings,sectorTrend,summaryDetail,summaryProfile,topHoldings,upgradeDowngradeHistory"
+    ],
+    "file": "quote-summary/BAC-PL.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote-summary/BTC-USD": {
+    "argv": [
+      "quote-summary",
+      "BTC-USD",
+      "--modules",
+      "assetProfile,balanceSheetHistory,balanceSheetHistoryQuarterly,calendarEvents,corporateActions,cashflowStatementHistory,cashflowStatementHistoryQuarterly,defaultKeyStatistics,earnings,earningsCallTranscripts,earningsGaap,earningsHistory,earningsNonGaap,earningsTrend,equityPerformance,financialData,financialsTemplate,fundOwnership,fundPerformance,fundProfile,incomeStatementHistory,incomeStatementHistoryQuarterly,indexTrend,industryTrend,insiderHolders,insiderTransactions,institutionOwnership,majorDirectHolders,majorHoldersBreakdown,netSharePurchaseActivity,pageViews,price,quoteType,quoteUnadjustedPerformanceOverview,recommendationTrend,secFilings,sectorTrend,summaryDetail,summaryProfile,topHoldings,upgradeDowngradeHistory"
+    ],
+    "file": "quote-summary/BTC-USD.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote-summary/CL=F": {
+    "argv": [
+      "quote-summary",
+      "CL=F",
+      "--modules",
+      "assetProfile,balanceSheetHistory,balanceSheetHistoryQuarterly,calendarEvents,corporateActions,cashflowStatementHistory,cashflowStatementHistoryQuarterly,defaultKeyStatistics,earnings,earningsCallTranscripts,earningsGaap,earningsHistory,earningsNonGaap,earningsTrend,equityPerformance,financialData,financialsTemplate,fundOwnership,fundPerformance,fundProfile,incomeStatementHistory,incomeStatementHistoryQuarterly,indexTrend,industryTrend,insiderHolders,insiderTransactions,institutionOwnership,majorDirectHolders,majorHoldersBreakdown,netSharePurchaseActivity,pageViews,price,quoteType,quoteUnadjustedPerformanceOverview,recommendationTrend,secFilings,sectorTrend,summaryDetail,summaryProfile,topHoldings,upgradeDowngradeHistory"
+    ],
+    "file": "quote-summary/CL_F.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote-summary/ES=F": {
+    "argv": [
+      "quote-summary",
+      "ES=F",
+      "--modules",
+      "assetProfile,balanceSheetHistory,balanceSheetHistoryQuarterly,calendarEvents,corporateActions,cashflowStatementHistory,cashflowStatementHistoryQuarterly,defaultKeyStatistics,earnings,earningsCallTranscripts,earningsGaap,earningsHistory,earningsNonGaap,earningsTrend,equityPerformance,financialData,financialsTemplate,fundOwnership,fundPerformance,fundProfile,incomeStatementHistory,incomeStatementHistoryQuarterly,indexTrend,industryTrend,insiderHolders,insiderTransactions,institutionOwnership,majorDirectHolders,majorHoldersBreakdown,netSharePurchaseActivity,pageViews,price,quoteType,quoteUnadjustedPerformanceOverview,recommendationTrend,secFilings,sectorTrend,summaryDetail,summaryProfile,topHoldings,upgradeDowngradeHistory"
+    ],
+    "file": "quote-summary/ES_F.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote-summary/EURUSD=X": {
+    "argv": [
+      "quote-summary",
+      "EURUSD=X",
+      "--modules",
+      "assetProfile,balanceSheetHistory,balanceSheetHistoryQuarterly,calendarEvents,corporateActions,cashflowStatementHistory,cashflowStatementHistoryQuarterly,defaultKeyStatistics,earnings,earningsCallTranscripts,earningsGaap,earningsHistory,earningsNonGaap,earningsTrend,equityPerformance,financialData,financialsTemplate,fundOwnership,fundPerformance,fundProfile,incomeStatementHistory,incomeStatementHistoryQuarterly,indexTrend,industryTrend,insiderHolders,insiderTransactions,institutionOwnership,majorDirectHolders,majorHoldersBreakdown,netSharePurchaseActivity,pageViews,price,quoteType,quoteUnadjustedPerformanceOverview,recommendationTrend,secFilings,sectorTrend,summaryDetail,summaryProfile,topHoldings,upgradeDowngradeHistory"
+    ],
+    "file": "quote-summary/EURUSD_X.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote-summary/MSFT": {
+    "argv": [
+      "quote-summary",
+      "MSFT",
+      "--modules",
+      "assetProfile,balanceSheetHistory,balanceSheetHistoryQuarterly,calendarEvents,corporateActions,cashflowStatementHistory,cashflowStatementHistoryQuarterly,defaultKeyStatistics,earnings,earningsCallTranscripts,earningsGaap,earningsHistory,earningsNonGaap,earningsTrend,equityPerformance,financialData,financialsTemplate,fundOwnership,fundPerformance,fundProfile,incomeStatementHistory,incomeStatementHistoryQuarterly,indexTrend,industryTrend,insiderHolders,insiderTransactions,institutionOwnership,majorDirectHolders,majorHoldersBreakdown,netSharePurchaseActivity,pageViews,price,quoteType,quoteUnadjustedPerformanceOverview,recommendationTrend,secFilings,sectorTrend,summaryDetail,summaryProfile,topHoldings,upgradeDowngradeHistory"
+    ],
+    "file": "quote-summary/MSFT.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote-summary/OKLO": {
+    "argv": [
+      "quote-summary",
+      "OKLO",
+      "--modules",
+      "assetProfile,balanceSheetHistory,balanceSheetHistoryQuarterly,calendarEvents,corporateActions,cashflowStatementHistory,cashflowStatementHistoryQuarterly,defaultKeyStatistics,earnings,earningsCallTranscripts,earningsGaap,earningsHistory,earningsNonGaap,earningsTrend,equityPerformance,financialData,financialsTemplate,fundOwnership,fundPerformance,fundProfile,incomeStatementHistory,incomeStatementHistoryQuarterly,indexTrend,industryTrend,insiderHolders,insiderTransactions,institutionOwnership,majorDirectHolders,majorHoldersBreakdown,netSharePurchaseActivity,pageViews,price,quoteType,quoteUnadjustedPerformanceOverview,recommendationTrend,secFilings,sectorTrend,summaryDetail,summaryProfile,topHoldings,upgradeDowngradeHistory"
+    ],
+    "file": "quote-summary/OKLO.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote-summary/OPTION_CONTRACT": {
+    "argv": [
+      "quote-summary",
+      "AAPL260706C00240000",
+      "--modules",
+      "assetProfile,balanceSheetHistory,balanceSheetHistoryQuarterly,calendarEvents,corporateActions,cashflowStatementHistory,cashflowStatementHistoryQuarterly,defaultKeyStatistics,earnings,earningsCallTranscripts,earningsGaap,earningsHistory,earningsNonGaap,earningsTrend,equityPerformance,financialData,financialsTemplate,fundOwnership,fundPerformance,fundProfile,incomeStatementHistory,incomeStatementHistoryQuarterly,indexTrend,industryTrend,insiderHolders,insiderTransactions,institutionOwnership,majorDirectHolders,majorHoldersBreakdown,netSharePurchaseActivity,pageViews,price,quoteType,quoteUnadjustedPerformanceOverview,recommendationTrend,secFilings,sectorTrend,summaryDetail,summaryProfile,topHoldings,upgradeDowngradeHistory"
+    ],
+    "file": "quote-summary/OPTION_CONTRACT.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote-summary/QQQ": {
+    "argv": [
+      "quote-summary",
+      "QQQ",
+      "--modules",
+      "assetProfile,balanceSheetHistory,balanceSheetHistoryQuarterly,calendarEvents,corporateActions,cashflowStatementHistory,cashflowStatementHistoryQuarterly,defaultKeyStatistics,earnings,earningsCallTranscripts,earningsGaap,earningsHistory,earningsNonGaap,earningsTrend,equityPerformance,financialData,financialsTemplate,fundOwnership,fundPerformance,fundProfile,incomeStatementHistory,incomeStatementHistoryQuarterly,indexTrend,industryTrend,insiderHolders,insiderTransactions,institutionOwnership,majorDirectHolders,majorHoldersBreakdown,netSharePurchaseActivity,pageViews,price,quoteType,quoteUnadjustedPerformanceOverview,recommendationTrend,secFilings,sectorTrend,summaryDetail,summaryProfile,topHoldings,upgradeDowngradeHistory"
+    ],
+    "file": "quote-summary/QQQ.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote-summary/RY.TO": {
+    "argv": [
+      "quote-summary",
+      "RY.TO",
+      "--modules",
+      "assetProfile,balanceSheetHistory,balanceSheetHistoryQuarterly,calendarEvents,corporateActions,cashflowStatementHistory,cashflowStatementHistoryQuarterly,defaultKeyStatistics,earnings,earningsCallTranscripts,earningsGaap,earningsHistory,earningsNonGaap,earningsTrend,equityPerformance,financialData,financialsTemplate,fundOwnership,fundPerformance,fundProfile,incomeStatementHistory,incomeStatementHistoryQuarterly,indexTrend,industryTrend,insiderHolders,insiderTransactions,institutionOwnership,majorDirectHolders,majorHoldersBreakdown,netSharePurchaseActivity,pageViews,price,quoteType,quoteUnadjustedPerformanceOverview,recommendationTrend,secFilings,sectorTrend,summaryDetail,summaryProfile,topHoldings,upgradeDowngradeHistory"
+    ],
+    "file": "quote-summary/RY.TO.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote-summary/SHEL.L": {
+    "argv": [
+      "quote-summary",
+      "SHEL.L",
+      "--modules",
+      "assetProfile,balanceSheetHistory,balanceSheetHistoryQuarterly,calendarEvents,corporateActions,cashflowStatementHistory,cashflowStatementHistoryQuarterly,defaultKeyStatistics,earnings,earningsCallTranscripts,earningsGaap,earningsHistory,earningsNonGaap,earningsTrend,equityPerformance,financialData,financialsTemplate,fundOwnership,fundPerformance,fundProfile,incomeStatementHistory,incomeStatementHistoryQuarterly,indexTrend,industryTrend,insiderHolders,insiderTransactions,institutionOwnership,majorDirectHolders,majorHoldersBreakdown,netSharePurchaseActivity,pageViews,price,quoteType,quoteUnadjustedPerformanceOverview,recommendationTrend,secFilings,sectorTrend,summaryDetail,summaryProfile,topHoldings,upgradeDowngradeHistory"
+    ],
+    "file": "quote-summary/SHEL.L.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote-summary/SPY": {
+    "argv": [
+      "quote-summary",
+      "SPY",
+      "--modules",
+      "assetProfile,balanceSheetHistory,balanceSheetHistoryQuarterly,calendarEvents,corporateActions,cashflowStatementHistory,cashflowStatementHistoryQuarterly,defaultKeyStatistics,earnings,earningsCallTranscripts,earningsGaap,earningsHistory,earningsNonGaap,earningsTrend,equityPerformance,financialData,financialsTemplate,fundOwnership,fundPerformance,fundProfile,incomeStatementHistory,incomeStatementHistoryQuarterly,indexTrend,industryTrend,insiderHolders,insiderTransactions,institutionOwnership,majorDirectHolders,majorHoldersBreakdown,netSharePurchaseActivity,pageViews,price,quoteType,quoteUnadjustedPerformanceOverview,recommendationTrend,secFilings,sectorTrend,summaryDetail,summaryProfile,topHoldings,upgradeDowngradeHistory"
+    ],
+    "file": "quote-summary/SPY.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote-summary/VT": {
+    "argv": [
+      "quote-summary",
+      "VT",
+      "--modules",
+      "assetProfile,balanceSheetHistory,balanceSheetHistoryQuarterly,calendarEvents,corporateActions,cashflowStatementHistory,cashflowStatementHistoryQuarterly,defaultKeyStatistics,earnings,earningsCallTranscripts,earningsGaap,earningsHistory,earningsNonGaap,earningsTrend,equityPerformance,financialData,financialsTemplate,fundOwnership,fundPerformance,fundProfile,incomeStatementHistory,incomeStatementHistoryQuarterly,indexTrend,industryTrend,insiderHolders,insiderTransactions,institutionOwnership,majorDirectHolders,majorHoldersBreakdown,netSharePurchaseActivity,pageViews,price,quoteType,quoteUnadjustedPerformanceOverview,recommendationTrend,secFilings,sectorTrend,summaryDetail,summaryProfile,topHoldings,upgradeDowngradeHistory"
+    ],
+    "file": "quote-summary/VT.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote-summary/VTSAX": {
+    "argv": [
+      "quote-summary",
+      "VTSAX",
+      "--modules",
+      "assetProfile,balanceSheetHistory,balanceSheetHistoryQuarterly,calendarEvents,corporateActions,cashflowStatementHistory,cashflowStatementHistoryQuarterly,defaultKeyStatistics,earnings,earningsCallTranscripts,earningsGaap,earningsHistory,earningsNonGaap,earningsTrend,equityPerformance,financialData,financialsTemplate,fundOwnership,fundPerformance,fundProfile,incomeStatementHistory,incomeStatementHistoryQuarterly,indexTrend,industryTrend,insiderHolders,insiderTransactions,institutionOwnership,majorDirectHolders,majorHoldersBreakdown,netSharePurchaseActivity,pageViews,price,quoteType,quoteUnadjustedPerformanceOverview,recommendationTrend,secFilings,sectorTrend,summaryDetail,summaryProfile,topHoldings,upgradeDowngradeHistory"
+    ],
+    "file": "quote-summary/VTSAX.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote-summary/ZZZZXYZQ": {
+    "argv": [
+      "quote-summary",
+      "ZZZZXYZQ"
+    ],
+    "detail": "Yahoo request rejected with HTTP 404 for https://query1.finance.yahoo.com/v10/finance/quoteSummary/ZZZZXYZQ?modules=summaryProfile%2CfinancialData%2CrecommendationTrend%2Cearnings%2CequityPerformance%2CdefaultKeyStatistics&formatted=false&enablePrivateCompany=true&enableQSPExpandedEarnings=true&overnightPrice=true&lang=en-US&region=US",
+    "file": "quote-summary/ZZZZXYZQ.json",
+    "http_status": 404,
+    "status": "http_error"
+  },
+  "quote-summary/^DJI": {
+    "argv": [
+      "quote-summary",
+      "^DJI",
+      "--modules",
+      "assetProfile,balanceSheetHistory,balanceSheetHistoryQuarterly,calendarEvents,corporateActions,cashflowStatementHistory,cashflowStatementHistoryQuarterly,defaultKeyStatistics,earnings,earningsCallTranscripts,earningsGaap,earningsHistory,earningsNonGaap,earningsTrend,equityPerformance,financialData,financialsTemplate,fundOwnership,fundPerformance,fundProfile,incomeStatementHistory,incomeStatementHistoryQuarterly,indexTrend,industryTrend,insiderHolders,insiderTransactions,institutionOwnership,majorDirectHolders,majorHoldersBreakdown,netSharePurchaseActivity,pageViews,price,quoteType,quoteUnadjustedPerformanceOverview,recommendationTrend,secFilings,sectorTrend,summaryDetail,summaryProfile,topHoldings,upgradeDowngradeHistory"
+    ],
+    "file": "quote-summary/_DJI.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote-summary/^GSPC": {
+    "argv": [
+      "quote-summary",
+      "^GSPC",
+      "--modules",
+      "assetProfile,balanceSheetHistory,balanceSheetHistoryQuarterly,calendarEvents,corporateActions,cashflowStatementHistory,cashflowStatementHistoryQuarterly,defaultKeyStatistics,earnings,earningsCallTranscripts,earningsGaap,earningsHistory,earningsNonGaap,earningsTrend,equityPerformance,financialData,financialsTemplate,fundOwnership,fundPerformance,fundProfile,incomeStatementHistory,incomeStatementHistoryQuarterly,indexTrend,industryTrend,insiderHolders,insiderTransactions,institutionOwnership,majorDirectHolders,majorHoldersBreakdown,netSharePurchaseActivity,pageViews,price,quoteType,quoteUnadjustedPerformanceOverview,recommendationTrend,secFilings,sectorTrend,summaryDetail,summaryProfile,topHoldings,upgradeDowngradeHistory"
+    ],
+    "file": "quote-summary/_GSPC.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote-summary/^IRX": {
+    "argv": [
+      "quote-summary",
+      "^IRX",
+      "--modules",
+      "assetProfile,balanceSheetHistory,balanceSheetHistoryQuarterly,calendarEvents,corporateActions,cashflowStatementHistory,cashflowStatementHistoryQuarterly,defaultKeyStatistics,earnings,earningsCallTranscripts,earningsGaap,earningsHistory,earningsNonGaap,earningsTrend,equityPerformance,financialData,financialsTemplate,fundOwnership,fundPerformance,fundProfile,incomeStatementHistory,incomeStatementHistoryQuarterly,indexTrend,industryTrend,insiderHolders,insiderTransactions,institutionOwnership,majorDirectHolders,majorHoldersBreakdown,netSharePurchaseActivity,pageViews,price,quoteType,quoteUnadjustedPerformanceOverview,recommendationTrend,secFilings,sectorTrend,summaryDetail,summaryProfile,topHoldings,upgradeDowngradeHistory"
+    ],
+    "file": "quote-summary/_IRX.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote-summary/^IXIC": {
+    "argv": [
+      "quote-summary",
+      "^IXIC",
+      "--modules",
+      "assetProfile,balanceSheetHistory,balanceSheetHistoryQuarterly,calendarEvents,corporateActions,cashflowStatementHistory,cashflowStatementHistoryQuarterly,defaultKeyStatistics,earnings,earningsCallTranscripts,earningsGaap,earningsHistory,earningsNonGaap,earningsTrend,equityPerformance,financialData,financialsTemplate,fundOwnership,fundPerformance,fundProfile,incomeStatementHistory,incomeStatementHistoryQuarterly,indexTrend,industryTrend,insiderHolders,insiderTransactions,institutionOwnership,majorDirectHolders,majorHoldersBreakdown,netSharePurchaseActivity,pageViews,price,quoteType,quoteUnadjustedPerformanceOverview,recommendationTrend,secFilings,sectorTrend,summaryDetail,summaryProfile,topHoldings,upgradeDowngradeHistory"
+    ],
+    "file": "quote-summary/_IXIC.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote-summary/^TNX": {
+    "argv": [
+      "quote-summary",
+      "^TNX",
+      "--modules",
+      "assetProfile,balanceSheetHistory,balanceSheetHistoryQuarterly,calendarEvents,corporateActions,cashflowStatementHistory,cashflowStatementHistoryQuarterly,defaultKeyStatistics,earnings,earningsCallTranscripts,earningsGaap,earningsHistory,earningsNonGaap,earningsTrend,equityPerformance,financialData,financialsTemplate,fundOwnership,fundPerformance,fundProfile,incomeStatementHistory,incomeStatementHistoryQuarterly,indexTrend,industryTrend,insiderHolders,insiderTransactions,institutionOwnership,majorDirectHolders,majorHoldersBreakdown,netSharePurchaseActivity,pageViews,price,quoteType,quoteUnadjustedPerformanceOverview,recommendationTrend,secFilings,sectorTrend,summaryDetail,summaryProfile,topHoldings,upgradeDowngradeHistory"
+    ],
+    "file": "quote-summary/_TNX.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote-type/0700.HK": {
+    "argv": [
+      "quote-type",
+      "0700.HK"
+    ],
+    "file": "quote-type/0700.HK.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote-type/7203.T": {
+    "argv": [
+      "quote-type",
+      "7203.T"
+    ],
+    "file": "quote-type/7203.T.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote-type/AAPL": {
+    "argv": [
+      "quote-type",
+      "AAPL"
+    ],
+    "file": "quote-type/AAPL.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote-type/BABA": {
+    "argv": [
+      "quote-type",
+      "BABA"
+    ],
+    "file": "quote-type/BABA.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote-type/BAC-PL": {
+    "argv": [
+      "quote-type",
+      "BAC-PL"
+    ],
+    "file": "quote-type/BAC-PL.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote-type/BTC-USD": {
+    "argv": [
+      "quote-type",
+      "BTC-USD"
+    ],
+    "file": "quote-type/BTC-USD.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote-type/CL=F": {
+    "argv": [
+      "quote-type",
+      "CL=F"
+    ],
+    "file": "quote-type/CL_F.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote-type/ES=F": {
+    "argv": [
+      "quote-type",
+      "ES=F"
+    ],
+    "file": "quote-type/ES_F.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote-type/EURUSD=X": {
+    "argv": [
+      "quote-type",
+      "EURUSD=X"
+    ],
+    "file": "quote-type/EURUSD_X.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote-type/MSFT": {
+    "argv": [
+      "quote-type",
+      "MSFT"
+    ],
+    "file": "quote-type/MSFT.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote-type/OKLO": {
+    "argv": [
+      "quote-type",
+      "OKLO"
+    ],
+    "file": "quote-type/OKLO.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote-type/OPTION_CONTRACT": {
+    "argv": [
+      "quote-type",
+      "AAPL260706C00240000"
+    ],
+    "file": "quote-type/OPTION_CONTRACT.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote-type/QQQ": {
+    "argv": [
+      "quote-type",
+      "QQQ"
+    ],
+    "file": "quote-type/QQQ.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote-type/RY.TO": {
+    "argv": [
+      "quote-type",
+      "RY.TO"
+    ],
+    "file": "quote-type/RY.TO.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote-type/SHEL.L": {
+    "argv": [
+      "quote-type",
+      "SHEL.L"
+    ],
+    "file": "quote-type/SHEL.L.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote-type/SPY": {
+    "argv": [
+      "quote-type",
+      "SPY"
+    ],
+    "file": "quote-type/SPY.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote-type/VT": {
+    "argv": [
+      "quote-type",
+      "VT"
+    ],
+    "file": "quote-type/VT.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote-type/VTSAX": {
+    "argv": [
+      "quote-type",
+      "VTSAX"
+    ],
+    "file": "quote-type/VTSAX.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote-type/ZZZZXYZQ": {
+    "argv": [
+      "quote-type",
+      "ZZZZXYZQ"
+    ],
+    "file": "quote-type/ZZZZXYZQ.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote-type/^DJI": {
+    "argv": [
+      "quote-type",
+      "^DJI"
+    ],
+    "file": "quote-type/_DJI.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote-type/^GSPC": {
+    "argv": [
+      "quote-type",
+      "^GSPC"
+    ],
+    "file": "quote-type/_GSPC.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote-type/^IRX": {
+    "argv": [
+      "quote-type",
+      "^IRX"
+    ],
+    "file": "quote-type/_IRX.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote-type/^IXIC": {
+    "argv": [
+      "quote-type",
+      "^IXIC"
+    ],
+    "file": "quote-type/_IXIC.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote-type/^TNX": {
+    "argv": [
+      "quote-type",
+      "^TNX"
+    ],
+    "file": "quote-type/_TNX.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote/0700.HK": {
+    "argv": [
+      "quote",
+      "0700.HK",
+      "--fields",
+      "ask,askSize,averageAnalystRating,averageDailyVolume10Day,averageDailyVolume3Month,bid,bidSize,bookValue,circulatingSupply,coinImageUrl,coinMarketCapLink,contractSymbol,cryptoTradeable,customPriceAlertConfidence,currency,displayName,dividendDate,dividendRate,dividendYield,earningsTimestamp,earningsTimestampEnd,earningsTimestampStart,epsCurrentYear,epsForward,epsTrailingTwelveMonths,esgPopulated,exchange,exchangeDataDelayedBy,exchangeTimezoneName,exchangeTimezoneShortName,extendedMarketChange,extendedMarketChangePercent,extendedMarketPrice,extendedMarketTime,expireDate,expireIsoDate,fiftyDayAverage,fiftyDayAverageChange,fiftyDayAverageChangePercent,fiftyTwoWeekChangePercent,fiftyTwoWeekHigh,fiftyTwoWeekHighChange,fiftyTwoWeekHighChangePercent,fiftyTwoWeekLow,fiftyTwoWeekLowChange,fiftyTwoWeekLowChangePercent,fiftyTwoWeekRange,financialCurrency,firstTradeDateMilliseconds,forwardPe,fromCurrency,fromExchange,fullExchangeName,gmtOffSetMilliseconds,headSymbolAsString,ipoExpectedDate,language,lastMarket,companyLogoUrl,logoUrl,longName,market,marketCap,marketState,messageBoardId,morningstarIndustry,nameChangeDate,netAssets,netExpenseRatio,openInterest,optionsType,optionType,overnightMarketChange,overnightMarketChangePercent,overnightMarketPrice,overnightMarketTime,postMarketChange,postMarketChangePercent,postMarketPrice,postMarketTime,preMarketChange,preMarketChangePercent,preMarketPrice,preMarketTime,prevName,priceEpsCurrentYear,priceHint,priceToBook,quartrId,quoteSourceName,quoteType,region,regularMarketChange,regularMarketChangePercent,regularMarketDayHigh,regularMarketDayLow,regularMarketDayRange,regularMarketOpen,regularMarketPreviousClose,regularMarketPrice,regularMarketSource,regularMarketTime,regularMarketVolume,sharesOutstanding,shortName,sourceInterval,startDate,stockStory,strike,symbol,toCurrency,toExchange,tradeable,trailingAnnualDividendRate,trailingAnnualDividendYield,trailingPE,trailingThreeMonthNavReturns,trailingThreeMonthReturns,triggerable,twoHundredDayAverage,twoHundredDayAverageChange,twoHundredDayAverageChangePercent,typeDisp,underlyingExchangeSymbol,underlyingShortName,underlyingSymbol,volume24Hr,volumeAllCurrencies,ytdReturn"
+    ],
+    "file": "quote/0700.HK.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote/7203.T": {
+    "argv": [
+      "quote",
+      "7203.T",
+      "--fields",
+      "ask,askSize,averageAnalystRating,averageDailyVolume10Day,averageDailyVolume3Month,bid,bidSize,bookValue,circulatingSupply,coinImageUrl,coinMarketCapLink,contractSymbol,cryptoTradeable,customPriceAlertConfidence,currency,displayName,dividendDate,dividendRate,dividendYield,earningsTimestamp,earningsTimestampEnd,earningsTimestampStart,epsCurrentYear,epsForward,epsTrailingTwelveMonths,esgPopulated,exchange,exchangeDataDelayedBy,exchangeTimezoneName,exchangeTimezoneShortName,extendedMarketChange,extendedMarketChangePercent,extendedMarketPrice,extendedMarketTime,expireDate,expireIsoDate,fiftyDayAverage,fiftyDayAverageChange,fiftyDayAverageChangePercent,fiftyTwoWeekChangePercent,fiftyTwoWeekHigh,fiftyTwoWeekHighChange,fiftyTwoWeekHighChangePercent,fiftyTwoWeekLow,fiftyTwoWeekLowChange,fiftyTwoWeekLowChangePercent,fiftyTwoWeekRange,financialCurrency,firstTradeDateMilliseconds,forwardPe,fromCurrency,fromExchange,fullExchangeName,gmtOffSetMilliseconds,headSymbolAsString,ipoExpectedDate,language,lastMarket,companyLogoUrl,logoUrl,longName,market,marketCap,marketState,messageBoardId,morningstarIndustry,nameChangeDate,netAssets,netExpenseRatio,openInterest,optionsType,optionType,overnightMarketChange,overnightMarketChangePercent,overnightMarketPrice,overnightMarketTime,postMarketChange,postMarketChangePercent,postMarketPrice,postMarketTime,preMarketChange,preMarketChangePercent,preMarketPrice,preMarketTime,prevName,priceEpsCurrentYear,priceHint,priceToBook,quartrId,quoteSourceName,quoteType,region,regularMarketChange,regularMarketChangePercent,regularMarketDayHigh,regularMarketDayLow,regularMarketDayRange,regularMarketOpen,regularMarketPreviousClose,regularMarketPrice,regularMarketSource,regularMarketTime,regularMarketVolume,sharesOutstanding,shortName,sourceInterval,startDate,stockStory,strike,symbol,toCurrency,toExchange,tradeable,trailingAnnualDividendRate,trailingAnnualDividendYield,trailingPE,trailingThreeMonthNavReturns,trailingThreeMonthReturns,triggerable,twoHundredDayAverage,twoHundredDayAverageChange,twoHundredDayAverageChangePercent,typeDisp,underlyingExchangeSymbol,underlyingShortName,underlyingSymbol,volume24Hr,volumeAllCurrencies,ytdReturn"
+    ],
+    "file": "quote/7203.T.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote/AAPL": {
+    "argv": [
+      "quote",
+      "AAPL",
+      "--fields",
+      "ask,askSize,averageAnalystRating,averageDailyVolume10Day,averageDailyVolume3Month,bid,bidSize,bookValue,circulatingSupply,coinImageUrl,coinMarketCapLink,contractSymbol,cryptoTradeable,customPriceAlertConfidence,currency,displayName,dividendDate,dividendRate,dividendYield,earningsTimestamp,earningsTimestampEnd,earningsTimestampStart,epsCurrentYear,epsForward,epsTrailingTwelveMonths,esgPopulated,exchange,exchangeDataDelayedBy,exchangeTimezoneName,exchangeTimezoneShortName,extendedMarketChange,extendedMarketChangePercent,extendedMarketPrice,extendedMarketTime,expireDate,expireIsoDate,fiftyDayAverage,fiftyDayAverageChange,fiftyDayAverageChangePercent,fiftyTwoWeekChangePercent,fiftyTwoWeekHigh,fiftyTwoWeekHighChange,fiftyTwoWeekHighChangePercent,fiftyTwoWeekLow,fiftyTwoWeekLowChange,fiftyTwoWeekLowChangePercent,fiftyTwoWeekRange,financialCurrency,firstTradeDateMilliseconds,forwardPe,fromCurrency,fromExchange,fullExchangeName,gmtOffSetMilliseconds,headSymbolAsString,ipoExpectedDate,language,lastMarket,companyLogoUrl,logoUrl,longName,market,marketCap,marketState,messageBoardId,morningstarIndustry,nameChangeDate,netAssets,netExpenseRatio,openInterest,optionsType,optionType,overnightMarketChange,overnightMarketChangePercent,overnightMarketPrice,overnightMarketTime,postMarketChange,postMarketChangePercent,postMarketPrice,postMarketTime,preMarketChange,preMarketChangePercent,preMarketPrice,preMarketTime,prevName,priceEpsCurrentYear,priceHint,priceToBook,quartrId,quoteSourceName,quoteType,region,regularMarketChange,regularMarketChangePercent,regularMarketDayHigh,regularMarketDayLow,regularMarketDayRange,regularMarketOpen,regularMarketPreviousClose,regularMarketPrice,regularMarketSource,regularMarketTime,regularMarketVolume,sharesOutstanding,shortName,sourceInterval,startDate,stockStory,strike,symbol,toCurrency,toExchange,tradeable,trailingAnnualDividendRate,trailingAnnualDividendYield,trailingPE,trailingThreeMonthNavReturns,trailingThreeMonthReturns,triggerable,twoHundredDayAverage,twoHundredDayAverageChange,twoHundredDayAverageChangePercent,typeDisp,underlyingExchangeSymbol,underlyingShortName,underlyingSymbol,volume24Hr,volumeAllCurrencies,ytdReturn"
+    ],
+    "file": "quote/AAPL.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote/AAPL_default": {
+    "argv": [
+      "quote",
+      "AAPL"
+    ],
+    "file": "quote/AAPL_default.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote/BABA": {
+    "argv": [
+      "quote",
+      "BABA",
+      "--fields",
+      "ask,askSize,averageAnalystRating,averageDailyVolume10Day,averageDailyVolume3Month,bid,bidSize,bookValue,circulatingSupply,coinImageUrl,coinMarketCapLink,contractSymbol,cryptoTradeable,customPriceAlertConfidence,currency,displayName,dividendDate,dividendRate,dividendYield,earningsTimestamp,earningsTimestampEnd,earningsTimestampStart,epsCurrentYear,epsForward,epsTrailingTwelveMonths,esgPopulated,exchange,exchangeDataDelayedBy,exchangeTimezoneName,exchangeTimezoneShortName,extendedMarketChange,extendedMarketChangePercent,extendedMarketPrice,extendedMarketTime,expireDate,expireIsoDate,fiftyDayAverage,fiftyDayAverageChange,fiftyDayAverageChangePercent,fiftyTwoWeekChangePercent,fiftyTwoWeekHigh,fiftyTwoWeekHighChange,fiftyTwoWeekHighChangePercent,fiftyTwoWeekLow,fiftyTwoWeekLowChange,fiftyTwoWeekLowChangePercent,fiftyTwoWeekRange,financialCurrency,firstTradeDateMilliseconds,forwardPe,fromCurrency,fromExchange,fullExchangeName,gmtOffSetMilliseconds,headSymbolAsString,ipoExpectedDate,language,lastMarket,companyLogoUrl,logoUrl,longName,market,marketCap,marketState,messageBoardId,morningstarIndustry,nameChangeDate,netAssets,netExpenseRatio,openInterest,optionsType,optionType,overnightMarketChange,overnightMarketChangePercent,overnightMarketPrice,overnightMarketTime,postMarketChange,postMarketChangePercent,postMarketPrice,postMarketTime,preMarketChange,preMarketChangePercent,preMarketPrice,preMarketTime,prevName,priceEpsCurrentYear,priceHint,priceToBook,quartrId,quoteSourceName,quoteType,region,regularMarketChange,regularMarketChangePercent,regularMarketDayHigh,regularMarketDayLow,regularMarketDayRange,regularMarketOpen,regularMarketPreviousClose,regularMarketPrice,regularMarketSource,regularMarketTime,regularMarketVolume,sharesOutstanding,shortName,sourceInterval,startDate,stockStory,strike,symbol,toCurrency,toExchange,tradeable,trailingAnnualDividendRate,trailingAnnualDividendYield,trailingPE,trailingThreeMonthNavReturns,trailingThreeMonthReturns,triggerable,twoHundredDayAverage,twoHundredDayAverageChange,twoHundredDayAverageChangePercent,typeDisp,underlyingExchangeSymbol,underlyingShortName,underlyingSymbol,volume24Hr,volumeAllCurrencies,ytdReturn"
+    ],
+    "file": "quote/BABA.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote/BAC-PL": {
+    "argv": [
+      "quote",
+      "BAC-PL",
+      "--fields",
+      "ask,askSize,averageAnalystRating,averageDailyVolume10Day,averageDailyVolume3Month,bid,bidSize,bookValue,circulatingSupply,coinImageUrl,coinMarketCapLink,contractSymbol,cryptoTradeable,customPriceAlertConfidence,currency,displayName,dividendDate,dividendRate,dividendYield,earningsTimestamp,earningsTimestampEnd,earningsTimestampStart,epsCurrentYear,epsForward,epsTrailingTwelveMonths,esgPopulated,exchange,exchangeDataDelayedBy,exchangeTimezoneName,exchangeTimezoneShortName,extendedMarketChange,extendedMarketChangePercent,extendedMarketPrice,extendedMarketTime,expireDate,expireIsoDate,fiftyDayAverage,fiftyDayAverageChange,fiftyDayAverageChangePercent,fiftyTwoWeekChangePercent,fiftyTwoWeekHigh,fiftyTwoWeekHighChange,fiftyTwoWeekHighChangePercent,fiftyTwoWeekLow,fiftyTwoWeekLowChange,fiftyTwoWeekLowChangePercent,fiftyTwoWeekRange,financialCurrency,firstTradeDateMilliseconds,forwardPe,fromCurrency,fromExchange,fullExchangeName,gmtOffSetMilliseconds,headSymbolAsString,ipoExpectedDate,language,lastMarket,companyLogoUrl,logoUrl,longName,market,marketCap,marketState,messageBoardId,morningstarIndustry,nameChangeDate,netAssets,netExpenseRatio,openInterest,optionsType,optionType,overnightMarketChange,overnightMarketChangePercent,overnightMarketPrice,overnightMarketTime,postMarketChange,postMarketChangePercent,postMarketPrice,postMarketTime,preMarketChange,preMarketChangePercent,preMarketPrice,preMarketTime,prevName,priceEpsCurrentYear,priceHint,priceToBook,quartrId,quoteSourceName,quoteType,region,regularMarketChange,regularMarketChangePercent,regularMarketDayHigh,regularMarketDayLow,regularMarketDayRange,regularMarketOpen,regularMarketPreviousClose,regularMarketPrice,regularMarketSource,regularMarketTime,regularMarketVolume,sharesOutstanding,shortName,sourceInterval,startDate,stockStory,strike,symbol,toCurrency,toExchange,tradeable,trailingAnnualDividendRate,trailingAnnualDividendYield,trailingPE,trailingThreeMonthNavReturns,trailingThreeMonthReturns,triggerable,twoHundredDayAverage,twoHundredDayAverageChange,twoHundredDayAverageChangePercent,typeDisp,underlyingExchangeSymbol,underlyingShortName,underlyingSymbol,volume24Hr,volumeAllCurrencies,ytdReturn"
+    ],
+    "file": "quote/BAC-PL.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote/BTC-USD": {
+    "argv": [
+      "quote",
+      "BTC-USD",
+      "--fields",
+      "ask,askSize,averageAnalystRating,averageDailyVolume10Day,averageDailyVolume3Month,bid,bidSize,bookValue,circulatingSupply,coinImageUrl,coinMarketCapLink,contractSymbol,cryptoTradeable,customPriceAlertConfidence,currency,displayName,dividendDate,dividendRate,dividendYield,earningsTimestamp,earningsTimestampEnd,earningsTimestampStart,epsCurrentYear,epsForward,epsTrailingTwelveMonths,esgPopulated,exchange,exchangeDataDelayedBy,exchangeTimezoneName,exchangeTimezoneShortName,extendedMarketChange,extendedMarketChangePercent,extendedMarketPrice,extendedMarketTime,expireDate,expireIsoDate,fiftyDayAverage,fiftyDayAverageChange,fiftyDayAverageChangePercent,fiftyTwoWeekChangePercent,fiftyTwoWeekHigh,fiftyTwoWeekHighChange,fiftyTwoWeekHighChangePercent,fiftyTwoWeekLow,fiftyTwoWeekLowChange,fiftyTwoWeekLowChangePercent,fiftyTwoWeekRange,financialCurrency,firstTradeDateMilliseconds,forwardPe,fromCurrency,fromExchange,fullExchangeName,gmtOffSetMilliseconds,headSymbolAsString,ipoExpectedDate,language,lastMarket,companyLogoUrl,logoUrl,longName,market,marketCap,marketState,messageBoardId,morningstarIndustry,nameChangeDate,netAssets,netExpenseRatio,openInterest,optionsType,optionType,overnightMarketChange,overnightMarketChangePercent,overnightMarketPrice,overnightMarketTime,postMarketChange,postMarketChangePercent,postMarketPrice,postMarketTime,preMarketChange,preMarketChangePercent,preMarketPrice,preMarketTime,prevName,priceEpsCurrentYear,priceHint,priceToBook,quartrId,quoteSourceName,quoteType,region,regularMarketChange,regularMarketChangePercent,regularMarketDayHigh,regularMarketDayLow,regularMarketDayRange,regularMarketOpen,regularMarketPreviousClose,regularMarketPrice,regularMarketSource,regularMarketTime,regularMarketVolume,sharesOutstanding,shortName,sourceInterval,startDate,stockStory,strike,symbol,toCurrency,toExchange,tradeable,trailingAnnualDividendRate,trailingAnnualDividendYield,trailingPE,trailingThreeMonthNavReturns,trailingThreeMonthReturns,triggerable,twoHundredDayAverage,twoHundredDayAverageChange,twoHundredDayAverageChangePercent,typeDisp,underlyingExchangeSymbol,underlyingShortName,underlyingSymbol,volume24Hr,volumeAllCurrencies,ytdReturn"
+    ],
+    "file": "quote/BTC-USD.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote/CL=F": {
+    "argv": [
+      "quote",
+      "CL=F",
+      "--fields",
+      "ask,askSize,averageAnalystRating,averageDailyVolume10Day,averageDailyVolume3Month,bid,bidSize,bookValue,circulatingSupply,coinImageUrl,coinMarketCapLink,contractSymbol,cryptoTradeable,customPriceAlertConfidence,currency,displayName,dividendDate,dividendRate,dividendYield,earningsTimestamp,earningsTimestampEnd,earningsTimestampStart,epsCurrentYear,epsForward,epsTrailingTwelveMonths,esgPopulated,exchange,exchangeDataDelayedBy,exchangeTimezoneName,exchangeTimezoneShortName,extendedMarketChange,extendedMarketChangePercent,extendedMarketPrice,extendedMarketTime,expireDate,expireIsoDate,fiftyDayAverage,fiftyDayAverageChange,fiftyDayAverageChangePercent,fiftyTwoWeekChangePercent,fiftyTwoWeekHigh,fiftyTwoWeekHighChange,fiftyTwoWeekHighChangePercent,fiftyTwoWeekLow,fiftyTwoWeekLowChange,fiftyTwoWeekLowChangePercent,fiftyTwoWeekRange,financialCurrency,firstTradeDateMilliseconds,forwardPe,fromCurrency,fromExchange,fullExchangeName,gmtOffSetMilliseconds,headSymbolAsString,ipoExpectedDate,language,lastMarket,companyLogoUrl,logoUrl,longName,market,marketCap,marketState,messageBoardId,morningstarIndustry,nameChangeDate,netAssets,netExpenseRatio,openInterest,optionsType,optionType,overnightMarketChange,overnightMarketChangePercent,overnightMarketPrice,overnightMarketTime,postMarketChange,postMarketChangePercent,postMarketPrice,postMarketTime,preMarketChange,preMarketChangePercent,preMarketPrice,preMarketTime,prevName,priceEpsCurrentYear,priceHint,priceToBook,quartrId,quoteSourceName,quoteType,region,regularMarketChange,regularMarketChangePercent,regularMarketDayHigh,regularMarketDayLow,regularMarketDayRange,regularMarketOpen,regularMarketPreviousClose,regularMarketPrice,regularMarketSource,regularMarketTime,regularMarketVolume,sharesOutstanding,shortName,sourceInterval,startDate,stockStory,strike,symbol,toCurrency,toExchange,tradeable,trailingAnnualDividendRate,trailingAnnualDividendYield,trailingPE,trailingThreeMonthNavReturns,trailingThreeMonthReturns,triggerable,twoHundredDayAverage,twoHundredDayAverageChange,twoHundredDayAverageChangePercent,typeDisp,underlyingExchangeSymbol,underlyingShortName,underlyingSymbol,volume24Hr,volumeAllCurrencies,ytdReturn"
+    ],
+    "file": "quote/CL_F.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote/ES=F": {
+    "argv": [
+      "quote",
+      "ES=F",
+      "--fields",
+      "ask,askSize,averageAnalystRating,averageDailyVolume10Day,averageDailyVolume3Month,bid,bidSize,bookValue,circulatingSupply,coinImageUrl,coinMarketCapLink,contractSymbol,cryptoTradeable,customPriceAlertConfidence,currency,displayName,dividendDate,dividendRate,dividendYield,earningsTimestamp,earningsTimestampEnd,earningsTimestampStart,epsCurrentYear,epsForward,epsTrailingTwelveMonths,esgPopulated,exchange,exchangeDataDelayedBy,exchangeTimezoneName,exchangeTimezoneShortName,extendedMarketChange,extendedMarketChangePercent,extendedMarketPrice,extendedMarketTime,expireDate,expireIsoDate,fiftyDayAverage,fiftyDayAverageChange,fiftyDayAverageChangePercent,fiftyTwoWeekChangePercent,fiftyTwoWeekHigh,fiftyTwoWeekHighChange,fiftyTwoWeekHighChangePercent,fiftyTwoWeekLow,fiftyTwoWeekLowChange,fiftyTwoWeekLowChangePercent,fiftyTwoWeekRange,financialCurrency,firstTradeDateMilliseconds,forwardPe,fromCurrency,fromExchange,fullExchangeName,gmtOffSetMilliseconds,headSymbolAsString,ipoExpectedDate,language,lastMarket,companyLogoUrl,logoUrl,longName,market,marketCap,marketState,messageBoardId,morningstarIndustry,nameChangeDate,netAssets,netExpenseRatio,openInterest,optionsType,optionType,overnightMarketChange,overnightMarketChangePercent,overnightMarketPrice,overnightMarketTime,postMarketChange,postMarketChangePercent,postMarketPrice,postMarketTime,preMarketChange,preMarketChangePercent,preMarketPrice,preMarketTime,prevName,priceEpsCurrentYear,priceHint,priceToBook,quartrId,quoteSourceName,quoteType,region,regularMarketChange,regularMarketChangePercent,regularMarketDayHigh,regularMarketDayLow,regularMarketDayRange,regularMarketOpen,regularMarketPreviousClose,regularMarketPrice,regularMarketSource,regularMarketTime,regularMarketVolume,sharesOutstanding,shortName,sourceInterval,startDate,stockStory,strike,symbol,toCurrency,toExchange,tradeable,trailingAnnualDividendRate,trailingAnnualDividendYield,trailingPE,trailingThreeMonthNavReturns,trailingThreeMonthReturns,triggerable,twoHundredDayAverage,twoHundredDayAverageChange,twoHundredDayAverageChangePercent,typeDisp,underlyingExchangeSymbol,underlyingShortName,underlyingSymbol,volume24Hr,volumeAllCurrencies,ytdReturn"
+    ],
+    "file": "quote/ES_F.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote/EURUSD=X": {
+    "argv": [
+      "quote",
+      "EURUSD=X",
+      "--fields",
+      "ask,askSize,averageAnalystRating,averageDailyVolume10Day,averageDailyVolume3Month,bid,bidSize,bookValue,circulatingSupply,coinImageUrl,coinMarketCapLink,contractSymbol,cryptoTradeable,customPriceAlertConfidence,currency,displayName,dividendDate,dividendRate,dividendYield,earningsTimestamp,earningsTimestampEnd,earningsTimestampStart,epsCurrentYear,epsForward,epsTrailingTwelveMonths,esgPopulated,exchange,exchangeDataDelayedBy,exchangeTimezoneName,exchangeTimezoneShortName,extendedMarketChange,extendedMarketChangePercent,extendedMarketPrice,extendedMarketTime,expireDate,expireIsoDate,fiftyDayAverage,fiftyDayAverageChange,fiftyDayAverageChangePercent,fiftyTwoWeekChangePercent,fiftyTwoWeekHigh,fiftyTwoWeekHighChange,fiftyTwoWeekHighChangePercent,fiftyTwoWeekLow,fiftyTwoWeekLowChange,fiftyTwoWeekLowChangePercent,fiftyTwoWeekRange,financialCurrency,firstTradeDateMilliseconds,forwardPe,fromCurrency,fromExchange,fullExchangeName,gmtOffSetMilliseconds,headSymbolAsString,ipoExpectedDate,language,lastMarket,companyLogoUrl,logoUrl,longName,market,marketCap,marketState,messageBoardId,morningstarIndustry,nameChangeDate,netAssets,netExpenseRatio,openInterest,optionsType,optionType,overnightMarketChange,overnightMarketChangePercent,overnightMarketPrice,overnightMarketTime,postMarketChange,postMarketChangePercent,postMarketPrice,postMarketTime,preMarketChange,preMarketChangePercent,preMarketPrice,preMarketTime,prevName,priceEpsCurrentYear,priceHint,priceToBook,quartrId,quoteSourceName,quoteType,region,regularMarketChange,regularMarketChangePercent,regularMarketDayHigh,regularMarketDayLow,regularMarketDayRange,regularMarketOpen,regularMarketPreviousClose,regularMarketPrice,regularMarketSource,regularMarketTime,regularMarketVolume,sharesOutstanding,shortName,sourceInterval,startDate,stockStory,strike,symbol,toCurrency,toExchange,tradeable,trailingAnnualDividendRate,trailingAnnualDividendYield,trailingPE,trailingThreeMonthNavReturns,trailingThreeMonthReturns,triggerable,twoHundredDayAverage,twoHundredDayAverageChange,twoHundredDayAverageChangePercent,typeDisp,underlyingExchangeSymbol,underlyingShortName,underlyingSymbol,volume24Hr,volumeAllCurrencies,ytdReturn"
+    ],
+    "file": "quote/EURUSD_X.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote/MSFT": {
+    "argv": [
+      "quote",
+      "MSFT",
+      "--fields",
+      "ask,askSize,averageAnalystRating,averageDailyVolume10Day,averageDailyVolume3Month,bid,bidSize,bookValue,circulatingSupply,coinImageUrl,coinMarketCapLink,contractSymbol,cryptoTradeable,customPriceAlertConfidence,currency,displayName,dividendDate,dividendRate,dividendYield,earningsTimestamp,earningsTimestampEnd,earningsTimestampStart,epsCurrentYear,epsForward,epsTrailingTwelveMonths,esgPopulated,exchange,exchangeDataDelayedBy,exchangeTimezoneName,exchangeTimezoneShortName,extendedMarketChange,extendedMarketChangePercent,extendedMarketPrice,extendedMarketTime,expireDate,expireIsoDate,fiftyDayAverage,fiftyDayAverageChange,fiftyDayAverageChangePercent,fiftyTwoWeekChangePercent,fiftyTwoWeekHigh,fiftyTwoWeekHighChange,fiftyTwoWeekHighChangePercent,fiftyTwoWeekLow,fiftyTwoWeekLowChange,fiftyTwoWeekLowChangePercent,fiftyTwoWeekRange,financialCurrency,firstTradeDateMilliseconds,forwardPe,fromCurrency,fromExchange,fullExchangeName,gmtOffSetMilliseconds,headSymbolAsString,ipoExpectedDate,language,lastMarket,companyLogoUrl,logoUrl,longName,market,marketCap,marketState,messageBoardId,morningstarIndustry,nameChangeDate,netAssets,netExpenseRatio,openInterest,optionsType,optionType,overnightMarketChange,overnightMarketChangePercent,overnightMarketPrice,overnightMarketTime,postMarketChange,postMarketChangePercent,postMarketPrice,postMarketTime,preMarketChange,preMarketChangePercent,preMarketPrice,preMarketTime,prevName,priceEpsCurrentYear,priceHint,priceToBook,quartrId,quoteSourceName,quoteType,region,regularMarketChange,regularMarketChangePercent,regularMarketDayHigh,regularMarketDayLow,regularMarketDayRange,regularMarketOpen,regularMarketPreviousClose,regularMarketPrice,regularMarketSource,regularMarketTime,regularMarketVolume,sharesOutstanding,shortName,sourceInterval,startDate,stockStory,strike,symbol,toCurrency,toExchange,tradeable,trailingAnnualDividendRate,trailingAnnualDividendYield,trailingPE,trailingThreeMonthNavReturns,trailingThreeMonthReturns,triggerable,twoHundredDayAverage,twoHundredDayAverageChange,twoHundredDayAverageChangePercent,typeDisp,underlyingExchangeSymbol,underlyingShortName,underlyingSymbol,volume24Hr,volumeAllCurrencies,ytdReturn"
+    ],
+    "file": "quote/MSFT.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote/OKLO": {
+    "argv": [
+      "quote",
+      "OKLO",
+      "--fields",
+      "ask,askSize,averageAnalystRating,averageDailyVolume10Day,averageDailyVolume3Month,bid,bidSize,bookValue,circulatingSupply,coinImageUrl,coinMarketCapLink,contractSymbol,cryptoTradeable,customPriceAlertConfidence,currency,displayName,dividendDate,dividendRate,dividendYield,earningsTimestamp,earningsTimestampEnd,earningsTimestampStart,epsCurrentYear,epsForward,epsTrailingTwelveMonths,esgPopulated,exchange,exchangeDataDelayedBy,exchangeTimezoneName,exchangeTimezoneShortName,extendedMarketChange,extendedMarketChangePercent,extendedMarketPrice,extendedMarketTime,expireDate,expireIsoDate,fiftyDayAverage,fiftyDayAverageChange,fiftyDayAverageChangePercent,fiftyTwoWeekChangePercent,fiftyTwoWeekHigh,fiftyTwoWeekHighChange,fiftyTwoWeekHighChangePercent,fiftyTwoWeekLow,fiftyTwoWeekLowChange,fiftyTwoWeekLowChangePercent,fiftyTwoWeekRange,financialCurrency,firstTradeDateMilliseconds,forwardPe,fromCurrency,fromExchange,fullExchangeName,gmtOffSetMilliseconds,headSymbolAsString,ipoExpectedDate,language,lastMarket,companyLogoUrl,logoUrl,longName,market,marketCap,marketState,messageBoardId,morningstarIndustry,nameChangeDate,netAssets,netExpenseRatio,openInterest,optionsType,optionType,overnightMarketChange,overnightMarketChangePercent,overnightMarketPrice,overnightMarketTime,postMarketChange,postMarketChangePercent,postMarketPrice,postMarketTime,preMarketChange,preMarketChangePercent,preMarketPrice,preMarketTime,prevName,priceEpsCurrentYear,priceHint,priceToBook,quartrId,quoteSourceName,quoteType,region,regularMarketChange,regularMarketChangePercent,regularMarketDayHigh,regularMarketDayLow,regularMarketDayRange,regularMarketOpen,regularMarketPreviousClose,regularMarketPrice,regularMarketSource,regularMarketTime,regularMarketVolume,sharesOutstanding,shortName,sourceInterval,startDate,stockStory,strike,symbol,toCurrency,toExchange,tradeable,trailingAnnualDividendRate,trailingAnnualDividendYield,trailingPE,trailingThreeMonthNavReturns,trailingThreeMonthReturns,triggerable,twoHundredDayAverage,twoHundredDayAverageChange,twoHundredDayAverageChangePercent,typeDisp,underlyingExchangeSymbol,underlyingShortName,underlyingSymbol,volume24Hr,volumeAllCurrencies,ytdReturn"
+    ],
+    "file": "quote/OKLO.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote/OPTION_CONTRACT": {
+    "argv": [
+      "quote",
+      "AAPL260706C00240000"
+    ],
+    "file": "quote/OPTION_CONTRACT.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote/QQQ": {
+    "argv": [
+      "quote",
+      "QQQ",
+      "--fields",
+      "ask,askSize,averageAnalystRating,averageDailyVolume10Day,averageDailyVolume3Month,bid,bidSize,bookValue,circulatingSupply,coinImageUrl,coinMarketCapLink,contractSymbol,cryptoTradeable,customPriceAlertConfidence,currency,displayName,dividendDate,dividendRate,dividendYield,earningsTimestamp,earningsTimestampEnd,earningsTimestampStart,epsCurrentYear,epsForward,epsTrailingTwelveMonths,esgPopulated,exchange,exchangeDataDelayedBy,exchangeTimezoneName,exchangeTimezoneShortName,extendedMarketChange,extendedMarketChangePercent,extendedMarketPrice,extendedMarketTime,expireDate,expireIsoDate,fiftyDayAverage,fiftyDayAverageChange,fiftyDayAverageChangePercent,fiftyTwoWeekChangePercent,fiftyTwoWeekHigh,fiftyTwoWeekHighChange,fiftyTwoWeekHighChangePercent,fiftyTwoWeekLow,fiftyTwoWeekLowChange,fiftyTwoWeekLowChangePercent,fiftyTwoWeekRange,financialCurrency,firstTradeDateMilliseconds,forwardPe,fromCurrency,fromExchange,fullExchangeName,gmtOffSetMilliseconds,headSymbolAsString,ipoExpectedDate,language,lastMarket,companyLogoUrl,logoUrl,longName,market,marketCap,marketState,messageBoardId,morningstarIndustry,nameChangeDate,netAssets,netExpenseRatio,openInterest,optionsType,optionType,overnightMarketChange,overnightMarketChangePercent,overnightMarketPrice,overnightMarketTime,postMarketChange,postMarketChangePercent,postMarketPrice,postMarketTime,preMarketChange,preMarketChangePercent,preMarketPrice,preMarketTime,prevName,priceEpsCurrentYear,priceHint,priceToBook,quartrId,quoteSourceName,quoteType,region,regularMarketChange,regularMarketChangePercent,regularMarketDayHigh,regularMarketDayLow,regularMarketDayRange,regularMarketOpen,regularMarketPreviousClose,regularMarketPrice,regularMarketSource,regularMarketTime,regularMarketVolume,sharesOutstanding,shortName,sourceInterval,startDate,stockStory,strike,symbol,toCurrency,toExchange,tradeable,trailingAnnualDividendRate,trailingAnnualDividendYield,trailingPE,trailingThreeMonthNavReturns,trailingThreeMonthReturns,triggerable,twoHundredDayAverage,twoHundredDayAverageChange,twoHundredDayAverageChangePercent,typeDisp,underlyingExchangeSymbol,underlyingShortName,underlyingSymbol,volume24Hr,volumeAllCurrencies,ytdReturn"
+    ],
+    "file": "quote/QQQ.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote/RY.TO": {
+    "argv": [
+      "quote",
+      "RY.TO",
+      "--fields",
+      "ask,askSize,averageAnalystRating,averageDailyVolume10Day,averageDailyVolume3Month,bid,bidSize,bookValue,circulatingSupply,coinImageUrl,coinMarketCapLink,contractSymbol,cryptoTradeable,customPriceAlertConfidence,currency,displayName,dividendDate,dividendRate,dividendYield,earningsTimestamp,earningsTimestampEnd,earningsTimestampStart,epsCurrentYear,epsForward,epsTrailingTwelveMonths,esgPopulated,exchange,exchangeDataDelayedBy,exchangeTimezoneName,exchangeTimezoneShortName,extendedMarketChange,extendedMarketChangePercent,extendedMarketPrice,extendedMarketTime,expireDate,expireIsoDate,fiftyDayAverage,fiftyDayAverageChange,fiftyDayAverageChangePercent,fiftyTwoWeekChangePercent,fiftyTwoWeekHigh,fiftyTwoWeekHighChange,fiftyTwoWeekHighChangePercent,fiftyTwoWeekLow,fiftyTwoWeekLowChange,fiftyTwoWeekLowChangePercent,fiftyTwoWeekRange,financialCurrency,firstTradeDateMilliseconds,forwardPe,fromCurrency,fromExchange,fullExchangeName,gmtOffSetMilliseconds,headSymbolAsString,ipoExpectedDate,language,lastMarket,companyLogoUrl,logoUrl,longName,market,marketCap,marketState,messageBoardId,morningstarIndustry,nameChangeDate,netAssets,netExpenseRatio,openInterest,optionsType,optionType,overnightMarketChange,overnightMarketChangePercent,overnightMarketPrice,overnightMarketTime,postMarketChange,postMarketChangePercent,postMarketPrice,postMarketTime,preMarketChange,preMarketChangePercent,preMarketPrice,preMarketTime,prevName,priceEpsCurrentYear,priceHint,priceToBook,quartrId,quoteSourceName,quoteType,region,regularMarketChange,regularMarketChangePercent,regularMarketDayHigh,regularMarketDayLow,regularMarketDayRange,regularMarketOpen,regularMarketPreviousClose,regularMarketPrice,regularMarketSource,regularMarketTime,regularMarketVolume,sharesOutstanding,shortName,sourceInterval,startDate,stockStory,strike,symbol,toCurrency,toExchange,tradeable,trailingAnnualDividendRate,trailingAnnualDividendYield,trailingPE,trailingThreeMonthNavReturns,trailingThreeMonthReturns,triggerable,twoHundredDayAverage,twoHundredDayAverageChange,twoHundredDayAverageChangePercent,typeDisp,underlyingExchangeSymbol,underlyingShortName,underlyingSymbol,volume24Hr,volumeAllCurrencies,ytdReturn"
+    ],
+    "file": "quote/RY.TO.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote/SHEL.L": {
+    "argv": [
+      "quote",
+      "SHEL.L",
+      "--fields",
+      "ask,askSize,averageAnalystRating,averageDailyVolume10Day,averageDailyVolume3Month,bid,bidSize,bookValue,circulatingSupply,coinImageUrl,coinMarketCapLink,contractSymbol,cryptoTradeable,customPriceAlertConfidence,currency,displayName,dividendDate,dividendRate,dividendYield,earningsTimestamp,earningsTimestampEnd,earningsTimestampStart,epsCurrentYear,epsForward,epsTrailingTwelveMonths,esgPopulated,exchange,exchangeDataDelayedBy,exchangeTimezoneName,exchangeTimezoneShortName,extendedMarketChange,extendedMarketChangePercent,extendedMarketPrice,extendedMarketTime,expireDate,expireIsoDate,fiftyDayAverage,fiftyDayAverageChange,fiftyDayAverageChangePercent,fiftyTwoWeekChangePercent,fiftyTwoWeekHigh,fiftyTwoWeekHighChange,fiftyTwoWeekHighChangePercent,fiftyTwoWeekLow,fiftyTwoWeekLowChange,fiftyTwoWeekLowChangePercent,fiftyTwoWeekRange,financialCurrency,firstTradeDateMilliseconds,forwardPe,fromCurrency,fromExchange,fullExchangeName,gmtOffSetMilliseconds,headSymbolAsString,ipoExpectedDate,language,lastMarket,companyLogoUrl,logoUrl,longName,market,marketCap,marketState,messageBoardId,morningstarIndustry,nameChangeDate,netAssets,netExpenseRatio,openInterest,optionsType,optionType,overnightMarketChange,overnightMarketChangePercent,overnightMarketPrice,overnightMarketTime,postMarketChange,postMarketChangePercent,postMarketPrice,postMarketTime,preMarketChange,preMarketChangePercent,preMarketPrice,preMarketTime,prevName,priceEpsCurrentYear,priceHint,priceToBook,quartrId,quoteSourceName,quoteType,region,regularMarketChange,regularMarketChangePercent,regularMarketDayHigh,regularMarketDayLow,regularMarketDayRange,regularMarketOpen,regularMarketPreviousClose,regularMarketPrice,regularMarketSource,regularMarketTime,regularMarketVolume,sharesOutstanding,shortName,sourceInterval,startDate,stockStory,strike,symbol,toCurrency,toExchange,tradeable,trailingAnnualDividendRate,trailingAnnualDividendYield,trailingPE,trailingThreeMonthNavReturns,trailingThreeMonthReturns,triggerable,twoHundredDayAverage,twoHundredDayAverageChange,twoHundredDayAverageChangePercent,typeDisp,underlyingExchangeSymbol,underlyingShortName,underlyingSymbol,volume24Hr,volumeAllCurrencies,ytdReturn"
+    ],
+    "file": "quote/SHEL.L.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote/SPY": {
+    "argv": [
+      "quote",
+      "SPY",
+      "--fields",
+      "ask,askSize,averageAnalystRating,averageDailyVolume10Day,averageDailyVolume3Month,bid,bidSize,bookValue,circulatingSupply,coinImageUrl,coinMarketCapLink,contractSymbol,cryptoTradeable,customPriceAlertConfidence,currency,displayName,dividendDate,dividendRate,dividendYield,earningsTimestamp,earningsTimestampEnd,earningsTimestampStart,epsCurrentYear,epsForward,epsTrailingTwelveMonths,esgPopulated,exchange,exchangeDataDelayedBy,exchangeTimezoneName,exchangeTimezoneShortName,extendedMarketChange,extendedMarketChangePercent,extendedMarketPrice,extendedMarketTime,expireDate,expireIsoDate,fiftyDayAverage,fiftyDayAverageChange,fiftyDayAverageChangePercent,fiftyTwoWeekChangePercent,fiftyTwoWeekHigh,fiftyTwoWeekHighChange,fiftyTwoWeekHighChangePercent,fiftyTwoWeekLow,fiftyTwoWeekLowChange,fiftyTwoWeekLowChangePercent,fiftyTwoWeekRange,financialCurrency,firstTradeDateMilliseconds,forwardPe,fromCurrency,fromExchange,fullExchangeName,gmtOffSetMilliseconds,headSymbolAsString,ipoExpectedDate,language,lastMarket,companyLogoUrl,logoUrl,longName,market,marketCap,marketState,messageBoardId,morningstarIndustry,nameChangeDate,netAssets,netExpenseRatio,openInterest,optionsType,optionType,overnightMarketChange,overnightMarketChangePercent,overnightMarketPrice,overnightMarketTime,postMarketChange,postMarketChangePercent,postMarketPrice,postMarketTime,preMarketChange,preMarketChangePercent,preMarketPrice,preMarketTime,prevName,priceEpsCurrentYear,priceHint,priceToBook,quartrId,quoteSourceName,quoteType,region,regularMarketChange,regularMarketChangePercent,regularMarketDayHigh,regularMarketDayLow,regularMarketDayRange,regularMarketOpen,regularMarketPreviousClose,regularMarketPrice,regularMarketSource,regularMarketTime,regularMarketVolume,sharesOutstanding,shortName,sourceInterval,startDate,stockStory,strike,symbol,toCurrency,toExchange,tradeable,trailingAnnualDividendRate,trailingAnnualDividendYield,trailingPE,trailingThreeMonthNavReturns,trailingThreeMonthReturns,triggerable,twoHundredDayAverage,twoHundredDayAverageChange,twoHundredDayAverageChangePercent,typeDisp,underlyingExchangeSymbol,underlyingShortName,underlyingSymbol,volume24Hr,volumeAllCurrencies,ytdReturn"
+    ],
+    "file": "quote/SPY.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote/VT": {
+    "argv": [
+      "quote",
+      "VT",
+      "--fields",
+      "ask,askSize,averageAnalystRating,averageDailyVolume10Day,averageDailyVolume3Month,bid,bidSize,bookValue,circulatingSupply,coinImageUrl,coinMarketCapLink,contractSymbol,cryptoTradeable,customPriceAlertConfidence,currency,displayName,dividendDate,dividendRate,dividendYield,earningsTimestamp,earningsTimestampEnd,earningsTimestampStart,epsCurrentYear,epsForward,epsTrailingTwelveMonths,esgPopulated,exchange,exchangeDataDelayedBy,exchangeTimezoneName,exchangeTimezoneShortName,extendedMarketChange,extendedMarketChangePercent,extendedMarketPrice,extendedMarketTime,expireDate,expireIsoDate,fiftyDayAverage,fiftyDayAverageChange,fiftyDayAverageChangePercent,fiftyTwoWeekChangePercent,fiftyTwoWeekHigh,fiftyTwoWeekHighChange,fiftyTwoWeekHighChangePercent,fiftyTwoWeekLow,fiftyTwoWeekLowChange,fiftyTwoWeekLowChangePercent,fiftyTwoWeekRange,financialCurrency,firstTradeDateMilliseconds,forwardPe,fromCurrency,fromExchange,fullExchangeName,gmtOffSetMilliseconds,headSymbolAsString,ipoExpectedDate,language,lastMarket,companyLogoUrl,logoUrl,longName,market,marketCap,marketState,messageBoardId,morningstarIndustry,nameChangeDate,netAssets,netExpenseRatio,openInterest,optionsType,optionType,overnightMarketChange,overnightMarketChangePercent,overnightMarketPrice,overnightMarketTime,postMarketChange,postMarketChangePercent,postMarketPrice,postMarketTime,preMarketChange,preMarketChangePercent,preMarketPrice,preMarketTime,prevName,priceEpsCurrentYear,priceHint,priceToBook,quartrId,quoteSourceName,quoteType,region,regularMarketChange,regularMarketChangePercent,regularMarketDayHigh,regularMarketDayLow,regularMarketDayRange,regularMarketOpen,regularMarketPreviousClose,regularMarketPrice,regularMarketSource,regularMarketTime,regularMarketVolume,sharesOutstanding,shortName,sourceInterval,startDate,stockStory,strike,symbol,toCurrency,toExchange,tradeable,trailingAnnualDividendRate,trailingAnnualDividendYield,trailingPE,trailingThreeMonthNavReturns,trailingThreeMonthReturns,triggerable,twoHundredDayAverage,twoHundredDayAverageChange,twoHundredDayAverageChangePercent,typeDisp,underlyingExchangeSymbol,underlyingShortName,underlyingSymbol,volume24Hr,volumeAllCurrencies,ytdReturn"
+    ],
+    "file": "quote/VT.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote/VTSAX": {
+    "argv": [
+      "quote",
+      "VTSAX",
+      "--fields",
+      "ask,askSize,averageAnalystRating,averageDailyVolume10Day,averageDailyVolume3Month,bid,bidSize,bookValue,circulatingSupply,coinImageUrl,coinMarketCapLink,contractSymbol,cryptoTradeable,customPriceAlertConfidence,currency,displayName,dividendDate,dividendRate,dividendYield,earningsTimestamp,earningsTimestampEnd,earningsTimestampStart,epsCurrentYear,epsForward,epsTrailingTwelveMonths,esgPopulated,exchange,exchangeDataDelayedBy,exchangeTimezoneName,exchangeTimezoneShortName,extendedMarketChange,extendedMarketChangePercent,extendedMarketPrice,extendedMarketTime,expireDate,expireIsoDate,fiftyDayAverage,fiftyDayAverageChange,fiftyDayAverageChangePercent,fiftyTwoWeekChangePercent,fiftyTwoWeekHigh,fiftyTwoWeekHighChange,fiftyTwoWeekHighChangePercent,fiftyTwoWeekLow,fiftyTwoWeekLowChange,fiftyTwoWeekLowChangePercent,fiftyTwoWeekRange,financialCurrency,firstTradeDateMilliseconds,forwardPe,fromCurrency,fromExchange,fullExchangeName,gmtOffSetMilliseconds,headSymbolAsString,ipoExpectedDate,language,lastMarket,companyLogoUrl,logoUrl,longName,market,marketCap,marketState,messageBoardId,morningstarIndustry,nameChangeDate,netAssets,netExpenseRatio,openInterest,optionsType,optionType,overnightMarketChange,overnightMarketChangePercent,overnightMarketPrice,overnightMarketTime,postMarketChange,postMarketChangePercent,postMarketPrice,postMarketTime,preMarketChange,preMarketChangePercent,preMarketPrice,preMarketTime,prevName,priceEpsCurrentYear,priceHint,priceToBook,quartrId,quoteSourceName,quoteType,region,regularMarketChange,regularMarketChangePercent,regularMarketDayHigh,regularMarketDayLow,regularMarketDayRange,regularMarketOpen,regularMarketPreviousClose,regularMarketPrice,regularMarketSource,regularMarketTime,regularMarketVolume,sharesOutstanding,shortName,sourceInterval,startDate,stockStory,strike,symbol,toCurrency,toExchange,tradeable,trailingAnnualDividendRate,trailingAnnualDividendYield,trailingPE,trailingThreeMonthNavReturns,trailingThreeMonthReturns,triggerable,twoHundredDayAverage,twoHundredDayAverageChange,twoHundredDayAverageChangePercent,typeDisp,underlyingExchangeSymbol,underlyingShortName,underlyingSymbol,volume24Hr,volumeAllCurrencies,ytdReturn"
+    ],
+    "file": "quote/VTSAX.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote/ZZZZXYZQ": {
+    "argv": [
+      "quote",
+      "ZZZZXYZQ"
+    ],
+    "file": "quote/ZZZZXYZQ.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote/^DJI": {
+    "argv": [
+      "quote",
+      "^DJI",
+      "--fields",
+      "ask,askSize,averageAnalystRating,averageDailyVolume10Day,averageDailyVolume3Month,bid,bidSize,bookValue,circulatingSupply,coinImageUrl,coinMarketCapLink,contractSymbol,cryptoTradeable,customPriceAlertConfidence,currency,displayName,dividendDate,dividendRate,dividendYield,earningsTimestamp,earningsTimestampEnd,earningsTimestampStart,epsCurrentYear,epsForward,epsTrailingTwelveMonths,esgPopulated,exchange,exchangeDataDelayedBy,exchangeTimezoneName,exchangeTimezoneShortName,extendedMarketChange,extendedMarketChangePercent,extendedMarketPrice,extendedMarketTime,expireDate,expireIsoDate,fiftyDayAverage,fiftyDayAverageChange,fiftyDayAverageChangePercent,fiftyTwoWeekChangePercent,fiftyTwoWeekHigh,fiftyTwoWeekHighChange,fiftyTwoWeekHighChangePercent,fiftyTwoWeekLow,fiftyTwoWeekLowChange,fiftyTwoWeekLowChangePercent,fiftyTwoWeekRange,financialCurrency,firstTradeDateMilliseconds,forwardPe,fromCurrency,fromExchange,fullExchangeName,gmtOffSetMilliseconds,headSymbolAsString,ipoExpectedDate,language,lastMarket,companyLogoUrl,logoUrl,longName,market,marketCap,marketState,messageBoardId,morningstarIndustry,nameChangeDate,netAssets,netExpenseRatio,openInterest,optionsType,optionType,overnightMarketChange,overnightMarketChangePercent,overnightMarketPrice,overnightMarketTime,postMarketChange,postMarketChangePercent,postMarketPrice,postMarketTime,preMarketChange,preMarketChangePercent,preMarketPrice,preMarketTime,prevName,priceEpsCurrentYear,priceHint,priceToBook,quartrId,quoteSourceName,quoteType,region,regularMarketChange,regularMarketChangePercent,regularMarketDayHigh,regularMarketDayLow,regularMarketDayRange,regularMarketOpen,regularMarketPreviousClose,regularMarketPrice,regularMarketSource,regularMarketTime,regularMarketVolume,sharesOutstanding,shortName,sourceInterval,startDate,stockStory,strike,symbol,toCurrency,toExchange,tradeable,trailingAnnualDividendRate,trailingAnnualDividendYield,trailingPE,trailingThreeMonthNavReturns,trailingThreeMonthReturns,triggerable,twoHundredDayAverage,twoHundredDayAverageChange,twoHundredDayAverageChangePercent,typeDisp,underlyingExchangeSymbol,underlyingShortName,underlyingSymbol,volume24Hr,volumeAllCurrencies,ytdReturn"
+    ],
+    "file": "quote/_DJI.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote/^GSPC": {
+    "argv": [
+      "quote",
+      "^GSPC",
+      "--fields",
+      "ask,askSize,averageAnalystRating,averageDailyVolume10Day,averageDailyVolume3Month,bid,bidSize,bookValue,circulatingSupply,coinImageUrl,coinMarketCapLink,contractSymbol,cryptoTradeable,customPriceAlertConfidence,currency,displayName,dividendDate,dividendRate,dividendYield,earningsTimestamp,earningsTimestampEnd,earningsTimestampStart,epsCurrentYear,epsForward,epsTrailingTwelveMonths,esgPopulated,exchange,exchangeDataDelayedBy,exchangeTimezoneName,exchangeTimezoneShortName,extendedMarketChange,extendedMarketChangePercent,extendedMarketPrice,extendedMarketTime,expireDate,expireIsoDate,fiftyDayAverage,fiftyDayAverageChange,fiftyDayAverageChangePercent,fiftyTwoWeekChangePercent,fiftyTwoWeekHigh,fiftyTwoWeekHighChange,fiftyTwoWeekHighChangePercent,fiftyTwoWeekLow,fiftyTwoWeekLowChange,fiftyTwoWeekLowChangePercent,fiftyTwoWeekRange,financialCurrency,firstTradeDateMilliseconds,forwardPe,fromCurrency,fromExchange,fullExchangeName,gmtOffSetMilliseconds,headSymbolAsString,ipoExpectedDate,language,lastMarket,companyLogoUrl,logoUrl,longName,market,marketCap,marketState,messageBoardId,morningstarIndustry,nameChangeDate,netAssets,netExpenseRatio,openInterest,optionsType,optionType,overnightMarketChange,overnightMarketChangePercent,overnightMarketPrice,overnightMarketTime,postMarketChange,postMarketChangePercent,postMarketPrice,postMarketTime,preMarketChange,preMarketChangePercent,preMarketPrice,preMarketTime,prevName,priceEpsCurrentYear,priceHint,priceToBook,quartrId,quoteSourceName,quoteType,region,regularMarketChange,regularMarketChangePercent,regularMarketDayHigh,regularMarketDayLow,regularMarketDayRange,regularMarketOpen,regularMarketPreviousClose,regularMarketPrice,regularMarketSource,regularMarketTime,regularMarketVolume,sharesOutstanding,shortName,sourceInterval,startDate,stockStory,strike,symbol,toCurrency,toExchange,tradeable,trailingAnnualDividendRate,trailingAnnualDividendYield,trailingPE,trailingThreeMonthNavReturns,trailingThreeMonthReturns,triggerable,twoHundredDayAverage,twoHundredDayAverageChange,twoHundredDayAverageChangePercent,typeDisp,underlyingExchangeSymbol,underlyingShortName,underlyingSymbol,volume24Hr,volumeAllCurrencies,ytdReturn"
+    ],
+    "file": "quote/_GSPC.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote/^IRX": {
+    "argv": [
+      "quote",
+      "^IRX",
+      "--fields",
+      "ask,askSize,averageAnalystRating,averageDailyVolume10Day,averageDailyVolume3Month,bid,bidSize,bookValue,circulatingSupply,coinImageUrl,coinMarketCapLink,contractSymbol,cryptoTradeable,customPriceAlertConfidence,currency,displayName,dividendDate,dividendRate,dividendYield,earningsTimestamp,earningsTimestampEnd,earningsTimestampStart,epsCurrentYear,epsForward,epsTrailingTwelveMonths,esgPopulated,exchange,exchangeDataDelayedBy,exchangeTimezoneName,exchangeTimezoneShortName,extendedMarketChange,extendedMarketChangePercent,extendedMarketPrice,extendedMarketTime,expireDate,expireIsoDate,fiftyDayAverage,fiftyDayAverageChange,fiftyDayAverageChangePercent,fiftyTwoWeekChangePercent,fiftyTwoWeekHigh,fiftyTwoWeekHighChange,fiftyTwoWeekHighChangePercent,fiftyTwoWeekLow,fiftyTwoWeekLowChange,fiftyTwoWeekLowChangePercent,fiftyTwoWeekRange,financialCurrency,firstTradeDateMilliseconds,forwardPe,fromCurrency,fromExchange,fullExchangeName,gmtOffSetMilliseconds,headSymbolAsString,ipoExpectedDate,language,lastMarket,companyLogoUrl,logoUrl,longName,market,marketCap,marketState,messageBoardId,morningstarIndustry,nameChangeDate,netAssets,netExpenseRatio,openInterest,optionsType,optionType,overnightMarketChange,overnightMarketChangePercent,overnightMarketPrice,overnightMarketTime,postMarketChange,postMarketChangePercent,postMarketPrice,postMarketTime,preMarketChange,preMarketChangePercent,preMarketPrice,preMarketTime,prevName,priceEpsCurrentYear,priceHint,priceToBook,quartrId,quoteSourceName,quoteType,region,regularMarketChange,regularMarketChangePercent,regularMarketDayHigh,regularMarketDayLow,regularMarketDayRange,regularMarketOpen,regularMarketPreviousClose,regularMarketPrice,regularMarketSource,regularMarketTime,regularMarketVolume,sharesOutstanding,shortName,sourceInterval,startDate,stockStory,strike,symbol,toCurrency,toExchange,tradeable,trailingAnnualDividendRate,trailingAnnualDividendYield,trailingPE,trailingThreeMonthNavReturns,trailingThreeMonthReturns,triggerable,twoHundredDayAverage,twoHundredDayAverageChange,twoHundredDayAverageChangePercent,typeDisp,underlyingExchangeSymbol,underlyingShortName,underlyingSymbol,volume24Hr,volumeAllCurrencies,ytdReturn"
+    ],
+    "file": "quote/_IRX.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote/^IXIC": {
+    "argv": [
+      "quote",
+      "^IXIC",
+      "--fields",
+      "ask,askSize,averageAnalystRating,averageDailyVolume10Day,averageDailyVolume3Month,bid,bidSize,bookValue,circulatingSupply,coinImageUrl,coinMarketCapLink,contractSymbol,cryptoTradeable,customPriceAlertConfidence,currency,displayName,dividendDate,dividendRate,dividendYield,earningsTimestamp,earningsTimestampEnd,earningsTimestampStart,epsCurrentYear,epsForward,epsTrailingTwelveMonths,esgPopulated,exchange,exchangeDataDelayedBy,exchangeTimezoneName,exchangeTimezoneShortName,extendedMarketChange,extendedMarketChangePercent,extendedMarketPrice,extendedMarketTime,expireDate,expireIsoDate,fiftyDayAverage,fiftyDayAverageChange,fiftyDayAverageChangePercent,fiftyTwoWeekChangePercent,fiftyTwoWeekHigh,fiftyTwoWeekHighChange,fiftyTwoWeekHighChangePercent,fiftyTwoWeekLow,fiftyTwoWeekLowChange,fiftyTwoWeekLowChangePercent,fiftyTwoWeekRange,financialCurrency,firstTradeDateMilliseconds,forwardPe,fromCurrency,fromExchange,fullExchangeName,gmtOffSetMilliseconds,headSymbolAsString,ipoExpectedDate,language,lastMarket,companyLogoUrl,logoUrl,longName,market,marketCap,marketState,messageBoardId,morningstarIndustry,nameChangeDate,netAssets,netExpenseRatio,openInterest,optionsType,optionType,overnightMarketChange,overnightMarketChangePercent,overnightMarketPrice,overnightMarketTime,postMarketChange,postMarketChangePercent,postMarketPrice,postMarketTime,preMarketChange,preMarketChangePercent,preMarketPrice,preMarketTime,prevName,priceEpsCurrentYear,priceHint,priceToBook,quartrId,quoteSourceName,quoteType,region,regularMarketChange,regularMarketChangePercent,regularMarketDayHigh,regularMarketDayLow,regularMarketDayRange,regularMarketOpen,regularMarketPreviousClose,regularMarketPrice,regularMarketSource,regularMarketTime,regularMarketVolume,sharesOutstanding,shortName,sourceInterval,startDate,stockStory,strike,symbol,toCurrency,toExchange,tradeable,trailingAnnualDividendRate,trailingAnnualDividendYield,trailingPE,trailingThreeMonthNavReturns,trailingThreeMonthReturns,triggerable,twoHundredDayAverage,twoHundredDayAverageChange,twoHundredDayAverageChangePercent,typeDisp,underlyingExchangeSymbol,underlyingShortName,underlyingSymbol,volume24Hr,volumeAllCurrencies,ytdReturn"
+    ],
+    "file": "quote/_IXIC.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote/^TNX": {
+    "argv": [
+      "quote",
+      "^TNX",
+      "--fields",
+      "ask,askSize,averageAnalystRating,averageDailyVolume10Day,averageDailyVolume3Month,bid,bidSize,bookValue,circulatingSupply,coinImageUrl,coinMarketCapLink,contractSymbol,cryptoTradeable,customPriceAlertConfidence,currency,displayName,dividendDate,dividendRate,dividendYield,earningsTimestamp,earningsTimestampEnd,earningsTimestampStart,epsCurrentYear,epsForward,epsTrailingTwelveMonths,esgPopulated,exchange,exchangeDataDelayedBy,exchangeTimezoneName,exchangeTimezoneShortName,extendedMarketChange,extendedMarketChangePercent,extendedMarketPrice,extendedMarketTime,expireDate,expireIsoDate,fiftyDayAverage,fiftyDayAverageChange,fiftyDayAverageChangePercent,fiftyTwoWeekChangePercent,fiftyTwoWeekHigh,fiftyTwoWeekHighChange,fiftyTwoWeekHighChangePercent,fiftyTwoWeekLow,fiftyTwoWeekLowChange,fiftyTwoWeekLowChangePercent,fiftyTwoWeekRange,financialCurrency,firstTradeDateMilliseconds,forwardPe,fromCurrency,fromExchange,fullExchangeName,gmtOffSetMilliseconds,headSymbolAsString,ipoExpectedDate,language,lastMarket,companyLogoUrl,logoUrl,longName,market,marketCap,marketState,messageBoardId,morningstarIndustry,nameChangeDate,netAssets,netExpenseRatio,openInterest,optionsType,optionType,overnightMarketChange,overnightMarketChangePercent,overnightMarketPrice,overnightMarketTime,postMarketChange,postMarketChangePercent,postMarketPrice,postMarketTime,preMarketChange,preMarketChangePercent,preMarketPrice,preMarketTime,prevName,priceEpsCurrentYear,priceHint,priceToBook,quartrId,quoteSourceName,quoteType,region,regularMarketChange,regularMarketChangePercent,regularMarketDayHigh,regularMarketDayLow,regularMarketDayRange,regularMarketOpen,regularMarketPreviousClose,regularMarketPrice,regularMarketSource,regularMarketTime,regularMarketVolume,sharesOutstanding,shortName,sourceInterval,startDate,stockStory,strike,symbol,toCurrency,toExchange,tradeable,trailingAnnualDividendRate,trailingAnnualDividendYield,trailingPE,trailingThreeMonthNavReturns,trailingThreeMonthReturns,triggerable,twoHundredDayAverage,twoHundredDayAverageChange,twoHundredDayAverageChangePercent,typeDisp,underlyingExchangeSymbol,underlyingShortName,underlyingSymbol,volume24Hr,volumeAllCurrencies,ytdReturn"
+    ],
+    "file": "quote/_TNX.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "quote/multi": {
+    "argv": [
+      "quote",
+      "AAPL,MSFT,BTC-USD,EURUSD=X"
+    ],
+    "file": "quote/multi.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "ratings-top/AAPL": {
+    "argv": [
+      "ratings-top",
+      "AAPL"
+    ],
+    "file": "ratings-top/AAPL.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "ratings-top/MSFT": {
+    "argv": [
+      "ratings-top",
+      "MSFT"
+    ],
+    "file": "ratings-top/MSFT.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "ratings-top/RY.TO": {
+    "argv": [
+      "ratings-top",
+      "RY.TO"
+    ],
+    "detail": "Yahoo request rejected with HTTP 404 for https://query1.finance.yahoo.com/v2/ratings/top/RY.TO?exclude_noncurrent=true&lang=en-US&region=US",
+    "file": "ratings-top/RY.TO.json",
+    "http_status": 404,
+    "status": "http_error"
+  },
+  "raw/quote_AAPL": {
+    "argv": [
+      "raw",
+      "/v7/finance/quote",
+      "--param",
+      "symbols=AAPL"
+    ],
+    "file": "raw/quote_AAPL.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "recommendations-by-symbol/AAPL": {
+    "argv": [
+      "recommendations-by-symbol",
+      "AAPL"
+    ],
+    "file": "recommendations-by-symbol/AAPL.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "recommendations-by-symbol/MSFT": {
+    "argv": [
+      "recommendations-by-symbol",
+      "MSFT"
+    ],
+    "file": "recommendations-by-symbol/MSFT.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "recommendations-by-symbol/RY.TO": {
+    "argv": [
+      "recommendations-by-symbol",
+      "RY.TO"
+    ],
+    "file": "recommendations-by-symbol/RY.TO.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "recommendations-by-symbol/^GSPC": {
+    "argv": [
+      "recommendations-by-symbol",
+      "^GSPC"
+    ],
+    "file": "recommendations-by-symbol/_GSPC.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "screener-discover/default": {
+    "argv": [
+      "screener-discover"
+    ],
+    "file": "screener-discover/default.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "screener-instrument-fields/analyst_ratings": {
+    "argv": [
+      "screener-instrument-fields",
+      "analyst_ratings"
+    ],
+    "file": "screener-instrument-fields/analyst_ratings.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "screener-instrument-fields/bond": {
+    "argv": [
+      "screener-instrument-fields",
+      "bond"
+    ],
+    "file": "screener-instrument-fields/bond.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "screener-instrument-fields/commodity": {
+    "argv": [
+      "screener-instrument-fields",
+      "commodity"
+    ],
+    "file": "screener-instrument-fields/commodity.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "screener-instrument-fields/cryptocurrency": {
+    "argv": [
+      "screener-instrument-fields",
+      "cryptocurrency"
+    ],
+    "file": "screener-instrument-fields/cryptocurrency.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "screener-instrument-fields/currency": {
+    "argv": [
+      "screener-instrument-fields",
+      "currency"
+    ],
+    "file": "screener-instrument-fields/currency.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "screener-instrument-fields/economic_event": {
+    "argv": [
+      "screener-instrument-fields",
+      "economic_event"
+    ],
+    "file": "screener-instrument-fields/economic_event.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "screener-instrument-fields/equity": {
+    "argv": [
+      "screener-instrument-fields",
+      "equity"
+    ],
+    "file": "screener-instrument-fields/equity.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "screener-instrument-fields/etf": {
+    "argv": [
+      "screener-instrument-fields",
+      "etf"
+    ],
+    "file": "screener-instrument-fields/etf.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "screener-instrument-fields/future": {
+    "argv": [
+      "screener-instrument-fields",
+      "future"
+    ],
+    "file": "screener-instrument-fields/future.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "screener-instrument-fields/index": {
+    "argv": [
+      "screener-instrument-fields",
+      "index"
+    ],
+    "file": "screener-instrument-fields/index.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "screener-instrument-fields/insider_transaction": {
+    "argv": [
+      "screener-instrument-fields",
+      "insider_transaction"
+    ],
+    "file": "screener-instrument-fields/insider_transaction.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "screener-instrument-fields/institutional_holdings": {
+    "argv": [
+      "screener-instrument-fields",
+      "institutional_holdings"
+    ],
+    "file": "screener-instrument-fields/institutional_holdings.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "screener-instrument-fields/institutional_interest": {
+    "argv": [
+      "screener-instrument-fields",
+      "institutional_interest"
+    ],
+    "file": "screener-instrument-fields/institutional_interest.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "screener-instrument-fields/ipo_info": {
+    "argv": [
+      "screener-instrument-fields",
+      "ipo_info"
+    ],
+    "file": "screener-instrument-fields/ipo_info.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "screener-instrument-fields/mutualfund": {
+    "argv": [
+      "screener-instrument-fields",
+      "mutualfund"
+    ],
+    "file": "screener-instrument-fields/mutualfund.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "screener-instrument-fields/option": {
+    "argv": [
+      "screener-instrument-fields",
+      "option"
+    ],
+    "file": "screener-instrument-fields/option.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "screener-instrument-fields/research_reports": {
+    "argv": [
+      "screener-instrument-fields",
+      "research_reports"
+    ],
+    "file": "screener-instrument-fields/research_reports.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "screener-instrument-fields/splits": {
+    "argv": [
+      "screener-instrument-fields",
+      "splits"
+    ],
+    "file": "screener-instrument-fields/splits.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "screener-instrument-fields/trade_idea": {
+    "argv": [
+      "screener-instrument-fields",
+      "trade_idea"
+    ],
+    "file": "screener-instrument-fields/trade_idea.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "screener-instrument-fields/tradingcentral_event_info": {
+    "argv": [
+      "screener-instrument-fields",
+      "tradingcentral_event_info"
+    ],
+    "file": "screener-instrument-fields/tradingcentral_event_info.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "screener-instrument-fields/warrant": {
+    "argv": [
+      "screener-instrument-fields",
+      "warrant"
+    ],
+    "file": "screener-instrument-fields/warrant.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "screener-predefined/52_WEEK_GAINERS_PRIVATE_COMPANY": {
+    "argv": [
+      "screener-predefined",
+      "52_WEEK_GAINERS_PRIVATE_COMPANY"
+    ],
+    "file": "screener-predefined/52_WEEK_GAINERS_PRIVATE_COMPANY.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "screener-predefined/MOST_ACTIVES": {
+    "argv": [
+      "screener-predefined",
+      "MOST_ACTIVES"
+    ],
+    "file": "screener-predefined/MOST_ACTIVES.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "screener-predefined/MOST_ACTIVES_CRYPTOCURRENCIES": {
+    "argv": [
+      "screener-predefined",
+      "MOST_ACTIVES_CRYPTOCURRENCIES"
+    ],
+    "file": "screener-predefined/MOST_ACTIVES_CRYPTOCURRENCIES.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "screener-predefined/TOP_MUTUAL_FUNDS": {
+    "argv": [
+      "screener-predefined",
+      "TOP_MUTUAL_FUNDS"
+    ],
+    "file": "screener-predefined/TOP_MUTUAL_FUNDS.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "screener-predefined/TOP_OPTIONS_OPEN_INTEREST": {
+    "argv": [
+      "screener-predefined",
+      "TOP_OPTIONS_OPEN_INTEREST"
+    ],
+    "file": "screener-predefined/TOP_OPTIONS_OPEN_INTEREST.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "screener/equity_us_tech": {
+    "argv": [
+      "screener",
+      "--query",
+      "SELECT ticker, intradaymarketcap, sector FROM EQUITY WHERE region = 'us' AND sector = 'Technology' ORDER BY intradaymarketcap DESC LIMIT 5"
+    ],
+    "file": "screener/equity_us_tech.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "screener/etf": {
+    "argv": [
+      "screener",
+      "--query",
+      "SELECT ticker, intradaymarketcap FROM ETF WHERE region = 'us' ORDER BY intradaymarketcap DESC LIMIT 5"
+    ],
+    "detail": "Yahoo request rejected with HTTP 400 for https://query1.finance.yahoo.com/v1/finance/screener?lang=en-US&region=US&formatted=false&useRecordsResponse=true",
+    "file": "screener/etf.json",
+    "http_status": 400,
+    "status": "http_error"
+  },
+  "screener/mutualfund": {
+    "argv": [
+      "screener",
+      "--query",
+      "SELECT ticker FROM MUTUALFUND WHERE region = 'us' LIMIT 5"
+    ],
+    "detail": "Yahoo request rejected with HTTP 400 for https://query1.finance.yahoo.com/v1/finance/screener?lang=en-US&region=US&formatted=false&useRecordsResponse=true",
+    "file": "screener/mutualfund.json",
+    "http_status": 400,
+    "status": "http_error"
+  },
+  "sector/energy": {
+    "argv": [
+      "sector",
+      "energy"
+    ],
+    "file": "sector/energy.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "sector/real-estate": {
+    "argv": [
+      "sector",
+      "real-estate"
+    ],
+    "file": "sector/real-estate.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "sector/technology": {
+    "argv": [
+      "sector",
+      "technology"
+    ],
+    "file": "sector/technology.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "sector/technology_returns": {
+    "argv": [
+      "sector",
+      "technology",
+      "--with-returns"
+    ],
+    "file": "sector/technology_returns.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "spark/0700.HK": {
+    "argv": [
+      "spark",
+      "0700.HK"
+    ],
+    "file": "spark/0700.HK.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "spark/7203.T": {
+    "argv": [
+      "spark",
+      "7203.T"
+    ],
+    "file": "spark/7203.T.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "spark/AAPL": {
+    "argv": [
+      "spark",
+      "AAPL"
+    ],
+    "file": "spark/AAPL.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "spark/BABA": {
+    "argv": [
+      "spark",
+      "BABA"
+    ],
+    "file": "spark/BABA.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "spark/BAC-PL": {
+    "argv": [
+      "spark",
+      "BAC-PL"
+    ],
+    "file": "spark/BAC-PL.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "spark/BTC-USD": {
+    "argv": [
+      "spark",
+      "BTC-USD"
+    ],
+    "file": "spark/BTC-USD.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "spark/CL=F": {
+    "argv": [
+      "spark",
+      "CL=F"
+    ],
+    "file": "spark/CL_F.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "spark/ES=F": {
+    "argv": [
+      "spark",
+      "ES=F"
+    ],
+    "file": "spark/ES_F.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "spark/EURUSD=X": {
+    "argv": [
+      "spark",
+      "EURUSD=X"
+    ],
+    "file": "spark/EURUSD_X.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "spark/MSFT": {
+    "argv": [
+      "spark",
+      "MSFT"
+    ],
+    "file": "spark/MSFT.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "spark/OKLO": {
+    "argv": [
+      "spark",
+      "OKLO"
+    ],
+    "file": "spark/OKLO.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "spark/QQQ": {
+    "argv": [
+      "spark",
+      "QQQ"
+    ],
+    "file": "spark/QQQ.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "spark/RY.TO": {
+    "argv": [
+      "spark",
+      "RY.TO"
+    ],
+    "file": "spark/RY.TO.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "spark/SHEL.L": {
+    "argv": [
+      "spark",
+      "SHEL.L"
+    ],
+    "file": "spark/SHEL.L.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "spark/SPY": {
+    "argv": [
+      "spark",
+      "SPY"
+    ],
+    "file": "spark/SPY.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "spark/VT": {
+    "argv": [
+      "spark",
+      "VT"
+    ],
+    "file": "spark/VT.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "spark/VTSAX": {
+    "argv": [
+      "spark",
+      "VTSAX"
+    ],
+    "file": "spark/VTSAX.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "spark/ZZZZXYZQ": {
+    "argv": [
+      "spark",
+      "ZZZZXYZQ"
+    ],
+    "detail": "Yahoo request rejected with HTTP 404 for https://query1.finance.yahoo.com/v7/finance/spark?symbols=ZZZZXYZQ&range=1d&interval=5m&indicators=close&includeTimestamps=false&includePrePost=false&corsDomain=finance.yahoo.com&.tsrc=finance",
+    "file": "spark/ZZZZXYZQ.json",
+    "http_status": 404,
+    "status": "http_error"
+  },
+  "spark/^DJI": {
+    "argv": [
+      "spark",
+      "^DJI"
+    ],
+    "file": "spark/_DJI.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "spark/^GSPC": {
+    "argv": [
+      "spark",
+      "^GSPC"
+    ],
+    "file": "spark/_GSPC.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "spark/^IRX": {
+    "argv": [
+      "spark",
+      "^IRX"
+    ],
+    "file": "spark/_IRX.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "spark/^IXIC": {
+    "argv": [
+      "spark",
+      "^IXIC"
+    ],
+    "file": "spark/_IXIC.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "spark/^TNX": {
+    "argv": [
+      "spark",
+      "^TNX"
+    ],
+    "file": "spark/_TNX.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "spark/multi": {
+    "argv": [
+      "spark",
+      "AAPL,MSFT"
+    ],
+    "file": "spark/multi.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "stock-recommender/AAPL": {
+    "argv": [
+      "stock-recommender",
+      "AAPL"
+    ],
+    "file": "stock-recommender/AAPL.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "stock-recommender/MSFT": {
+    "argv": [
+      "stock-recommender",
+      "MSFT"
+    ],
+    "file": "stock-recommender/MSFT.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "stock-recommender/RY.TO": {
+    "argv": [
+      "stock-recommender",
+      "RY.TO"
+    ],
+    "file": "stock-recommender/RY.TO.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "timeseries-fields/default": {
+    "argv": [
+      "timeseries-fields"
+    ],
+    "file": "timeseries-fields/default.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "timeseries/0700.HK": {
+    "argv": [
+      "timeseries",
+      "0700.HK"
+    ],
+    "file": "timeseries/0700.HK.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "timeseries/7203.T": {
+    "argv": [
+      "timeseries",
+      "7203.T"
+    ],
+    "file": "timeseries/7203.T.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "timeseries/AAPL": {
+    "argv": [
+      "timeseries",
+      "AAPL"
+    ],
+    "file": "timeseries/AAPL.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "timeseries/AAPL_types_00": {
+    "argv": [
+      "timeseries",
+      "AAPL",
+      "--type",
+      "spEarningsReleaseEvents,analystRatings,economicEvents,quarterlyMarketCap,quarterlyEnterpriseValue,quarterlyPeRatio,quarterlyForwardPeRatio,quarterlyPegRatio,quarterlyPsRatio,quarterlyPbRatio,quarterlyEnterprisesValueRevenueRatio,quarterlyEnterprisesValueEBITDARatio,trailingMarketCap,trailingEnterpriseValue,trailingPeRatio,trailingForwardPeRatio,trailingPegRatio,trailingPsRatio,trailingPbRatio,trailingEnterprisesValueRevenueRatio,trailingEnterprisesValueEBITDARatio,annualInterestExpense,annualOtherIncomeExpense,annualOperatingCashFlow,annualPurchaseOfInvestment,annualEndCashPosition,annualBeginningCashPosition,annualNetOtherFinancingCharges,annualRepurchaseOfCapitalStock,annualRepaymentOfDebt,annualSaleOfInvestment,annualPurchaseOfBusiness,annualOtherNonCashItems,annualFreeCashFlow,annualAccountsPayable,annualStockBasedCompensation,annualDeferredIncomeTax,annualChangeInWorkingCapital,annualCostOfRevenue,annualEBITDA",
+      "--period1",
+      "2020-01-01",
+      "--period2",
+      "2026-07-03"
+    ],
+    "file": "timeseries/AAPL_types_00.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "timeseries/AAPL_types_01": {
+    "argv": [
+      "timeseries",
+      "AAPL",
+      "--type",
+      "annualNormalizedEBITDA,annualOperatingIncome,annualStockholdersEquity,annualCurrentLiabilities,annualTotalLiabilitiesNetMinorityInterest,annualCurrentAssets,annualTotalAssets,annualChangesInAccountReceivables,annualCapitalExpenditure,annualNetOtherInvestingChanges,annualCashFlowFromContinuingFinancingActivities,annualChangeInCashSupplementalAsReported,annualDepreciationAndAmortization,annualChangeInInventory,annualInvestingCashFlow,annualCommonStockIssuance,annualCashDividendsPaid,annualChangeInAccountPayable,annualSpecialIncomeCharges,annualOtherSpecialCharges,annualRestructuringAndMergernAcquisition,annualImpairmentOfCapitalAssets,annualWriteOff,annualSellingAndMarketingExpense,annualNetIncome,annualTotalRevenue,annualGrossProfit,annualOperatingExpense,annualResearchAndDevelopment,annualSellingGeneralAndAdministration,annualPretaxIncome,annualTaxProvision,annualBasicEPS,annualDilutedEPS,annualBasicAverageShares,annualDilutedAverageShares,annualNetIncomeContinuousOperations,annualCapitalLeaseObligations,annualTotalDebt,annualNetDebt",
+      "--period1",
+      "2020-01-01",
+      "--period2",
+      "2026-07-03"
+    ],
+    "file": "timeseries/AAPL_types_01.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "timeseries/AAPL_types_02": {
+    "argv": [
+      "timeseries",
+      "AAPL",
+      "--type",
+      "annualGoodwillAndOtherIntangibleAssets,annualGoodwill,annualAccountsReceivable,annualInventory,annualCashCashEquivalentsAndShortTermInvestments,annualLongTermDebt,annualNetPPE,annualTotalNonCurrentAssets,annualTotalNonCurrentLiabilitiesNetMinorityInterest,annualInvestedCapital,annualWorkingCapital,annualTangibleBookValue,quarterlyTotalRevenue,quarterlyNetIncome,quarterlyCostOfRevenue,quarterlyGrossProfit,quarterlyOperatingIncome,quarterlyInterestExpense,quarterlyBasicEPS,quarterlyDilutedEPS,quarterlyEBITDA,quarterlyOperatingExpense,quarterlyPretaxIncome,quarterlyTaxProvision,quarterlyBasicAverageShares,quarterlyDilutedAverageShares,quarterlyOtherIncomeExpense,quarterlyNetIncomeContinuousOperations,quarterlyNormalizedEBITDA,quarterlySellingAndMarketingExpense,quarterlySellingGeneralAndAdministration,quarterlyResearchAndDevelopment,trailingTotalRevenue,trailingNetIncome,trailingCostOfRevenue,trailingGrossProfit,trailingOperatingIncome,trailingInterestExpense,trailingBasicEPS,trailingDilutedEPS",
+      "--period1",
+      "2020-01-01",
+      "--period2",
+      "2026-07-03"
+    ],
+    "file": "timeseries/AAPL_types_02.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "timeseries/AAPL_types_03": {
+    "argv": [
+      "timeseries",
+      "AAPL",
+      "--type",
+      "trailingEBITDA,trailingOperatingExpense,trailingPretaxIncome,trailingTaxProvision,trailingBasicAverageShares,trailingDilutedAverageShares,trailingOtherIncomeExpense,trailingNetIncomeContinuousOperations,trailingNormalizedEBITDA,trailingSellingAndMarketingExpense,trailingSellingGeneralAndAdministration,trailingResearchAndDevelopment",
+      "--period1",
+      "2020-01-01",
+      "--period2",
+      "2026-07-03"
+    ],
+    "file": "timeseries/AAPL_types_03.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "timeseries/BABA": {
+    "argv": [
+      "timeseries",
+      "BABA"
+    ],
+    "file": "timeseries/BABA.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "timeseries/BAC-PL": {
+    "argv": [
+      "timeseries",
+      "BAC-PL"
+    ],
+    "file": "timeseries/BAC-PL.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "timeseries/BTC-USD": {
+    "argv": [
+      "timeseries",
+      "BTC-USD"
+    ],
+    "file": "timeseries/BTC-USD.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "timeseries/CL=F": {
+    "argv": [
+      "timeseries",
+      "CL=F"
+    ],
+    "file": "timeseries/CL_F.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "timeseries/ES=F": {
+    "argv": [
+      "timeseries",
+      "ES=F"
+    ],
+    "file": "timeseries/ES_F.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "timeseries/EURUSD=X": {
+    "argv": [
+      "timeseries",
+      "EURUSD=X"
+    ],
+    "file": "timeseries/EURUSD_X.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "timeseries/MSFT": {
+    "argv": [
+      "timeseries",
+      "MSFT"
+    ],
+    "file": "timeseries/MSFT.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "timeseries/OKLO": {
+    "argv": [
+      "timeseries",
+      "OKLO"
+    ],
+    "file": "timeseries/OKLO.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "timeseries/QQQ": {
+    "argv": [
+      "timeseries",
+      "QQQ"
+    ],
+    "file": "timeseries/QQQ.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "timeseries/RY.TO": {
+    "argv": [
+      "timeseries",
+      "RY.TO"
+    ],
+    "file": "timeseries/RY.TO.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "timeseries/SHEL.L": {
+    "argv": [
+      "timeseries",
+      "SHEL.L"
+    ],
+    "file": "timeseries/SHEL.L.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "timeseries/SPY": {
+    "argv": [
+      "timeseries",
+      "SPY"
+    ],
+    "file": "timeseries/SPY.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "timeseries/VT": {
+    "argv": [
+      "timeseries",
+      "VT"
+    ],
+    "file": "timeseries/VT.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "timeseries/VTSAX": {
+    "argv": [
+      "timeseries",
+      "VTSAX"
+    ],
+    "file": "timeseries/VTSAX.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "timeseries/ZZZZXYZQ": {
+    "argv": [
+      "timeseries",
+      "ZZZZXYZQ"
+    ],
+    "file": "timeseries/ZZZZXYZQ.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "timeseries/^DJI": {
+    "argv": [
+      "timeseries",
+      "^DJI"
+    ],
+    "file": "timeseries/_DJI.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "timeseries/^GSPC": {
+    "argv": [
+      "timeseries",
+      "^GSPC"
+    ],
+    "file": "timeseries/_GSPC.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "timeseries/^IRX": {
+    "argv": [
+      "timeseries",
+      "^IRX"
+    ],
+    "file": "timeseries/_IRX.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "timeseries/^IXIC": {
+    "argv": [
+      "timeseries",
+      "^IXIC"
+    ],
+    "file": "timeseries/_IXIC.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "timeseries/^TNX": {
+    "argv": [
+      "timeseries",
+      "^TNX"
+    ],
+    "file": "timeseries/_TNX.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "trending/default": {
+    "argv": [
+      "trending"
+    ],
+    "file": "trending/default.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "visualization/insider_transaction": {
+    "argv": [
+      "visualization",
+      "--query",
+      "SELECT ticker, transactiondate, shares FROM INSIDER_TRANSACTION WHERE ticker = 'AAPL' ORDER BY transactiondate DESC LIMIT 5"
+    ],
+    "file": "visualization/insider_transaction.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "visualization/sp_earnings": {
+    "argv": [
+      "visualization",
+      "--query",
+      "SELECT ticker, startdatetime FROM sp_earnings WHERE region = 'us' AND startdatetime BETWEEN '2026-06-26' AND '2026-07-03' LIMIT 5"
+    ],
+    "file": "visualization/sp_earnings.json",
+    "http_status": 200,
+    "status": "ok"
+  }
+}
