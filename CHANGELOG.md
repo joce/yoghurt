@@ -14,6 +14,14 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `to_arrow`/`to_dicts`/`save_parquet`, a `SymbolNotFoundError`/`YahooApiError`/
   `YahooRequestError`/`YahooUnavailableError` error contract, `configure()`,
   `py.typed`, and an optional `yoghurt[pandas]` extra.
+- Typed `Quote` response model (131 fields, corpus-verified against 28
+  real quote captures) plus `QuoteType`/`MarketState`/`OptionsType`/
+  `PriceAlertConfidence` enums, in a new `yoghurt.models` package.
+
+### Changed
+
+- `Ticker.quote()` and `Ticker.quotes()` now return typed `Quote` models
+  instead of raw dicts.
 
 ### Internal
 

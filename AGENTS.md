@@ -60,6 +60,19 @@ When adding or editing a CLI command:
 - Response models (Part 3+) are frozen pydantic models with extra="allow"; internal metadata records are frozen dataclasses; orchestrators are plain classes.
 - The corpus at tests/fixtures/corpus/ is the evidence for response shapes; parser code and tests reference corpus files, not hand-invented JSON, wherever a real capture exists.
 
+## Response model conventions
+- All response models subclass yoghurt.models.YahooModel (frozen, to_camel aliases with explicit Field(alias=...) for irregular wire spellings, populate_by_name, extra="allow", str_strip_whitespace — the last is a quote-informed default; confirm per endpoint family).
+- The corpus is authoritative for wire spellings, presence, and types; prior art (Doubloon) second; researched docs (src/yoghurt/docs/*.md) third.
+- Optionality is evidence-driven: required exactly for keys present in 100% of that endpoint's corpus records (tools/quote_fields_report.py-style report), else Optional.
+- Closed vocabularies are (str, Enum) classes in yoghurt/models/enums.py with WIRE casing, defined once, corpus-coverage-tested; values known only from prior use are noted in the enum docstring.
+- Every field docstring ends with exactly one applicability form: "Observed on: <types> quotes." / "Not observed in the corpus; known from prior use on <types> quotes." / "Observed only as empty lists in the corpus." The corpus capture date lives once in the module docstring.
+- Fields are declared in alphabetical order; the coverage gate asserts it.
+- Nested payload objects become nested YahooModel sub-models — never dict fields.
+- Convenience accessors are plain functools.cached_property, never pydantic computed_field: model_dump() stays wire-shaped.
+- Every model ships a corpus coverage gate: every relevant corpus record validates with EMPTY extras at EVERY nesting level (tests/conftest.py::collect_nested_extras), and the required-field set is pinned to the presence report.
+- Validation failures surface as YahooApiError(code="model-validation") via yoghurt.models.validate_model(); pydantic never leaks through the public API.
+- Large models get a compact custom __repr__ (symbol-forward); __str__ only if it adds real value.
+
 ## Workflow
 - Make minimal changes and avoid unrelated refactors.
 - When adding a command or parameter, update validation, adaptive help, and tests in the same change.
