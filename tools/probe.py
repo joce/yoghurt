@@ -9,13 +9,25 @@ and diffing the corpus is the Yahoo schema-drift detector.
 
 from __future__ import annotations
 
+import asyncio
+import io
+import json
 import re
+import sys
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
+from yoghurt.cli import _dispatch_command, build_parser
+from yoghurt.client import YahooClient
 from yoghurt.commands import COMMANDS_BY_NAME
+from yoghurt.exceptions import YahooRequestError, YoghurtError
+
+if TYPE_CHECKING:
+    import argparse
+
+    from yoghurt.cli import _YahooClientProtocol
 
 REPO_ROOT: Final[Path] = Path(__file__).resolve().parents[1]
 CORPUS_DIR: Final[Path] = REPO_ROOT / "tests" / "fixtures" / "corpus"
@@ -448,3 +460,95 @@ def build_cases() -> list[ProbeCase]:
         + _invalid_cases()
         + _raw_case()
     )
+
+
+async def _run_case(
+    parser: argparse.ArgumentParser,
+    client: _YahooClientProtocol,
+    case: ProbeCase,
+    corpus_dir: Path,
+) -> dict[str, object]:
+    """Execute one case through the CLI pipeline; write its body if any.
+
+    Returns:
+        dict[str, object]: The manifest entry for this case.
+    """
+
+    entry: dict[str, object] = {
+        "argv": list(case.argv),
+        "status": "ok",
+        "http_status": 200,
+    }
+    body = ""
+    try:
+        namespace = parser.parse_args(list(case.argv))
+        out = io.StringIO()
+        await _dispatch_command(namespace, out, client)
+        body = out.getvalue()
+    except YahooRequestError as exc:
+        entry["status"] = "http_error"
+        entry["http_status"] = exc.status_code
+        entry["detail"] = str(exc)
+        body = exc.body or ""
+    except YoghurtError as exc:
+        entry["status"] = "error"
+        entry["http_status"] = None
+        entry["detail"] = str(exc)
+    if body:
+        relative = f"{case.command}/{sanitize(case.case)}.json"
+        target = corpus_dir / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(body, encoding="utf-8")
+        entry["file"] = relative
+    return entry
+
+
+def _write_manifest(
+    manifest: dict[str, object], case_count: int, corpus_dir: Path
+) -> None:
+    """Attach the run metadata and write manifest.json to the corpus dir."""
+
+    manifest["_meta"] = {
+        "fetched_at": datetime.now(timezone.utc).isoformat(),
+        "case_count": case_count,
+    }
+    corpus_dir.mkdir(parents=True, exist_ok=True)
+    manifest_path = corpus_dir / "manifest.json"
+    manifest_path.write_text(
+        json.dumps(manifest, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+
+async def _run_all(cases: list[ProbeCase], corpus_dir: Path) -> None:
+    """Run every case sequentially and write the corpus plus manifest.json."""
+
+    parser = build_parser()
+    client = YahooClient()
+    manifest: dict[str, object] = {}
+    try:
+        # ponytail: sequential with a fixed delay; parallelize only if a full
+        # run ever becomes painfully slow (politeness beats speed here).
+        for index, case in enumerate(cases, start=1):
+            key = f"{case.command}/{case.case}"
+            print(f"[{index}/{len(cases)}] {key}", file=sys.stderr)
+            manifest[key] = await _run_case(parser, client, case, corpus_dir)
+            await asyncio.sleep(POLITENESS_DELAY_SECONDS)
+    finally:
+        await client.aclose()
+    _write_manifest(manifest, len(cases), corpus_dir)
+
+
+def main() -> int:
+    """Run the full probe.
+
+    Returns:
+        int: Process exit code.
+    """
+
+    asyncio.run(_run_all(build_cases(), CORPUS_DIR))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
