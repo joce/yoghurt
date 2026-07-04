@@ -24,6 +24,9 @@ class Frame:
     def to_polars(self) -> pl.DataFrame:
         """Return the underlying polars DataFrame.
 
+        The frame is returned directly, not copied; polars operations
+        produce new frames, so aliasing is safe.
+
         Returns:
             pl.DataFrame: The result table.
         """

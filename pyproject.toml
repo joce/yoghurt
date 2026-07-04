@@ -40,7 +40,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-pandas = ["pandas>=2.2,<3.0", "pyarrow>=17"]
+pandas = ["pandas>=2.2,<3.0", "pyarrow>=17,<23"]
 
 [project.scripts]
 yoghurt = "yoghurt.cli:main"
