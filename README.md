@@ -40,8 +40,9 @@ like the CLI):
 1. **Typed** — `Ticker` methods and module-level functions. Tabular results
    (`chart`, `screener`, `visualization`) return `Chart`/`Frame` with
    `to_polars()`, `to_pandas()` (`pip install yoghurt[pandas]`), `to_arrow()`,
-   `to_dicts()`, and `save_parquet()`. Other endpoints return parsed `dict`s
-   today; typed response models land endpoint by endpoint.
+   `to_dicts()`, and `save_parquet()`. `Ticker.quote()`/`quotes()` return
+   `Quote` (pydantic) models. Other endpoints return parsed `dict`s today;
+   typed response models land endpoint by endpoint.
 2. **Parsed raw** — `yoghurt.raw(path, params)` for any Yahoo query path.
 3. **Raw async** — `yoghurt.YahooClient`, the async client the CLI itself
    uses.

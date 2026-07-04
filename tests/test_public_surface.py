@@ -25,6 +25,8 @@ def test_expected_surface() -> None:
     expected = {
         "Chart",
         "Frame",
+        "Quote",
+        "QuoteType",
         "Ticker",
         "YahooClient",
         "SymbolNotFoundError",

@@ -11,7 +11,7 @@ value known only from prior use.
 
 from __future__ import annotations
 
-from yoghurt.models._base import YahooModel
+from yoghurt.models._base import YahooModel, validate_model
 from yoghurt.models.enums import (
     MarketState,
     OptionsType,
@@ -28,4 +28,5 @@ __all__ = [
     "Quote",
     "QuoteType",
     "YahooModel",
+    "validate_model",
 ]

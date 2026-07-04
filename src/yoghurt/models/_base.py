@@ -2,8 +2,17 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, TypeVar
+
+import pydantic
 from pydantic import BaseModel, ConfigDict
 from pydantic.alias_generators import to_camel
+
+from yoghurt.exceptions import YahooApiError
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+    from typing import Any
 
 
 class YahooModel(BaseModel):
@@ -30,3 +39,24 @@ class YahooModel(BaseModel):
         extra="allow",
         str_strip_whitespace=True,
     )
+
+
+_M = TypeVar("_M", bound=YahooModel)
+
+
+def validate_model(model_cls: type[_M], payload: Mapping[str, Any]) -> _M:
+    """Validate a Yahoo payload into a model, folding failures into the error contract.
+
+    Returns:
+        _M: The validated model instance.
+
+    Raises:
+        YahooApiError: If the payload does not satisfy the model (code
+            ``"model-validation"``).
+    """
+
+    try:
+        return model_cls.model_validate(payload)
+    except pydantic.ValidationError as exc:
+        message = f"{model_cls.__name__}: {exc}"
+        raise YahooApiError(code="model-validation", description=message) from exc

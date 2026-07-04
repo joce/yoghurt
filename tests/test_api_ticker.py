@@ -6,11 +6,13 @@ import json
 from pathlib import Path
 from typing import TYPE_CHECKING, TypeAlias
 
+import pydantic
 import pytest
 
 import yoghurt._core as core
 from yoghurt.api import Ticker
 from yoghurt.exceptions import SymbolNotFoundError, YahooApiError
+from yoghurt.models import Quote, QuoteType
 from yoghurt.tabular import TabularShapeError
 
 if TYPE_CHECKING:
@@ -95,10 +97,12 @@ def _install_fake(monkeypatch: pytest.MonkeyPatch, body: str) -> _FakeClient:
 
 
 def test_ticker_quote_returns_single_record(monkeypatch: pytest.MonkeyPatch) -> None:
-    """quote() unwraps the one-record result list."""
+    """quote() unwraps the one-record result list into a typed Quote."""
     _install_fake(monkeypatch, _corpus_text("quote/AAPL_default.json"))
     record = Ticker("AAPL").quote()
-    assert record["symbol"] == "AAPL"
+    assert isinstance(record, Quote)
+    assert record.symbol == "AAPL"
+    assert record.quote_type is QuoteType.EQUITY
 
 
 def test_ticker_quote_empty_result_raises_symbol_error(
@@ -108,6 +112,20 @@ def test_ticker_quote_empty_result_raises_symbol_error(
     _install_fake(monkeypatch, _corpus_text("quote/ZZZZXYZQ.json"))
     with pytest.raises(SymbolNotFoundError):
         Ticker("ZZZZXYZQ").quote()
+
+
+def test_ticker_quote_model_violation_raises_yahoo_api_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A record that fails Quote validation surfaces as YahooApiError."""
+    payload = json.loads(_corpus_text("quote/AAPL_default.json"))
+    payload["quoteResponse"]["result"][0]["regularMarketPrice"] = "abc"
+    _install_fake(monkeypatch, json.dumps(payload))
+    with pytest.raises(YahooApiError) as exc_info:
+        Ticker("AAPL").quote()
+    assert exc_info.value.code == "model-validation"
+    assert type(exc_info.value) is YahooApiError
+    assert isinstance(exc_info.value.__cause__, pydantic.ValidationError)
 
 
 def test_ticker_quote_passes_new_wire_params(monkeypatch: pytest.MonkeyPatch) -> None:

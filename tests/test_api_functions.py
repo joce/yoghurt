@@ -13,6 +13,7 @@ from yoghurt import api
 from yoghurt.commands import COMMANDS_BY_NAME
 from yoghurt.exceptions import YahooApiError
 from yoghurt.frames import Frame
+from yoghurt.models import Quote
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -100,12 +101,16 @@ def _install_fake(monkeypatch: pytest.MonkeyPatch, body: str) -> _FakeClient:
 
 
 def test_quotes_returns_result_list(monkeypatch: pytest.MonkeyPatch) -> None:
-    """quotes() returns quoteResponse.result as-is."""
+    """quotes() returns a typed Quote per quoteResponse.result record."""
     body = _corpus_text("quote/multi.json")
     _install_fake(monkeypatch, body)
     results = api.quotes(["AAPL", "MSFT"])
     expected = json.loads(body)["quoteResponse"]["result"]
     assert len(results) == len(expected)
+    assert all(isinstance(result, Quote) for result in results)
+    assert [result.symbol for result in results] == [
+        record["symbol"] for record in expected
+    ]
 
 
 def test_quotes_joins_symbols_csv(monkeypatch: pytest.MonkeyPatch) -> None:

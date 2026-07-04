@@ -114,7 +114,7 @@ def test_readme_quote_quickstart(monkeypatch: pytest.MonkeyPatch) -> None:
 
     _install_fake(monkeypatch, _corpus_text("quote/AAPL_default.json"))
     record = Ticker("AAPL").quote()
-    assert record["symbol"] == "AAPL"
+    assert record.symbol == "AAPL"
 
 
 def test_readme_screener_quickstart(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -135,7 +135,7 @@ def test_readme_quickstart_examples_live() -> None:
     assert bars.height > 0
 
     quote = yoghurt.Ticker("AAPL").quote()
-    assert quote["symbol"] == "AAPL"
+    assert quote.symbol == "AAPL"
 
     frame = yoghurt.screener(
         "SELECT ticker FROM EQUITY WHERE region = 'us' LIMIT 5"

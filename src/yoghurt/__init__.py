@@ -50,6 +50,7 @@ if TYPE_CHECKING:
         visualization,
     )
     from yoghurt.frames import Chart, Frame
+    from yoghurt.models import Quote, QuoteType
 
 
 def __getattr__(name: str) -> Any:  # noqa: ANN401 - PEP 562 module __getattr__
@@ -57,9 +58,10 @@ def __getattr__(name: str) -> Any:  # noqa: ANN401 - PEP 562 module __getattr__
 
     ``Frame``/``Chart`` and the ``Ticker``/function surface live in
     :mod:`yoghurt.frames` and :mod:`yoghurt.api`, both of which pull in
-    polars; deferring the import here keeps that cost off every import of
-    the ``yoghurt`` package (including the CLI, which imports the package
-    by virtue of ``yoghurt.cli`` being a submodule).
+    polars; ``Quote``/``QuoteType`` live in :mod:`yoghurt.models` (pydantic).
+    Deferring the import here keeps that cost off every import of the
+    ``yoghurt`` package (including the CLI, which imports the package by
+    virtue of ``yoghurt.cli`` being a submodule).
 
     Returns:
         Any: The resolved attribute, also cached on the module for reuse.
@@ -69,9 +71,12 @@ def __getattr__(name: str) -> Any:  # noqa: ANN401 - PEP 562 module __getattr__
     """
 
     frames_names = {"Chart", "Frame"}
+    models_names = {"Quote", "QuoteType"}
     lazy_names = set(__all__) - {"__version__"} - set(globals())
     if name in frames_names:
         module_name = "yoghurt.frames"
+    elif name in models_names:
+        module_name = "yoghurt.models"
     elif name in lazy_names:
         module_name = "yoghurt.api"
     else:
@@ -101,6 +106,8 @@ def __dir__() -> list[str]:
 __all__ = [
     "Chart",
     "Frame",
+    "Quote",
+    "QuoteType",
     "SymbolNotFoundError",
     "Ticker",
     "YahooApiError",

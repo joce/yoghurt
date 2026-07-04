@@ -19,6 +19,7 @@ from yoghurt._bridge import run
 from yoghurt.commands import COMMANDS_BY_NAME
 from yoghurt.exceptions import SymbolNotFoundError, YahooApiError
 from yoghurt.frames import Chart, Frame
+from yoghurt.models import Quote, validate_model
 from yoghurt.tabular import (
     TabularShapeError,
     build_chart_frame,
@@ -74,14 +75,14 @@ class Ticker:
         img_heights: int | None = None,
         img_labels: list[str] | None = None,
         img_widths: int | None = None,
-    ) -> dict[str, Any]:
+    ) -> Quote:
         """Fetch this symbol's quote record.
 
         ``enable_private_company=True`` includes private-company quote
         matches; ``overnight_price=True`` requests overnight price fields.
 
         Returns:
-            dict[str, Any]: The single quote record.
+            Quote: The validated quote record.
 
         Raises:
             SymbolNotFoundError: If Yahoo returns no record for the symbol.
@@ -107,7 +108,7 @@ class Ticker:
         results = payload["quoteResponse"]["result"]
         if not results:
             raise SymbolNotFoundError(self.symbol)
-        return results[0]
+        return validate_model(Quote, results[0])
 
     def chart(
         self,
@@ -533,7 +534,7 @@ def quotes(  # noqa: PLR0913 - one keyword-only arg per quote wire param.
     img_heights: int | None = None,
     img_labels: list[str] | None = None,
     img_widths: int | None = None,
-) -> list[dict[str, Any]]:
+) -> list[Quote]:
     """Fetch quote records for one or more symbols.
 
     ``enable_private_company=True`` includes private-company quote matches;
@@ -542,7 +543,7 @@ def quotes(  # noqa: PLR0913 - one keyword-only arg per quote wire param.
     raising.
 
     Returns:
-        list[dict[str, Any]]: The ``quoteResponse.result`` list, as-is.
+        list[Quote]: The validated ``quoteResponse.result`` records.
 
     Raises:
         ValueError: If ``symbols`` is empty.
@@ -567,7 +568,9 @@ def quotes(  # noqa: PLR0913 - one keyword-only arg per quote wire param.
             ),
         )
     )
-    return payload["quoteResponse"]["result"]
+    return [
+        validate_model(Quote, record) for record in payload["quoteResponse"]["result"]
+    ]
 
 
 def screener(query: str) -> Frame:
