@@ -16,11 +16,14 @@ from yoghurt.models.enums import (
     PriceAlertConfidence,
     QuoteType,
 )
+from yoghurt.models.quote import CorporateAction, Quote
 
 __all__ = [
+    "CorporateAction",
     "MarketState",
     "OptionType",
     "PriceAlertConfidence",
+    "Quote",
     "QuoteType",
     "YahooModel",
 ]
