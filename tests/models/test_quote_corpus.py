@@ -1,11 +1,13 @@
 """The Quote corpus coverage gate: the template test for every Yahoo model.
 
 Every quote corpus record must validate as a :class:`Quote` with nothing
-landing on ``model_extra`` — a non-empty ``model_extra`` means Yahoo has
-started sending a field this model doesn't know about, and that should
-fail loudly rather than silently pass through. This file also pins the
-required-field set to the corpus-measured universal keys and checks that
-the enum fields round-trip to real enum members, not bare strings.
+landing on ``model_extra`` anywhere in the model tree — a non-empty extras
+map means Yahoo has started sending a field some model here doesn't know
+about, and that should fail loudly rather than silently pass through. This
+file also pins the required-field set to the corpus-measured universal
+keys, enforces alphabetical field declaration order (template rule), and
+checks that the enum fields round-trip to real enum members, not bare
+strings.
 """
 
 from __future__ import annotations
@@ -15,6 +17,7 @@ from pathlib import Path
 
 import pytest
 
+from tests.conftest import collect_nested_extras
 from tools.quote_fields_report import CORPUS_DIR, collect_field_presence
 from yoghurt.models import MarketState, QuoteType
 from yoghurt.models.quote import Quote
@@ -76,21 +79,81 @@ def test_corpus_has_expected_record_count() -> None:
     assert len(_CASES) == _EXPECTED_CORPUS_RECORD_COUNT
 
 
+def _flatten_extras(nested: dict[str, dict[str, object]]) -> list[str]:
+    """Flatten a nested-extras map to sorted ``path.key`` strings."""
+
+    return sorted(
+        f"{path}.{key}" if path else key
+        for path, extras in nested.items()
+        for key in extras
+    )
+
+
 @pytest.mark.parametrize(
     "record", [record for _case_id, record in _CASES], ids=[c for c, _r in _CASES]
 )
 def test_record_validates_with_no_extra_fields(record: dict[str, object]) -> None:
-    """Every corpus record validates as Quote with model_extra empty.
+    """Every corpus record validates as Quote with no extras anywhere.
 
-    A non-empty model_extra is the drift alarm: it means Yahoo sent a
-    field this model doesn't know about, and the assertion message lists
-    exactly which keys so the alarm is actionable.
+    The nested-extras walker checks the whole model tree, not just the
+    top level: a populated sub-model (say, a corporate action) growing an
+    unknown key must trip the drift alarm too. The assertion message
+    lists the dotted paths of every unmodeled key so the alarm is
+    actionable.
     """
 
     quote = Quote.model_validate(record)
-    extra = quote.model_extra
-    message = f"Quote gained unmodeled fields (drift alarm): {sorted(extra or {})}"
-    assert not extra, message
+    nested = collect_nested_extras(quote)
+    message = f"Quote gained unmodeled fields (drift alarm): {_flatten_extras(nested)}"
+    assert not nested, message
+
+
+def test_nested_extras_walker_sees_below_top_level() -> None:
+    """The walker reports extras inside a populated corporateActions entry.
+
+    No real corpus record populates corporateActions, so this feeds a
+    synthetic entry through Quote validation and asserts the walker
+    reports the sub-model's unknown keys with their dotted path. This is
+    the proof the drift alarm is not blind below top level.
+    """
+
+    record = dict(_records_in(_CORPUS_QUOTE_DIR / "AAPL_default.json")[0])
+    record["corporateActions"] = [
+        {"header": "Dividend", "message": "AAPL declared a cash dividend."}
+    ]
+    quote = Quote.model_validate(record)
+
+    nested = collect_nested_extras(quote)
+
+    assert "corporate_actions[0]" in nested
+    assert sorted(nested["corporate_actions[0]"]) == ["header", "message"]
+    assert _flatten_extras(nested) == [
+        "corporate_actions[0].header",
+        "corporate_actions[0].message",
+    ]
+
+
+def test_nested_extras_walker_reports_top_level_extras() -> None:
+    """The walker also covers the root model's own extras (path is '')."""
+
+    record = dict(_records_in(_CORPUS_QUOTE_DIR / "AAPL_default.json")[0])
+    record["someNewYahooField"] = "surprise"
+    quote = Quote.model_validate(record)
+
+    nested = collect_nested_extras(quote)
+
+    assert nested[""] == {"someNewYahooField": "surprise"}
+
+
+def test_quote_fields_are_declared_in_alphabetical_order() -> None:
+    """Template enforcement: Quote declares its fields alphabetically.
+
+    Sorted declaration order keeps 100+-field models reviewable and makes
+    corpus-refresh diffs land in predictable places.
+    """
+
+    names = list(Quote.model_fields)
+    assert names == sorted(names)
 
 
 def test_required_field_set_matches_corpus_universal_keys() -> None:

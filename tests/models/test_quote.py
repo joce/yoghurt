@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from yoghurt.models import MarketState, PriceAlertConfidence, QuoteType
+from yoghurt.models import MarketState, OptionsType, PriceAlertConfidence, QuoteType
 from yoghurt.models.quote import Quote
 
 _CORPUS_QUOTE_DIR = (
@@ -75,7 +75,7 @@ def test_quote_validates_option_contract_record() -> None:
     quote = Quote.model_validate(record)
 
     assert quote.quote_type is QuoteType.OPTION
-    assert quote.options_type == "Call"
+    assert quote.options_type is OptionsType.CALL
     assert quote.expire_date == datetime.date(2026, 7, 6)
     assert quote.underlying_symbol == "AAPL"
     assert quote.model_extra in (None, {})

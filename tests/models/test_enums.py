@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from yoghurt.models import MarketState, OptionType, PriceAlertConfidence, QuoteType
+from yoghurt.models import MarketState, OptionsType, PriceAlertConfidence, QuoteType
 
 
 def _records_with_key(
@@ -55,7 +55,22 @@ def test_corpus_price_alert_confidence_values_all_construct(
         PriceAlertConfidence(record[key])
 
 
-def test_option_type_members() -> None:
-    """OptionType has exactly CALL and PUT, matching Yahoo's option payloads."""
+def test_options_type_members_carry_wire_casing() -> None:
+    """OptionsType has exactly CALL and PUT with Yahoo's title-cased values."""
 
-    assert {member.value for member in OptionType} == {"CALL", "PUT"}
+    assert {member.value for member in OptionsType} == {"Call", "Put"}
+
+
+def test_corpus_options_type_values_all_construct(
+    quote_corpus_records: list[dict[str, object]],
+) -> None:
+    """Every optionsType value seen in the corpus maps to an OptionsType member.
+
+    The key is not universal (OPTION quotes only), so this filters rather
+    than using the universal-key helper.
+    """
+
+    with_key = [r for r in quote_corpus_records if "optionsType" in r]
+    assert with_key, "expected at least one record carrying optionsType"
+    for record in with_key:
+        OptionsType(record["optionsType"])

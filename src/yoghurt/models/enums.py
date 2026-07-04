@@ -44,14 +44,17 @@ class MarketState(str, Enum):
     CLOSED = "CLOSED"
 
 
-class OptionType(str, Enum):
-    """Classification of derivative contracts by the right they grant.
+class OptionsType(str, Enum):
+    """Classification of option contracts by the right they grant.
 
-    Members: CALL (right to buy the underlying) and PUT (right to sell it).
+    Values carry Yahoo's wire casing for the ``optionsType`` quote key,
+    which is title-cased: CALL is ``"Call"`` (right to buy the underlying)
+    and PUT is ``"Put"`` (right to sell it). PUT is not observed in the
+    corpus; known from prior use on OPTION quotes.
     """
 
-    CALL = "CALL"
-    PUT = "PUT"
+    CALL = "Call"
+    PUT = "Put"
 
 
 class PriceAlertConfidence(str, Enum):
