@@ -1,5 +1,7 @@
 """Tests for the Yahoo probe harness."""
 
+import json
+from datetime import datetime
 from pathlib import Path
 
 import pytest
@@ -8,6 +10,7 @@ from tools.probe import (
     INVALID_SYMBOL,
     SYMBOLS,
     ProbeCase,
+    _run_all,  # pyright: ignore[reportPrivateUsage]
     _run_case,  # pyright: ignore[reportPrivateUsage]
     build_cases,
     sanitize,
@@ -70,6 +73,7 @@ class _FakeClient:
     def __init__(self, *, error: Exception | None = None) -> None:
         """Store the error to raise, if any, instead of returning a body."""
         self._error = error
+        self.closed = False
 
     async def get(
         self,
@@ -109,7 +113,8 @@ class _FakeClient:
         return '{"ok": true}'
 
     async def aclose(self) -> None:
-        """Do nothing; no real connection to close."""
+        """Record the close; there is no real connection."""
+        self.closed = True
 
 
 async def test_run_case_writes_body_and_manifest_entry(tmp_path: Path) -> None:
@@ -149,3 +154,27 @@ async def test_run_case_records_transport_error_without_file(
     )
     assert entry["status"] == "error"
     assert "file" not in entry
+
+
+async def test_run_all_writes_manifest(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A full run writes every body file plus the manifest and closes the client."""
+    fake = _FakeClient()
+    monkeypatch.setattr("tools.probe.YahooClient", lambda: fake)
+    monkeypatch.setattr("tools.probe.POLITENESS_DELAY_SECONDS", 0.0)
+    cases = [
+        ProbeCase("quote", "AAPL", ("quote", "AAPL")),
+        ProbeCase("quote-type", "AAPL", ("quote-type", "AAPL")),
+    ]
+    await _run_all(cases, tmp_path)
+    assert fake.closed
+    manifest_text = (tmp_path / "manifest.json").read_text(encoding="utf-8")
+    assert manifest_text.endswith("\n")
+    manifest = json.loads(manifest_text)
+    assert set(manifest) == {"quote/AAPL", "quote-type/AAPL", "_meta"}
+    meta = manifest["_meta"]
+    assert meta["case_count"] == len(cases)
+    assert isinstance(datetime.fromisoformat(meta["fetched_at"]), datetime)
+    assert (tmp_path / "quote" / "AAPL.json").is_file()
+    assert (tmp_path / "quote-type" / "AAPL.json").is_file()
