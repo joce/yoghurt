@@ -1,5 +1,12 @@
 """Immutable tabular results with one conversion vocabulary."""
 
+# pandas/pyarrow are optional (the yoghurt[pandas] extra) and absent from the
+# base dev environment, so pyright sees their types as Unknown in this module.
+# Relax only the Unknown-type checks here; the ImportError probes below keep
+# runtime behavior honest, and all polars-side typing remains fully checked
+# elsewhere.
+# pyright: reportUnknownMemberType=false, reportUnknownVariableType=false, reportUnknownParameterType=false
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -33,9 +40,7 @@ class Frame:
 
         return self.df
 
-    def to_pandas(  # pyright: ignore[reportUnknownParameterType]
-        self,
-    ) -> pd.DataFrame:  # pyright: ignore[reportUnknownMemberType]
+    def to_pandas(self) -> pd.DataFrame:
         """Convert to pandas (requires the yoghurt[pandas] extra).
 
         Returns:
@@ -52,11 +57,9 @@ class Frame:
                 "to_pandas() requires the optional extra: pip install yoghurt[pandas]"
             )
             raise ImportError(message) from exc
-        return self.df.to_pandas()  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType]
+        return self.df.to_pandas()
 
-    def to_arrow(  # pyright: ignore[reportUnknownParameterType]
-        self,
-    ) -> pa.Table:  # pyright: ignore[reportUnknownMemberType]
+    def to_arrow(self) -> pa.Table:
         """Convert to a pyarrow Table (requires pyarrow, in yoghurt[pandas]).
 
         Returns:
@@ -71,7 +74,7 @@ class Frame:
         except ImportError as exc:
             message = "to_arrow() requires pyarrow: pip install yoghurt[pandas]"
             raise ImportError(message) from exc
-        return self.df.to_arrow()  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType]
+        return self.df.to_arrow()
 
     def to_dicts(self) -> list[dict[str, Any]]:
         """Return rows as plain dicts.

@@ -1,5 +1,10 @@
 """Tests for Frame/Chart conversion vocabulary."""
 
+# The optional pandas/pyarrow deps are absent in the base dev env, so their
+# types are Unknown to pyright here; the positive-path tests below skip at
+# runtime via importorskip. Relax only the Unknown-type checks, file-wide.
+# pyright: reportUnknownMemberType=false, reportUnknownVariableType=false, reportUnknownArgumentType=false
+
 from __future__ import annotations
 
 import builtins
@@ -62,7 +67,7 @@ def test_to_pandas_without_pandas_raises_helpful_import_error(
 
     monkeypatch.setattr(builtins, "__import__", _no_pandas)
     with pytest.raises(ImportError, match=r"yoghurt\[pandas\]"):
-        _frame().to_pandas()  # pyright: ignore[reportUnknownMemberType]
+        _frame().to_pandas()
 
 
 def test_to_arrow_without_pyarrow_raises_helpful_import_error(
@@ -79,23 +84,25 @@ def test_to_arrow_without_pyarrow_raises_helpful_import_error(
 
     monkeypatch.setattr(builtins, "__import__", _no_pyarrow)
     with pytest.raises(ImportError, match=r"pyarrow"):
-        _frame().to_arrow()  # pyright: ignore[reportUnknownMemberType]
+        _frame().to_arrow()
 
 
 def test_to_pandas_returns_a_pandas_dataframe() -> None:
     """to_pandas() converts to pandas when the extra is installed."""
 
     pytest.importorskip("pandas")
-    result: Any = _frame().to_pandas()  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType]
-    assert list(result.columns) == ["a", "b"]  # pyright: ignore[reportUnknownMemberType, reportUnknownArgumentType]
+    result: Any = _frame().to_pandas()
+    columns: Any = result.columns
+    assert list(columns) == ["a", "b"]
 
 
 def test_to_arrow_returns_a_pyarrow_table() -> None:
     """to_arrow() converts to pyarrow when installed."""
 
     pytest.importorskip("pyarrow")
-    result: Any = _frame().to_arrow()  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType]
-    assert result.num_rows == _EXPECTED_ROW_COUNT  # pyright: ignore[reportUnknownMemberType]
+    result: Any = _frame().to_arrow()
+    rows: Any = result.num_rows
+    assert rows == _EXPECTED_ROW_COUNT
 
 
 def test_chart_is_a_frame_with_meta() -> None:
