@@ -257,12 +257,26 @@ def _equity_subset_cases() -> list[ProbeCase]:
     cases.append(
         ProbeCase(
             "recommendations-by-symbol",
-            "_GSPC",
+            "^GSPC",
             ("recommendations-by-symbol", "^GSPC"),
         )
     )
     for sym in OPTIONABLE:
         cases.append(ProbeCase("options", sym, ("options", sym)))
+    # Documented price-insights shape variants: modules=ai drops the
+    # news/rating sections; check-anomaly narrows to hasPriceAnomaly only.
+    cases += [
+        ProbeCase(
+            "price-insights",
+            "AAPL_ai",
+            ("price-insights", "AAPL", "--modules", "ai"),
+        ),
+        ProbeCase(
+            "price-insights",
+            "AAPL_anomaly",
+            ("price-insights", "AAPL", "--check-anomaly"),
+        ),
+    ]
     # Calendar module sweep on AAPL (shapes differ per module).
     for module in ("economicEvents", "ipoEvents", "secReports"):
         cases.append(
@@ -284,15 +298,12 @@ def _market_cases() -> list[ProbeCase]:
         screener sweep.
     """
 
+    # Every documented instrument: asset classes, event entities, and
+    # premium-locked entities (whose schemas are still readable). If this
+    # metadata ever empties out, the completeness gate test fails loudly.
     sif_spec = COMMANDS_BY_NAME["screener-instrument-fields"]
-    instruments = sif_spec.params[0].allowed_values or (
-        "equity",
-        "etf",
-        "mutualfund",
-        "index",
-        "future",
-        "cryptocurrency",
-        "insider_transaction",
+    instruments = tuple(
+        ref.name for section in sif_spec.reference_sections for ref in section.values
     )
     screener_ids = (
         "MOST_ACTIVES",  # equities
