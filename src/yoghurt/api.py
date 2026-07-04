@@ -9,17 +9,29 @@ use the wire name so the kwarg's meaning matches its effect.
 
 from __future__ import annotations
 
+import json
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any, TypeAlias
+
+import polars as pl
 
 from yoghurt import _core
 from yoghurt._bridge import run
 from yoghurt.exceptions import SymbolNotFoundError
-from yoghurt.frames import Chart
-from yoghurt.tabular import build_chart_frame, extract_chart_columns
+from yoghurt.frames import Chart, Frame
+from yoghurt.tabular import (
+    build_chart_frame,
+    build_tabular_frame,
+    collect_column_data,
+    extract_chart_columns,
+    parse_tabular_response,
+    resolve_column_order,
+)
 
 if TYPE_CHECKING:
     from datetime import date
+
+    from yoghurt.types import ParamValue
 
 DateLike: TypeAlias = "int | str | date | datetime"
 
@@ -460,3 +472,320 @@ class Ticker:
                 values=_values(symbol=self.symbol),
             )
         )
+
+
+def _tabular_frame(payload: dict[str, Any], route: str) -> Frame:
+    """Flatten a screener/visualization payload into a Frame.
+
+    Empty result sets (no records, or no documents) resolve to zero columns
+    and produce an empty ``Frame`` rather than raising.
+
+    Returns:
+        Frame: The flattened result table plus a fetch timestamp.
+    """
+
+    records, _total_rows, schema_hint = parse_tabular_response(
+        json.dumps(payload), route, route
+    )
+    columns = resolve_column_order(records, schema_hint)
+    column_data = collect_column_data(records, columns)
+    df = build_tabular_frame(column_data, columns) if columns else pl.DataFrame()
+    return Frame(df=df, fetched_at=_now_utc())
+
+
+def quotes(  # noqa: PLR0913 - one keyword-only arg per quote wire param.
+    symbols: list[str],
+    *,
+    fields: list[str] | None = None,
+    formatted: bool | None = None,
+    enable_private_company: bool | None = None,
+    overnight_price: bool | None = None,
+    top_pick_this_month: bool | None = None,
+    img_heights: int | None = None,
+    img_labels: list[str] | None = None,
+    img_widths: int | None = None,
+) -> list[dict[str, Any]]:
+    """Fetch quote records for one or more symbols.
+
+    ``enable_private_company=True`` includes private-company quote matches;
+    ``overnight_price=True`` requests overnight price fields. Symbols Yahoo
+    does not recognize are simply absent from the returned list rather than
+    raising.
+
+    Returns:
+        list[dict[str, Any]]: The ``quoteResponse.result`` list, as-is.
+
+    Raises:
+        ValueError: If ``symbols`` is empty.
+    """
+
+    if not symbols:
+        message = "symbols must not be empty"
+        raise ValueError(message)
+    payload = run(
+        _core.call_endpoint(
+            "quote",
+            values=_values(
+                symbols=",".join(symbols),
+                fields=fields,
+                formatted=formatted,
+                enablePrivateCompany=enable_private_company,
+                overnightPrice=overnight_price,
+                topPickThisMonth=top_pick_this_month,
+                imgHeights=img_heights,
+                imgLabels=img_labels,
+                imgWidths=img_widths,
+            ),
+        )
+    )
+    return payload["quoteResponse"]["result"]
+
+
+def screener(query: str) -> Frame:
+    """Run a screener DSL query and flatten the records into a table.
+
+    Returns:
+        Frame: One row per screener record. Empty result sets produce an
+        empty Frame.
+    """
+
+    payload = run(_core.call_query("screener", query))
+    return _tabular_frame(payload, "screener")
+
+
+def visualization(query: str) -> Frame:
+    """Run a visualization DSL query and flatten the rows into a table.
+
+    Returns:
+        Frame: One row per visualization document row. Empty result sets
+        produce an empty Frame.
+    """
+
+    payload = run(_core.call_query("visualization", query))
+    return _tabular_frame(payload, "visualization")
+
+
+def screener_predefined(  # noqa: PLR0913 - one keyword-only arg per wire param.
+    scr_ids: list[str],
+    *,
+    count: int | None = None,
+    start: int | None = None,
+    formatted: bool | None = None,
+    use_records_response: bool | None = None,
+    sort_field: str | None = None,
+    sort_type: str | None = None,
+) -> dict[str, Any]:
+    """Run one or more of Yahoo's predefined screeners.
+
+    ``use_records_response=False`` requests Yahoo's non-records-style
+    screener response shape.
+
+    Returns:
+        dict[str, Any]: The full parsed response payload.
+    """
+
+    return run(
+        _core.call_endpoint(
+            "screener-predefined",
+            values=_values(
+                scrIds=",".join(scr_ids),
+                count=count,
+                start=start,
+                formatted=formatted,
+                useRecordsResponse=use_records_response,
+                sortField=sort_field,
+                sortType=sort_type,
+            ),
+        )
+    )
+
+
+_TRENDING_DEFAULT_REGION = "US"
+
+
+def trending(  # noqa: PLR0913 - one keyword-only arg per wire param.
+    region: str | None = None,
+    *,
+    count: int | None = None,
+    use_quotes: bool | None = None,
+    fields: list[str] | None = None,
+    quote_type: str | None = None,
+    formatted: bool | None = None,
+) -> dict[str, Any]:
+    """List trending tickers for a region.
+
+    ``region`` is substituted into the URL path, not sent as a query
+    parameter; it defaults to ``"US"`` when omitted, matching the CLI.
+    ``use_quotes=False`` omits inline quote data from trending results.
+
+    Returns:
+        dict[str, Any]: The full parsed response payload.
+    """
+
+    return run(
+        _core.call_endpoint(
+            "trending",
+            values=_values(
+                region=region if region is not None else _TRENDING_DEFAULT_REGION,
+                count=count,
+                useQuotes=use_quotes,
+                fields=fields,
+                quoteType=quote_type,
+                formatted=formatted,
+            ),
+        )
+    )
+
+
+def sector(
+    sector: str,
+    *,
+    with_returns: bool | None = None,
+    formatted: bool | None = None,
+) -> dict[str, Any]:
+    """Fetch sector overview, performance, top holdings, and industries.
+
+    Returns:
+        dict[str, Any]: The full parsed response payload.
+    """
+
+    return run(
+        _core.call_endpoint(
+            "sector",
+            values=_values(
+                sector=sector,
+                withReturns=with_returns,
+                formatted=formatted,
+            ),
+        )
+    )
+
+
+def market_summary(
+    *,
+    formatted: bool | None = None,
+    region: str | None = None,
+) -> dict[str, Any]:
+    """Fetch a global market summary: indices, futures, forex, crypto.
+
+    ``region`` controls which markets Yahoo returns (e.g. US returns S&P
+    500, Dow, Nasdaq; CA returns TSX, CAD pairs).
+
+    Returns:
+        dict[str, Any]: The full parsed response payload.
+    """
+
+    return run(
+        _core.call_endpoint(
+            "market-summary",
+            values=_values(formatted=formatted, region=region),
+        )
+    )
+
+
+def market_info(*, modules: list[str] | None = None) -> dict[str, Any]:
+    """Fetch commodity and currency market data.
+
+    Returns:
+        dict[str, Any]: The full parsed response payload.
+    """
+
+    return run(
+        _core.call_endpoint(
+            "market-info",
+            values=_values(modules=modules),
+        )
+    )
+
+
+def market_time(
+    *,
+    formatted: bool | None = None,
+    key: str | None = None,
+) -> dict[str, Any]:
+    """Show current market hours and session status.
+
+    Returns:
+        dict[str, Any]: The full parsed response payload.
+    """
+
+    return run(
+        _core.call_endpoint(
+            "market-time",
+            values=_values(formatted=formatted, key=key),
+        )
+    )
+
+
+def screener_instrument_fields(instrument: str) -> dict[str, Any]:
+    """List every field available for a Yahoo data-platform entity.
+
+    Returns:
+        dict[str, Any]: The full parsed response payload.
+    """
+
+    return run(
+        _core.call_endpoint(
+            "screener-instrument-fields",
+            values=_values(instrument=instrument),
+        )
+    )
+
+
+def timeseries_fields(
+    *,
+    type: str | None = None,  # noqa: A002 - mirrors Yahoo's wire/CLI name
+) -> dict[str, Any]:
+    """List available fundamentals timeseries field names for a type.
+
+    Returns:
+        dict[str, Any]: The full parsed response payload.
+    """
+
+    return run(
+        _core.call_endpoint(
+            "timeseries-fields",
+            values=_values(type=type),
+        )
+    )
+
+
+def screener_discover(
+    *,
+    modules: list[str] | None = None,
+    count: int | None = None,
+    formatted: bool | None = None,
+) -> dict[str, Any]:
+    """Discover investment ideas from Yahoo screener modules.
+
+    Returns:
+        dict[str, Any]: The full parsed response payload.
+    """
+
+    return run(
+        _core.call_endpoint(
+            "screener-discover",
+            values=_values(modules=modules, count=count, formatted=formatted),
+        )
+    )
+
+
+def raw(
+    path: str,
+    params: dict[str, ParamValue] | None = None,
+    *,
+    use_crumb: bool = True,
+) -> dict[str, Any]:
+    """Call an arbitrary Yahoo path with pre-serialized wire params.
+
+    This is the escape hatch: no path template, no param coercion or
+    validation, and no envelope lookup or error-code mapping — the response
+    body is parsed and returned exactly as Yahoo sent it. A malformed body
+    raises ``YahooApiError`` (code ``"malformed-response"``) via
+    :func:`yoghurt._core.call_raw`.
+
+    Returns:
+        dict[str, Any]: The parsed response payload.
+    """
+
+    return run(_core.call_raw(path, params, use_crumb=use_crumb))

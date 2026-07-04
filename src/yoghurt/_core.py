@@ -111,19 +111,14 @@ def _raise_for_envelope_error(
     ) from cause
 
 
-def interpret_body(
-    command: str, body: str, *, symbol: str | None = None
-) -> dict[str, Any]:
-    """Parse a Yahoo response body and enforce the error contract.
-
-    When ``symbol`` is given and the envelope reports a not-found error, the
-    error raised is ``SymbolNotFoundError``, a ``YahooApiError`` subclass.
+def _parse_json_object(body: str) -> dict[str, Any]:
+    """Parse a response body into a JSON object, per the malformed-response contract.
 
     Returns:
-        dict[str, Any]: The full parsed payload (envelope included).
+        dict[str, Any]: The parsed payload.
 
     Raises:
-        YahooApiError: If the body is not valid JSON or carries an error.
+        YahooApiError: If the body is not valid JSON or not a JSON object.
     """
     try:
         payload = json.loads(body)
@@ -132,13 +127,30 @@ def interpret_body(
         # (corpus: timeseries/AAPL_types_00.json).
         message = f"Yahoo response is not valid JSON: {exc}"
         raise YahooApiError(code="malformed-response", description=message) from exc
-    error = _envelope_error(command, payload)
-    if error is not None:
-        _raise_for_envelope_error(error, symbol=symbol, http_status=None)
     payload_dict = _as_object_dict(payload)
     if payload_dict is None:
         message = "Yahoo response is not a JSON object"
         raise YahooApiError(code="malformed-response", description=message)
+    return payload_dict
+
+
+def interpret_body(
+    command: str, body: str, *, symbol: str | None = None
+) -> dict[str, Any]:
+    """Parse a Yahoo response body and enforce the error contract.
+
+    When ``symbol`` is given and the envelope reports a not-found error, the
+    error raised is ``SymbolNotFoundError``, a ``YahooApiError`` subclass.
+    Malformed-JSON bodies raise via :func:`_parse_json_object`; enveloped
+    errors raise via :func:`_raise_for_envelope_error`.
+
+    Returns:
+        dict[str, Any]: The full parsed payload (envelope included).
+    """
+    payload_dict = _parse_json_object(body)
+    error = _envelope_error(command, payload_dict)
+    if error is not None:
+        _raise_for_envelope_error(error, symbol=symbol, http_status=None)
     return payload_dict
 
 
@@ -342,3 +354,29 @@ async def call_query(route: str, query: str) -> dict[str, Any]:
         map_http_error(route, exc)
         raise
     return interpret_body(route, body)
+
+
+async def call_raw(
+    path: str, params: Mapping[str, ParamValue] | None, *, use_crumb: bool
+) -> dict[str, Any]:
+    """Call an arbitrary Yahoo path with pre-serialized wire params.
+
+    Unlike :func:`call_endpoint`, this bypasses ``COMMANDS_BY_NAME`` entirely:
+    no path template, no param coercion or validation, and no envelope
+    lookup. The body is parsed with the same malformed-response contract as
+    every other call.
+
+    Returns:
+        dict[str, Any]: The parsed response payload, exactly as Yahoo sent it.
+
+    Raises:
+        YahooRequestError: If the HTTP failure carries no mappable payload.
+    """
+
+    client = _get_client()
+    try:
+        body = await client.get(path, dict(params or {}), use_crumb=use_crumb)
+    except YahooRequestError as exc:
+        map_http_error("raw", exc)
+        raise
+    return _parse_json_object(body)
