@@ -27,6 +27,7 @@ def test_expected_surface() -> None:
         "Frame",
         "Quote",
         "QuoteType",
+        "Spark",
         "Ticker",
         "YahooClient",
         "SymbolNotFoundError",

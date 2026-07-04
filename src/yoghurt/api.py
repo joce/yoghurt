@@ -18,11 +18,12 @@ from yoghurt import _core
 from yoghurt._bridge import run
 from yoghurt.commands import COMMANDS_BY_NAME
 from yoghurt.exceptions import SymbolNotFoundError, YahooApiError
-from yoghurt.frames import Chart, Frame
-from yoghurt.models import Quote, validate_model
+from yoghurt.frames import Chart, Frame, Spark
+from yoghurt.models import ChartEvents, ChartMeta, Quote, validate_model
 from yoghurt.tabular import (
     TabularShapeError,
     build_chart_frame,
+    build_spark_frame,
     build_tabular_frame,
     collect_column_data,
     extract_chart_columns,
@@ -122,11 +123,14 @@ class Ticker:
         """Fetch OHLCV bars.
 
         Returns:
-            Chart: Typed bars frame plus the chart meta block.
+            Chart: Typed bars frame plus the typed chart meta and (when
+            requested) events blocks.
 
         Raises:
             YahooApiError: If the response cannot be flattened into the
-                fixed bars schema (code ``"malformed-response"``).
+                fixed bars schema (code ``"malformed-response"``), or if
+                the meta/events blocks fail model validation (code
+                ``"model-validation"``).
         """
 
         payload = run(
@@ -151,10 +155,14 @@ class Ticker:
             raise YahooApiError(
                 code="malformed-response", description=str(exc)
             ) from exc
+        meta = validate_model(ChartMeta, result.get("meta", {}))
+        raw_events = result.get("events")
+        chart_events = validate_model(ChartEvents, raw_events) if raw_events else None
         return Chart(
             df=df,
             fetched_at=_now_utc(),
-            meta=result.get("meta", {}),
+            meta=meta,
+            events=chart_events,
         )
 
     def spark(  # noqa: PLR0913 - one keyword-only arg per spark wire param.
@@ -167,18 +175,25 @@ class Ticker:
         include_pre_post: bool | None = None,
         cors_domain: str | None = None,
         tsrc: str | None = None,
-    ) -> dict[str, Any]:
+    ) -> Spark:
         """Fetch the sparkline price series for this symbol.
 
-        The spark response nests per-symbol data as ``spark.result[].response[]``
-        rather than the ``chart``-compatible shape, so this returns the raw
-        payload rather than a :class:`~yoghurt.frames.Chart`.
+        The spark response nests per-symbol data as
+        ``spark.result[].response[]``; this unwraps that shape into a typed
+        single-column (``close``) :class:`~yoghurt.frames.Spark` frame.
 
         Returns:
-            dict[str, Any]: The full parsed response payload.
+            Spark: Typed close-price series plus the typed chart meta block.
+
+        Raises:
+            SymbolNotFoundError: If Yahoo returns no record for the symbol.
+            YahooApiError: If the response cannot be flattened into the
+                fixed ``close`` schema (code ``"malformed-response"``), or
+                if the meta block fails model validation (code
+                ``"model-validation"``).
         """
 
-        return run(
+        payload = run(
             _core.call_endpoint(
                 "spark",
                 symbol=self.symbol,
@@ -194,6 +209,21 @@ class Ticker:
                 ),
             )
         )
+        results = payload["spark"]["result"]
+        if not results:
+            raise SymbolNotFoundError(self.symbol)
+        responses = results[0]["response"]
+        if not responses:
+            raise SymbolNotFoundError(self.symbol)
+        response = responses[0]
+        try:
+            df = build_spark_frame(response)
+        except TabularShapeError as exc:
+            raise YahooApiError(
+                code="malformed-response", description=str(exc)
+            ) from exc
+        meta = validate_model(ChartMeta, response.get("meta", {}))
+        return Spark(df=df, fetched_at=_now_utc(), meta=meta)
 
     def quote_type(
         self,

@@ -49,7 +49,7 @@ if TYPE_CHECKING:
         trending,
         visualization,
     )
-    from yoghurt.frames import Chart, Frame
+    from yoghurt.frames import Chart, Frame, Spark
     from yoghurt.models import Quote, QuoteType
 
 
@@ -70,7 +70,7 @@ def __getattr__(name: str) -> Any:  # noqa: ANN401 - PEP 562 module __getattr__
         AttributeError: If ``name`` is not a lazily-exported attribute.
     """
 
-    frames_names = {"Chart", "Frame"}
+    frames_names = {"Chart", "Frame", "Spark"}
     models_names = {"Quote", "QuoteType"}
     lazy_names = set(__all__) - {"__version__"} - set(globals())
     if name in frames_names:
@@ -108,6 +108,7 @@ __all__ = [
     "Frame",
     "Quote",
     "QuoteType",
+    "Spark",
     "SymbolNotFoundError",
     "Ticker",
     "YahooApiError",

@@ -137,6 +137,57 @@ def build_chart_frame(
     )
 
 
+def build_spark_frame(response: dict[str, Any]) -> pl.DataFrame:
+    """Construct the spark ``pl.DataFrame`` (``ts``, ``close``) from one spark response.
+
+    Unlike ``chart``, spark's ``indicators.quote[0]`` carries only ``close``
+    (no open/high/low/volume/adjclose), so this does not reuse
+    :func:`build_chart_frame`'s seven-column flattener.
+
+    Returns:
+        pl.DataFrame: A two-column (``ts``, ``close``) DataFrame ready for
+        :class:`~yoghurt.frames.Spark`.
+
+    Raises:
+        TabularShapeError: If the timestamp array, indicator block, or the
+            ``close`` array has the wrong shape.
+    """
+
+    timestamps = response.get("timestamp") or []
+    if not isinstance(timestamps, list):
+        message = "spark response.timestamp must be a list"
+        raise TabularShapeError(message)
+
+    indicators = response.get("indicators") or {}
+    quote_blocks = indicators.get("quote") or [{}]
+    quote = quote_blocks[0] if quote_blocks else {}
+    if not isinstance(quote, dict):
+        message = "spark response.indicators.quote[0] must be an object"
+        raise TabularShapeError(message)
+
+    closes = quote.get("close", [])
+    if not isinstance(closes, list):
+        message = "spark indicator 'close' must be a list"
+        raise TabularShapeError(message)
+    expected = len(timestamps)
+    if len(closes) != expected:
+        message = (
+            f"spark indicator 'close' has length {len(closes)} but "
+            f"timestamp has length {expected}"
+        )
+        raise TabularShapeError(message)
+
+    ts = (
+        pl.Series("ts", [int(t) * 1_000_000_000 for t in timestamps], dtype=pl.Int64)
+        .cast(pl.Datetime("ns"))
+        .dt.replace_time_zone("UTC")
+    )
+    return pl.DataFrame(
+        {"ts": ts, "close": closes},
+        schema={"ts": pl.Datetime("ns", "UTC"), "close": pl.Float64},
+    )
+
+
 def _coerce_volume_to_int(volumes: list[Any]) -> list[int | None]:
     """Return ``volumes`` as ints, raising if any value is non-integer.
 

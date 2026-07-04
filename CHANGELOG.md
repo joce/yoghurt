@@ -17,11 +17,21 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Typed `Quote` response model (131 fields, corpus-verified against 28
   real quote captures) plus `QuoteType`/`MarketState`/`OptionsType`/
   `PriceAlertConfidence` enums, in a new `yoghurt.models` package.
+- Typed `ChartMeta`/`ChartEvents` response models (shared by the `chart` and
+  `spark` endpoints, corpus-verified against 48 chart+spark meta captures)
+  plus `TradingPeriod`/`CurrentTradingPeriod`/`ChartDividend`/`ChartSplit`,
+  in `yoghurt.models`. `yoghurt.Spark`, a `Frame` subclass for the sparkline
+  close-price series.
 
 ### Changed
 
 - `Ticker.quote()` and the module-level `quotes()` now return typed `Quote`
   models instead of raw dicts.
+- `Ticker.chart()`'s `Chart.meta` is now a typed `ChartMeta` instead of a raw
+  dict, and `Chart` gained a typed `events: ChartEvents | None` field.
+  `Ticker.spark()` now returns a typed `Spark` frame (`to_polars()` columns
+  `ts`, `close`; `Spark.meta` is `ChartMeta`) instead of the raw parsed
+  payload.
 
 ### Internal
 

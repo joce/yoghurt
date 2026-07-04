@@ -1,4 +1,4 @@
-"""Tests for Frame/Chart conversion vocabulary."""
+"""Tests for Frame/Chart/Spark conversion vocabulary."""
 
 # The optional pandas/pyarrow deps are absent in the base dev env, so their
 # types are Unknown to pyright here; the positive-path tests below skip at
@@ -8,18 +8,25 @@
 from __future__ import annotations
 
 import builtins
+import json
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Any
+from pathlib import Path
+from typing import Any
 
 import polars as pl
 import pytest
 
-from yoghurt.frames import Chart, Frame
-
-if TYPE_CHECKING:
-    from pathlib import Path
+from yoghurt.frames import Chart, Frame, Spark
+from yoghurt.models.chart import ChartMeta
 
 _EXPECTED_ROW_COUNT = 2
+_CORPUS_CHART_DIR = Path(__file__).resolve().parent / "fixtures" / "corpus" / "chart"
+
+
+def _aapl_chart_meta() -> ChartMeta:
+    payload = json.loads((_CORPUS_CHART_DIR / "AAPL.json").read_text(encoding="utf-8"))
+    meta: dict[str, object] = payload["chart"]["result"][0]["meta"]
+    return ChartMeta.model_validate(meta)
 
 
 def _frame() -> Frame:
@@ -105,13 +112,27 @@ def test_to_arrow_returns_a_pyarrow_table() -> None:
     assert rows == _EXPECTED_ROW_COUNT
 
 
-def test_chart_is_a_frame_with_meta() -> None:
-    """Chart carries the response meta block alongside Frame behavior."""
+def test_chart_is_a_frame_with_typed_meta() -> None:
+    """Chart carries the typed meta block alongside Frame behavior."""
 
     chart = Chart(
         df=pl.DataFrame({"ts": [1]}),
         fetched_at=datetime(2026, 7, 4, tzinfo=timezone.utc),
-        meta={"currency": "USD"},
+        meta=_aapl_chart_meta(),
+        events=None,
     )
-    assert chart.meta["currency"] == "USD"
+    assert chart.meta.currency == "USD"
+    assert chart.events is None
     assert chart.to_dicts() == [{"ts": 1}]
+
+
+def test_spark_is_a_frame_with_typed_meta() -> None:
+    """Spark carries the typed meta block alongside Frame behavior."""
+
+    spark = Spark(
+        df=pl.DataFrame({"ts": [1], "close": [1.5]}),
+        fetched_at=datetime(2026, 7, 4, tzinfo=timezone.utc),
+        meta=_aapl_chart_meta(),
+    )
+    assert spark.meta.currency == "USD"
+    assert spark.to_dicts() == [{"ts": 1, "close": 1.5}]

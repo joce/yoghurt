@@ -20,6 +20,8 @@ if TYPE_CHECKING:
     import polars as pl
     import pyarrow as pa  # pyright: ignore[reportMissingImports, reportMissingTypeStubs]
 
+    from yoghurt.models.chart import ChartEvents, ChartMeta
+
 
 @dataclass(frozen=True, slots=True)
 class Frame:
@@ -93,13 +95,28 @@ class Frame:
 
 @dataclass(frozen=True, slots=True)
 class Chart(Frame):
-    """OHLCV bars plus the chart response's meta block.
+    """OHLCV bars plus the chart response's typed meta and events blocks.
 
-    ``meta`` is required (no default) because a defaulted field on a
-    slotted dataclass subclass confuses pyright's field-type inference
-    (the field itself is correctly typed at use sites; only the
-    declaration line mis-infers). Callers always have a meta block to
-    pass, since it comes straight from the chart response.
+    ``meta`` and ``events`` are both required (no defaults) because a
+    defaulted field on a slotted dataclass subclass confuses pyright's
+    field-type inference (the field itself is correctly typed at use
+    sites; only the declaration line mis-infers). Callers always have a
+    meta block to pass, since it comes straight from the chart response;
+    ``events`` is ``None`` at call sites that did not request an
+    ``events`` block (Yahoo omits the key entirely in that case).
     """
 
-    meta: dict[str, Any]
+    meta: ChartMeta
+    events: ChartEvents | None
+
+
+@dataclass(frozen=True, slots=True)
+class Spark(Frame):
+    """A single-column close-price series plus the spark response's meta block.
+
+    Spark's ``indicators.quote[0]`` carries only ``close`` (no open/high/
+    low/volume), unlike chart's seven-column OHLCV shape, so this is a
+    distinct Frame subclass rather than a reuse of :class:`Chart`.
+    """
+
+    meta: ChartMeta

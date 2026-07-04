@@ -12,7 +12,8 @@ import pytest
 import yoghurt._core as core
 from yoghurt.api import Ticker
 from yoghurt.exceptions import SymbolNotFoundError, YahooApiError
-from yoghurt.models import Quote, QuoteType
+from yoghurt.frames import Spark
+from yoghurt.models import ChartEvents, ChartMeta, Quote, QuoteType
 from yoghurt.tabular import TabularShapeError
 
 if TYPE_CHECKING:
@@ -159,7 +160,7 @@ def test_ticker_quote_type_empty_result_raises_symbol_error(
 
 
 def test_ticker_chart_builds_typed_bars(monkeypatch: pytest.MonkeyPatch) -> None:
-    """chart() returns a Chart whose frame has the fixed schema."""
+    """chart() returns a Chart whose frame has the fixed schema and typed meta."""
     _install_fake(monkeypatch, _corpus_text("chart/AAPL.json"))
     chart = Ticker("AAPL").chart()
     assert chart.to_polars().columns == [
@@ -171,7 +172,9 @@ def test_ticker_chart_builds_typed_bars(monkeypatch: pytest.MonkeyPatch) -> None
         "volume",
         "adj_close",
     ]
-    assert chart.meta["currency"] == "USD"
+    assert isinstance(chart.meta, ChartMeta)
+    assert chart.meta.currency == "USD"
+    assert chart.events is None
 
 
 def test_ticker_chart_all_defaults_sends_interval(
@@ -197,6 +200,113 @@ def test_ticker_chart_shape_mismatch_raises_yahoo_api_error(
     assert exc_info.value.code == "malformed-response"
     assert type(exc_info.value) is YahooApiError
     assert isinstance(exc_info.value.__cause__, TabularShapeError)
+
+
+def test_ticker_chart_meta_model_violation_raises_yahoo_api_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A meta block that fails ChartMeta validation surfaces as YahooApiError."""
+    payload = json.loads(_corpus_text("chart/AAPL.json"))
+    payload["chart"]["result"][0]["meta"]["regularMarketPrice"] = "abc"
+    _install_fake(monkeypatch, json.dumps(payload))
+    with pytest.raises(YahooApiError) as exc_info:
+        Ticker("AAPL").chart()
+    assert exc_info.value.code == "model-validation"
+    assert type(exc_info.value) is YahooApiError
+    assert isinstance(exc_info.value.__cause__, pydantic.ValidationError)
+
+
+def test_ticker_chart_builds_typed_events(monkeypatch: pytest.MonkeyPatch) -> None:
+    """chart() returns typed ChartEvents when the response carries an events block."""
+    _install_fake(monkeypatch, _corpus_text("chart/MSFT_1y_events.json"))
+    chart = Ticker("MSFT").chart(events=["div"])
+    assert isinstance(chart.events, ChartEvents)
+    assert chart.events.dividends is not None
+    assert chart.events.splits is None
+
+
+_SPARK_AAPL_PREVIOUS_CLOSE = 294.38
+_SPARK_AAPL_FIRST_CLOSE = 298.2
+_SPARK_AAPL_LAST_CLOSE = 308.63
+_SPARK_AAPL_ROW_COUNT = 79
+
+
+def test_ticker_spark_builds_typed_close_series(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """spark() returns a Spark whose frame has the fixed (ts, close) schema."""
+    fake = _install_fake(monkeypatch, _corpus_text("spark/AAPL.json"))
+    spark = Ticker("AAPL").spark()
+    assert isinstance(spark, Spark)
+    path, _ = fake.calls[0]
+    assert path == "/v7/finance/spark"
+    assert spark.to_polars().columns == ["ts", "close"]
+    rows = spark.to_dicts()
+    assert len(rows) == _SPARK_AAPL_ROW_COUNT
+    assert rows[0]["close"] == pytest.approx(_SPARK_AAPL_FIRST_CLOSE)
+    assert rows[-1]["close"] == pytest.approx(_SPARK_AAPL_LAST_CLOSE)
+    assert isinstance(spark.meta, ChartMeta)
+    assert spark.meta.previous_close == pytest.approx(_SPARK_AAPL_PREVIOUS_CLOSE)
+
+
+def test_ticker_spark_empty_result_raises_symbol_not_found_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Yahoo's 200-with-null-result spark shape becomes SymbolNotFoundError."""
+    _install_fake(monkeypatch, _corpus_text("spark/ZZZZXYZQ.json"))
+    with pytest.raises(SymbolNotFoundError):
+        Ticker("ZZZZXYZQ").spark()
+
+
+def test_ticker_spark_empty_response_list_raises_symbol_not_found_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A result entry with an empty response list also becomes SymbolNotFoundError."""
+    payload = json.loads(_corpus_text("spark/AAPL.json"))
+    payload["spark"]["result"][0]["response"] = []
+    _install_fake(monkeypatch, json.dumps(payload))
+    with pytest.raises(SymbolNotFoundError):
+        Ticker("AAPL").spark()
+
+
+def test_ticker_spark_shape_mismatch_raises_yahoo_api_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A truncated timestamp array surfaces as YahooApiError, not TabularShapeError."""
+    payload = json.loads(_corpus_text("spark/AAPL.json"))
+    response = payload["spark"]["result"][0]["response"][0]
+    response["timestamp"] = response["timestamp"][:1]
+    _install_fake(monkeypatch, json.dumps(payload))
+    with pytest.raises(YahooApiError) as exc_info:
+        Ticker("AAPL").spark()
+    assert exc_info.value.code == "malformed-response"
+    assert type(exc_info.value) is YahooApiError
+    assert isinstance(exc_info.value.__cause__, TabularShapeError)
+
+
+def test_ticker_spark_meta_model_violation_raises_yahoo_api_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A meta block that fails ChartMeta validation surfaces as YahooApiError."""
+    payload = json.loads(_corpus_text("spark/AAPL.json"))
+    response = payload["spark"]["result"][0]["response"][0]
+    response["meta"]["regularMarketPrice"] = "abc"
+    _install_fake(monkeypatch, json.dumps(payload))
+    with pytest.raises(YahooApiError) as exc_info:
+        Ticker("AAPL").spark()
+    assert exc_info.value.code == "model-validation"
+    assert type(exc_info.value) is YahooApiError
+    assert isinstance(exc_info.value.__cause__, pydantic.ValidationError)
+
+
+def test_ticker_spark_passes_wire_params(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Typed spark kwargs land under their Yahoo wire names."""
+    fake = _install_fake(monkeypatch, _corpus_text("spark/AAPL.json"))
+    Ticker("AAPL").spark(range="1d", interval="5m", include_timestamps=True)
+    _, params = fake.calls[0]
+    assert params["range"] == "1d"
+    assert params["interval"] == "5m"
+    assert params["includeTimestamps"] is True
 
 
 def test_ticker_quote_summary_passes_modules(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -228,10 +338,6 @@ def test_ticker_repr() -> None:
 def test_ticker_strips_symbol_whitespace() -> None:
     """The constructor strips surrounding whitespace from the symbol."""
     assert Ticker(" AAPL ").symbol == "AAPL"
-
-
-def _invoke_spark(ticker: Ticker) -> object:
-    return ticker.spark()
 
 
 def _invoke_options(ticker: Ticker) -> object:
@@ -271,7 +377,6 @@ def _invoke_stock_recommender(ticker: Ticker) -> object:
 
 
 _METHOD_CASES = (
-    pytest.param(_invoke_spark, "spark/AAPL.json", "/v7/finance/spark", id="spark"),
     pytest.param(
         _invoke_options,
         "options/AAPL.json",
