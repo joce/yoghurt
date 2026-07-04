@@ -178,3 +178,34 @@ async def test_run_all_writes_manifest(
     assert isinstance(datetime.fromisoformat(meta["fetched_at"]), datetime)
     assert (tmp_path / "quote" / "AAPL.json").is_file()
     assert (tmp_path / "quote-type" / "AAPL.json").is_file()
+
+
+async def test_run_all_records_validation_error_in_manifest(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A case failing dispatch-time validation becomes an error entry, not a crash."""
+    fake = _FakeClient()
+    monkeypatch.setattr("tools.probe.YahooClient", lambda: fake)
+    monkeypatch.setattr("tools.probe.POLITENESS_DELAY_SECONDS", 0.0)
+    # Reversed date window: parses fine, then _validate_command_params
+    # raises ValueError (not a YoghurtError) at dispatch time.
+    bad = ProbeCase(
+        "chart",
+        "AAPL_reversed",
+        (
+            "chart",
+            "AAPL",
+            "--period1",
+            "2026-01-02",
+            "--period2",
+            "2026-01-01",
+            "--interval",
+            "1d",
+        ),
+    )
+    await _run_all([bad], tmp_path)
+    manifest = json.loads((tmp_path / "manifest.json").read_text(encoding="utf-8"))
+    entry = manifest["chart/AAPL_reversed"]
+    assert entry["status"] == "error"
+    assert entry["http_status"] is None
+    assert "file" not in entry

@@ -490,7 +490,10 @@ async def _run_case(
         entry["http_status"] = exc.status_code
         entry["detail"] = str(exc)
         body = exc.body or ""
-    except YoghurtError as exc:
+    except (YoghurtError, ValueError) as exc:
+        # ValueError covers the CLI's dispatch-time validation (bad chart
+        # intervals, reversed date windows); a typo'd probe case should
+        # become a manifest entry, not a crash.
         entry["status"] = "error"
         entry["http_status"] = None
         entry["detail"] = str(exc)
@@ -535,8 +538,11 @@ async def _run_all(cases: list[ProbeCase], corpus_dir: Path) -> None:
             manifest[key] = await _run_case(parser, client, case, corpus_dir)
             await asyncio.sleep(POLITENESS_DELAY_SECONDS)
     finally:
+        # Persist partial progress even if a case raises something
+        # unexpected: hours of politely rate-limited evidence should
+        # survive a crash on the last case.
         await client.aclose()
-    _write_manifest(manifest, len(cases), corpus_dir)
+        _write_manifest(manifest, len(cases), corpus_dir)
 
 
 def main() -> int:
