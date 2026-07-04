@@ -589,12 +589,17 @@ def build_timeseries_frames(payload: dict[str, Any]) -> TimeseriesTables:
     """Flatten a timeseries payload into four typed tables.
 
     Walks ``timeseries.result[]`` and routes each entry by row family:
-    rows carrying ``reportedValue`` are fundamentals (long format, plus a
-    separate geographic-segments table for rows that also carry
-    ``geographicSegmentData``); ``economicEvents`` and ``analystRatings``
-    entries get their own event tables. Entries with no (non-null) rows
-    are collected in ``empty_types``; entries whose rows match no known
-    family are collected in ``unrecognized_types``.
+    a type is fundamentals-shaped if ANY of its rows carries
+    ``reportedValue`` (long format, plus a separate geographic-segments
+    table for rows that also carry ``geographicSegmentData``); rows in a
+    fundamentals-shaped type that lack ``reportedValue`` still contribute
+    a record, with ``value`` (and any other reportedValue-derived field)
+    null — the flat frame already tolerates nulls, so no row is dropped or
+    silently routed wrong. ``economicEvents`` and ``analystRatings`` entries
+    get their own event tables. Entries with no (non-null) rows are
+    collected in ``empty_types``; entries whose rows match no known
+    family (no row carries ``reportedValue``) are collected in
+    ``unrecognized_types``.
 
     Returns:
         TimeseriesTables: The four tables plus type-name bookkeeping.
@@ -615,7 +620,7 @@ def build_timeseries_frames(payload: dict[str, Any]) -> TimeseriesTables:
             economic.extend(_economic_event_records(data_rows))
         elif type_name == "analystRatings":
             ratings.extend(_analyst_rating_records(data_rows))
-        elif "reportedValue" in data_rows[0]:
+        elif any("reportedValue" in row for row in data_rows):
             fundamental_records, segment_records = _fundamentals_records(
                 type_name, data_rows
             )

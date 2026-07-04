@@ -42,8 +42,12 @@ like the CLI):
    `Frame` with `to_polars()`, `to_pandas()` (`pip install yoghurt[pandas]`),
    `to_arrow()`, `to_dicts()`, and `save_parquet()`; `Chart.meta`/`Spark.meta`
    are typed `ChartMeta` (pydantic), and `Chart.events` is typed
-   `ChartEvents` when the response carries one. `Ticker.quote()`/`quotes()`
-   return `Quote` (pydantic) models. Other endpoints return parsed `dict`s
+   `ChartEvents` when the response carries one. `Ticker.timeseries()` returns
+   `Timeseries`: four typed frames (fundamentals, geographic segments,
+   economic events, analyst ratings) plus `empty_types`/`unrecognized_types`
+   bookkeeping. `Ticker.quote()`/`quotes()` return `Quote` (pydantic) models.
+   `Ticker.options()` returns a typed `OptionChain` (pydantic), including the
+   underlying security's `Quote`. Other endpoints return parsed `dict`s
    today; typed response models land endpoint by endpoint.
 2. **Parsed raw** — `yoghurt.raw(path, params)` for any Yahoo query path.
 3. **Raw async** — `yoghurt.YahooClient`, the async client the CLI itself

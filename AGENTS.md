@@ -31,7 +31,11 @@ Parquet is written with **polars** (a core dependency); chart/screener/visualiza
 - `src/yoghurt/_core.py` -> async endpoint core: envelopes, error mapping, shared client.
 - `src/yoghurt/api.py` -> public sync Ticker + module functions.
 - `src/yoghurt/frames.py` -> Frame/Chart result types.
-- `src/yoghurt/tabular.py` -> response flattening shared by frames and parquet.
+- `src/yoghurt/tabular.py` -> response flattening shared by frames and parquet, including the timeseries fundamentals/geographic-segments/economic-events/analyst-ratings flattener.
+- `src/yoghurt/parquet_writer.py` -> Parquet output for chart/screener/visualization.
+- `src/yoghurt/query.py` -> screener/visualization DSL parsing.
+- `src/yoghurt/exceptions.py` -> public exception hierarchy.
+- `src/yoghurt/models/` -> typed pydantic response models (Part 3+): `_base.py` (YahooModel base), `enums.py` (closed vocabularies), `quote.py` (Quote), `chart.py` (ChartMeta/Spark meta/chart events), `options.py` (OptionChain/OptionContract/OptionExpiration).
 - `src/yoghurt/__init__.py` -> lazy public surface, py.typed.
 - `tests/` -> pytest tests mirroring `src/yoghurt/`.
 
@@ -65,9 +69,10 @@ When adding or editing a CLI command:
 - The corpus is authoritative for wire spellings, presence, and types; prior art (Doubloon) second; researched docs (src/yoghurt/docs/*.md) third.
 - Optionality is evidence-driven: required exactly for keys present in 100% of that endpoint's corpus records (tools/fields_report.py-style report), else Optional.
 - Closed vocabularies are (str, Enum) classes in yoghurt/models/enums.py with WIRE casing, defined once, corpus-coverage-tested; values known only from prior use are noted in the enum docstring.
-- Every field docstring ends with exactly one applicability form: "Observed on: <types> quotes." / "Not observed in the corpus; known from prior use on <types> quotes." / "Observed only as empty lists in the corpus." The corpus capture date lives once in the module docstring.
+- Closed vocabularies are reused across endpoint families when values coincide (e.g. QuoteType for chart's instrumentType); when a new family verifies an existing enum against its own corpus, note it in the enum's docstring rather than minting a duplicate.
+- Every field docstring ends with exactly one applicability form: "Observed on: <types> <endpoint-noun>." / "Not observed in the corpus; known from prior use on <types> <endpoint-noun>." / "Observed only as empty lists in the corpus." The endpoint noun (quotes / charts / contracts / chains / …) is fixed per model module and stated in that module's docstring. The corpus capture date lives once in the module docstring.
 - Fields are declared in alphabetical order; the coverage gate asserts it.
-- Nested payload objects become nested YahooModel sub-models — never dict fields.
+- Nested payload objects become nested YahooModel sub-models — never dict fields; keyed collections are dict[str, SubModel].
 - Convenience accessors are plain functools.cached_property, never pydantic computed_field: model_dump() stays wire-shaped.
 - Every model ships a corpus coverage gate: every relevant corpus record validates with EMPTY extras at EVERY nesting level (tests/conftest.py::collect_nested_extras), and the required-field set is pinned to the presence report.
 - Validation failures surface as YahooApiError(code="model-validation") via yoghurt.models.validate_model(); pydantic never leaks through the public API.

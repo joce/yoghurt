@@ -14,6 +14,12 @@ class QuoteType(str, Enum):
 
     Members: EQUITY, INDEX, OPTION, CURRENCY, CRYPTOCURRENCY, FUTURE, ETF,
     MUTUALFUND, and PRIVATE_COMPANY.
+
+    Reused as the type of chart/spark meta's ``instrumentType``
+    (:class:`~yoghurt.models.chart.ChartMeta.instrument_type`): every value
+    observed in the chart+spark corpus (CRYPTOCURRENCY, CURRENCY, EQUITY,
+    ETF, FUTURE, INDEX, MUTUALFUND) is a member here, verified independently
+    against that corpus rather than assumed from the quote corpus.
     """
 
     EQUITY = "EQUITY"

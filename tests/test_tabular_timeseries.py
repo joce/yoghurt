@@ -291,6 +291,77 @@ def test_unrecognized_family_surfaces_by_name() -> None:
         assert frame.height == 0
 
 
+def test_mixed_shape_type_lands_in_fundamentals_with_a_null_and_a_value() -> None:
+    """A type with [no-reportedValue, with-reportedValue] rows is fundamentals-shaped.
+
+    Dispatch sniffs whether ANY row in the type carries ``reportedValue``,
+    not just the first row: a row lacking it still lands in the flat
+    frame with a null ``value`` instead of the whole type wrongly landing
+    in ``unrecognized_types``.
+    """
+
+    payload = {
+        "timeseries": {
+            "result": [
+                {
+                    "meta": {"symbol": ["AAPL"], "type": ["annualTotalRevenue"]},
+                    "annualTotalRevenue": [
+                        {"asOfDate": "2021-09-30", "periodType": "12M"},
+                        {
+                            "asOfDate": "2022-09-30",
+                            "periodType": "12M",
+                            "currencyCode": "USD",
+                            "reportedValue": {"raw": 394328000000.0, "fmt": "394.33B"},
+                        },
+                    ],
+                }
+            ]
+        }
+    }
+    tables = build_timeseries_frames(payload)
+    assert tables.unrecognized_types == ()
+    assert tables.empty_types == ()
+    rows = tables.fundamentals.sort("as_of_date").to_dicts()
+    assert rows == [
+        {
+            "type": "annualTotalRevenue",
+            "as_of_date": date(2021, 9, 30),
+            "period_type": "12M",
+            "currency_code": None,
+            "value": None,
+        },
+        {
+            "type": "annualTotalRevenue",
+            "as_of_date": date(2022, 9, 30),
+            "period_type": "12M",
+            "currency_code": "USD",
+            "value": 394328000000.0,
+        },
+    ]
+
+
+def test_type_with_no_reported_value_rows_anywhere_is_unrecognized() -> None:
+    """A type where no row carries reportedValue lands in unrecognized_types."""
+
+    payload = {
+        "timeseries": {
+            "result": [
+                {
+                    "meta": {"symbol": ["AAPL"], "type": ["annualTotalRevenue"]},
+                    "annualTotalRevenue": [
+                        {"asOfDate": "2021-09-30", "periodType": "12M"},
+                        {"asOfDate": "2022-09-30", "periodType": "12M"},
+                    ],
+                }
+            ]
+        }
+    }
+    tables = build_timeseries_frames(payload)
+    assert tables.unrecognized_types == ("annualTotalRevenue",)
+    assert tables.empty_types == ()
+    assert tables.fundamentals.height == 0
+
+
 def test_missing_result_path_raises_shape_error() -> None:
     """A payload without timeseries.result is a shape error."""
 

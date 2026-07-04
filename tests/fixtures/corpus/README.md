@@ -19,3 +19,12 @@ they capture Yahoo's error-payload shapes. `timeseries/AAPL_types_00.json` is
 kept byte-for-byte as evidence of Yahoo-side corruption (HTTP 200 with an
 invalid JSON escape inside `spEarningsReleaseEvents`) and does not parse as
 JSON.
+
+`timeseries/AAPL_analystRatings.json` and
+`timeseries/AAPL_economicEventsLong.json` are surgical single-case captures:
+hand-added `tools/probe.py` cases requesting one event type over a long
+(2020-01-01 onward) window, rather than results carried by the all-types
+sweep. The probe plan also includes a dedicated `AAPL_spEarnings` case; Yahoo
+currently serves malformed JSON for `spEarningsReleaseEvents` on every
+symbol, so that case is expected to record a manifest `status: "error"`
+(no corpus file) on full probe runs, not a probe bug.
