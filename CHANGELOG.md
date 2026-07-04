@@ -6,6 +6,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Internal
+
+- `YahooRequestError` now exposes a public `body` attribute with Yahoo's raw
+  error response body, when available.
+
 ## [0.3.3] - 2026-06-30
 
 Maintenance release — dependency updates only; no user-facing changes.

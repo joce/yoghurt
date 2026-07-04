@@ -223,7 +223,6 @@ preview = true
 "tools/*" = [
     "T201",     # print: probe is a console tool
     "PLC2701",  # private import: deliberately reuses yoghurt.cli internals
-    "SLF001",   # same
 ]
 
 [tool.ruff.lint.pydocstyle]
@@ -240,6 +239,7 @@ packages = ["src/yoghurt"]
 
 [tool.hatch.build.targets.sdist]
 include = ["src", "tests", "AGENTS.md", "CHANGELOG.md", "LICENSE", "README.md", "RELEASING.md", "pyproject.toml"]
+exclude = ["tests/fixtures/corpus", "tests/tools"]
 
 [build-system]
 requires = ["hatchling>=1.29,<2.0", "hatch-vcs>=0.4,<1.0"]

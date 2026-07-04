@@ -69,6 +69,12 @@ def test_case_keys_are_unique() -> None:
     assert len(keys) == len(set(keys))
 
 
+def test_case_files_are_unique() -> None:
+    """No two cases sanitize to the same command/file path on disk."""
+    files = [(c.command, sanitize(c.case)) for c in build_cases()]
+    assert len(files) == len(set(files))
+
+
 class _FakeClient:
     """Minimal stand-in for YahooClient that returns or raises canned results."""
 
