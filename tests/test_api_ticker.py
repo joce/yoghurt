@@ -1,0 +1,267 @@
+"""Tests for the public synchronous Ticker API."""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+from typing import TYPE_CHECKING, TypeAlias
+
+import pytest
+
+import yoghurt._core as core
+from yoghurt.api import Ticker
+from yoghurt.exceptions import SymbolNotFoundError
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from typing import Any
+
+    from yoghurt.types import ParamValue
+
+_Invoke: TypeAlias = "Callable[[Ticker], object]"
+
+_CORPUS_ROOT = Path(__file__).parent / "fixtures" / "corpus"
+
+
+def _corpus_text(relative_path: str) -> str:
+    """Read a corpus fixture body as text.
+
+    Returns:
+        str: The raw fixture file contents.
+    """
+
+    return (_CORPUS_ROOT / relative_path).read_text(encoding="utf-8")
+
+
+class _FakeClient:
+    """Minimal stand-in for YahooClient that records calls and returns a body."""
+
+    def __init__(self, body: str) -> None:
+        """Store the canned response body."""
+        self.body = body
+        self.calls: list[tuple[str, dict[str, object]]] = []
+
+    async def get(
+        self,
+        path: str,
+        params: dict[str, ParamValue],
+        *,
+        use_crumb: bool = True,
+        base_url: str | None = None,
+    ) -> str:
+        """Record the call and return the canned body.
+
+        Returns:
+            str: The canned response body.
+        """
+        del use_crumb, base_url
+        self.calls.append((path, dict(params)))
+        return self.body
+
+    async def post(
+        self,
+        path: str,
+        params: dict[str, ParamValue],
+        json_body: dict[str, Any],
+        *,
+        use_crumb: bool = True,
+        base_url: str | None = None,
+    ) -> str:
+        """Record the call and return the canned body.
+
+        Returns:
+            str: The canned response body.
+        """
+        del use_crumb, base_url
+        self.calls.append((path, {"params": dict(params), "body": json_body}))
+        return self.body
+
+    async def aclose(self) -> None:
+        """No-op close."""
+
+
+def _install_fake(monkeypatch: pytest.MonkeyPatch, body: str) -> _FakeClient:
+    """Patch the core client seam with a fake that returns ``body``.
+
+    Returns:
+        _FakeClient: The installed fake, for call-inspection assertions.
+    """
+
+    fake = _FakeClient(body)
+    monkeypatch.setattr(core, "_get_client", lambda: fake)
+    return fake
+
+
+def test_ticker_quote_returns_single_record(monkeypatch: pytest.MonkeyPatch) -> None:
+    """quote() unwraps the one-record result list."""
+    _install_fake(monkeypatch, _corpus_text("quote/AAPL_default.json"))
+    record = Ticker("AAPL").quote()
+    assert record["symbol"] == "AAPL"
+
+
+def test_ticker_quote_empty_result_raises_symbol_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Yahoo's 200-with-empty-result shape becomes SymbolNotFoundError."""
+    _install_fake(monkeypatch, _corpus_text("quote/ZZZZXYZQ.json"))
+    with pytest.raises(SymbolNotFoundError):
+        Ticker("ZZZZXYZQ").quote()
+
+
+def test_ticker_chart_builds_typed_bars(monkeypatch: pytest.MonkeyPatch) -> None:
+    """chart() returns a Chart whose frame has the fixed schema."""
+    _install_fake(monkeypatch, _corpus_text("chart/AAPL.json"))
+    chart = Ticker("AAPL").chart()
+    assert chart.to_polars().columns == [
+        "ts",
+        "open",
+        "high",
+        "low",
+        "close",
+        "volume",
+        "adj_close",
+    ]
+    assert chart.meta["currency"] == "USD"
+
+
+def test_ticker_quote_summary_passes_modules(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Modules list serializes to the CSV wire form."""
+    fake = _install_fake(monkeypatch, _corpus_text("quote-summary/AAPL.json"))
+    Ticker("AAPL").quote_summary(modules=["price", "summaryDetail"])
+    _, params = fake.calls[0]
+    assert params["modules"] == "price,summaryDetail"
+
+
+def test_ticker_repr() -> None:
+    """repr() shows the bound symbol."""
+    assert repr(Ticker(" AAPL ")) == "Ticker('AAPL')"
+
+
+def test_ticker_strips_symbol_whitespace() -> None:
+    """The constructor strips surrounding whitespace from the symbol."""
+    assert Ticker(" AAPL ").symbol == "AAPL"
+
+
+def _invoke_spark(ticker: Ticker) -> object:
+    return ticker.spark()
+
+
+def _invoke_quote_type(ticker: Ticker) -> object:
+    return ticker.quote_type()
+
+
+def _invoke_options(ticker: Ticker) -> object:
+    return ticker.options()
+
+
+def _invoke_timeseries(ticker: Ticker) -> object:
+    return ticker.timeseries()
+
+
+def _invoke_calendar_events(ticker: Ticker) -> object:
+    return ticker.calendar_events()
+
+
+def _invoke_analyst(ticker: Ticker) -> object:
+    return ticker.analyst()
+
+
+def _invoke_ratings_top(ticker: Ticker) -> object:
+    return ticker.ratings_top()
+
+
+def _invoke_price_insights(ticker: Ticker) -> object:
+    return ticker.price_insights()
+
+
+def _invoke_insights(ticker: Ticker) -> object:
+    return ticker.insights()
+
+
+def _invoke_recommendations(ticker: Ticker) -> object:
+    return ticker.recommendations()
+
+
+def _invoke_stock_recommender(ticker: Ticker) -> object:
+    return ticker.stock_recommender()
+
+
+_METHOD_CASES = (
+    pytest.param(_invoke_spark, "spark/AAPL.json", "/v7/finance/spark", id="spark"),
+    pytest.param(
+        _invoke_quote_type,
+        "quote-type/AAPL.json",
+        "/v1/finance/quoteType/AAPL",
+        id="quote_type",
+    ),
+    pytest.param(
+        _invoke_options,
+        "options/AAPL.json",
+        "/v7/finance/options/AAPL",
+        id="options",
+    ),
+    pytest.param(
+        _invoke_timeseries,
+        "timeseries/AAPL.json",
+        "/ws/fundamentals-timeseries/v1/finance/timeseries/AAPL",
+        id="timeseries",
+    ),
+    pytest.param(
+        _invoke_calendar_events,
+        "calendar-events/AAPL.json",
+        "/ws/screeners/v1/finance/calendar-events",
+        id="calendar_events",
+    ),
+    pytest.param(
+        _invoke_analyst,
+        "analyst/AAPL.json",
+        "/ws/mad/v2/analyst/symbol/AAPL",
+        id="analyst",
+    ),
+    pytest.param(
+        _invoke_ratings_top,
+        "ratings-top/AAPL.json",
+        "/v2/ratings/top/AAPL",
+        id="ratings_top",
+    ),
+    pytest.param(
+        _invoke_price_insights,
+        "price-insights/AAPL.json",
+        "/ws/company-fundamentals/v1/finance/price-insights",
+        id="price_insights",
+    ),
+    pytest.param(
+        _invoke_insights,
+        "insights/AAPL.json",
+        "/ws/insights/v3/finance/insights",
+        id="insights",
+    ),
+    pytest.param(
+        _invoke_recommendations,
+        "recommendations-by-symbol/AAPL.json",
+        "/v6/finance/recommendationsbysymbol/AAPL",
+        id="recommendations",
+    ),
+    pytest.param(
+        _invoke_stock_recommender,
+        "stock-recommender/AAPL.json",
+        "/xhr/stock-recommender",
+        id="stock_recommender",
+    ),
+)
+
+
+@pytest.mark.parametrize(("invoke", "corpus_file", "expected_path"), _METHOD_CASES)
+def test_ticker_method_calls_expected_path_and_returns_payload(
+    monkeypatch: pytest.MonkeyPatch,
+    invoke: _Invoke,
+    corpus_file: str,
+    expected_path: str,
+) -> None:
+    """Each Ticker method hits its command's path and passes the payload through."""
+    body = _corpus_text(corpus_file)
+    fake = _install_fake(monkeypatch, body)
+    result = invoke(Ticker("AAPL"))
+    path, _ = fake.calls[0]
+    assert path == expected_path
+    assert result == json.loads(body)

@@ -280,7 +280,16 @@ def _check_date_pair_present(
 
 
 def _param_from_default(spec: ParamSpec, current_timestamp: int) -> ParamValue | None:
-    """Return the static or dynamic default for an absent param, if any."""
+    """Return the static or dynamic default for an absent param, if any.
+
+    CLI callers never reach this branch for plain static defaults (e.g.
+    ``interval="1m"``): argparse resolves ``default_for_param`` onto the
+    namespace up front, so ``_values_from_namespace`` already sees the key
+    present. Library callers build ``values`` directly from typed kwargs and
+    skip unset (``None``) ones, so an omitted key must still resolve to the
+    command's plain static default here, not just the dynamic/empty-string
+    special cases.
+    """
 
     dynamic_default = _dynamic_default_for_param(spec, current_timestamp)
     if dynamic_default is not None:
@@ -291,6 +300,10 @@ def _param_from_default(spec: ParamSpec, current_timestamp: int) -> ParamValue |
         and len(spec.default) == 0
     ):
         return ""
+    if spec.default == "today":
+        return datetime.now(timezone.utc).date().isoformat()
+    if spec.default is not None:
+        return spec.default
     return None
 
 
