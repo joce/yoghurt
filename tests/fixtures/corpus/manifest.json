@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "case_count": 242,
+    "case_count": 244,
     "fetched_at": "2026-07-04T04:35:12.640976+00:00"
   },
   "analyst/AAPL": {
@@ -2193,6 +2193,36 @@
       "AAPL"
     ],
     "file": "timeseries/AAPL.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "timeseries/AAPL_analystRatings": {
+    "argv": [
+      "timeseries",
+      "AAPL",
+      "--type",
+      "analystRatings",
+      "--period1",
+      "2020-01-01",
+      "--period2",
+      "2026-07-03"
+    ],
+    "file": "timeseries/AAPL_analystRatings.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "timeseries/AAPL_economicEventsLong": {
+    "argv": [
+      "timeseries",
+      "AAPL",
+      "--type",
+      "economicEvents",
+      "--period1",
+      "2020-01-01",
+      "--period2",
+      "2026-07-03"
+    ],
+    "file": "timeseries/AAPL_economicEventsLong.json",
     "http_status": 200,
     "status": "ok"
   },

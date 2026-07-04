@@ -219,10 +219,24 @@ def _chart_variant_cases() -> list[ProbeCase]:
     ]
 
 
+# Yahoo serves stable, systemic malformed JSON for spEarningsReleaseEvents
+# (every symbol, every re-probe, even requested alone): a request bundling it
+# with any other type fails wholesale at JSON parse. Quarantined out of the
+# all-types chunks below; analystRatings and economicEvents are event types
+# too but are individually clean, so they get their own dedicated cases
+# instead of riding in the bulk fundamentals sweep.
+_QUARANTINED_EVENT_TYPES: Final[frozenset[str]] = frozenset(
+    {"spEarningsReleaseEvents", "analystRatings", "economicEvents"}
+)
+
+
 def _timeseries_all_type_cases() -> list[ProbeCase]:
     """All known fundamentals types for AAPL, chunked to keep URLs sane.
 
     Long window: annual metrics need years of history to return anything.
+    The three event types (``spEarningsReleaseEvents``, ``analystRatings``,
+    ``economicEvents``) are excluded from these chunks; see
+    ``_QUARANTINED_EVENT_TYPES`` and the three dedicated cases below.
 
     Returns:
         list[ProbeCase]: One case per chunk of --type values.
@@ -231,6 +245,9 @@ def _timeseries_all_type_cases() -> list[ProbeCase]:
     ts_spec = COMMANDS_BY_NAME["timeseries"]
     all_types = (
         tuple(ref.name for ref in ts_spec.field_reference) or ts_spec.common_types
+    )
+    fundamentals_types = tuple(
+        name for name in all_types if name not in _QUARANTINED_EVENT_TYPES
     )
     p1, p2 = "2020-01-01", _yesterday_iso()
     return [
@@ -248,7 +265,53 @@ def _timeseries_all_type_cases() -> list[ProbeCase]:
                 p2,
             ),
         )
-        for index, chunk in enumerate(_chunked(all_types, 40))
+        for index, chunk in enumerate(_chunked(fundamentals_types, 40))
+    ] + [
+        ProbeCase(
+            "timeseries",
+            "AAPL_analystRatings",
+            (
+                "timeseries",
+                "AAPL",
+                "--type",
+                "analystRatings",
+                "--period1",
+                p1,
+                "--period2",
+                p2,
+            ),
+        ),
+        ProbeCase(
+            "timeseries",
+            "AAPL_economicEventsLong",
+            (
+                "timeseries",
+                "AAPL",
+                "--type",
+                "economicEvents",
+                "--period1",
+                p1,
+                "--period2",
+                p2,
+            ),
+        ),
+        # Requesting spEarningsReleaseEvents records Yahoo's own JSON
+        # corruption as manifest evidence (status "error", no file) on
+        # future full runs; that's intentional, not a probe bug.
+        ProbeCase(
+            "timeseries",
+            "AAPL_spEarnings",
+            (
+                "timeseries",
+                "AAPL",
+                "--type",
+                "spEarningsReleaseEvents",
+                "--period1",
+                p1,
+                "--period2",
+                p2,
+            ),
+        ),
     ]
 
 

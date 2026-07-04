@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 
 from tools.probe import (
+    _QUARANTINED_EVENT_TYPES,  # pyright: ignore[reportPrivateUsage]
     INVALID_SYMBOL,
     SYMBOLS,
     ProbeCase,
@@ -14,6 +15,7 @@ from tools.probe import (
     _first_contract_symbol,  # pyright: ignore[reportPrivateUsage]
     _run_all,  # pyright: ignore[reportPrivateUsage]
     _run_case,  # pyright: ignore[reportPrivateUsage]
+    _timeseries_all_type_cases,  # pyright: ignore[reportPrivateUsage]
     build_cases,
     sanitize,
 )
@@ -49,6 +51,43 @@ def test_symbol_matrix_is_probed_for_quote() -> None:
     for symbol in SYMBOLS:
         assert symbol in quote_cases
     assert INVALID_SYMBOL in quote_cases
+
+
+def test_quarantined_event_types_excluded_from_bulk_chunks() -> None:
+    """The three event types never appear in an AAPL_types_NN bulk chunk.
+
+    spEarningsReleaseEvents corrupts Yahoo's JSON response wholesale when
+    bundled with any other type; analystRatings and economicEvents are
+    individually clean but are quarantined alongside it so the bulk
+    fundamentals sweep stays parseable.
+    """
+    cases = _timeseries_all_type_cases()
+    bulk_cases = [c for c in cases if c.case.startswith("AAPL_types_")]
+    assert bulk_cases, "expected at least one bulk fundamentals chunk"
+    for case in bulk_cases:
+        type_index = case.argv.index("--type")
+        requested = set(case.argv[type_index + 1].split(","))
+        assert requested.isdisjoint(_QUARANTINED_EVENT_TYPES)
+
+
+def test_quarantined_event_types_each_get_a_dedicated_case() -> None:
+    """analystRatings, economicEvents, and spEarnings each get their own case."""
+    cases = _timeseries_all_type_cases()
+    dedicated_names = {
+        "AAPL_analystRatings",
+        "AAPL_economicEventsLong",
+        "AAPL_spEarnings",
+    }
+    dedicated = {
+        c.case: c.argv[c.argv.index("--type") + 1]
+        for c in cases
+        if c.case in dedicated_names
+    }
+    assert dedicated == {
+        "AAPL_analystRatings": "analystRatings",
+        "AAPL_economicEventsLong": "economicEvents",
+        "AAPL_spEarnings": "spEarningsReleaseEvents",
+    }
 
 
 def test_all_case_argv_parse() -> None:
