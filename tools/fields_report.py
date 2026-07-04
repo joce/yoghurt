@@ -225,6 +225,21 @@ def chart_and_spark_meta_records() -> Iterator[dict[str, Any]]:
     yield from spark_meta_records()
 
 
+def collect_chart_and_spark_meta_presence() -> PresenceReport:
+    """Compute per-field applicability across the combined chart+spark meta stream.
+
+    This is the evidence base for :class:`~yoghurt.models.chart.ChartMeta`'s
+    requiredness (see ``tests/models/test_chart_corpus.py``), mirroring
+    :func:`collect_field_presence`'s role for the quote model.
+
+    Returns:
+        PresenceReport: Per-field evidence keyed by Yahoo's exact wire
+        spelling, plus how many records of each instrumentType were scanned.
+    """
+
+    return collect_presence(chart_and_spark_meta_records(), kind_of=_instrument_kind)
+
+
 def option_contract_records() -> Iterator[_KindTagged]:
     """Yield every call/put contract across every options capture.
 

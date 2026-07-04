@@ -12,6 +12,14 @@ value known only from prior use.
 from __future__ import annotations
 
 from yoghurt.models._base import YahooModel, validate_model
+from yoghurt.models.chart import (
+    ChartDividend,
+    ChartEvents,
+    ChartMeta,
+    ChartSplit,
+    CurrentTradingPeriod,
+    TradingPeriod,
+)
 from yoghurt.models.enums import (
     MarketState,
     OptionsType,
@@ -21,12 +29,18 @@ from yoghurt.models.enums import (
 from yoghurt.models.quote import CorporateAction, Quote
 
 __all__ = [
+    "ChartDividend",
+    "ChartEvents",
+    "ChartMeta",
+    "ChartSplit",
     "CorporateAction",
+    "CurrentTradingPeriod",
     "MarketState",
     "OptionsType",
     "PriceAlertConfidence",
     "Quote",
     "QuoteType",
+    "TradingPeriod",
     "YahooModel",
     "validate_model",
 ]
