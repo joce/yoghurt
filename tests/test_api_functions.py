@@ -189,6 +189,18 @@ def test_visualization_empty_documents_returns_empty_frame(
     assert frame.to_polars().height == 0
 
 
+def test_screener_nested_cell_raises_unsupported_response_shape(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A nested screener value surfaces as YahooApiError, not TabularShapeError."""
+    payload = json.loads(_corpus_text("screener/equity_us_tech.json"))
+    payload["finance"]["result"][0]["records"][0]["sector"] = {"nested": "value"}
+    _install_fake(monkeypatch, json.dumps(payload))
+    with pytest.raises(YahooApiError) as exc_info:
+        api.screener(_SCREENER_QUERY)
+    assert exc_info.value.code == "unsupported-response-shape"
+
+
 def _invoke_screener_predefined() -> object:
     return api.screener_predefined(["MOST_ACTIVES"])
 

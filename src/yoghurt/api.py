@@ -17,14 +17,16 @@ import polars as pl
 from yoghurt import _core
 from yoghurt._bridge import run
 from yoghurt.commands import COMMANDS_BY_NAME
-from yoghurt.exceptions import SymbolNotFoundError
+from yoghurt.exceptions import SymbolNotFoundError, YahooApiError
 from yoghurt.frames import Chart, Frame
 from yoghurt.tabular import (
+    TabularShapeError,
     build_chart_frame,
     build_tabular_frame,
     collect_column_data,
     extract_chart_columns,
     parse_tabular_payload,
+    reject_nested_cells,
     resolve_column_order,
 )
 
@@ -120,6 +122,10 @@ class Ticker:
 
         Returns:
             Chart: Typed bars frame plus the chart meta block.
+
+        Raises:
+            YahooApiError: If the response cannot be flattened into the
+                fixed bars schema (code ``"malformed-response"``).
         """
 
         payload = run(
@@ -137,9 +143,15 @@ class Ticker:
             )
         )
         result = payload["chart"]["result"][0]
-        timestamps, columns = extract_chart_columns(result)
+        try:
+            timestamps, columns = extract_chart_columns(result)
+            df = build_chart_frame(timestamps, columns)
+        except TabularShapeError as exc:
+            raise YahooApiError(
+                code="malformed-response", description=str(exc)
+            ) from exc
         return Chart(
-            df=build_chart_frame(timestamps, columns),
+            df=df,
             fetched_at=_now_utc(),
             meta=result.get("meta", {}),
         )
@@ -482,11 +494,30 @@ def _tabular_frame(payload: dict[str, Any], route: str) -> Frame:
 
     Returns:
         Frame: The flattened result table plus a fetch timestamp.
+
+    Raises:
+        YahooApiError: If the response cannot be flattened into a tabular
+            shape (code ``"malformed-response"``), or if a cell holds a
+            nested object/list that cannot become a scalar column (code
+            ``"unsupported-response-shape"``).
     """
 
-    records, _total_rows, schema_hint = parse_tabular_payload(payload, route, route)
-    columns = resolve_column_order(records, schema_hint)
-    column_data = collect_column_data(records, columns)
+    try:
+        records, _total_rows, schema_hint = parse_tabular_payload(payload, route, route)
+        columns = resolve_column_order(records, schema_hint)
+        column_data = collect_column_data(records, columns)
+    except TabularShapeError as exc:
+        raise YahooApiError(code="malformed-response", description=str(exc)) from exc
+    try:
+        reject_nested_cells(column_data)
+    except TabularShapeError as exc:
+        message = (
+            "Yahoo returned nested values that cannot form a tabular Frame; "
+            "use raw() for this query"
+        )
+        raise YahooApiError(
+            code="unsupported-response-shape", description=message
+        ) from exc
     df = build_tabular_frame(column_data, columns) if columns else pl.DataFrame()
     return Frame(df=df, fetched_at=_now_utc())
 
@@ -545,6 +576,10 @@ def screener(query: str) -> Frame:
     Returns:
         Frame: One row per screener record. Empty result sets produce an
         empty Frame.
+
+    See Also:
+        :func:`_tabular_frame` for the ``YahooApiError`` codes a malformed
+        or unsupported response shape can raise.
     """
 
     payload = run(_core.call_query("screener", query))
@@ -557,6 +592,10 @@ def visualization(query: str) -> Frame:
     Returns:
         Frame: One row per visualization document row. Empty result sets
         produce an empty Frame.
+
+    See Also:
+        :func:`_tabular_frame` for the ``YahooApiError`` codes a malformed
+        or unsupported response shape can raise.
     """
 
     payload = run(_core.call_query("visualization", query))

@@ -10,7 +10,8 @@ import pytest
 
 import yoghurt._core as core
 from yoghurt.api import Ticker
-from yoghurt.exceptions import SymbolNotFoundError
+from yoghurt.exceptions import SymbolNotFoundError, YahooApiError
+from yoghurt.tabular import TabularShapeError
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -163,6 +164,21 @@ def test_ticker_chart_all_defaults_sends_interval(
     Ticker("AAPL").chart()
     _, params = fake.calls[0]
     assert params["interval"] == "1m"
+
+
+def test_ticker_chart_shape_mismatch_raises_yahoo_api_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A truncated timestamp array surfaces as YahooApiError, not TabularShapeError."""
+    payload = json.loads(_corpus_text("chart/AAPL.json"))
+    result = payload["chart"]["result"][0]
+    result["timestamp"] = result["timestamp"][:1]
+    _install_fake(monkeypatch, json.dumps(payload))
+    with pytest.raises(YahooApiError) as exc_info:
+        Ticker("AAPL").chart()
+    assert exc_info.value.code == "malformed-response"
+    assert type(exc_info.value) is YahooApiError
+    assert isinstance(exc_info.value.__cause__, TabularShapeError)
 
 
 def test_ticker_quote_summary_passes_modules(monkeypatch: pytest.MonkeyPatch) -> None:
