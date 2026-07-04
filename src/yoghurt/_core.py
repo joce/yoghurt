@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import atexit
+import concurrent.futures
 import contextlib
 import json
 import threading
@@ -228,11 +229,23 @@ def _reset_for_tests() -> None:  # pyright: ignore[reportUnusedFunction]
         _client_options.clear()
 
 
+_CLOSE_TIMEOUT_SECONDS: Final[float] = 2.0
+
+
 def _close_default_client() -> None:
-    """Best-effort aclose of the shared client at interpreter exit."""
+    """Best-effort aclose of the shared client at interpreter exit.
+
+    The wait is bounded: at interpreter exit the bridge's daemon loop
+    thread may already be dead, and an unbounded ``future.result()`` would
+    hang forever. ``concurrent.futures.TimeoutError`` is suppressed
+    explicitly — it subclasses ``Exception`` on all supported versions
+    (a distinct ``Exception`` subclass on 3.10; an alias of the builtin
+    ``TimeoutError`` on 3.11+), but spelling it out guarantees the exit
+    path can never raise or hang regardless of interpreter version.
+    """
     if _client is not None:
-        with contextlib.suppress(Exception):
-            run(_client.aclose())
+        with contextlib.suppress(Exception, concurrent.futures.TimeoutError):
+            run(_client.aclose(), timeout=_CLOSE_TIMEOUT_SECONDS)
 
 
 atexit.register(_close_default_client)

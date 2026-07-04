@@ -9,6 +9,7 @@ surface usable inside environments that already run an event loop
 from __future__ import annotations
 
 import asyncio
+import concurrent.futures
 import threading
 from typing import TYPE_CHECKING, TypeVar
 
@@ -36,11 +37,27 @@ def _ensure_loop() -> asyncio.AbstractEventLoop:
     return loop
 
 
-def run(coro: Coroutine[Any, Any, _T]) -> _T:
+def run(coro: Coroutine[Any, Any, _T], *, timeout: float | None = None) -> _T:
     """Execute ``coro`` on the bridge loop and return its result.
+
+    ``timeout=None`` (the default) waits forever, matching the historical
+    behavior. With a bounded ``timeout``, the wait cannot hang if the
+    daemon loop thread has already died (e.g. during interpreter exit);
+    the coroutine is cancelled best-effort before the timeout propagates.
 
     Returns:
         _T: Whatever the coroutine returns.
+
+    Raises:
+        concurrent.futures.TimeoutError: If the result is not available
+            within ``timeout`` seconds. (An alias of the builtin
+            ``TimeoutError`` on Python 3.11+; a distinct ``Exception``
+            subclass on 3.10.)
     """
 
-    return asyncio.run_coroutine_threadsafe(coro, _ensure_loop()).result()
+    future = asyncio.run_coroutine_threadsafe(coro, _ensure_loop())
+    try:
+        return future.result(timeout)
+    except concurrent.futures.TimeoutError:
+        future.cancel()
+        raise
