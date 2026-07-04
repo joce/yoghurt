@@ -383,10 +383,13 @@ def _dsl_cases() -> list[ProbeCase]:
             "ORDER BY intradaymarketcap DESC LIMIT 5"
         ),
         "etf": (
-            "SELECT ticker, intradaymarketcap FROM ETF "
-            "WHERE region = 'us' ORDER BY intradaymarketcap DESC LIMIT 5"
+            "SELECT ticker, fundnetassets FROM ETF "
+            "WHERE region = 'us' ORDER BY fundnetassets DESC LIMIT 5"
         ),
-        "mutualfund": ("SELECT ticker FROM MUTUALFUND WHERE region = 'us' LIMIT 5"),
+        "mutualfund": (
+            "SELECT ticker, fundnetassets FROM MUTUALFUND "
+            "WHERE region = 'us' ORDER BY fundnetassets DESC LIMIT 5"
+        ),
     }
     viz_queries = {
         "insider_transaction": (

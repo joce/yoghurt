@@ -1,1 +1,1 @@
-{"timeseries":{"result":[{"meta":{"symbol":["ZZZZXYZQ"],"type":["analystRatings"]}},{"meta":{"symbol":["ZZZZXYZQ"],"type":["spEarningsReleaseEvents"]}},{"meta":{"symbol":["ZZZZXYZQ"],"type":["economicEvents"]}}],"error":null}}
+{"timeseries":{"result":[{"meta":{"symbol":["ZZZZXYZQ"],"type":["economicEvents"]}},{"meta":{"symbol":["ZZZZXYZQ"],"type":["spEarningsReleaseEvents"]}},{"meta":{"symbol":["ZZZZXYZQ"],"type":["analystRatings"]}}],"error":null}}

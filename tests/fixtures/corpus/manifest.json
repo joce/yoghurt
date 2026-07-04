@@ -1,7 +1,7 @@
 {
   "_meta": {
     "case_count": 242,
-    "fetched_at": "2026-07-04T04:19:33.191324+00:00"
+    "fetched_at": "2026-07-04T04:35:12.640976+00:00"
   },
   "analyst/AAPL": {
     "argv": [
@@ -1864,23 +1864,21 @@
     "argv": [
       "screener",
       "--query",
-      "SELECT ticker, intradaymarketcap FROM ETF WHERE region = 'us' ORDER BY intradaymarketcap DESC LIMIT 5"
+      "SELECT ticker, fundnetassets FROM ETF WHERE region = 'us' ORDER BY fundnetassets DESC LIMIT 5"
     ],
-    "detail": "Yahoo request rejected with HTTP 400 for https://query1.finance.yahoo.com/v1/finance/screener?lang=en-US&region=US&formatted=false&useRecordsResponse=true",
     "file": "screener/etf.json",
-    "http_status": 400,
-    "status": "http_error"
+    "http_status": 200,
+    "status": "ok"
   },
   "screener/mutualfund": {
     "argv": [
       "screener",
       "--query",
-      "SELECT ticker FROM MUTUALFUND WHERE region = 'us' LIMIT 5"
+      "SELECT ticker, fundnetassets FROM MUTUALFUND WHERE region = 'us' ORDER BY fundnetassets DESC LIMIT 5"
     ],
-    "detail": "Yahoo request rejected with HTTP 400 for https://query1.finance.yahoo.com/v1/finance/screener?lang=en-US&region=US&formatted=false&useRecordsResponse=true",
     "file": "screener/mutualfund.json",
-    "http_status": 400,
-    "status": "http_error"
+    "http_status": 200,
+    "status": "ok"
   },
   "sector/energy": {
     "argv": [
