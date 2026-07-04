@@ -39,6 +39,9 @@ dependencies = [
     'tzdata; sys_platform == "win32"',
 ]
 
+[project.optional-dependencies]
+pandas = ["pandas>=2.2,<3.0", "pyarrow>=17"]
+
 [project.scripts]
 yoghurt = "yoghurt.cli:main"
 
