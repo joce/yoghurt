@@ -11,7 +11,11 @@ from tools.fields_report import (
     contract_kind,
     option_chain_records,
     option_contract_records,
+    quote_summary_module_kind,
+    quote_summary_module_records,
 )
+
+_EXPECTED_FUND_PROFILE_RECORD_COUNT = 4
 
 
 def test_symbol_is_universal() -> None:
@@ -100,3 +104,41 @@ def test_option_chain_records_report_symbol_as_universal() -> None:
 
     report = collect_presence(option_chain_records(), kind_of=lambda _record: "chain")
     assert report.fields["underlyingSymbol"].universal
+
+
+def test_quote_summary_price_stream_universal_keys_are_sane() -> None:
+    """The price module's universal keys look like the always-there quote basics.
+
+    Every quote-summary capture (across every quoteType) carries a price
+    module, so symbol/currency/exchange/maxAge should be universal — this
+    is the sanity check that the generic module-record stream and its
+    quoteType-derived kind tagging both work end to end.
+    """
+
+    report = collect_presence(
+        quote_summary_module_records("price"), kind_of=quote_summary_module_kind
+    )
+    for key in ("symbol", "currency", "exchange", "maxAge", "quoteType"):
+        assert report.fields[key].universal, key
+
+
+def test_quote_summary_fund_profile_stream_is_etf_and_mutualfund_only() -> None:
+    """The fundProfile module's 4 captures are all ETF or MUTUALFUND, never EQUITY."""
+
+    records = list(quote_summary_module_records("fundProfile"))
+    assert len(records) == _EXPECTED_FUND_PROFILE_RECORD_COUNT
+    kinds = {quote_summary_module_kind(record) for record in records}
+    assert kinds == {"ETF", "MUTUALFUND"}
+
+
+def test_quote_summary_stream_skips_invalid_symbol_capture() -> None:
+    """The ZZZZXYZQ capture has no quoteSummary.result and yields nothing."""
+
+    records = list(quote_summary_module_records("price"))
+    assert all(quote_summary_module_kind(record) != "?" for record in records)
+
+
+def test_quote_summary_module_kind_returns_placeholder_for_untagged_record() -> None:
+    """A record that never went through the tagging wrapper reports '?'."""
+
+    assert quote_summary_module_kind({"symbol": "AAPL"}) == "?"

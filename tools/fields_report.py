@@ -23,6 +23,10 @@ Streams:
 - ``option-contracts``: calls+puts across every options capture; kind =
   "call"/"put".
 - ``option-chains``: optionChain.result[0] records; kind = "chain".
+- ``quote-summary:<module>``: that module's payload per valid quote-summary
+  capture (for example ``quote-summary:price``); kind = the same capture's
+  own ``quoteType`` module payload (``quoteType.quoteType``), so applicability
+  never depends on filename conventions.
 """
 
 from __future__ import annotations
@@ -289,6 +293,80 @@ def option_chain_records() -> Iterator[dict[str, Any]]:
             yield results[0]
 
 
+CORPUS_QUOTE_SUMMARY_DIR: Final[Path] = CORPUS_ROOT / "quote-summary"
+
+
+class _KindTaggedModule(Mapping[str, Any]):
+    """A quote-summary module payload tagged with its capture's quoteType.
+
+    A module payload (``price``, ``assetProfile``, and so on) doesn't
+    self-report the capture's quoteType; the sibling ``quoteType`` module
+    in the same capture does, so :func:`quote_summary_module_records` reads
+    it once per capture and tags every module payload from that capture
+    with it.
+    """
+
+    __slots__ = ("_record", "kind")
+
+    def __init__(self, record: Mapping[str, Any], kind: str) -> None:
+        self._record = record
+        self.kind = kind
+
+    def __getitem__(self, key: str) -> Any:  # noqa: ANN401 - Mapping value type
+        return self._record[key]
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(self._record)
+
+    def __len__(self) -> int:
+        return len(self._record)
+
+
+def quote_summary_module_records(
+    module: str, corpus_dir: Path = CORPUS_QUOTE_SUMMARY_DIR
+) -> Iterator[_KindTaggedModule]:
+    """Yield ``module``'s payload from every valid quote-summary capture.
+
+    Skips captures with no ``quoteSummary.result`` (the deliberate
+    invalid-symbol probe) and captures where ``module`` itself is absent
+    (module availability varies by quoteType). Each yielded payload is
+    tagged with the capture's own quoteType, read from that same capture's
+    sibling ``quoteType`` module payload (``quoteType.quoteType``) rather
+    than any filename or cross-corpus mapping, so tagging stays correct
+    even if captures are renamed.
+
+    Args:
+        module: The quote-summary module name, wire-spelled (for example
+            ``"price"``, ``"assetProfile"``).
+        corpus_dir: Directory of quote-summary corpus captures.
+    """
+
+    for path in sorted(corpus_dir.glob("*.json")):
+        payload = _load_json(path)
+        results: list[dict[str, Any]] = (
+            payload.get("quoteSummary", {}).get("result") or []
+        )
+        if not results:
+            continue
+        modules = results[0]
+        module_payload = modules.get(module)
+        if module_payload is None:
+            continue
+        kind = str(modules.get("quoteType", {}).get("quoteType", ""))
+        yield _KindTaggedModule(module_payload, kind)
+
+
+def quote_summary_module_kind(record: Mapping[str, Any]) -> str:
+    """Read the quoteType kind off a record from ``quote_summary_module_records``.
+
+    Returns:
+        str: The capture's quoteType (for example ``"EQUITY"``), or ``"?"``
+        for an untagged record.
+    """
+
+    return record.kind if isinstance(record, _KindTaggedModule) else "?"
+
+
 _STREAMS: Final[dict[str, Callable[[], Iterator[Mapping[str, Any]]]]] = {
     "quote": quote_records,
     "chart-meta": chart_meta_records,
@@ -306,6 +384,8 @@ _KIND_OF: Final[dict[str, Callable[[Mapping[str, Any]], str]]] = {
     "option-contracts": contract_kind,
     "option-chains": lambda _record: "chain",
 }
+
+_QUOTE_SUMMARY_PREFIX: Final[str] = "quote-summary:"
 
 
 def _print_table(report: PresenceReport) -> None:
@@ -347,12 +427,25 @@ def main() -> int:
     as_json = "--json" in args
     positional = [arg for arg in args if arg != "--json"]
     stream = positional[0] if positional else "quote"
-    if stream not in _STREAMS:
-        choices = ", ".join(sorted(_STREAMS))
-        print(f"unknown stream {stream!r}; choose from: {choices}", file=sys.stderr)
+
+    if stream.startswith(_QUOTE_SUMMARY_PREFIX):
+        module = stream[len(_QUOTE_SUMMARY_PREFIX) :]
+        if not module:
+            print("quote-summary: stream requires a module name", file=sys.stderr)
+            return 2
+        report = collect_presence(
+            quote_summary_module_records(module), kind_of=quote_summary_module_kind
+        )
+    elif stream in _STREAMS:
+        report = collect_presence(_STREAMS[stream](), kind_of=_KIND_OF[stream])
+    else:
+        choices = [*sorted(_STREAMS), f"{_QUOTE_SUMMARY_PREFIX}<module>"]
+        print(
+            f"unknown stream {stream!r}; choose from: {', '.join(choices)}",
+            file=sys.stderr,
+        )
         return 2
 
-    report = collect_presence(_STREAMS[stream](), kind_of=_KIND_OF[stream])
     if as_json:
         _print_json(report)
     else:
