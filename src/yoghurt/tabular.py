@@ -243,10 +243,13 @@ def _records_from_visualization_documents(
     return records, column_ids
 
 
-def parse_tabular_response(
-    response_json_text: str, command: str, route: str
+def parse_tabular_payload(
+    payload: dict[str, Any], command: str, route: str
 ) -> tuple[list[dict[str, Any]], int, list[str] | None]:
     """Return records, ``total_rows``, and an optional schema hint.
+
+    Dict-accepting core of :func:`parse_tabular_response`, for callers
+    that already hold a parsed payload (see ``yoghurt.api``).
 
     The schema hint is populated only for visualization responses, where
     ``documents[0].columns`` provides column IDs even when ``rows`` is
@@ -258,15 +261,8 @@ def parse_tabular_response(
         total_rows, schema_hint)``.
 
     Raises:
-        TabularShapeError: If the response JSON is malformed or the
-            records path has the wrong type.
+        TabularShapeError: If the records path has the wrong type.
     """
-
-    try:
-        payload = json.loads(response_json_text)
-    except json.JSONDecodeError as exc:
-        message = f"{command} response is not valid JSON: {exc}"
-        raise TabularShapeError(message) from exc
 
     record_key = TABULAR_ROUTE_RECORD_KEY.get(route)
     if record_key is None:
@@ -306,6 +302,27 @@ def parse_tabular_response(
     if not isinstance(total_rows, int):
         total_rows = len(records)
     return records, total_rows, schema_hint
+
+
+def parse_tabular_response(
+    response_json_text: str, command: str, route: str
+) -> tuple[list[dict[str, Any]], int, list[str] | None]:
+    """Decode a raw response body and delegate to :func:`parse_tabular_payload`.
+
+    Returns:
+        tuple[list[dict[str, Any]], int, list[str] | None]: ``(records,
+        total_rows, schema_hint)``.
+
+    Raises:
+        TabularShapeError: If the response JSON is malformed.
+    """
+
+    try:
+        payload = json.loads(response_json_text)
+    except json.JSONDecodeError as exc:
+        message = f"{command} response is not valid JSON: {exc}"
+        raise TabularShapeError(message) from exc
+    return parse_tabular_payload(payload, command, route)
 
 
 def collect_column_data(

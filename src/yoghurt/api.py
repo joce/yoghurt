@@ -9,14 +9,14 @@ use the wire name so the kwarg's meaning matches its effect.
 
 from __future__ import annotations
 
-import json
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Any, TypeAlias
+from typing import TYPE_CHECKING, Any, Final, TypeAlias
 
 import polars as pl
 
 from yoghurt import _core
 from yoghurt._bridge import run
+from yoghurt.commands import COMMANDS_BY_NAME
 from yoghurt.exceptions import SymbolNotFoundError
 from yoghurt.frames import Chart, Frame
 from yoghurt.tabular import (
@@ -24,7 +24,7 @@ from yoghurt.tabular import (
     build_tabular_frame,
     collect_column_data,
     extract_chart_columns,
-    parse_tabular_response,
+    parse_tabular_payload,
     resolve_column_order,
 )
 
@@ -484,9 +484,7 @@ def _tabular_frame(payload: dict[str, Any], route: str) -> Frame:
         Frame: The flattened result table plus a fetch timestamp.
     """
 
-    records, _total_rows, schema_hint = parse_tabular_response(
-        json.dumps(payload), route, route
-    )
+    records, _total_rows, schema_hint = parse_tabular_payload(payload, route, route)
     columns = resolve_column_order(records, schema_hint)
     column_data = collect_column_data(records, columns)
     df = build_tabular_frame(column_data, columns) if columns else pl.DataFrame()
@@ -600,7 +598,27 @@ def screener_predefined(  # noqa: PLR0913 - one keyword-only arg per wire param.
     )
 
 
-_TRENDING_DEFAULT_REGION = "US"
+def _spec_default_str(command_name: str, param_name: str) -> str:
+    """Read a command param's CommandSpec default, narrowed to ``str``.
+
+    Returns:
+        str: The spec's default value for the named param.
+
+    Raises:
+        TypeError: If the spec default is not a string (spec invariant).
+    """
+
+    command = COMMANDS_BY_NAME[command_name]
+    default = next(
+        param.default for param in command.params if param.name == param_name
+    )
+    if not isinstance(default, str):
+        message = f"{command_name} param {param_name!r} default must be a string"
+        raise TypeError(message)
+    return default
+
+
+_TRENDING_DEFAULT_REGION: Final[str] = _spec_default_str("trending", "region")
 
 
 def trending(  # noqa: PLR0913 - one keyword-only arg per wire param.
@@ -615,8 +633,9 @@ def trending(  # noqa: PLR0913 - one keyword-only arg per wire param.
     """List trending tickers for a region.
 
     ``region`` is substituted into the URL path, not sent as a query
-    parameter; it defaults to ``"US"`` when omitted, matching the CLI.
-    ``use_quotes=False`` omits inline quote data from trending results.
+    parameter; when omitted it falls back to the CommandSpec's region
+    default. ``use_quotes=False`` omits inline quote data from trending
+    results.
 
     Returns:
         dict[str, Any]: The full parsed response payload.
@@ -661,15 +680,8 @@ def sector(
     )
 
 
-def market_summary(
-    *,
-    formatted: bool | None = None,
-    region: str | None = None,
-) -> dict[str, Any]:
+def market_summary(*, formatted: bool | None = None) -> dict[str, Any]:
     """Fetch a global market summary: indices, futures, forex, crypto.
-
-    ``region`` controls which markets Yahoo returns (e.g. US returns S&P
-    500, Dow, Nasdaq; CA returns TSX, CAD pairs).
 
     Returns:
         dict[str, Any]: The full parsed response payload.
@@ -678,7 +690,7 @@ def market_summary(
     return run(
         _core.call_endpoint(
             "market-summary",
-            values=_values(formatted=formatted, region=region),
+            values=_values(formatted=formatted),
         )
     )
 

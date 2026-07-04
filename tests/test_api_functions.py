@@ -10,6 +10,7 @@ import pytest
 
 import yoghurt._core as core
 from yoghurt import api
+from yoghurt.commands import COMMANDS_BY_NAME
 from yoghurt.exceptions import YahooApiError
 from yoghurt.frames import Frame
 
@@ -22,6 +23,11 @@ if TYPE_CHECKING:
 _Invoke: TypeAlias = "Callable[[], object]"
 
 _CORPUS_ROOT = Path(__file__).parent / "fixtures" / "corpus"
+_TRENDING_SPEC_REGION = next(
+    param.default
+    for param in COMMANDS_BY_NAME["trending"].params
+    if param.name == "region"
+)
 
 
 def _corpus_text(relative_path: str) -> str:
@@ -229,7 +235,7 @@ _METHOD_CASES = (
     pytest.param(
         _invoke_trending,
         "trending/default.json",
-        "/v1/finance/trending/US",
+        f"/v1/finance/trending/{_TRENDING_SPEC_REGION}",
         id="trending",
     ),
     pytest.param(
