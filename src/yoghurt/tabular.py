@@ -308,7 +308,7 @@ def parse_tabular_response(
     return records, total_rows, schema_hint
 
 
-def _collect_column_data(
+def collect_column_data(
     records: list[dict[str, Any]], columns: list[str]
 ) -> dict[str, list[Any]]:
     """Project ``records`` onto the resolved column order.
@@ -324,7 +324,7 @@ def _collect_column_data(
     return column_data
 
 
-def _reject_nested_cells(column_data: dict[str, list[Any]]) -> None:
+def reject_nested_cells(column_data: dict[str, list[Any]]) -> None:
     """Raise if any cell contains a nested object or list.
 
     Raises:
@@ -397,7 +397,7 @@ def build_tabular_frame(
     return pl.DataFrame(data, schema=schema)
 
 
-def _resolve_column_order(
+def resolve_column_order(
     records: list[dict[str, Any]], schema_hint: list[str] | None
 ) -> list[str]:
     """Pick the column order for the Parquet schema from the response itself.

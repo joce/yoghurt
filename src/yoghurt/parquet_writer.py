@@ -19,14 +19,14 @@ from yoghurt import __version__
 from yoghurt.exceptions import YoghurtError
 from yoghurt.tabular import (
     TabularShapeError,
-    _collect_column_data,
-    _reject_nested_cells,
-    _resolve_column_order,
     build_chart_frame,
     build_tabular_frame,
+    collect_column_data,
     extract_chart_columns,
     parse_chart_result,
     parse_tabular_response,
+    reject_nested_cells,
+    resolve_column_order,
 )
 
 if TYPE_CHECKING:
@@ -160,9 +160,9 @@ def write_tabular_parquet(  # noqa: PLR0913 - keyword-only metadata.
         records, total_rows, schema_hint = parse_tabular_response(
             response_json_text, command, route
         )
-        columns = _resolve_column_order(records, schema_hint)
-        column_data = _collect_column_data(records, columns)
-        _reject_nested_cells(column_data)
+        columns = resolve_column_order(records, schema_hint)
+        column_data = collect_column_data(records, columns)
+        reject_nested_cells(column_data)
         frame = build_tabular_frame(column_data, columns)
     except TabularShapeError as exc:
         raise ParquetWriterError(str(exc)) from exc
