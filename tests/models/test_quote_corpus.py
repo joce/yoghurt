@@ -18,7 +18,7 @@ from pathlib import Path
 import pytest
 
 from tests.conftest import collect_nested_extras
-from tools.quote_fields_report import CORPUS_DIR, collect_field_presence
+from tools.fields_report import CORPUS_DIR, collect_field_presence
 from yoghurt.models import MarketState, QuoteType
 from yoghurt.models.quote import Quote
 

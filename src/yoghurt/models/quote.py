@@ -3,7 +3,7 @@
 Ported from Doubloon's ``YQuote`` and reconciled against the probe corpus
 at ``tests/fixtures/corpus/quote/`` (28 records, 125 distinct keys).
 Applicability lines derive from the probe corpus captured 2026-07-04;
-regenerate with ``tools/quote_fields_report.py`` after a corpus refresh.
+regenerate with ``tools/fields_report.py`` after a corpus refresh.
 Overall reconciliation notes:
 
 - Wire aliases were corrected where ``to_camel`` disagrees with Yahoo's
@@ -15,7 +15,7 @@ Overall reconciliation notes:
   Every other field is optional, including several Doubloon typed as
   required that this corpus never observed as universal.
 - Every field docstring ends with an applicability line generated from
-  ``tools.quote_fields_report``, in one of three forms: an observed
+  ``tools.fields_report``, in one of three forms: an observed
   quoteType list (``Observed on: ... quotes.``), a Doubloon-only note
   (``Not observed in the corpus; known from prior use on ... quotes.``),
   or, for shapes only ever seen empty, ``Observed only as empty lists in

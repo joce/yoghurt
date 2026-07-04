@@ -63,7 +63,7 @@ When adding or editing a CLI command:
 ## Response model conventions
 - All response models subclass yoghurt.models.YahooModel (frozen, to_camel aliases with explicit Field(alias=...) for irregular wire spellings, populate_by_name, extra="allow", str_strip_whitespace — the last is a quote-informed default; confirm per endpoint family).
 - The corpus is authoritative for wire spellings, presence, and types; prior art (Doubloon) second; researched docs (src/yoghurt/docs/*.md) third.
-- Optionality is evidence-driven: required exactly for keys present in 100% of that endpoint's corpus records (tools/quote_fields_report.py-style report), else Optional.
+- Optionality is evidence-driven: required exactly for keys present in 100% of that endpoint's corpus records (tools/fields_report.py-style report), else Optional.
 - Closed vocabularies are (str, Enum) classes in yoghurt/models/enums.py with WIRE casing, defined once, corpus-coverage-tested; values known only from prior use are noted in the enum docstring.
 - Every field docstring ends with exactly one applicability form: "Observed on: <types> quotes." / "Not observed in the corpus; known from prior use on <types> quotes." / "Observed only as empty lists in the corpus." The corpus capture date lives once in the module docstring.
 - Fields are declared in alphabetical order; the coverage gate asserts it.
