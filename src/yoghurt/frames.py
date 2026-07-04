@@ -120,3 +120,33 @@ class Spark(Frame):
     """
 
     meta: ChartMeta
+
+
+@dataclass(frozen=True, slots=True)
+class Timeseries:
+    """Typed fundamentals-timeseries result: four frames plus bookkeeping.
+
+    Each known row family gets its own typed frame. ``fundamentals`` is
+    long format (one row per type/date); ``geographic_segments`` carries
+    the per-region breakdowns some fundamentals rows attach (supplementing
+    the flat frame, not replacing it); ``economic_events`` and
+    ``analyst_ratings`` are the two event-type tables. Every frame keeps
+    its declared schema even when empty, so callers can rely on columns.
+
+    ``empty_types`` lists requested types Yahoo answered with a meta-only
+    entry (or only null rows); ``unrecognized_types`` lists types whose
+    rows matched no known family — unexpected data surfaces by name
+    instead of being silently eaten.
+    """
+
+    # ponytail: no unmodeled-dict field here. The only known-unreachable
+    # family is spEarningsReleaseEvents, which fails upstream at JSON parse
+    # (Yahoo serves invalid JSON for that type), so nothing survives to
+    # store. If Yahoo ever fixes that feed, add a dedicated frame for it.
+    fundamentals: Frame
+    geographic_segments: Frame
+    economic_events: Frame
+    analyst_ratings: Frame
+    empty_types: tuple[str, ...]
+    unrecognized_types: tuple[str, ...]
+    fetched_at: datetime

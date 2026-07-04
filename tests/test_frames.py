@@ -16,7 +16,7 @@ from typing import Any
 import polars as pl
 import pytest
 
-from yoghurt.frames import Chart, Frame, Spark
+from yoghurt.frames import Chart, Frame, Spark, Timeseries
 from yoghurt.models.chart import ChartMeta
 
 _EXPECTED_ROW_COUNT = 2
@@ -136,3 +136,26 @@ def test_spark_is_a_frame_with_typed_meta() -> None:
     )
     assert spark.meta.currency == "USD"
     assert spark.to_dicts() == [{"ts": 1, "close": 1.5}]
+
+
+def test_timeseries_holds_four_frames_and_bookkeeping() -> None:
+    """Timeseries aggregates four Frames plus the type-name tuples."""
+
+    fetched_at = datetime(2026, 7, 4, tzinfo=timezone.utc)
+    empty = Frame(df=pl.DataFrame(), fetched_at=fetched_at)
+    ts = Timeseries(
+        fundamentals=_frame(),
+        geographic_segments=empty,
+        economic_events=empty,
+        analyst_ratings=empty,
+        empty_types=("spEarningsReleaseEvents",),
+        unrecognized_types=(),
+        fetched_at=fetched_at,
+    )
+    assert ts.fundamentals.to_polars().shape == (2, 2)
+    assert ts.economic_events.to_polars().is_empty()
+    assert ts.empty_types == ("spEarningsReleaseEvents",)
+    assert ts.unrecognized_types == ()
+    assert ts.fetched_at is fetched_at
+    with pytest.raises(AttributeError):
+        ts.fundamentals = empty  # pyright: ignore[reportAttributeAccessIssue]

@@ -8,6 +8,8 @@ shared by the ``chart``, ``screener``, and ``visualization`` Parquet writers
 from __future__ import annotations
 
 import json
+from dataclasses import dataclass
+from datetime import date
 from typing import Any, Final
 
 import polars as pl
@@ -223,6 +225,422 @@ def _coerce_volume_to_int(volumes: list[Any]) -> list[int | None]:
         )
         raise TabularShapeError(message)
     return result
+
+
+TIMESERIES_FUNDAMENTALS_SCHEMA: Final[dict[str, Any]] = {
+    "type": pl.Utf8,
+    "as_of_date": pl.Date,
+    "period_type": pl.Utf8,
+    "currency_code": pl.Utf8,
+    "value": pl.Float64,
+}
+
+TIMESERIES_GEOGRAPHIC_SEGMENTS_SCHEMA: Final[dict[str, Any]] = {
+    "type": pl.Utf8,
+    "as_of_date": pl.Date,
+    "segment_type": pl.Utf8,
+    "segment_name": pl.Utf8,
+    "is_primary_segment": pl.Boolean,
+    "value": pl.Float64,
+}
+
+TIMESERIES_ECONOMIC_EVENTS_SCHEMA: Final[dict[str, Any]] = {
+    "event_time": pl.Datetime("ms", "UTC"),
+    "country_code": pl.Utf8,
+    "event_name": pl.Utf8,
+    "prior": pl.Utf8,
+    "actual": pl.Utf8,
+    "period": pl.Utf8,
+    "revised_from": pl.Utf8,
+}
+
+TIMESERIES_ANALYST_RATINGS_SCHEMA: Final[dict[str, Any]] = {
+    "rated_at": pl.Datetime("ms", "UTC"),
+    "analyst": pl.Utf8,
+    "current_rating": pl.Utf8,
+    "rating_action": pl.Utf8,
+    "prior_price_target": pl.Float64,
+    "current_price_target": pl.Float64,
+    "price_target_action": pl.Utf8,
+    "time_zone_short_name": pl.Utf8,
+    "prior_rating": pl.Utf8,
+}
+
+
+@dataclass(frozen=True, slots=True)
+class TimeseriesTables:
+    """Flattened timeseries payload: four typed tables plus type bookkeeping.
+
+    ``empty_types`` lists requested types Yahoo answered with a meta-only
+    entry (or only null rows); ``unrecognized_types`` lists types whose rows
+    matched no known row family, so unexpected data surfaces by name instead
+    of being silently eaten.
+    """
+
+    fundamentals: pl.DataFrame
+    geographic_segments: pl.DataFrame
+    economic_events: pl.DataFrame
+    analyst_ratings: pl.DataFrame
+    empty_types: tuple[str, ...]
+    unrecognized_types: tuple[str, ...]
+
+
+def _timeseries_result_entries(payload: dict[str, Any]) -> list[dict[str, Any]]:
+    """Return the validated ``timeseries.result`` entry list.
+
+    A ``null`` result resolves to an empty list, mirroring the screener
+    path's tolerance for empty result envelopes.
+
+    Returns:
+        list[dict[str, Any]]: One dict per result entry.
+
+    Raises:
+        TabularShapeError: If the result path is missing, not a list, or
+            any entry is not an object.
+    """
+
+    try:
+        result = payload["timeseries"]["result"]
+    except (KeyError, TypeError) as exc:
+        message = "timeseries response missing timeseries.result"
+        raise TabularShapeError(message) from exc
+    if result is None:
+        return []
+    if not isinstance(result, list):
+        message = "timeseries response timeseries.result must be a list"
+        raise TabularShapeError(message)
+    entries: list[dict[str, Any]] = []
+    for index, entry in enumerate(result):
+        if not isinstance(entry, dict):
+            message = f"timeseries.result[{index}] is not a JSON object"
+            raise TabularShapeError(message)
+        entries.append(entry)
+    return entries
+
+
+def _timeseries_entry_rows(
+    entry: dict[str, Any], index: int
+) -> tuple[str, list[dict[str, Any] | None]]:
+    """Return an entry's type name and its (possibly empty) row list.
+
+    A meta-only entry (the type key absent) resolves to an empty row list.
+    Null rows are preserved here (fundamentals arrays pad gaps with nulls);
+    callers filter them.
+
+    Returns:
+        tuple[str, list[dict[str, Any] | None]]: ``(type_name, rows)``.
+
+    Raises:
+        TabularShapeError: If ``meta.type[0]`` is missing or not a string,
+            the rows value is not a list, or a row is neither an object
+            nor null.
+    """
+
+    try:
+        type_name = entry["meta"]["type"][0]
+    except (KeyError, IndexError, TypeError) as exc:
+        message = f"timeseries.result[{index}] missing meta.type[0]"
+        raise TabularShapeError(message) from exc
+    if not isinstance(type_name, str):
+        message = f"timeseries.result[{index}] meta.type[0] must be a string"
+        raise TabularShapeError(message)
+    rows_raw = entry.get(type_name)
+    if rows_raw is None:
+        return type_name, []
+    if not isinstance(rows_raw, list):
+        message = f"timeseries type {type_name!r} rows must be a list"
+        raise TabularShapeError(message)
+    rows: list[dict[str, Any] | None] = []
+    for row_index, row in enumerate(rows_raw):
+        if row is not None and not isinstance(row, dict):
+            message = (
+                f"timeseries type {type_name!r} row {row_index} is not a "
+                f"JSON object (got {type(row).__name__})"
+            )
+            raise TabularShapeError(message)
+        rows.append(row)
+    return type_name, rows
+
+
+def _timeseries_as_of_date(
+    value: Any,  # noqa: ANN401 - shape comes from json.loads.
+    type_name: str,
+) -> date | None:
+    """Parse an ``asOfDate`` string into a date.
+
+    Returns:
+        date | None: The parsed date, or ``None`` for a missing value.
+
+    Raises:
+        TabularShapeError: If the value is not an ISO ``YYYY-MM-DD`` date.
+    """
+
+    if value is None:
+        return None
+    try:
+        return date.fromisoformat(str(value))
+    except ValueError as exc:
+        message = f"timeseries type {type_name!r} asOfDate {value!r} is not an ISO date"
+        raise TabularShapeError(message) from exc
+
+
+def _timeseries_epoch_ms(
+    value: Any,  # noqa: ANN401 - shape comes from json.loads.
+    type_name: str,
+    field: str,
+) -> int | None:
+    """Validate an epoch-milliseconds field as an integer.
+
+    Returns:
+        int | None: The epoch value, or ``None`` for a missing value.
+
+    Raises:
+        TabularShapeError: If the value is not an integer.
+    """
+
+    if value is None:
+        return None
+    if isinstance(value, bool) or not isinstance(value, int):
+        message = (
+            f"timeseries type {type_name!r} {field} must be an integer "
+            f"epoch in milliseconds, got {type(value).__name__}: {value!r}"
+        )
+        raise TabularShapeError(message)
+    return value
+
+
+def _geographic_segment_records(
+    type_name: str,
+    as_of_date: date | None,
+    segments_raw: Any,  # noqa: ANN401 - shape comes from json.loads.
+) -> list[dict[str, Any]]:
+    """Flatten one fundamentals row's ``geographicSegmentData`` list.
+
+    ``dataValue`` is a bare number on the wire (never a ``{raw, fmt}``
+    pair), so it maps to ``value`` directly.
+
+    Returns:
+        list[dict[str, Any]]: One record per segment; empty when the row
+        carries no segment data.
+
+    Raises:
+        TabularShapeError: If the segment block is not a list of objects.
+    """
+
+    if segments_raw is None:
+        return []
+    if not isinstance(segments_raw, list):
+        message = f"timeseries type {type_name!r} geographicSegmentData must be a list"
+        raise TabularShapeError(message)
+    records: list[dict[str, Any]] = []
+    for index, segment in enumerate(segments_raw):
+        if not isinstance(segment, dict):
+            message = (
+                f"timeseries type {type_name!r} geographicSegmentData[{index}] "
+                "is not a JSON object"
+            )
+            raise TabularShapeError(message)
+        is_primary_raw = segment.get("isPrimarySegment")
+        records.append(
+            {
+                "type": type_name,
+                "as_of_date": as_of_date,
+                "segment_type": segment.get("segmentType"),
+                "segment_name": segment.get("segmentName"),
+                "is_primary_segment": (
+                    None if is_primary_raw is None else bool(is_primary_raw)
+                ),
+                "value": segment.get("dataValue"),
+            }
+        )
+    return records
+
+
+def _fundamentals_records(
+    type_name: str, rows: list[dict[str, Any]]
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """Flatten one fundamentals entry into long-format and segment records.
+
+    ``reportedValue.raw`` becomes ``value``; ``reportedValue.fmt`` is
+    presentation-only and dropped. Rows carrying ``geographicSegmentData``
+    additionally contribute segment records (the flat record keeps its
+    ``reportedValue``; segment data supplements, it does not replace).
+
+    Returns:
+        tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+        ``(fundamentals_records, segment_records)``.
+    """
+
+    fundamentals: list[dict[str, Any]] = []
+    segments: list[dict[str, Any]] = []
+    for row in rows:
+        as_of_date = _timeseries_as_of_date(row.get("asOfDate"), type_name)
+        reported = row.get("reportedValue")
+        value = reported.get("raw") if isinstance(reported, dict) else None
+        fundamentals.append(
+            {
+                "type": type_name,
+                "as_of_date": as_of_date,
+                "period_type": row.get("periodType"),
+                "currency_code": row.get("currencyCode"),
+                "value": value,
+            }
+        )
+        segments.extend(
+            _geographic_segment_records(
+                type_name, as_of_date, row.get("geographicSegmentData")
+            )
+        )
+    return fundamentals, segments
+
+
+def _economic_event_records(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Flatten ``economicEvents`` rows into records.
+
+    Returns:
+        list[dict[str, Any]]: One record per event row.
+    """
+
+    return [
+        {
+            "event_time": _timeseries_epoch_ms(
+                row.get("eventTime"), "economicEvents", "eventTime"
+            ),
+            "country_code": row.get("countryCode"),
+            "event_name": row.get("eventName"),
+            "prior": row.get("prior"),
+            "actual": row.get("actual"),
+            "period": row.get("period"),
+            "revised_from": row.get("revisedFrom"),
+        }
+        for row in rows
+    ]
+
+
+def _analyst_rating_records(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Flatten ``analystRatings`` rows into records.
+
+    Only the five keys present on every observed row (``analyst``,
+    ``currentRating``, ``ratingAction``, ``epochDateInMillis``,
+    ``timeZoneShortName``) are expected to be non-null; the price-target
+    trio and ``priorRating`` are frequently absent and map to nulls.
+
+    Returns:
+        list[dict[str, Any]]: One record per rating row.
+    """
+
+    return [
+        {
+            "rated_at": _timeseries_epoch_ms(
+                row.get("epochDateInMillis"), "analystRatings", "epochDateInMillis"
+            ),
+            "analyst": row.get("analyst"),
+            "current_rating": row.get("currentRating"),
+            "rating_action": row.get("ratingAction"),
+            "prior_price_target": row.get("priorPriceTarget"),
+            "current_price_target": row.get("currentPriceTarget"),
+            "price_target_action": row.get("priceTargetAction"),
+            "time_zone_short_name": row.get("timeZoneShortName"),
+            "prior_rating": row.get("priorRating"),
+        }
+        for row in rows
+    ]
+
+
+def _epoch_ms_series(name: str, values: list[Any]) -> pl.Series:
+    """Build a UTC millisecond-datetime Series from epoch-ms integers.
+
+    Returns:
+        pl.Series: A ``Datetime("ms", "UTC")`` series.
+    """
+
+    return (
+        pl.Series(name, values, dtype=pl.Int64)
+        .cast(pl.Datetime("ms"))
+        .dt.replace_time_zone("UTC")
+    )
+
+
+def _timeseries_table(
+    records: list[dict[str, Any]],
+    schema: dict[str, Any],
+    epoch_ms_columns: tuple[str, ...] = (),
+) -> pl.DataFrame:
+    """Assemble one timeseries DataFrame with its declared schema.
+
+    An empty record list still yields the declared schema (not a
+    schemaless empty frame), so callers can rely on the columns.
+
+    Returns:
+        pl.DataFrame: A typed DataFrame.
+    """
+
+    if not records:
+        return pl.DataFrame(schema=schema)
+    data: dict[str, Any] = {
+        name: [record[name] for record in records] for name in schema
+    }
+    for column in epoch_ms_columns:
+        data[column] = _epoch_ms_series(column, data[column])
+    return pl.DataFrame(data, schema=schema)
+
+
+def build_timeseries_frames(payload: dict[str, Any]) -> TimeseriesTables:
+    """Flatten a timeseries payload into four typed tables.
+
+    Walks ``timeseries.result[]`` and routes each entry by row family:
+    rows carrying ``reportedValue`` are fundamentals (long format, plus a
+    separate geographic-segments table for rows that also carry
+    ``geographicSegmentData``); ``economicEvents`` and ``analystRatings``
+    entries get their own event tables. Entries with no (non-null) rows
+    are collected in ``empty_types``; entries whose rows match no known
+    family are collected in ``unrecognized_types``.
+
+    Returns:
+        TimeseriesTables: The four tables plus type-name bookkeeping.
+    """
+
+    fundamentals: list[dict[str, Any]] = []
+    segments: list[dict[str, Any]] = []
+    economic: list[dict[str, Any]] = []
+    ratings: list[dict[str, Any]] = []
+    empty_types: list[str] = []
+    unrecognized_types: list[str] = []
+    for index, entry in enumerate(_timeseries_result_entries(payload)):
+        type_name, rows = _timeseries_entry_rows(entry, index)
+        data_rows = [row for row in rows if row is not None]
+        if not data_rows:
+            empty_types.append(type_name)
+        elif type_name == "economicEvents":
+            economic.extend(_economic_event_records(data_rows))
+        elif type_name == "analystRatings":
+            ratings.extend(_analyst_rating_records(data_rows))
+        elif "reportedValue" in data_rows[0]:
+            fundamental_records, segment_records = _fundamentals_records(
+                type_name, data_rows
+            )
+            fundamentals.extend(fundamental_records)
+            segments.extend(segment_records)
+        else:
+            unrecognized_types.append(type_name)
+    return TimeseriesTables(
+        fundamentals=_timeseries_table(fundamentals, TIMESERIES_FUNDAMENTALS_SCHEMA),
+        geographic_segments=_timeseries_table(
+            segments, TIMESERIES_GEOGRAPHIC_SEGMENTS_SCHEMA
+        ),
+        economic_events=_timeseries_table(
+            economic,
+            TIMESERIES_ECONOMIC_EVENTS_SCHEMA,
+            epoch_ms_columns=("event_time",),
+        ),
+        analyst_ratings=_timeseries_table(
+            ratings,
+            TIMESERIES_ANALYST_RATINGS_SCHEMA,
+            epoch_ms_columns=("rated_at",),
+        ),
+        empty_types=tuple(empty_types),
+        unrecognized_types=tuple(unrecognized_types),
+    )
 
 
 TABULAR_ROUTE_RECORD_KEY: Final[dict[str, str]] = {
