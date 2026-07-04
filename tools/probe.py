@@ -107,6 +107,19 @@ def _chunked(values: tuple[str, ...], size: int) -> list[tuple[str, ...]]:
     return [values[i : i + size] for i in range(0, len(values), size)]
 
 
+def _all_quote_summary_modules() -> str:
+    """Every quote-summary module: common list, or the full field reference.
+
+    Returns:
+        str: A comma-joined module list suitable for --modules.
+    """
+
+    qs_spec = COMMANDS_BY_NAME["quote-summary"]
+    return ",".join(
+        qs_spec.common_modules or tuple(ref.name for ref in qs_spec.field_reference)
+    )
+
+
 def _symbol_cases() -> list[ProbeCase]:
     """Symbol-bound endpoints across the full matrix.
 
@@ -119,10 +132,7 @@ def _symbol_cases() -> list[ProbeCase]:
     quote_fields = ",".join(
         ref.name for ref in COMMANDS_BY_NAME["quote"].field_reference
     )
-    qs_spec = COMMANDS_BY_NAME["quote-summary"]
-    qs_modules = ",".join(
-        qs_spec.common_modules or tuple(ref.name for ref in qs_spec.field_reference)
-    )
+    qs_modules = _all_quote_summary_modules()
     chart_p1, chart_p2 = _days_ago_iso(5), _yesterday_iso()
 
     cases: list[ProbeCase] = []
@@ -443,6 +453,41 @@ def _raw_case() -> list[ProbeCase]:
     ]
 
 
+def _first_contract_symbol(options_file: Path) -> str | None:
+    """Pull the first call contract symbol from a saved options response.
+
+    Returns:
+        str | None: A live option contract symbol, or None if unavailable.
+    """
+
+    try:
+        payload = json.loads(options_file.read_text(encoding="utf-8"))
+        result = payload["optionChain"]["result"][0]
+        return str(result["options"][0]["calls"][0]["contractSymbol"])
+    except (OSError, ValueError, LookupError, TypeError):
+        return None
+
+
+def _contract_cases(contract: str) -> list[ProbeCase]:
+    """Follow-up quote endpoints for a live option-contract symbol.
+
+    Returns:
+        list[ProbeCase]: quote/quote-type/quote-summary cases for the
+        contract, mirroring the symbol matrix's field/module coverage.
+    """
+
+    qs_modules = _all_quote_summary_modules()
+    return [
+        ProbeCase("quote", "OPTION_CONTRACT", ("quote", contract)),
+        ProbeCase("quote-type", "OPTION_CONTRACT", ("quote-type", contract)),
+        ProbeCase(
+            "quote-summary",
+            "OPTION_CONTRACT",
+            ("quote-summary", contract, "--modules", qs_modules),
+        ),
+    ]
+
+
 def build_cases() -> list[ProbeCase]:
     """Full declarative probe plan.
 
@@ -537,12 +582,27 @@ async def _run_all(cases: list[ProbeCase], corpus_dir: Path) -> None:
             print(f"[{index}/{len(cases)}] {key}", file=sys.stderr)
             manifest[key] = await _run_case(parser, client, case, corpus_dir)
             await asyncio.sleep(POLITENESS_DELAY_SECONDS)
+
+        # A live option-contract symbol can only be resolved from the AAPL
+        # options-chain response fetched earlier in this same run.
+        contract = _first_contract_symbol(corpus_dir / "options" / "AAPL.json")
+        if contract is None:
+            print("no option contract resolved; skipping", file=sys.stderr)
+        else:
+            for case in _contract_cases(contract):
+                key = f"{case.command}/{case.case}"
+                print(key, file=sys.stderr)
+                manifest[key] = await _run_case(parser, client, case, corpus_dir)
+                await asyncio.sleep(POLITENESS_DELAY_SECONDS)
     finally:
         # Persist partial progress even if a case raises something
         # unexpected: hours of politely rate-limited evidence should
         # survive a crash on the last case.
         await client.aclose()
-        _write_manifest(manifest, len(cases), corpus_dir)
+        # Actual manifest entries, not len(cases): the dynamically-resolved
+        # option-contract follow-up cases add entries the static plan
+        # doesn't know about ahead of time.
+        _write_manifest(manifest, len(manifest), corpus_dir)
 
 
 def main() -> int:

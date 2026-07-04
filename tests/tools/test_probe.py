@@ -10,6 +10,8 @@ from tools.probe import (
     INVALID_SYMBOL,
     SYMBOLS,
     ProbeCase,
+    _contract_cases,  # pyright: ignore[reportPrivateUsage]
+    _first_contract_symbol,  # pyright: ignore[reportPrivateUsage]
     _run_all,  # pyright: ignore[reportPrivateUsage]
     _run_case,  # pyright: ignore[reportPrivateUsage]
     build_cases,
@@ -209,3 +211,37 @@ async def test_run_all_records_validation_error_in_manifest(
     assert entry["status"] == "error"
     assert entry["http_status"] is None
     assert "file" not in entry
+
+
+_OPTIONS_BODY = {
+    "optionChain": {
+        "result": [
+            {
+                "underlyingSymbol": "AAPL",
+                "options": [{"calls": [{"contractSymbol": "AAPL260117C00200000"}]}],
+            }
+        ],
+        "error": None,
+    }
+}
+
+
+def test_first_contract_symbol_extracts_call(tmp_path: Path) -> None:
+    """The first call contract symbol is pulled from a saved options response."""
+    path = tmp_path / "AAPL.json"
+    path.write_text(json.dumps(_OPTIONS_BODY), encoding="utf-8")
+    assert _first_contract_symbol(path) == "AAPL260117C00200000"
+
+
+def test_first_contract_symbol_handles_missing_file(tmp_path: Path) -> None:
+    """A missing options file resolves to None instead of raising."""
+    assert _first_contract_symbol(tmp_path / "nope.json") is None
+
+
+def test_contract_cases_cover_quote_endpoints() -> None:
+    """The contract follow-up cases cover quote, quote-type, and quote-summary."""
+    cases = _contract_cases("AAPL260117C00200000")
+    assert {c.command for c in cases} == {"quote", "quote-type", "quote-summary"}
+    for case in cases:
+        assert case.case == "OPTION_CONTRACT"
+        assert "AAPL260117C00200000" in case.argv
