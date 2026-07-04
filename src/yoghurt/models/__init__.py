@@ -26,6 +26,7 @@ from yoghurt.models.enums import (
     PriceAlertConfidence,
     QuoteType,
 )
+from yoghurt.models.options import OptionChain, OptionContract, OptionExpiration
 from yoghurt.models.quote import CorporateAction, Quote
 
 __all__ = [
@@ -36,6 +37,9 @@ __all__ = [
     "CorporateAction",
     "CurrentTradingPeriod",
     "MarketState",
+    "OptionChain",
+    "OptionContract",
+    "OptionExpiration",
     "OptionsType",
     "PriceAlertConfidence",
     "Quote",

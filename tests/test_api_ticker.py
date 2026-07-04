@@ -13,7 +13,7 @@ import yoghurt._core as core
 from yoghurt.api import Ticker
 from yoghurt.exceptions import SymbolNotFoundError, YahooApiError
 from yoghurt.frames import Spark
-from yoghurt.models import ChartEvents, ChartMeta, Quote, QuoteType
+from yoghurt.models import ChartEvents, ChartMeta, OptionChain, Quote, QuoteType
 from yoghurt.tabular import TabularShapeError
 
 if TYPE_CHECKING:
@@ -309,6 +309,54 @@ def test_ticker_spark_passes_wire_params(monkeypatch: pytest.MonkeyPatch) -> Non
     assert params["includeTimestamps"] is True
 
 
+def test_ticker_options_returns_typed_option_chain(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """options() unwraps the one-record result list into a typed OptionChain."""
+    fake = _install_fake(monkeypatch, _corpus_text("options/AAPL.json"))
+    chain = Ticker("AAPL").options()
+    assert isinstance(chain, OptionChain)
+    assert chain.underlying_symbol == "AAPL"
+    assert chain.quote.symbol == "AAPL"
+    path, _ = fake.calls[0]
+    assert path == "/v7/finance/options/AAPL"
+
+
+def test_ticker_options_empty_result_raises_symbol_not_found_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Yahoo's 200-with-empty-result options shape becomes SymbolNotFoundError."""
+    payload = json.loads(_corpus_text("options/AAPL.json"))
+    payload["optionChain"]["result"] = []
+    _install_fake(monkeypatch, json.dumps(payload))
+    with pytest.raises(SymbolNotFoundError):
+        Ticker("AAPL").options()
+
+
+def test_ticker_options_model_violation_raises_yahoo_api_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A record that fails OptionChain validation surfaces as YahooApiError."""
+    payload = json.loads(_corpus_text("options/AAPL.json"))
+    payload["optionChain"]["result"][0]["underlyingSymbol"] = 123
+    _install_fake(monkeypatch, json.dumps(payload))
+    with pytest.raises(YahooApiError) as exc_info:
+        Ticker("AAPL").options()
+    assert exc_info.value.code == "model-validation"
+    assert type(exc_info.value) is YahooApiError
+    assert isinstance(exc_info.value.__cause__, pydantic.ValidationError)
+
+
+def test_ticker_options_passes_new_wire_params(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Typed options kwargs land under their Yahoo wire names."""
+    fake = _install_fake(monkeypatch, _corpus_text("options/AAPL.json"))
+    Ticker("AAPL").options(date="2026-07-06", straddle=True)
+    _, params = fake.calls[0]
+    assert params["straddle"] is True
+
+
 def test_ticker_quote_summary_passes_modules(monkeypatch: pytest.MonkeyPatch) -> None:
     """Modules list serializes to the CSV wire form."""
     fake = _install_fake(monkeypatch, _corpus_text("quote-summary/AAPL.json"))
@@ -338,10 +386,6 @@ def test_ticker_repr() -> None:
 def test_ticker_strips_symbol_whitespace() -> None:
     """The constructor strips surrounding whitespace from the symbol."""
     assert Ticker(" AAPL ").symbol == "AAPL"
-
-
-def _invoke_options(ticker: Ticker) -> object:
-    return ticker.options()
 
 
 def _invoke_timeseries(ticker: Ticker) -> object:
@@ -377,12 +421,6 @@ def _invoke_stock_recommender(ticker: Ticker) -> object:
 
 
 _METHOD_CASES = (
-    pytest.param(
-        _invoke_options,
-        "options/AAPL.json",
-        "/v7/finance/options/AAPL",
-        id="options",
-    ),
     pytest.param(
         _invoke_timeseries,
         "timeseries/AAPL.json",

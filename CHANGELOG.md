@@ -22,6 +22,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   plus `TradingPeriod`/`CurrentTradingPeriod`/`ChartDividend`/`ChartSplit`,
   in `yoghurt.models`. `yoghurt.Spark`, a `Frame` subclass for the sparkline
   close-price series.
+- Typed `OptionChain`/`OptionExpiration`/`OptionContract` response models for
+  the `options` endpoint, corpus-verified against 3 option chain captures
+  (365 call+put contracts); `OptionChain.quote` embeds the typed `Quote`
+  model for the underlying security.
 
 ### Changed
 
@@ -32,6 +36,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `Ticker.spark()` now returns a typed `Spark` frame (`to_polars()` columns
   `ts`, `close`; `Spark.meta` is `ChartMeta`) instead of the raw parsed
   payload.
+- `Ticker.options()` now returns a typed `OptionChain` instead of a raw dict.
 
 ### Internal
 

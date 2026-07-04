@@ -19,7 +19,7 @@ from yoghurt._bridge import run
 from yoghurt.commands import COMMANDS_BY_NAME
 from yoghurt.exceptions import SymbolNotFoundError, YahooApiError
 from yoghurt.frames import Chart, Frame, Spark
-from yoghurt.models import ChartEvents, ChartMeta, Quote, validate_model
+from yoghurt.models import ChartEvents, ChartMeta, OptionChain, Quote, validate_model
 from yoghurt.tabular import (
     TabularShapeError,
     build_chart_frame,
@@ -302,14 +302,18 @@ class Ticker:
         date: DateLike | None = None,
         formatted: bool | None = None,
         straddle: bool | None = None,
-    ) -> dict[str, Any]:
+    ) -> OptionChain:
         """Fetch the option chain for this symbol.
 
         Returns:
-            dict[str, Any]: The full parsed response payload.
+            OptionChain: The validated option chain record, including the
+            underlying security's typed :class:`~yoghurt.models.Quote`.
+
+        Raises:
+            SymbolNotFoundError: If Yahoo returns no record for the symbol.
         """
 
-        return run(
+        payload = run(
             _core.call_endpoint(
                 "options",
                 symbol=self.symbol,
@@ -321,6 +325,10 @@ class Ticker:
                 ),
             )
         )
+        results = payload["optionChain"]["result"]
+        if not results:
+            raise SymbolNotFoundError(self.symbol)
+        return validate_model(OptionChain, results[0])
 
     def timeseries(
         self,
