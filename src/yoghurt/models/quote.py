@@ -32,7 +32,10 @@ Overall reconciliation notes:
 
 from __future__ import annotations
 
-import datetime  # noqa: TC003 - required at runtime for pydantic field validation
+import datetime
+from functools import cached_property
+from typing import overload
+from zoneinfo import ZoneInfo
 
 from pydantic import Field
 
@@ -61,7 +64,12 @@ class CorporateAction(YahooModel):
 
 
 class Quote(YahooModel):
-    """Structured representation of financial market quote data from Yahoo! Finance."""
+    """Structured representation of financial market quote data from Yahoo! Finance.
+
+    Template rule: datetime conveniences derived from epoch fields are plain
+    ``@cached_property``, never pydantic ``@computed_field``, so
+    ``model_dump()`` stays wire-shaped.
+    """
 
     ask: float | None = None
     """
@@ -1058,3 +1066,115 @@ class Quote(YahooModel):
 
     Observed on: ETF, MUTUALFUND quotes.
     """
+
+    # --- Convenience accessors (not part of the wire model) ---
+
+    @cached_property
+    def earnings_datetime(self) -> datetime.datetime | None:
+        """Date and time of the company's earnings announcement.
+
+        Applies to EQUITY quotes.
+        """
+
+        return self._get_datetime(self.earnings_timestamp)
+
+    @cached_property
+    def earnings_datetime_end(self) -> datetime.datetime | None:
+        """Date and time of the end of the company's earnings announcement.
+
+        Applies to EQUITY quotes.
+        """
+
+        return self._get_datetime(self.earnings_timestamp_end)
+
+    @cached_property
+    def earnings_datetime_start(self) -> datetime.datetime | None:
+        """Date and time of the start of the company's earnings announcement.
+
+        Applies to EQUITY quotes.
+        """
+
+        return self._get_datetime(self.earnings_timestamp_start)
+
+    @cached_property
+    def first_trade_datetime(self) -> datetime.datetime | None:
+        """Date and time of the first trade of this security.
+
+        Unlike Doubloon's ``YQuote``, this is optional: the source field
+        ``first_trade_date_milliseconds`` is absent on OPTION records in
+        this corpus, so a non-optional return would be a lie for that
+        quote type.
+
+        Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
+        MUTUALFUND quotes.
+        """
+
+        if self.first_trade_date_milliseconds is None:
+            return None
+        timestamp_seconds = self.first_trade_date_milliseconds // 1000
+        return self._get_datetime(timestamp_seconds)
+
+    @cached_property
+    def post_market_datetime(self) -> datetime.datetime | None:
+        """Date and time of the most recent post-market trade.
+
+        Observed on: EQUITY, ETF quotes.
+        """
+
+        return self._get_datetime(self.post_market_time)
+
+    @cached_property
+    def pre_market_datetime(self) -> datetime.datetime | None:
+        """Date and time of the most recent pre-market trade.
+
+        Not observed in the corpus; known from prior use on EQUITY quotes.
+        """
+
+        return self._get_datetime(self.pre_market_time)
+
+    @cached_property
+    def regular_market_datetime(self) -> datetime.datetime:
+        """Date and time of the most recent trade in the regular trading session.
+
+        Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
+        MUTUALFUND, OPTION quotes.
+        """
+
+        return self._get_datetime(self.regular_market_time)
+
+    @overload
+    def _get_datetime(self, timestamp: int) -> datetime.datetime: ...
+
+    @overload
+    def _get_datetime(self, timestamp: None) -> None: ...
+
+    def _get_datetime(self, timestamp: int | None) -> datetime.datetime | None:
+        """Convert an epoch timestamp in seconds to an aware datetime.
+
+        Args:
+            timestamp: Epoch timestamp in UTC seconds, or None.
+
+        Returns:
+            Timezone-aware datetime anchored to ``exchange_timezone_name``,
+            or None if ``timestamp`` is None.
+        """
+
+        if timestamp is None:
+            return None
+
+        tz_info = ZoneInfo(self.exchange_timezone_name)
+        return datetime.datetime.fromtimestamp(timestamp, tz_info)
+
+    def __repr__(self) -> str:
+        """Return a compact developer-friendly representation.
+
+        The default pydantic repr lists all 131 fields, which is unusable
+        for a model this wide; this mirrors Doubloon's symbol-forward
+        convention instead.
+        """
+
+        return (
+            f"Quote(symbol={self.symbol!r}, "
+            f"regular_market_price={self.regular_market_price!r}, "
+            f"quote_type={self.quote_type!r})"
+        )

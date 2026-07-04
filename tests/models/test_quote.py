@@ -5,6 +5,7 @@ from __future__ import annotations
 import datetime
 import json
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import pytest
 
@@ -18,6 +19,7 @@ _CORPUS_QUOTE_DIR = (
 _AAPL_FORWARD_PE = 32.119114
 _AAPL_TRAILING_PE = 37.319225
 _AAPL_REGULAR_MARKET_PRICE = 308.63
+_MAX_COMPACT_REPR_LENGTH = 150
 
 
 def _load_record(filename: str, index: int = 0) -> dict[str, object]:
@@ -91,3 +93,126 @@ def test_quote_validates_crypto_record() -> None:
     assert quote.circulating_supply is not None
     assert isinstance(quote.circulating_supply, int)
     assert quote.model_extra in (None, {})
+
+
+def test_datetime_conveniences_convert_epoch_to_aware_datetime() -> None:
+    """Each epoch field converts to a tz-aware datetime anchored to the exchange.
+
+    Computes the expected values independently with ``zoneinfo`` against
+    the AAPL record's raw epoch fields, rather than trusting the
+    implementation under test.
+    """
+
+    record = _load_record("AAPL.json")
+    quote = Quote.model_validate(record)
+    tz = ZoneInfo(quote.exchange_timezone_name)
+
+    assert quote.earnings_timestamp is not None
+    assert quote.earnings_datetime == datetime.datetime.fromtimestamp(
+        quote.earnings_timestamp, tz
+    )
+    assert quote.earnings_timestamp_end is not None
+    assert quote.earnings_datetime_end == datetime.datetime.fromtimestamp(
+        quote.earnings_timestamp_end, tz
+    )
+    assert quote.earnings_timestamp_start is not None
+    assert quote.earnings_datetime_start == datetime.datetime.fromtimestamp(
+        quote.earnings_timestamp_start, tz
+    )
+    assert quote.first_trade_date_milliseconds is not None
+    assert quote.first_trade_datetime == datetime.datetime.fromtimestamp(
+        quote.first_trade_date_milliseconds // 1000, tz
+    )
+    assert quote.post_market_time is not None
+    assert quote.post_market_datetime == datetime.datetime.fromtimestamp(
+        quote.post_market_time, tz
+    )
+    assert quote.regular_market_datetime == datetime.datetime.fromtimestamp(
+        quote.regular_market_time, tz
+    )
+    assert quote.regular_market_datetime.tzinfo is not None
+
+
+def test_pre_market_datetime_is_none_when_source_field_absent() -> None:
+    """AAPL's record has no preMarketTime key; the convenience must propagate that."""
+
+    record = _load_record("AAPL.json")
+    quote = Quote.model_validate(record)
+
+    assert "preMarketTime" not in record
+    assert quote.pre_market_time is None
+    assert quote.pre_market_datetime is None
+
+
+def test_first_trade_datetime_is_none_when_source_field_absent() -> None:
+    """OPTION records lack firstTradeDateMilliseconds.
+
+    Unlike Doubloon's YQuote (which types this non-optional), our corpus
+    shows the field absent on OPTION quotes, so the convenience must
+    return None rather than raise.
+    """
+
+    record = _load_record("OPTION_CONTRACT.json")
+    quote = Quote.model_validate(record)
+
+    assert "firstTradeDateMilliseconds" not in record
+    assert quote.first_trade_datetime is None
+
+
+def test_datetime_conveniences_are_cached() -> None:
+    """Repeated access returns the identical object, proving caching."""
+
+    record = _load_record("AAPL.json")
+    quote = Quote.model_validate(record)
+
+    first_access = quote.regular_market_datetime
+    second_access = quote.regular_market_datetime
+
+    assert first_access is second_access
+
+
+def test_model_dump_excludes_datetime_convenience_properties() -> None:
+    """The convenience properties must never leak into the wire-shaped dump.
+
+    They are plain ``cached_property``, not pydantic ``computed_field``,
+    specifically so ``model_dump()`` stays wire-shaped.
+    """
+
+    record = _load_record("AAPL.json")
+    quote = Quote.model_validate(record)
+
+    # Access every property first so caching can't hide a leak.
+    _ = (
+        quote.earnings_datetime,
+        quote.earnings_datetime_end,
+        quote.earnings_datetime_start,
+        quote.first_trade_datetime,
+        quote.post_market_datetime,
+        quote.pre_market_datetime,
+        quote.regular_market_datetime,
+    )
+
+    dumped = quote.model_dump()
+
+    assert "earningsDatetime" not in dumped
+    assert "earnings_datetime" not in dumped
+    assert "regularMarketDatetime" not in dumped
+    assert "regular_market_datetime" not in dumped
+    assert "firstTradeDatetime" not in dumped
+    assert "first_trade_datetime" not in dumped
+
+
+def test_repr_is_compact_and_symbol_forward() -> None:
+    """The custom __repr__ replaces pydantic's unusable 131-field default."""
+
+    record = _load_record("AAPL.json")
+    quote = Quote.model_validate(record)
+
+    representation = repr(quote)
+
+    assert representation == (
+        "Quote(symbol='AAPL', "
+        f"regular_market_price={quote.regular_market_price!r}, "
+        "quote_type=<QuoteType.EQUITY: 'EQUITY'>)"
+    )
+    assert len(representation) < _MAX_COMPACT_REPR_LENGTH
