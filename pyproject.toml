@@ -103,6 +103,7 @@ pythonpath = ["src", "."]
 testpaths = ["tests"]
 timeout = 10
 asyncio_mode = "auto"
+addopts = '-m "not integration"'
 markers = [
     "unit: Fast, isolated unit tests",
     "integration: Tests involving live Yahoo Finance endpoints",
