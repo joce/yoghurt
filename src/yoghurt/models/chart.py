@@ -43,8 +43,9 @@ corpus refresh. Reconciliation notes:
   a session timestamp rather than a midnight-aligned calendar date, and
   carries no in-model timezone context, so it is typed an aware UTC
   ``datetime.datetime`` despite its wire name — the ruling's Tier 3.
-  ``ChartSplit.date`` is unobserved and out of the ruling's scope, so it
-  stays a plain epoch ``int`` pending real evidence.
+  ``ChartSplit.date`` is unobserved but shares the events-block mechanism
+  and session-timestamp semantics of its dividend sibling, so it follows
+  the same Tier 3 typing (aware UTC ``datetime.datetime``).
 - The applicability lines below use "Observed on: <types> charts." rather
   than "quotes.", since the evidence stream here is chart/spark meta
   records (kind = instrumentType), not quoteResponse records.
@@ -506,9 +507,12 @@ class ChartSplit(YahooModel):
     shape ready the day Yahoo returns one.
     """
 
-    date: int
+    date: datetime.datetime
     """
-    Epoch timestamp in seconds of the split event.
+    Date and time of the split event, timezone-aware in UTC.
+
+    Yahoo sends an epoch-seconds session timestamp here, mirroring
+    ``ChartDividend.date`` (tier 3: no in-model timezone context).
 
     Not observed in the corpus; known from prior use on EQUITY charts.
     """
