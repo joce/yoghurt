@@ -2,14 +2,31 @@
 
 from __future__ import annotations
 
+import atexit
+import contextlib
 import json
-from typing import Any, Final, cast
+import threading
+from datetime import date, datetime
+from typing import TYPE_CHECKING, Any, Final, cast
 
+from yoghurt._bridge import run
+from yoghurt.client import YahooClient
+from yoghurt.commands import COMMANDS_BY_NAME
 from yoghurt.exceptions import (
     SymbolNotFoundError,
     YahooApiError,
     YahooRequestError,
 )
+from yoghurt.params import build_params, build_path, validate_params
+from yoghurt.query import parse as parse_query
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+    from pathlib import Path
+
+    import httpx2 as httpx
+
+    from yoghurt.types import ParamValue
 
 _FINANCE: Final[str] = "finance"
 ENVELOPES: Final[dict[str, str | None]] = {
@@ -158,3 +175,157 @@ def map_http_error(
                 http_status=exc.status_code,
             ) from exc
     raise exc
+
+
+_client: YahooClient | None = None
+_client_options: dict[str, Any] = {}
+_client_lock = threading.Lock()
+
+
+def configure(
+    *,
+    timeout: httpx.Timeout | None = None,
+    use_session_cache: bool = True,
+    refresh_session: bool = False,
+    session_cache_path: Path | None = None,
+) -> None:
+    """Set options for the library's shared Yahoo client.
+
+    Must be called before the first data call; raises RuntimeError after.
+
+    Raises:
+        RuntimeError: If the shared client has already been created.
+    """
+
+    with _client_lock:
+        if _client is not None:
+            message = "configure() must be called before the first yoghurt call"
+            raise RuntimeError(message)
+        _client_options.update(
+            timeout=timeout,
+            use_session_cache=use_session_cache,
+            refresh_session=refresh_session,
+            session_cache_path=session_cache_path,
+        )
+
+
+def _get_client() -> YahooClient:
+    global _client  # noqa: PLW0603 - module singleton by design
+    with _client_lock:
+        if _client is None:
+            _client = YahooClient(**_client_options)
+    return _client
+
+
+def _reset_for_tests() -> None:  # pyright: ignore[reportUnusedFunction]
+    """Drop the shared client so tests can reconfigure. Test-only."""
+    global _client  # noqa: PLW0603 - module singleton by design
+    with _client_lock:
+        if _client is not None:
+            with contextlib.suppress(Exception):
+                run(_client.aclose())
+        _client = None
+        _client_options.clear()
+
+
+def _close_default_client() -> None:
+    """Best-effort aclose of the shared client at interpreter exit."""
+    if _client is not None:
+        with contextlib.suppress(Exception):
+            run(_client.aclose())
+
+
+atexit.register(_close_default_client)
+
+
+def _serialize(value: object) -> object:
+    """Render a typed Python value exactly as a CLI user would spell it.
+
+    Returns:
+        object: The CLI-equivalent representation of ``value``.
+
+    Raises:
+        TypeError: If the value's type has no CLI-string equivalent.
+    """
+
+    if isinstance(value, bool | int | float | str):
+        return value
+    if isinstance(value, datetime | date):
+        return value.isoformat()
+    if isinstance(value, list | tuple):
+        items = cast("list[object] | tuple[object, ...]", value)
+        return ",".join(str(item) for item in items)
+    message = f"unsupported parameter value type: {type(value).__name__}"
+    raise TypeError(message)
+
+
+async def call_endpoint(
+    command_name: str,
+    *,
+    values: Mapping[str, object],
+    symbol: str | None = None,
+) -> dict[str, Any]:
+    """Call one modeled Yahoo endpoint with typed values.
+
+    Yahoo-reported errors are translated per the library error contract (see
+    :func:`map_http_error`); this only documents the fallback re-raise.
+
+    Returns:
+        dict[str, Any]: The full parsed response payload.
+
+    Raises:
+        YahooRequestError: If the HTTP failure carries no mappable payload.
+    """
+
+    command = COMMANDS_BY_NAME[command_name]
+    wire_values = {name: _serialize(value) for name, value in values.items()}
+    params = build_params(command, wire_values)
+    validate_params(command, params)
+    path = build_path(command, wire_values)
+    client = _get_client()
+    try:
+        body = await client.get(
+            path, params, use_crumb=command.use_crumb, base_url=command.base_url
+        )
+    except YahooRequestError as exc:
+        map_http_error(command_name, exc, symbol=symbol)
+        raise  # unreachable; map_http_error always raises
+    return interpret_body(command_name, body, symbol=symbol)
+
+
+_QUERY_ROUTE_PATHS: Final[dict[str, str]] = {
+    "screener": "/v1/finance/screener",
+    "visualization": "/v1/finance/visualization",
+}
+_QUERY_LANG: Final[str] = "en-US"
+_QUERY_REGION: Final[str] = "US"
+
+
+async def call_query(route: str, query: str) -> dict[str, Any]:
+    """Run a DSL query against a data-platform route.
+
+    Yahoo-reported errors are translated per the library error contract (see
+    :func:`map_http_error`); this only documents the DSL parse failure and
+    the fallback re-raise. ``query`` is parsed with
+    :func:`yoghurt.query.parse`, which raises ``QueryError`` (a
+    ``ValueError`` subclass) on malformed input; that propagates unchanged.
+
+    Returns:
+        dict[str, Any]: The full parsed response payload.
+
+    Raises:
+        YahooRequestError: If the HTTP failure carries no mappable payload.
+    """
+
+    statement = parse_query(query)
+    params: dict[str, ParamValue] = {"lang": _QUERY_LANG, "region": _QUERY_REGION}
+    if route == "screener":
+        params["formatted"] = False
+        params["useRecordsResponse"] = True
+    client = _get_client()
+    try:
+        body = await client.post(_QUERY_ROUTE_PATHS[route], params, statement.to_body())
+    except YahooRequestError as exc:
+        map_http_error(route, exc)
+        raise
+    return interpret_body(route, body)
