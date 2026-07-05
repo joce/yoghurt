@@ -144,6 +144,11 @@ class ScreenerFieldType(str, Enum):
     """Wire data type of a screener field, per :class:`ScreenerField.type`.
 
     All four members are observed across the 1666-field-spec corpus.
+
+    Deliberately module-local rather than in ``yoghurt.models.enums``:
+    this vocabulary (like :class:`ScreenerCriteriaOperator`) is consumed
+    only by this endpoint family, unlike the cross-family enums that
+    ``enums.py`` exists to share.
     """
 
     STRING = "STRING"
