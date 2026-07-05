@@ -16,6 +16,7 @@
     "Makefile",
     "node_modules",
     "pyproject.toml",
+    "src/yoghurt/_version.py",
     "tests/fixtures/corpus",
     "tox.ini",
     "uv.lock"
@@ -151,6 +152,7 @@
     "triggerable",
     "tsrc",
     "unrequested",
+    "worktrees",
   ],
   "patterns": [
     {
