@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import TYPE_CHECKING, TypeAlias
+from typing import TYPE_CHECKING
 
 import pytest
 
@@ -18,17 +18,18 @@ from yoghurt.models import (
     MarketSummaryQuote,
     MarketTimeResult,
     Quote,
+    ScreenerDiscoverResult,
+    ScreenerInstrumentFieldsResult,
+    ScreenerPredefinedResult,
     SectorResult,
+    TimeseriesFieldsResult,
     TrendingResult,
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
     from typing import Any
 
     from yoghurt.types import ParamValue
-
-_Invoke: TypeAlias = "Callable[[], object]"
 
 _CORPUS_ROOT = Path(__file__).parent / "fixtures" / "corpus"
 _TRENDING_SPEC_REGION = next(
@@ -300,64 +301,62 @@ def test_market_time_returns_typed_result(monkeypatch: pytest.MonkeyPatch) -> No
     assert path == "/v6/finance/markettime"
 
 
-def _invoke_screener_predefined() -> object:
-    return api.screener_predefined(["MOST_ACTIVES"])
-
-
-def _invoke_screener_instrument_fields() -> object:
-    return api.screener_instrument_fields("equity")
-
-
-def _invoke_timeseries_fields() -> object:
-    return api.timeseries_fields()
-
-
-def _invoke_screener_discover() -> object:
-    return api.screener_discover()
-
-
-_METHOD_CASES = (
-    pytest.param(
-        _invoke_screener_predefined,
-        "screener-predefined/MOST_ACTIVES.json",
-        "/v1/finance/screener/predefined/saved",
-        id="screener_predefined",
-    ),
-    pytest.param(
-        _invoke_screener_instrument_fields,
-        "screener-instrument-fields/equity.json",
-        "/v1/finance/screener/instrument/equity/fields",
-        id="screener_instrument_fields",
-    ),
-    pytest.param(
-        _invoke_timeseries_fields,
-        "timeseries-fields/default.json",
-        "/ws/fundamentals-timeseries/v1/finance/timeseriesfields",
-        id="timeseries_fields",
-    ),
-    pytest.param(
-        _invoke_screener_discover,
-        "screener-discover/default.json",
-        "/ws/screeners/v1/finance/screener/discover",
-        id="screener_discover",
-    ),
-)
-
-
-@pytest.mark.parametrize(("invoke", "corpus_file", "expected_path"), _METHOD_CASES)
-def test_dict_function_calls_expected_path_and_returns_payload(
+def test_screener_predefined_returns_typed_result_list(
     monkeypatch: pytest.MonkeyPatch,
-    invoke: _Invoke,
-    corpus_file: str,
-    expected_path: str,
 ) -> None:
-    """Each dict function hits its command's path and passes the payload through."""
-    body = _corpus_text(corpus_file)
+    """screener_predefined() returns one typed record per requested screener id."""
+    body = _corpus_text("screener-predefined/MOST_ACTIVES.json")
     fake = _install_fake(monkeypatch, body)
-    result = invoke()
+    results = api.screener_predefined(["MOST_ACTIVES"])
+    expected = json.loads(body)["finance"]["result"]
+    assert len(results) == len(expected)
+    assert all(isinstance(result, ScreenerPredefinedResult) for result in results)
+    assert results[0].canonical_name == expected[0]["canonicalName"]
+    assert results[0].records == expected[0]["records"]
     path, _ = fake.calls[0]
-    assert path == expected_path
-    assert result == json.loads(body)
+    assert path == "/v1/finance/screener/predefined/saved"
+
+
+def test_screener_instrument_fields_returns_typed_result(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """screener_instrument_fields() returns a typed ScreenerInstrumentFieldsResult."""
+    body = _corpus_text("screener-instrument-fields/equity.json")
+    fake = _install_fake(monkeypatch, body)
+    result = api.screener_instrument_fields("equity")
+    expected = json.loads(body)["finance"]["result"][0]
+    assert isinstance(result, ScreenerInstrumentFieldsResult)
+    assert set(result.fields) == set(expected["fields"])
+    path, _ = fake.calls[0]
+    assert path == "/v1/finance/screener/instrument/equity/fields"
+
+
+def test_timeseries_fields_returns_typed_result(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """timeseries_fields() returns a typed TimeseriesFieldsResult."""
+    body = _corpus_text("timeseries-fields/default.json")
+    fake = _install_fake(monkeypatch, body)
+    result = api.timeseries_fields()
+    expected = json.loads(body)["timeseriesfields"]["result"][0]
+    assert isinstance(result, TimeseriesFieldsResult)
+    assert len(result.time_series_data_class) == len(expected["timeSeriesDataClass"])
+    path, _ = fake.calls[0]
+    assert path == "/ws/fundamentals-timeseries/v1/finance/timeseriesfields"
+
+
+def test_screener_discover_returns_typed_result(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """screener_discover() returns a typed ScreenerDiscoverResult."""
+    body = _corpus_text("screener-discover/default.json")
+    fake = _install_fake(monkeypatch, body)
+    result = api.screener_discover()
+    expected = json.loads(body)["finance"]["result"]
+    assert isinstance(result, ScreenerDiscoverResult)
+    assert set(result.quotes) == set(expected["quotes"])
+    path, _ = fake.calls[0]
+    assert path == "/ws/screeners/v1/finance/screener/discover"
 
 
 def test_raw_returns_parsed_json(monkeypatch: pytest.MonkeyPatch) -> None:

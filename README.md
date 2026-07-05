@@ -12,11 +12,11 @@ Yoghurt brings Yahoo Finance's HTTP endpoints to the command line and to
 Python. It is built for scripts, agents, and quick terminal work that needs
 the JSON returned by Yahoo's finance endpoints.
 
-The CLI stays deliberately close to the source: it does not reshape Yahoo
-responses, define finance domain models, or add a discovery API beyond CLI
-help. The library layer (below) does return typed structures for tabular
-results, but the same no-modeling promise holds for the raw dicts every
-other call returns.
+The CLI stays deliberately close to the source: it prints Yahoo's response
+bodies as-is and adds no discovery API beyond CLI help. The library layer
+(below) does model Yahoo's responses as typed pydantic structures, with two
+deliberate exceptions (`screener()`/`visualization()`, dynamic-column DSL
+results returned as `Frame`s).
 
 ## Library
 
@@ -37,26 +37,30 @@ tech = yoghurt.screener(
 Three tiers, all sharing one Yahoo session (cookies and crumb cached exactly
 like the CLI):
 
-1. **Typed** — `Ticker` methods and module-level functions. Tabular results
-   (`chart`, `spark`, `screener`, `visualization`) return `Chart`/`Spark`/
-   `Frame` with `to_polars()`, `to_pandas()` (`pip install yoghurt[pandas]`),
-   `to_arrow()`, `to_dicts()`, and `save_parquet()`; `Chart.meta`/`Spark.meta`
-   are typed `ChartMeta` (pydantic), and `Chart.events` is typed
-   `ChartEvents` when the response carries one. `Ticker.timeseries()` returns
-   `Timeseries`: four typed frames (fundamentals, geographic segments,
-   economic events, analyst ratings) plus `empty_types`/`unrecognized_types`
-   bookkeeping. `Ticker.quote()`/`quotes()` return `Quote` (pydantic) models.
-   `Ticker.options()` returns a typed `OptionChain` (pydantic), including the
-   underlying security's `Quote`. `Ticker.quote_summary()` returns a typed
-   `QuoteSummary` (pydantic), with one optional field per requested-and-
-   applicable `quote-summary` module (41 total, all typed).
-   `Ticker.quote_type()`, `.calendar_events()`, `.recommendations()`,
-   `.stock_recommender()`, `.price_insights()`, and `.insights()` each return
-   a typed pydantic model (`QuoteTypeResult`, `CalendarEventsResult`,
-   `RecommendationsResult`, `StockRecommenderResult`, `PriceInsights`,
-   `Insights`). `Ticker.analyst()`/`.ratings_top()` and the market-wide/
-   introspection functions still return parsed `dict`s today; typed response
-   models land endpoint by endpoint.
+1. **Typed** — `Ticker` methods and module-level functions. Every endpoint
+   returns a typed result except `screener()`/`visualization()`, which
+   return a `Frame` with `to_polars()`, `to_pandas()`
+   (`pip install yoghurt[pandas]`), `to_arrow()`, `to_dicts()`, and
+   `save_parquet()`: both are SQL-flavored DSLs over caller-chosen,
+   dynamic column lists, so their row shape is a table, not a fixed
+   pydantic model, by design. `chart`/`spark` return `Chart`/`Spark` (also
+   `Frame` subclasses) whose `.meta` is typed `ChartMeta` (pydantic) and
+   whose `.events` is typed `ChartEvents` when the response carries one.
+   `Ticker.timeseries()` returns `Timeseries`: four typed frames
+   (fundamentals, geographic segments, economic events, analyst ratings)
+   plus `empty_types`/`unrecognized_types` bookkeeping. `Ticker.quote()`/
+   `quotes()` return `Quote` (pydantic) models. `Ticker.options()` returns
+   a typed `OptionChain` (pydantic), including the underlying security's
+   `Quote`. `Ticker.quote_summary()` returns a typed `QuoteSummary`
+   (pydantic), with one optional field per requested-and-applicable
+   `quote-summary` module (41 total, all typed). Every other `Ticker`
+   method and market-wide/introspection function (`quote_type`,
+   `calendar_events`, `recommendations`, `stock_recommender`,
+   `price_insights`, `insights`, `analyst`, `ratings_top`, `trending`,
+   `market_summary`, `market_info`, `market_time`, `sector`,
+   `screener_predefined`, `screener_instrument_fields`,
+   `timeseries_fields`, `screener_discover`) returns its own typed
+   pydantic model.
 2. **Parsed raw** — `yoghurt.raw(path, params)` for any Yahoo query path.
 3. **Raw async** — `yoghurt.YahooClient`, the async client the CLI itself
    uses.

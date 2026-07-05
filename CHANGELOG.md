@@ -78,6 +78,29 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   distinct model rather than a `Quote` reuse. `market-info`'s
   `finance.result` turned out to be a `currencies`/`commodities` mapping,
   not a list. `market-time` is thin, single-capture evidence throughout.
+- Typed `ScreenerInstrumentFieldsResult`/`ScreenerField` (plus
+  `ScreenerFieldCategory`/`ScreenerFieldLabel`/`ScreenerFieldCriteria` and
+  the `ScreenerFieldType`/`ScreenerCriteriaOperator` enums),
+  `TimeseriesFieldsResult`/`TimeseriesFieldClass`, `ScreenerDiscoverResult`
+  (plus `ScreenerDiscoverQuote`/`ScreenerDiscoverIdeaSection`/
+  `ScreenerDiscoverSections`/`NeoInvestmentIdeas`), and
+  `ScreenerPredefinedResult` (plus `ScreenerCriteriaMeta`/
+  `ScreenerCriteriaMetaFilter`) response models for the
+  `screener-instrument-fields`, `timeseries-fields`, `screener-discover`,
+  and `screener-predefined` endpoints, in the new
+  `yoghurt.models.screener_meta`. `screener-instrument-fields` has the
+  richest evidence base in the codebase (21 instrument captures, 1666
+  field specs). `screener-discover`'s `quotes` mapping was
+  script-validated against `Quote` first, per the reuse-decision
+  procedure: validation fails outright (8 required `Quote` fields are
+  missing on every row), so it gets its own `ScreenerDiscoverQuote`.
+  `screener-predefined`'s `records` (and `screener-discover`'s own
+  idea-module `records`) are left as `list[dict[str, object]]`: each
+  screener id's/idea module's rows are a distinct, Yahoo-selected field
+  subset with no stable shared schema across ids (5 shared fields out of
+  53 total, across the 5 captured predefined screeners) — the same
+  open-ended-column situation `screener()`/`visualization()` exist to
+  handle as `Frame`s, not a fixed row model.
 
 ### Changed
 
@@ -134,6 +157,18 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `sector()`'s first parameter is renamed from `sector` to `slug` (it was
   shadowing the function's own name); the wire/path value it maps to is
   still Yahoo's `sector` parameter.
+- `screener_instrument_fields()`, `timeseries_fields()`, and
+  `screener_discover()` now return typed models
+  (`ScreenerInstrumentFieldsResult`, `TimeseriesFieldsResult`,
+  `ScreenerDiscoverResult`) instead of raw parsed payloads.
+  `screener_predefined()` now returns `list[ScreenerPredefinedResult]`
+  instead of the raw parsed payload; its `records` field stays a plain
+  `list[dict[str, object]]` (see the Added entry above). These four
+  endpoints are market-wide/schema-introspection rather than symbol-bound:
+  an empty result is valid data, never `SymbolNotFoundError`. This
+  completes the typed-model conversion for every yoghurt endpoint except
+  `screener()`/`visualization()`, which remain `Frame`s by design (dynamic,
+  caller-chosen column lists).
 
 ### Internal
 

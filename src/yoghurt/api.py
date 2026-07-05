@@ -34,8 +34,12 @@ from yoghurt.models import (
     QuoteSummary,
     QuoteTypeResult,
     RecommendationsResult,
+    ScreenerDiscoverResult,
+    ScreenerInstrumentFieldsResult,
+    ScreenerPredefinedResult,
     SectorResult,
     StockRecommenderResult,
+    TimeseriesFieldsResult,
     TopRatingsResult,
     TrendingResult,
     validate_model,
@@ -758,17 +762,24 @@ def screener_predefined(  # noqa: PLR0913 - one keyword-only arg per wire param.
     use_records_response: bool | None = None,
     sort_field: str | None = None,
     sort_type: str | None = None,
-) -> dict[str, Any]:
+) -> list[ScreenerPredefinedResult]:
     """Run one or more of Yahoo's predefined screeners.
 
     ``use_records_response=False`` requests Yahoo's non-records-style
-    screener response shape.
+    screener response shape; both shapes validate as
+    :class:`ScreenerPredefinedResult`, but its ``records`` field is an
+    open-ended, screener-id-specific field subset (see the model's module
+    docstring), so it is left as ``list[dict[str, object]]`` rather than a
+    fixed row model. This endpoint is market-wide, not symbol-bound: an
+    empty ``records`` list for an unmatched screener id is valid data, not
+    an error.
 
     Returns:
-        dict[str, Any]: The full parsed response payload.
+        list[ScreenerPredefinedResult]: The validated
+        ``finance.result`` records, one per requested screener id.
     """
 
-    return run(
+    payload = run(
         _core.call_endpoint(
             "screener-predefined",
             values=_values(
@@ -782,6 +793,10 @@ def screener_predefined(  # noqa: PLR0913 - one keyword-only arg per wire param.
             ),
         )
     )
+    return [
+        validate_model(ScreenerPredefinedResult, record)
+        for record in payload["finance"]["result"]
+    ]
 
 
 def _spec_default_str(command_name: str, param_name: str) -> str:
@@ -933,36 +948,48 @@ def market_time(
     return validate_model(MarketTimeResult, payload["finance"])
 
 
-def screener_instrument_fields(instrument: str) -> dict[str, Any]:
+def screener_instrument_fields(instrument: str) -> ScreenerInstrumentFieldsResult:
     """List every field available for a Yahoo data-platform entity.
 
+    This endpoint is market-wide, not symbol-bound: an empty ``fields``
+    mapping for a paywalled instrument (Yahoo's documented
+    ``privatecompany`` quirk) is valid data, not an error.
+
     Returns:
-        dict[str, Any]: The full parsed response payload.
+        ScreenerInstrumentFieldsResult: The validated ``finance.result[0]``
+        record.
     """
 
-    return run(
+    payload = run(
         _core.call_endpoint(
             "screener-instrument-fields",
             values=_values(instrument=instrument),
         )
+    )
+    return validate_model(
+        ScreenerInstrumentFieldsResult, payload["finance"]["result"][0]
     )
 
 
 def timeseries_fields(
     *,
     type: str | None = None,  # noqa: A002 - mirrors Yahoo's wire/CLI name
-) -> dict[str, Any]:
+) -> TimeseriesFieldsResult:
     """List available fundamentals timeseries field names for a type.
 
     Returns:
-        dict[str, Any]: The full parsed response payload.
+        TimeseriesFieldsResult: The validated ``timeseriesfields.result[0]``
+        record.
     """
 
-    return run(
+    payload = run(
         _core.call_endpoint(
             "timeseries-fields",
             values=_values(type=type),
         )
+    )
+    return validate_model(
+        TimeseriesFieldsResult, payload["timeseriesfields"]["result"][0]
     )
 
 
@@ -971,19 +998,23 @@ def screener_discover(
     modules: list[str] | None = None,
     count: int | None = None,
     formatted: bool | None = None,
-) -> dict[str, Any]:
+) -> ScreenerDiscoverResult:
     """Discover investment ideas from Yahoo screener modules.
 
+    This endpoint is market-wide, not symbol-bound: an empty idea-module
+    list is valid data, never an error.
+
     Returns:
-        dict[str, Any]: The full parsed response payload.
+        ScreenerDiscoverResult: The validated ``finance.result`` record.
     """
 
-    return run(
+    payload = run(
         _core.call_endpoint(
             "screener-discover",
             values=_values(modules=modules, count=count, formatted=formatted),
         )
     )
+    return validate_model(ScreenerDiscoverResult, payload["finance"]["result"])
 
 
 def raw(
