@@ -137,7 +137,8 @@ class YahooClient:
                     attempt += 1
                     continue
                 url_str = self._redact_url(exc.request.url)
-                raise YahooRequestError(status_code, url_str) from exc
+                body = exc.response.text if exc.response else None
+                raise YahooRequestError(status_code, url_str, body=body) from exc
             except httpx.TransportError as exc:
                 if method == "GET" and attempt < self._REQUEST_ATTEMPTS:
                     await asyncio.sleep(self._RETRY_DELAY_SECONDS * attempt)

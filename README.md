@@ -8,13 +8,69 @@
 
 Yahoo!-Originated Graphs, Histories, Updates, Returns & Tickers.
 
-Yoghurt brings Yahoo Finance's HTTP endpoints to the command line. It is built
-for scripts, agents, and quick terminal work that needs the JSON returned by
-Yahoo's finance endpoints.
+Yoghurt brings Yahoo Finance's HTTP endpoints to the command line and to
+Python. It is built for scripts, agents, and quick terminal work that needs
+the JSON returned by Yahoo's finance endpoints.
 
-The project stays deliberately close to the source. It does not reshape Yahoo
-responses, define finance domain models, or add a discovery API beyond CLI
-help.
+The CLI stays deliberately close to the source: it prints Yahoo's response
+bodies as-is and adds no discovery API beyond CLI help. The library layer
+(below) does model Yahoo's responses as typed pydantic structures, with two
+deliberate exceptions (`screener()`/`visualization()`, dynamic-column DSL
+results returned as `Frame`s).
+
+## Library
+
+Yoghurt is also an importable, typed Python library:
+
+```python
+import yoghurt
+
+bars = yoghurt.Ticker("AAPL").chart(interval="1d").to_polars()
+quote = yoghurt.Ticker("AAPL").quote()
+tech = yoghurt.screener(
+    "SELECT ticker, intradaymarketcap FROM EQUITY "
+    "WHERE region = 'us' AND sector = 'Technology' "
+    "ORDER BY intradaymarketcap DESC LIMIT 25"
+).to_polars()
+```
+
+Three tiers, all sharing one Yahoo session (cookies and crumb cached exactly
+like the CLI):
+
+1. **Typed** — `Ticker` methods and module-level functions. Every endpoint
+   returns a typed result except `screener()`/`visualization()`, which
+   return a `Frame` with `to_polars()`, `to_pandas()`
+   (`pip install yoghurt[pandas]`), `to_arrow()`, `to_dicts()`, and
+   `save_parquet()`: both are SQL-flavored DSLs over caller-chosen,
+   dynamic column lists, so their row shape is a table, not a fixed
+   pydantic model, by design. `chart`/`spark` return `Chart`/`Spark` (also
+   `Frame` subclasses) whose `.meta` is typed `ChartMeta` (pydantic) and
+   whose `.events` is typed `ChartEvents` when the response carries one.
+   `Ticker.timeseries()` returns `Timeseries`: four typed frames
+   (fundamentals, geographic segments, economic events, analyst ratings)
+   plus `empty_types`/`unrecognized_types` bookkeeping. `Ticker.quote()`/
+   `quotes()` return `Quote` (pydantic) models. `Ticker.options()` returns
+   a typed `OptionChain` (pydantic), including the underlying security's
+   `Quote`. `Ticker.quote_summary()` returns a typed `QuoteSummary`
+   (pydantic), with one optional field per requested-and-applicable
+   `quote-summary` module (41 total, all typed). Every other `Ticker`
+   method and market-wide/introspection function (`quote_type`,
+   `calendar_events`, `recommendations`, `stock_recommender`,
+   `price_insights`, `insights`, `analyst`, `ratings_top`, `trending`,
+   `market_summary`, `market_info`, `market_time`, `sector`,
+   `screener_predefined`, `screener_instrument_fields`,
+   `timeseries_fields`, `screener_discover`) returns its own typed
+   pydantic model.
+2. **Parsed raw** — `yoghurt.raw(path, params)` for any Yahoo query path.
+3. **Raw async** — `yoghurt.YahooClient`, the async client the CLI itself
+   uses.
+
+Errors follow one contract: symbol lookups raise `SymbolNotFoundError`
+(carrying `.symbol`), Yahoo-reported failures raise `YahooApiError`
+(`.code`, `.description`), queries with zero matches return empty frames,
+and transport failures raise `YahooRequestError` or `YahooUnavailableError`.
+The library never prints and never prompts; `yoghurt.configure(...)` adjusts
+session-cache behavior before first use.
 
 ## Features
 
@@ -27,10 +83,29 @@ help.
 - Reusable Yahoo session cache for faster one-shot CLI calls.
 - A `raw` command for Yahoo query paths that do not have dedicated metadata yet.
 
-## Install From Source
+## Install
 
-Yoghurt is currently intended to run from a local checkout. It is a Python 3.10+
-project managed with [uv](https://docs.astral.sh/uv/).
+Yoghurt requires Python 3.10+.
+
+```powershell
+pip install yoghurt
+```
+
+`screener`/`visualization` results support `to_pandas()` when the optional
+`pandas` extra is installed:
+
+```powershell
+pip install "yoghurt[pandas]"
+```
+
+```powershell
+yoghurt --help
+```
+
+### Install From Source
+
+For development, or to run against an unreleased checkout, use
+[uv](https://docs.astral.sh/uv/):
 
 ```powershell
 uv sync --all-groups

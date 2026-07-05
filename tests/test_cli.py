@@ -1218,7 +1218,7 @@ def test_calendar_events_command_uses_observed_defaults(
 
     client = StubClient()
     stdout = StringIO()
-    monkeypatch.setattr("yoghurt.cli.time.time", lambda: 1777903200.9)
+    monkeypatch.setattr("yoghurt.params.time.time", lambda: 1777903200.9)
 
     exit_code = main(["calendar-events", "AAPL"], stdout=stdout, client=client)
 
@@ -1409,7 +1409,7 @@ def test_endpoint_commands_accept_ticker_only(
     client = StubClient()
     stdout = StringIO()
     stderr = StringIO()
-    monkeypatch.setattr("yoghurt.cli.time.time", lambda: 1777903200.9)
+    monkeypatch.setattr("yoghurt.params.time.time", lambda: 1777903200.9)
 
     exit_code = main(argv, stdout=stdout, stderr=stderr, client=client)
 
@@ -1473,7 +1473,7 @@ def test_fundamentals_timeseries_command_uses_observed_defaults(
 
     client = StubClient()
     stdout = StringIO()
-    monkeypatch.setattr("yoghurt.cli.time.time", lambda: 1777903200.9)
+    monkeypatch.setattr("yoghurt.params.time.time", lambda: 1777903200.9)
 
     exit_code = main(
         [
@@ -1510,7 +1510,7 @@ def test_fundamentals_timeseries_command_defaults_period_window(
 
     client = StubClient()
     stdout = StringIO()
-    monkeypatch.setattr("yoghurt.cli.time.time", lambda: 1777903200.9)
+    monkeypatch.setattr("yoghurt.params.time.time", lambda: 1777903200.9)
 
     exit_code = main(["timeseries", "AAPL"], stdout=stdout, client=client)
 
@@ -2030,7 +2030,7 @@ def test_chart_command_defaults_period2_to_execution_time(
 
     client = StubClient()
     stdout = StringIO()
-    monkeypatch.setattr("yoghurt.cli.time.time", lambda: 1777903200.9)
+    monkeypatch.setattr("yoghurt.params.time.time", lambda: 1777903200.9)
 
     exit_code = main(
         [
@@ -2068,7 +2068,7 @@ def test_chart_command_defaults_period_window_to_quote_page_shape(
 
     client = StubClient()
     stdout = StringIO()
-    monkeypatch.setattr("yoghurt.cli.time.time", lambda: 1777903200.9)
+    monkeypatch.setattr("yoghurt.params.time.time", lambda: 1777903200.9)
 
     exit_code = main(
         [

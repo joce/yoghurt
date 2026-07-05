@@ -6,6 +6,188 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Yoghurt is now also an importable Python library: `yoghurt.Ticker` plus
+  module-level functions (`quotes`, `screener`, `visualization`, `trending`,
+  etc.), typed `Frame`/`Chart` results with `to_polars`/`to_pandas`/
+  `to_arrow`/`to_dicts`/`save_parquet`, a `SymbolNotFoundError`/`YahooApiError`/
+  `YahooRequestError`/`YahooUnavailableError` error contract, `configure()`,
+  `py.typed`, and an optional `yoghurt[pandas]` extra.
+- Typed `Quote` response model (131 fields, corpus-verified against 28
+  real quote captures) plus `QuoteType`/`MarketState`/`OptionsType`/
+  `PriceAlertConfidence` enums, in a new `yoghurt.models` package.
+- Typed `ChartMeta`/`ChartEvents` response models (shared by the `chart` and
+  `spark` endpoints, corpus-verified against 48 chart+spark meta captures)
+  plus `TradingPeriod`/`CurrentTradingPeriod`/`ChartDividend`/`ChartSplit`,
+  in `yoghurt.models`. `yoghurt.Spark`, a `Frame` subclass for the sparkline
+  close-price series.
+- Typed `OptionChain`/`OptionExpiration`/`OptionContract` response models for
+  the `options` endpoint, corpus-verified against 3 option chain captures
+  (365 call+put contracts); `OptionChain.quote` embeds the typed `Quote`
+  model for the underlying security.
+- `yoghurt.Timeseries`, a frozen container of four typed frames built from
+  the `timeseries` endpoint: long-format `fundamentals` (with
+  `reportedValue.raw` as `value`), `geographic_segments` (the per-region
+  breakdowns some fundamentals rows attach), `economic_events`, and
+  `analyst_ratings` (corpus-verified against an 830-row capture), plus
+  `empty_types`/`unrecognized_types` bookkeeping so no returned type is
+  silently dropped. Every frame keeps its declared schema even when empty.
+- Typed response models for all 41 `quote-summary` modules (corpus-verified
+  against 23 real quote-summary captures across EQUITY, ETF, MUTUALFUND,
+  CRYPTOCURRENCY, CURRENCY, FUTURE, INDEX, and OPTION quoteTypes), plus a new
+  `QuoteSummary` container model (one optional field per module) in
+  `yoghurt.models`. Introduces the `Raw*`/`Raw*OrNone` family
+  (`RawFloat`/`RawInt`/`RawDate` and their nullable counterparts) for
+  fields that wrap a value as `{raw, fmt, longFmt}` instead of sending it
+  bare. `fundProfile`/`fundPerformance`/`topHoldings` (ETF/MUTUALFUND-only)
+  rest on a thinner 4-capture evidence base than the rest of this endpoint
+  family; see their module docstrings for the fields typed from a single
+  observation.
+- Typed `QuoteTypeResult`, `CalendarEventsResult` (plus `EconomicEvent`/
+  `EconomicEventDay`, `EarningsEvent`/`EarningsEventDay`, `IpoEvent`/
+  `IpoEventDay`, and `SecReport`/`SecReportDay`/`SecReportExhibit`),
+  `RecommendationsResult`/`RecommendedSymbol`, and
+  `StockRecommenderResult`/`StockRecommenderFields` response models for the
+  `quote-type`, `calendar-events`, `recommendations-by-symbol`, and
+  `stock-recommender` endpoints, in the new `yoghurt.models.analysis_events`.
+  `calendar-events`' `earnings`/`ipoEvents`/`secReports` modules need an
+  explicit `--start-date`/`--end-date` window covering a day with real
+  events to populate (the default window is always empty); `secReports`
+  carries SEC filing rows (10-Q/8-K/DEFA14A), not stock splits.
+- Typed `PriceInsights` and `Insights` response models for the
+  `price-insights` and `insights` endpoints, in the new
+  `yoghurt.models.analysis_insights`. `PriceInsights` validates all three
+  captured shape variants (a full default response, an AI-analysis-only
+  response, and a price-anomaly-only response) from one model; every field
+  except `has_price_anomaly` is optional as a result.
+- Typed `AnalystResult` and `TopRatingsResult`/`AnalystRatingRow` response
+  models for the `analyst` and `ratings-top` endpoints, in the new
+  `yoghurt.models.analysis_ratings`. `AnalystResult.price_movement`/
+  `.news_summary` reuse the existing `PriceMovement`/`NewsSummaryBlock`
+  models from `yoghurt.models.analysis_insights` rather than duplicating
+  them, after confirming both endpoints' AI-service payloads are
+  shape-identical.
+- Typed `TrendingResult`/`TrendingQuote`, `MarketSummaryQuote`,
+  `MarketInfoResult`/`MarketInfoModule`, `MarketTimeResult` (plus
+  `MarketTimeGroup`/`MarketTimeEntry`/`MarketTimeZone`/`MarketTimeMeta`),
+  and `SectorResult` (plus `SectorOverview`/`SectorPerformance`/
+  `SectorBenchmarkPerformance`/`SectorCompany`/`SectorFund`/
+  `SectorIndustry`/`SectorResearchReport`) response models for the
+  `trending`, `market-summary`, `market-info`, `market-time`, and `sector`
+  endpoints, in the new `yoghurt.models.markets`. `market-summary` rows
+  were script-validated against the existing `Quote` model first, per the
+  reuse-decision procedure: every row's wire keys are already known to
+  `Quote` (zero extras), but 8 of `Quote`'s 34 required fields
+  (`currency`, `priceHint`, and all six required `fiftyTwoWeek*` fields) are not
+  universally present on market-summary rows, so `MarketSummaryQuote` is a
+  distinct model rather than a `Quote` reuse. `market-info`'s
+  `finance.result` turned out to be a `currencies`/`commodities` mapping,
+  not a list. `market-time` is thin, single-capture evidence throughout.
+- Typed `ScreenerInstrumentFieldsResult`/`ScreenerField` (plus
+  `ScreenerFieldCategory`/`ScreenerFieldLabel`/`ScreenerFieldCriteria` and
+  the `ScreenerFieldType`/`ScreenerCriteriaOperator` enums),
+  `TimeseriesFieldsResult`/`TimeseriesFieldClass`, `ScreenerDiscoverResult`
+  (plus `ScreenerDiscoverQuote`/`ScreenerDiscoverIdeaSection`/
+  `ScreenerDiscoverSections`/`NeoInvestmentIdeas`), and
+  `ScreenerPredefinedResult` (plus `ScreenerCriteriaMeta`/
+  `ScreenerCriteriaMetaFilter`) response models for the
+  `screener-instrument-fields`, `timeseries-fields`, `screener-discover`,
+  and `screener-predefined` endpoints, in the new
+  `yoghurt.models.screener_meta`. `screener-instrument-fields` has the
+  richest evidence base in the codebase (21 instrument captures, 1666
+  field specs). `screener-discover`'s `quotes` mapping was
+  script-validated against `Quote` first, per the reuse-decision
+  procedure: validation fails outright (8 required `Quote` fields are
+  missing on every row), so it gets its own `ScreenerDiscoverQuote`.
+  `screener-predefined`'s `records` (and `screener-discover`'s own
+  idea-module `records`) are left as `list[dict[str, object]]`: each
+  screener id's/idea module's rows are a distinct, Yahoo-selected field
+  subset with no stable shared schema across ids (5 shared fields out of
+  53 total, across the 5 captured predefined screeners) — the same
+  open-ended-column situation `screener()`/`visualization()` exist to
+  handle as `Frame`s, not a fixed row model.
+
+### Changed
+
+- `Ticker.quote()` and the module-level `quotes()` now return typed `Quote`
+  models instead of raw dicts.
+- `Ticker.chart()`'s `Chart.meta` is now a typed `ChartMeta` instead of a raw
+  dict, and `Chart` gained a typed `events: ChartEvents | None` field.
+  `Ticker.spark()` now returns a typed `Spark` frame (`to_polars()` columns
+  `ts`, `close`; `Spark.meta` is `ChartMeta`) instead of the raw parsed
+  payload.
+- `Ticker.options()` now returns a typed `OptionChain` instead of a raw dict.
+- `Ticker.timeseries()` now returns a typed `Timeseries` instead of the raw
+  parsed payload. Known Yahoo-side bug: requesting the
+  `spEarningsReleaseEvents` type currently fails with
+  `YahooApiError("malformed-response")` because Yahoo serves invalid JSON
+  for that type (every symbol, even requested alone); keep it out of `type`
+  lists until Yahoo fixes the feed.
+- Epoch fields on the option and chart models now carry date/datetime
+  meaning instead of bare wire ints: `OptionContract.expiration`,
+  `OptionExpiration.expiration_date`, and `OptionChain.expiration_dates`
+  are `datetime.date`/`list[datetime.date]`; `OptionContract.last_trade_date`
+  and `ChartDividend.date` are aware UTC `datetime.datetime`. `ChartMeta`
+  gained `regular_market_datetime`/`first_trade_datetime` and
+  `TradingPeriod` gained `start_datetime`/`end_datetime` `cached_property`
+  conveniences (the latter localized via a fixed `gmtoffset`, since its
+  `timezone` field is a short abbreviation `ZoneInfo` cannot resolve).
+  `Quote` gained matching `earnings_call_datetime_start`/
+  `earnings_call_datetime_end` conveniences for parity with its other
+  epoch fields.
+- `Ticker.quote_summary()` now returns a typed `QuoteSummary` instead of the
+  raw parsed payload; `modules` still narrows which fields Yahoo populates
+  (unrequested or inapplicable modules validate as `None`).
+- `Ticker.quote_type()` now returns a typed `QuoteTypeResult` instead of a raw
+  dict; empty results still raise `SymbolNotFoundError`.
+- `Ticker.calendar_events()`, `.recommendations()`, `.stock_recommender()`,
+  `.price_insights()`, and `.insights()` now return typed models
+  (`CalendarEventsResult`, `RecommendationsResult`, `StockRecommenderResult`,
+  `PriceInsights`, `Insights`) instead of raw parsed payloads. An
+  unrecognized symbol behaves differently per endpoint, each pinned by a
+  real captured invalid-symbol response: `calendar_events()`,
+  `price_insights()`, and `insights()` never raise for it — Yahoo returns a
+  normally-typed, valid (if thin or empty) result, identical in shape to a
+  recognized symbol with nothing to report; `recommendations()` surfaces
+  `YahooApiError` (code `"model-validation"`), the same failure Yahoo
+  produces for any instrument type it has nothing to recommend for (for
+  example FUTURE symbols); `stock_recommender()`'s 404 body carries no
+  mappable payload (no `detail` key, unlike every sibling endpoint) so it
+  surfaces as a bare `YahooRequestError`.
+- `Ticker.analyst()` and `.ratings_top()` now return typed models
+  (`AnalystResult`, `TopRatingsResult`) instead of raw parsed payloads.
+- A 404 with a bare `{"detail": ...}` body on a symbol-bound call now maps
+  to `SymbolNotFoundError` by status and shape rather than by wording, so
+  `analyst()` and `ratings_top()` raise it consistently for symbols the
+  AI-service endpoints have no data for.
+- `trending()`, `market_summary()`, `market_info()`, `market_time()`, and
+  `sector()` now return typed models (`TrendingResult`,
+  `list[MarketSummaryQuote]`, `MarketInfoResult`, `MarketTimeResult`,
+  `SectorResult`) instead of raw parsed payloads. These five endpoints are
+  market-wide rather than symbol-bound: an empty result is valid data (for
+  example, no trending picks for a region), never `SymbolNotFoundError`.
+  `sector()`'s first parameter is renamed from `sector` to `slug` (it was
+  shadowing the function's own name); the wire/path value it maps to is
+  still Yahoo's `sector` parameter.
+- `screener_instrument_fields()`, `timeseries_fields()`, and
+  `screener_discover()` now return typed models
+  (`ScreenerInstrumentFieldsResult`, `TimeseriesFieldsResult`,
+  `ScreenerDiscoverResult`) instead of raw parsed payloads.
+  `screener_predefined()` now returns `list[ScreenerPredefinedResult]`
+  instead of the raw parsed payload; its `records` field stays a plain
+  `list[dict[str, object]]` (see the Added entry above). These four
+  endpoints are market-wide/schema-introspection rather than symbol-bound:
+  an empty result is valid data, never `SymbolNotFoundError`. This
+  completes the typed-model conversion for every yoghurt endpoint except
+  `screener()`/`visualization()`, which remain `Frame`s by design (dynamic,
+  caller-chosen column lists).
+
+### Internal
+
+- `YahooRequestError` now exposes a public `body` attribute with Yahoo's raw
+  error response body, when available.
+
 ## [0.3.3] - 2026-06-30
 
 Maintenance release — dependency updates only; no user-facing changes.

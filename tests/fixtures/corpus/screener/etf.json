@@ -1,0 +1,1 @@
+{"finance":{"result":[{"start":0,"count":5,"total":5660,"records":[{"ticker":"VTI","fundNetAssets":2.308925120464E12},{"ticker":"VOO","fundNetAssets":1.701513010031E12},{"ticker":"IVV","fundNetAssets":8.54917004714E11},{"ticker":"SPY","fundNetAssets":7.83796407176E11},{"ticker":"VXUS","fundNetAssets":6.52301263131E11}],"userHasReadRecord":false,"useRecords":true}],"error":null}}

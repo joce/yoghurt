@@ -1,7 +1,7 @@
 # AGENTS.md
 
 ## Project
-Yoghurt exposes Yahoo Finance HTTP endpoints as an LLM-friendly CLI that prints the raw JSON Yahoo returns.
+Yoghurt exposes Yahoo Finance HTTP endpoints as a typed Python library and an LLM-friendly CLI that prints the raw JSON Yahoo returns.
 
 ## Stack
 Python 3.10+, uv, httpx2, argparse, pytest, ruff, pyright, tox, hatchling.
@@ -17,7 +17,7 @@ Parquet is written with **polars** (a core dependency); chart/screener/visualiza
 - Lint: `uv run ruff check .`
 - Format: `uv run ruff format .`
 - Type check: `uv run pyright`
-- Spell check: `npm run spell` or `make spell`
+- Spell check: `npm run spell` or `make spell` (inside a git worktree nested under a gitignored directory — as agent-tooling worktrees often are — cspell's gitignore walk hits the parent repo's ignore rules and checks 0 files; use `npx cspell . --no-gitignore` there. Normal checkouts and CI are unaffected)
 - Spell changed files: `npm run spell:changed` or `make spell-changed`
 - Full check: `uv run tox`
 
@@ -25,15 +25,36 @@ Parquet is written with **polars** (a core dependency); chart/screener/visualiza
 - `src/yoghurt/client.py` -> Yahoo HTTP session, cookies, crumbs, retries, raw response retrieval.
 - `src/yoghurt/session_cache.py` -> persisted Yahoo cookie/crumb cache for one-shot CLI reuse.
 - `src/yoghurt/commands.py` -> command metadata used to build CLI commands, validation, and help.
-- `src/yoghurt/params.py` -> CLI parameter coercion and validation helpers.
+- `src/yoghurt/params.py` -> endpoint parameter metadata, coercion, and request (params/path) building.
 - `src/yoghurt/cli.py` -> argparse command tree and stdout/stderr behavior.
+- `src/yoghurt/_bridge.py` -> background-loop sync bridge.
+- `src/yoghurt/_core.py` -> async endpoint core: envelopes, error mapping, shared client.
+- `src/yoghurt/api.py` -> public sync Ticker + module functions.
+- `src/yoghurt/frames.py` -> Frame/Chart/Spark/Timeseries result types.
+- `src/yoghurt/tabular.py` -> response flattening shared by frames and parquet, including the timeseries fundamentals/geographic-segments/economic-events/analyst-ratings flattener.
+- `src/yoghurt/parquet_writer.py` -> Parquet output for chart/screener/visualization.
+- `src/yoghurt/query.py` -> screener/visualization DSL parsing.
+- `src/yoghurt/exceptions.py` -> public exception hierarchy.
+- `src/yoghurt/models/` -> typed pydantic response models:
+  - `_base.py` -> YahooModel base + Raw* wrapper-tolerant value types.
+  - `enums.py` -> closed vocabularies shared across endpoint families.
+  - `quote.py` -> Quote.
+  - `chart.py` -> ChartMeta, Spark meta, chart events.
+  - `options.py` -> OptionChain/OptionContract/OptionExpiration.
+  - `summary_*.py` -> the 41 quote-summary modules, one file per family.
+  - `summary.py` -> QuoteSummary, the quote-summary container.
+  - `analysis_events.py` -> quote-type/calendar-events/recommendations-by-symbol/stock-recommender.
+  - `analysis_insights.py` -> price-insights/insights.
+  - `analysis_ratings.py` -> analyst/ratings-top.
+  - `markets.py` -> trending/market-summary/market-info/market-time/sector.
+  - `screener_meta.py` -> screener-instrument-fields/timeseries-fields/screener-discover/screener-predefined.
+- `src/yoghurt/__init__.py` -> lazy public surface, py.typed.
 - `tests/` -> pytest tests mirroring `src/yoghurt/`.
 
 ## Rules
 - IMPORTANT: `--help` is the primary product surface; keep it complete, adaptive, and generated from command metadata where practical.
 - Do not add `describe`, `endpoints`, `params`, or other discovery commands; discovery belongs under `yoghurt --help` and `yoghurt <endpoint> --help`.
-- Print Yahoo response bodies to stdout exactly as returned; do not model, reshape, pretty-print, or interpret endpoint JSON.
-- Keep Yahoo endpoint knowledge in metadata and validation only; do not create response classes.
+- CLI: Print Yahoo response bodies to stdout exactly as returned; do not model, reshape, pretty-print, or interpret endpoint JSON.
 - Use `uv run python` for Python scripts; never use bare `python` or `python3`.
 - Never log or print Yahoo cookies, crumbs, or full session-cache contents.
 - Keep runtime dependencies narrow; do not add TUI, ORM, web framework, or rich formatting libraries.
@@ -45,6 +66,33 @@ When adding or editing a CLI command:
 3. **Notes**: real clarifications only — Yahoo quirks (typos, 500s, paywalled empties), switch-behavior surprises, instrument-type dependencies. Drop live-probe diary entries and redundant restatements.
 4. **Order in `COMMANDS` tuple by importance**: daily-driver → discovery → symbol-bound analysis → market-wide state → schema introspection → `raw`. The DSL parsers (`visualization`, `screener`) slot inside the loop after `screener-predefined` in `cli.py`. Never append to the end.
 5. **Param boilerplate is shared** (`--lang`, `--region`, `--formatted` use exact strings — copy them). Run `pytest -k help` before and after. Pinned-string assertions guard things like `INSIDER_TRANSACTION`, `snake_case`, `Module availability depends on instrument type`. Negative guards (`Calls Yahoo`, `Output:`) forbid implementation leak — do not reintroduce.
+
+## Library rules
+- The library never prints, never prompts, never reads stdin; missing config raises immediately.
+- Error contract: symbol lookups raise SymbolNotFoundError; Yahoo error payloads raise YahooApiError; empty query results return empty Frames (never None, never raise); transport failures raise YahooRequestError/YahooUnavailableError.
+- One conversion vocabulary on every tabular result: to_polars, to_pandas, to_arrow, to_dicts, save_parquet. Conversions take no shaping arguments.
+- One name per concept; no aliases; no value-dependent return types.
+- Kwargs mirror CLI command metadata 1:1 (wire-name keys); booleans whose CLI flag inverts the wire value are named after the wire param. lang/region ride their defaults; per-call overrides remain deliberately unexposed.
+- Response models are frozen pydantic models with extra="allow"; internal metadata records are frozen dataclasses; orchestrators are plain classes.
+- The corpus at tests/fixtures/corpus/ is the evidence for response shapes; parser code and tests reference corpus files, not hand-invented JSON, wherever a real capture exists.
+
+## Response model conventions
+- All response models subclass yoghurt.models.YahooModel (frozen, to_camel aliases with explicit Field(alias=...) for irregular wire spellings, populate_by_name, extra="allow", str_strip_whitespace — the last is a quote-informed default; confirm per endpoint family).
+- The corpus is authoritative for wire spellings, presence, and types; researched docs (src/yoghurt/docs/*.md) second.
+- Optionality is evidence-driven: required exactly for keys present in 100% of that endpoint's corpus records (tools/fields_report.py-style report), else Optional. A field whose wire key is present in 100% of records but whose value is sometimes/always null is still required (`T | None` with no default); its docstring must state the null-rate or non-null-only condition so the distinction is never silent.
+- Live cross-asset-class verification (per the Yahoo API state probes baseline) may LOOSEN a corpus-derived required field to Optional when it demonstrates the field is inapplicable to instrument types outside the corpus's coverage — evidence outranking a thin corpus. It must never TIGHTEN a field into required from live observation alone. Every such loosening: (a) field docstring states the live-observed condition and symbols/date, (b) class or module docstring summarizes the divergence from the corpus universal-key set, (c) a dedicated test pins `required_aliases < universal_keys` so a future corpus refresh cannot silently reintroduce it.
+- Wrapped `{raw, fmt, longFmt}` values unwrap to raw via the Raw* types; `{}` unwraps to None on Raw*OrNone fields; unknown wrapper keys fail validation.
+- Closed vocabularies are (str, Enum) classes with WIRE casing, defined once, corpus-coverage-tested; values known only from prior use are noted in the enum docstring. Cross-family vocabularies live in yoghurt/models/enums.py; a vocabulary consumed by exactly one endpoint family may live module-local with a docstring noting the choice.
+- Closed vocabularies are reused across endpoint families when values coincide (e.g. QuoteType for chart's instrumentType); when a new family verifies an existing enum against its own corpus, note it in the enum's docstring rather than minting a duplicate.
+- When an endpoint's row payload has no fixed schema (columns driven per request or per screener id), the envelope is fully typed and the rows stay dynamic — a Frame where the result feeds tabular work (screener/visualization), or list[dict[str, object]] with a dedicated evidence test where it does not (screener-predefined records).
+- Field applicability follows class-level uniformity: when every field in a class would carry the identical "Observed on:" statement, none of them carries one (uniform applicability is class-level; per-field absence means class-wide). When applicability varies across a class's fields, every field ends with exactly one applicability form — the widest observed sets included: "Observed on: <types> <endpoint-noun>." / "Not observed in the corpus; known from prior use on <types> <endpoint-noun>." / "Observed only as empty lists in the corpus." The last two forms are always stated and do not count as variation for the uniformity test. The endpoint noun (quotes / charts / contracts / chains / …) is fixed per model module and stated in that module's docstring. The corpus capture date lives once in the module docstring.
+- Fields are declared in alphabetical order; the coverage gate asserts it.
+- Nested payload objects become nested YahooModel sub-models — never dict fields; keyed collections are dict[str, SubModel]. When the value is itself a bare scalar with no further structure (for example AI-generated prose keyed by a dynamic headline), dict[str, <scalar type>] is used directly instead of wrapping the scalar in a single-field model.
+- Convenience accessors are plain functools.cached_property, never pydantic computed_field: model_dump() stays wire-shaped.
+- Epoch fields are never bare ints in meaning: calendar-date epochs (midnight-UTC-aligned) type as `datetime.date` directly; point-in-time epochs with in-model timezone context keep the wire `int` plus a localized `@cached_property` datetime; point-in-time epochs without in-model timezone context type as aware-UTC `datetime.datetime` directly.
+- Every model ships a corpus coverage gate: every relevant corpus record validates with EMPTY extras at EVERY nesting level (tests/conftest.py::collect_nested_extras), and the required-field set is pinned to the presence report.
+- Validation failures surface as YahooApiError(code="model-validation") via yoghurt.models.validate_model(); pydantic never leaks through the public API.
+- Large models get a compact custom __repr__ (symbol-forward); __str__ only if it adds real value.
 
 ## Workflow
 - Make minimal changes and avoid unrelated refactors.
@@ -73,6 +121,5 @@ When adding or editing a CLI command:
 - Add targeted probes when an endpoint is symbol-sensitive, but keep this baseline for broad API-surface discovery and for checking whether an observed endpoint applies across asset classes.
 
 ## Out of scope
-- Mapping Yahoo JSON into Python domain models.
 - Separate documentation/discovery subcommands.
 - Secrets, API keys, or checked-in session-cache files.

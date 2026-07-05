@@ -1,0 +1,74 @@
+"""Enumerated types for Yahoo! Finance quote data.
+
+``str, Enum`` rather than ``StrEnum``: the project floor is Python 3.10,
+and ``enum.StrEnum`` only ships from 3.11 onward.
+"""
+
+from __future__ import annotations
+
+from enum import Enum
+
+
+class QuoteType(str, Enum):
+    """Classification of financial instruments supported by Yahoo! Finance.
+
+    Members: EQUITY, INDEX, OPTION, CURRENCY, CRYPTOCURRENCY, FUTURE, ETF,
+    MUTUALFUND, and PRIVATE_COMPANY.
+
+    Reused as the type of chart/spark meta's ``instrumentType``
+    (:class:`~yoghurt.models.chart.ChartMeta.instrument_type`): every value
+    observed in the chart+spark corpus (CRYPTOCURRENCY, CURRENCY, EQUITY,
+    ETF, FUTURE, INDEX, MUTUALFUND) is a member here, verified independently
+    against that corpus rather than assumed from the quote corpus.
+    """
+
+    EQUITY = "EQUITY"
+    INDEX = "INDEX"
+    OPTION = "OPTION"
+    CURRENCY = "CURRENCY"
+    CRYPTOCURRENCY = "CRYPTOCURRENCY"
+    FUTURE = "FUTURE"
+    ETF = "ETF"
+    MUTUALFUND = "MUTUALFUND"
+    PRIVATE_COMPANY = "PRIVATE_COMPANY"
+
+
+class MarketState(str, Enum):
+    """Trading session phases for financial markets in Yahoo! Finance.
+
+    PREPRE and POSTPOST bracket the wider extended-hours window; PRE runs
+    weekdays roughly 4:00am-9:30am Eastern, REGULAR 9:30am-4:00pm Eastern,
+    and POST 4:00pm-8:00pm Eastern, all excluding holidays. CLOSED covers
+    everything else.
+    """
+
+    PREPRE = "PREPRE"
+    PRE = "PRE"
+    REGULAR = "REGULAR"
+    POST = "POST"
+    POSTPOST = "POSTPOST"
+    CLOSED = "CLOSED"
+
+
+class OptionsType(str, Enum):
+    """Classification of option contracts by the right they grant.
+
+    Values carry Yahoo's wire casing for the ``optionsType`` quote key,
+    which is title-cased: CALL is ``"Call"`` (right to buy the underlying)
+    and PUT is ``"Put"`` (right to sell it). PUT is not observed in the
+    corpus; known from prior use on OPTION quotes.
+    """
+
+    CALL = "Call"
+    PUT = "Put"
+
+
+class PriceAlertConfidence(str, Enum):
+    """Confidence level for Yahoo! Finance's internal price alert feature.
+
+    Members: NONE (no confidence), LOW, and HIGH.
+    """
+
+    NONE = "NONE"
+    LOW = "LOW"
+    HIGH = "HIGH"
