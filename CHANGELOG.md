@@ -105,10 +105,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   rather than `SymbolNotFoundError`.
 - `Ticker.analyst()` and `.ratings_top()` now return typed models
   (`AnalystResult`, `TopRatingsResult`) instead of raw parsed payloads.
-  `analyst()`'s not-found body already maps to `SymbolNotFoundError`;
-  `ratings_top()`'s not-found body ("No top ratings found for symbol: ...")
-  does not contain the literal substring the error mapper matches, so it
-  currently surfaces as `YahooApiError` instead.
+- A 404 with a bare `{"detail": ...}` body on a symbol-bound call now maps
+  to `SymbolNotFoundError` by status and shape rather than by wording, so
+  `analyst()` and `ratings_top()` raise it consistently for symbols the
+  AI-service endpoints have no data for.
 
 ### Internal
 

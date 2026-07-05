@@ -622,23 +622,23 @@ def test_ticker_ratings_top_model_violation_raises_yahoo_api_error(
     assert exc_info.value.code == "model-validation"
 
 
-def test_ticker_ratings_top_not_found_raises_yahoo_api_error(
+def test_ticker_ratings_top_not_found_raises_symbol_not_found(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Yahoo's ratings-top 404 body surfaces as YahooApiError, not SymbolNotFoundError.
+    """Yahoo's ratings-top 404 body surfaces as SymbolNotFoundError.
 
-    ``"No top ratings found for symbol: RY.TO"`` does not contain the
-    literal substring ``"not found"`` that
-    ``yoghurt._core.map_http_error`` matches (it contains "ratings
-    found"), so this symbol-lookup miss is not currently recognized as
-    one; see ``tests/models/test_analysis_ratings_corpus.py``'s
-    corresponding corpus-evidence test.
+    A 404 with a bare ``{"detail": ...}`` body on a symbol-bound call is a
+    per-endpoint lookup miss regardless of Yahoo's wording — the AI-service
+    endpoints report unknown symbols and no-coverage-for-symbol identically
+    (``"No top ratings found for symbol: RY.TO"`` here vs analyst's
+    ``"Symbol not found for RY.TO"`` for the same miss), so
+    ``yoghurt._core.map_http_error`` maps by status + shape, not wording.
     """
     _install_fake_error(monkeypatch, _corpus_text("ratings-top/RY.TO.json"))
-    with pytest.raises(YahooApiError) as exc_info:
+    with pytest.raises(SymbolNotFoundError) as exc_info:
         Ticker("RY.TO").ratings_top()
-    assert exc_info.value.code == "404"
-    assert not isinstance(exc_info.value, SymbolNotFoundError)
+    assert exc_info.value.symbol == "RY.TO"
+    assert "No top ratings found" in (exc_info.value.description or "")
 
 
 def test_ticker_calendar_events_returns_typed_result(

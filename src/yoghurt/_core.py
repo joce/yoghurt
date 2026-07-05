@@ -58,6 +58,7 @@ ENVELOPES: Final[dict[str, str | None]] = {
     "visualization": _FINANCE,
 }
 _NOT_FOUND_CODE: Final[str] = "Not Found"  # Yahoo's verbatim wire value (see corpus)
+_HTTP_NOT_FOUND: Final[int] = 404
 
 
 def _as_object_dict(value: object) -> dict[str, Any] | None:
@@ -178,7 +179,14 @@ def map_http_error(
         payload_dict = _as_object_dict(payload)
         detail = payload_dict.get("detail") if payload_dict is not None else None
         if isinstance(detail, str):
-            if symbol is not None and "not found" in detail.lower():
+            # A 404 with a bare {"detail": ...} body on a symbol-bound call is
+            # a per-endpoint lookup miss regardless of wording: the AI-service
+            # endpoints report unknown symbols and no-coverage-for-symbol
+            # identically (corpus: analyst says "Symbol not found for RY.TO"
+            # for a valid symbol; ratings-top says "No top ratings found for
+            # symbol: RY.TO" for the same miss), so wording-sniffing cannot
+            # distinguish them and does not try.
+            if symbol is not None and exc.status_code == _HTTP_NOT_FOUND:
                 raise SymbolNotFoundError(
                     symbol, description=detail, http_status=exc.status_code
                 ) from exc

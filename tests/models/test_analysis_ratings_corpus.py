@@ -186,15 +186,14 @@ def test_ratings_top_stream_has_expected_record_count() -> None:
 
 
 def test_ratings_top_ry_to_capture_is_a_404_error_body() -> None:
-    """RY.TO is a 404, but its wording does NOT trip _core's "not found" check.
+    """RY.TO is a 404 whose wording differs from analyst's, on purpose.
 
-    ``"No top ratings found for symbol: RY.TO"`` contains "ratings found",
-    not the literal substring "not found" that
-    ``yoghurt._core.map_http_error`` matches case-insensitively — so this
-    body maps to plain ``YahooApiError``, not ``SymbolNotFoundError``,
-    despite the endpoint being unambiguously a symbol-lookup miss. See
-    ``tests/test_api_ticker.py::test_ticker_ratings_top_not_found_raises_yahoo_api_error``
-    for the confirming behavioral test.
+    ``"No top ratings found for symbol: RY.TO"`` does not contain the
+    literal substring "not found" — this capture is the evidence for why
+    ``yoghurt._core.map_http_error`` maps symbol-bound 404 detail bodies
+    by status + shape rather than by wording. See
+    ``tests/test_api_ticker.py::test_ticker_ratings_top_not_found_raises_symbol_not_found``
+    for the behavioral test.
     """
 
     payload = _load_json(_CORPUS_RATINGS_TOP_DIR / "RY.TO.json")
