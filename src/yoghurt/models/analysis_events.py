@@ -52,7 +52,11 @@ windows for all three, since surgically captured (18 new files, per the
   text's description. Fully typed via
   :class:`SecReportDay`/:class:`SecReport`/:class:`SecReportExhibit`; all
   10 row fields (including the nested ``exhibits`` list) are present on
-  all 9 filing records across the 4 populated captures.
+  all 9 filing records across the 4 populated captures. Wire quirk: the
+  day-bucket's ``timestampString`` consistently sits one calendar day
+  *before* its rows' ``filingDate`` (every MSFT/AAPL bucket in the
+  corpus) — the two fields do not agree, and each is typed for what it
+  individually says.
 
 All three newly-typed fields, plus ``economicEvents``, remain optional at
 the :class:`CalendarEventsResult` level: no single capture (old or new)
