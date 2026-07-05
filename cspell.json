@@ -161,6 +161,7 @@
     "triggerable",
     "tsrc",
     "unrequested",
+    "wasxfail",
     "worktrees",
   ],
   "patterns": [

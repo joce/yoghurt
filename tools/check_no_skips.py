@@ -23,9 +23,14 @@ class _SkipCollector:
         self.skipped: list[str] = []
 
     def pytest_runtest_logreport(self, report: pytest.TestReport) -> None:
-        """Record the test's node ID when its report shows a skip."""
+        """Record the test's node ID when its report shows a genuine skip.
 
-        if report.skipped:
+        pytest represents ``xfail`` outcomes as ``skipped`` too, flagged
+        apart only by ``wasxfail`` — those are expected failures, not
+        silently-missing coverage, so they don't count.
+        """
+
+        if report.skipped and not hasattr(report, "wasxfail"):
             self.skipped.append(report.nodeid)
 
 
