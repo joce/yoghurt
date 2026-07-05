@@ -65,8 +65,8 @@ for this single section is stable across the corpus) plus a top-level
 idea modules' tickers). Per the plan's reuse-decision procedure (the
 ``MarketSummaryQuote`` template), ``quotes`` values were first
 script-validated directly against :class:`~yoghurt.models.quote.Quote`:
-validation itself fails (not just an extras check) because 8 of
-``Quote``'s required fields (``currency``, all seven required
+validation itself fails (not just an extras check) because 7 of
+``Quote``'s required fields (``currency``, all six required
 ``fiftyTwoWeek*`` fields) are missing outright on every row, so reuse is
 ruled out on the same required-set clause that produced
 ``MarketSummaryQuote`` — this endpoint gets its own

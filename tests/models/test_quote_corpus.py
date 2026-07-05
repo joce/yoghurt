@@ -156,13 +156,17 @@ def test_quote_fields_are_declared_in_alphabetical_order() -> None:
     assert names == sorted(names)
 
 
-def test_required_field_set_matches_corpus_universal_keys() -> None:
-    """Quote's required fields are exactly the corpus-measured universal keys.
+def test_required_field_set_is_a_subset_of_corpus_universal_keys() -> None:
+    """Quote's required fields are the corpus universal keys, minus one.
 
     A required field is one whose ``FieldInfo.is_required()`` is True; its
     wire key is its alias (or its name, for the handful with no override).
-    This must equal the set of wire keys present on all 28 corpus records,
-    exactly - not a superset, not a subset.
+    ``fiftyTwoWeekLowChangePercent`` is present on all 28 corpus records,
+    but a 2026-07-05 live re-pull observed it absent on treasury-yield
+    indices (^TNX/^IRX) whose ``fiftyTwoWeekLow`` is ``0.0`` — Yahoo
+    omits the percent field when the base is zero. Until a corpus capture
+    backs that, the model's required set is a strict subset of the corpus
+    universal set, with the difference pinned here exactly.
     """
 
     report = collect_field_presence(CORPUS_DIR)
@@ -174,7 +178,8 @@ def test_required_field_set_matches_corpus_universal_keys() -> None:
         if field_info.is_required()
     }
 
-    assert required_aliases == universal_keys
+    assert required_aliases < universal_keys
+    assert universal_keys - required_aliases == {"fiftyTwoWeekLowChangePercent"}
 
 
 def test_enum_fields_round_trip_to_enum_members() -> None:

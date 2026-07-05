@@ -65,7 +65,7 @@ _EXPECTED_SCREENER_PREDEFINED_FILE_COUNT = 5
 
 _EXPECTED_SCREENER_FIELD_REQUIRED_FIELD_COUNT = 9
 _EXPECTED_SCREENER_DISCOVER_QUOTE_REQUIRED_FIELD_COUNT = 29
-_QUOTE_REQUIRED_FIELD_COUNT = 35
+_QUOTE_REQUIRED_FIELD_COUNT = 34
 
 
 def _load_json(path: Any) -> dict[str, Any]:  # noqa: ANN401 - corpus JSON is untyped.
@@ -244,9 +244,11 @@ def test_screener_discover_quotes_fail_validation_against_quote() -> None:
     """Reuse-decision evidence: Quote validation fails outright on these rows.
 
     Unlike ``MarketSummaryQuote`` (whose rows are zero-extras but fail on
-    requiredness), every screener-discover quote row is missing 8 of
+    requiredness), every screener-discover quote row is missing 7 of
     ``Quote``'s required fields outright, so ``Quote.model_validate``
-    raises rather than merely landing extras.
+    raises rather than merely landing extras. (``fiftyTwoWeekLowChangePercent``
+    is equally absent but optional on ``Quote`` since the 2026-07-05 live
+    loosening, so it no longer appears in this pin.)
     """
 
     quote_required_aliases = _required_aliases(Quote)
@@ -265,7 +267,6 @@ def test_screener_discover_quotes_fail_validation_against_quote() -> None:
         "fiftyTwoWeekHighChangePercent",
         "fiftyTwoWeekLow",
         "fiftyTwoWeekLowChange",
-        "fiftyTwoWeekLowChangePercent",
         "fiftyTwoWeekRange",
     }
 

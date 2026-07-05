@@ -72,6 +72,23 @@ def test_calendar_events_economic_event_revised_from_is_optional() -> None:
     assert len(revised) < len(all_records)
 
 
+def test_calendar_events_economic_event_actual_is_optional() -> None:
+    """A not-yet-released event validates without ``actual``.
+
+    Live-observed 2026-07-05: pending releases (June trade figures) omit
+    ``actual`` until publication; every committed corpus row carries it,
+    so the pin removes the key from a real capture's row.
+    """
+
+    payload = _load("calendar-events/AAPL_economicEvents.json")
+    first_day = payload["finance"]["result"]["economicEvents"][0]
+    del first_day["records"][0]["actual"]
+
+    result = CalendarEventsResult.model_validate(payload["finance"]["result"])
+    assert result.economic_events is not None
+    assert result.economic_events[0].records[0].actual is None
+
+
 def test_quote_type_future_has_underlying_and_head_symbol() -> None:
     """FUTURE records carry underlying_symbol/underlying_exchange_symbol/head_symbol."""
 

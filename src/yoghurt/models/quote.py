@@ -420,9 +420,14 @@ class Quote(YahooModel):
     OPTION quotes.
     """
 
-    fifty_two_week_low_change_percent: float
+    fifty_two_week_low_change_percent: float | None = None
     """
     Percent change in the 52-week low price from the previous trading day.
+
+    Live-observed as absent on treasury-yield indices whose
+    ``fiftyTwoWeekLow`` is ``0.0`` (^TNX/^IRX, 2026-07-05 — Yahoo omits
+    the percent field when the base is zero); not yet backed by a corpus
+    capture. Present on every corpus record.
 
     Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX, MUTUALFUND,
     OPTION quotes.

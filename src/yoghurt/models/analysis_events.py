@@ -107,10 +107,14 @@ class UnmodeledCalendarRow(YahooModel):
 class EconomicEvent(YahooModel):
     """One economic-indicator release in an :class:`EconomicEventDay`."""
 
-    actual: str
+    actual: str | None = None
     """
     Reported value for this release, as Yahoo's wire string (for example
     ``"57"``, ``"0.3"``).
+
+    Live-observed as absent on not-yet-released events (June trade-figure
+    releases still pending publication, 2026-07-05); not yet backed by a
+    corpus capture — every committed corpus row carries it.
 
     Observed on: calendar events.
     """

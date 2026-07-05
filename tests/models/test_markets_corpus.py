@@ -10,7 +10,7 @@ required-field set is pinned to its corpus-measured universal keys via
 ``test_market_summary_rows_have_no_extras_against_quote`` and
 ``test_market_summary_required_quote_fields_are_not_all_universal`` for the
 script-validated finding that :class:`~yoghurt.models.quote.Quote` cannot be
-reused (zero extras, but 9 of its 35 required fields are not universal).
+reused (zero extras, but 8 of its 34 required fields are not universal).
 """
 
 from __future__ import annotations
@@ -65,7 +65,7 @@ _EXPECTED_SECTOR_FILE_COUNT = 4
 _EXPECTED_TRENDING_REQUIRED_FIELD_COUNT = 25
 _EXPECTED_MARKET_SUMMARY_REQUIRED_FIELD_COUNT = 27
 _EXPECTED_MARKET_INFO_REQUIRED_FIELD_COUNT = 3
-_QUOTE_REQUIRED_FIELD_COUNT = 35
+_QUOTE_REQUIRED_FIELD_COUNT = 34
 
 
 def _load_json(path: Any) -> dict[str, Any]:  # noqa: ANN401 - corpus JSON is untyped.
@@ -229,12 +229,15 @@ def test_market_summary_rows_have_no_extras_against_quote() -> None:
 
 
 def test_market_summary_required_quote_fields_are_not_all_universal() -> None:
-    """Reuse-decision evidence: 9 of Quote's required fields aren't universal.
+    """Reuse-decision evidence: 8 of Quote's required fields aren't universal.
 
-    ``currency``, ``priceHint``, and all seven required ``fiftyTwoWeek*`` fields are
-    not universal across the market-summary corpus, which is why
+    ``currency``, ``priceHint``, and all six required ``fiftyTwoWeek*``
+    fields are not universal across the market-summary corpus, which is why
     :class:`~yoghurt.models.markets.MarketSummaryQuote` is a distinct model
-    rather than a reuse of :class:`~yoghurt.models.quote.Quote`.
+    rather than a reuse of :class:`~yoghurt.models.quote.Quote`. (The
+    seventh family member, ``fiftyTwoWeekLowChangePercent``, is equally
+    absent on these rows but optional on ``Quote`` since the 2026-07-05
+    live loosening, so it no longer appears in this pin.)
     """
 
     quote_required_aliases = _required_aliases(Quote)
@@ -252,7 +255,6 @@ def test_market_summary_required_quote_fields_are_not_all_universal() -> None:
         "fiftyTwoWeekHighChangePercent",
         "fiftyTwoWeekLow",
         "fiftyTwoWeekLowChange",
-        "fiftyTwoWeekLowChangePercent",
         "fiftyTwoWeekRange",
     }
 
