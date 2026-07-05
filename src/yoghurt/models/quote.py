@@ -14,12 +14,14 @@ Overall reconciliation notes:
   records (see ``tests/models/test_quote_corpus.py`` for the pinned set).
   Every other field is optional, including several Doubloon typed as
   required that this corpus never observed as universal.
-- Every field docstring ends with an applicability line generated from
-  ``tools.fields_report``, in one of three forms: an observed
-  quoteType list (``Observed on: ... quotes.``), a Doubloon-only note
-  (``Not observed in the corpus; known from prior use on ... quotes.``),
-  or, for shapes only ever seen empty, ``Observed only as empty lists in
-  the corpus.``
+- A field restricted to a strict subset of this model's observed quoteTypes
+  ends with an applicability line generated from ``tools.fields_report``,
+  in one of three forms: an observed quoteType list (``Observed on: ...
+  quotes.``), a Doubloon-only note (``Not observed in the corpus; known
+  from prior use on ... quotes.``), or, for shapes only ever seen empty,
+  ``Observed only as empty lists in the corpus.`` A field observed on
+  every quoteType this model's corpus covers carries no applicability
+  line at all (absence means universal).
 - ``corporate_actions`` and the ``stock_story*``/crypto-supply/``industry``
   family are new since Doubloon; see ``CorporateAction`` below for the
   nested shape.
@@ -186,17 +188,11 @@ class Quote(YahooModel):
     crypto_tradeable: bool
     """
     Whether the cryptocurrency can be traded.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX, MUTUALFUND,
-    OPTION quotes.
     """
 
     currency: str
     """
     Currency in which the security is traded.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX, MUTUALFUND,
-    OPTION quotes.
     """
 
     custom_price_alert_confidence: PriceAlertConfidence
@@ -204,8 +200,6 @@ class Quote(YahooModel):
     Value whose meaning is not clear at the moment.
 
     Seen values have been NONE, LOW and HIGH.
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX, MUTUALFUND,
-    OPTION quotes.
     """
 
     display_name: str | None = None
@@ -297,41 +291,26 @@ class Quote(YahooModel):
     esg_populated: bool
     """
     Availability status of ESG ratings data.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX, MUTUALFUND,
-    OPTION quotes.
     """
 
     exchange: str
     """
     Securities exchange on which the security is traded.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX, MUTUALFUND,
-    OPTION quotes.
     """
 
     exchange_data_delayed_by: int
     """
     Delay in data from the exchange, typically in minutes.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX, MUTUALFUND,
-    OPTION quotes.
     """
 
     exchange_timezone_name: str
     """
     Name of the timezone of the exchange.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX, MUTUALFUND,
-    OPTION quotes.
     """
 
     exchange_timezone_short_name: str
     """
     Short name of the timezone of the exchange.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX, MUTUALFUND,
-    OPTION quotes.
     """
 
     expire_date: datetime.date | None = None
@@ -383,41 +362,26 @@ class Quote(YahooModel):
     fifty_two_week_high: float
     """
     Highest price the quote has traded at in the past 52 weeks.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX, MUTUALFUND,
-    OPTION quotes.
     """
 
     fifty_two_week_high_change: float
     """
     Change in the 52-week high price from the previous trading day.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX, MUTUALFUND,
-    OPTION quotes.
     """
 
     fifty_two_week_high_change_percent: float
     """
     Percent change in the 52-week high price from the previous trading day.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX, MUTUALFUND,
-    OPTION quotes.
     """
 
     fifty_two_week_low: float
     """
     Lowest price the quote has traded at in the past 52 weeks.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX, MUTUALFUND,
-    OPTION quotes.
     """
 
     fifty_two_week_low_change: float
     """
     Change in the 52-week low price from the previous trading day.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX, MUTUALFUND,
-    OPTION quotes.
     """
 
     fifty_two_week_low_change_percent: float | None = None
@@ -428,17 +392,11 @@ class Quote(YahooModel):
     ``fiftyTwoWeekLow`` is ``0.0`` (^TNX/^IRX, 2026-07-05 — Yahoo omits
     the percent field when the base is zero); not yet backed by a corpus
     capture. Present on every corpus record.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX, MUTUALFUND,
-    OPTION quotes.
     """
 
     fifty_two_week_range: str
     """
     Trading price range over the past 52 weeks.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX, MUTUALFUND,
-    OPTION quotes.
     """
 
     financial_currency: str | None = None
@@ -484,25 +442,16 @@ class Quote(YahooModel):
     full_exchange_name: str
     """
     Full name of the securities exchange on which the security is traded.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX, MUTUALFUND,
-    OPTION quotes.
     """
 
     gmt_off_set_milliseconds: int
     """
     Offset from GMT of the exchange, in milliseconds.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX, MUTUALFUND,
-    OPTION quotes.
     """
 
     has_pre_post_market_data: bool
     """
     Whether pre-market and post-market data is available for this quote.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX, MUTUALFUND,
-    OPTION quotes.
     """
 
     head_symbol_as_string: str | None = None
@@ -543,9 +492,6 @@ class Quote(YahooModel):
     language: str
     """
     Language in which financial results are reported.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX, MUTUALFUND,
-    OPTION quotes.
     """
 
     last_market: str | None = None
@@ -573,9 +519,6 @@ class Quote(YahooModel):
     market: str
     """
     Primary market for the security.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX, MUTUALFUND,
-    OPTION quotes.
     """
 
     market_cap: int | None = None
@@ -588,9 +531,6 @@ class Quote(YahooModel):
     market_state: MarketState
     """
     Current state of the market for a security.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX, MUTUALFUND,
-    OPTION quotes.
     """
 
     max_supply: int | None = None
@@ -726,9 +666,6 @@ class Quote(YahooModel):
     price_hint: int
     """
     Decimal precision indicator for price values.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX, MUTUALFUND,
-    OPTION quotes.
     """
 
     price_to_book: float | None = None
@@ -748,41 +685,26 @@ class Quote(YahooModel):
     quote_source_name: str | None = None
     """
     Name of the source providing the quote.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX, MUTUALFUND,
-    OPTION quotes.
     """
 
     quote_type: QuoteType
     """
     Type of quote.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX, MUTUALFUND,
-    OPTION quotes.
     """
 
     region: str
     """
     Region in which the company is located.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX, MUTUALFUND,
-    OPTION quotes.
     """
 
     regular_market_change: float
     """
     Change in the security's price in regular trading.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX, MUTUALFUND,
-    OPTION quotes.
     """
 
     regular_market_change_percent: float
     """
     Percent change in the security's price in regular trading.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX, MUTUALFUND,
-    OPTION quotes.
     """
 
     regular_market_day_high: float | None = None
@@ -816,25 +738,16 @@ class Quote(YahooModel):
     regular_market_previous_close: float
     """
     Closing price of the security in the previous regular trading session.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX, MUTUALFUND,
-    OPTION quotes.
     """
 
     regular_market_price: float
     """
     Latest price from regular trading session.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX, MUTUALFUND,
-    OPTION quotes.
     """
 
     regular_market_time: int
     """
     Raw timestamp of the most recent trade in the regular trading session.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX, MUTUALFUND,
-    OPTION quotes.
     """
 
     regular_market_volume: int | None = None
@@ -854,17 +767,11 @@ class Quote(YahooModel):
     short_name: str
     """
     Short, user-friendly name for the quote or security.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX, MUTUALFUND,
-    OPTION quotes.
     """
 
     source_interval: int
     """
     Interval at which the data source provides updates, in seconds.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX, MUTUALFUND,
-    OPTION quotes.
     """
 
     start_date: datetime.date | None = None
@@ -922,9 +829,6 @@ class Quote(YahooModel):
     symbol: str
     """
     Ticker symbol of the security.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX, MUTUALFUND,
-    OPTION quotes.
     """
 
     to_currency: str | None = None
@@ -952,9 +856,6 @@ class Quote(YahooModel):
     tradeable: bool
     """
     Whether the security is currently tradeable.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX, MUTUALFUND,
-    OPTION quotes.
     """
 
     trailing_annual_dividend_rate: float | None = None
@@ -999,9 +900,6 @@ class Quote(YahooModel):
     triggerable: bool
     """
     Internal Yahoo! Finance flag with undocumented and unknown purpose.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX, MUTUALFUND,
-    OPTION quotes.
     """
 
     two_hundred_day_average: float | None = None
@@ -1031,9 +929,6 @@ class Quote(YahooModel):
     type_disp: str
     """
     User-friendly representation of the QuoteType.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX, MUTUALFUND,
-    OPTION quotes.
     """
 
     underlying_exchange_symbol: str | None = None
@@ -1163,11 +1058,7 @@ class Quote(YahooModel):
 
     @cached_property
     def regular_market_datetime(self) -> datetime.datetime:
-        """Date and time of the most recent trade in the regular trading session.
-
-        Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
-        MUTUALFUND, OPTION quotes.
-        """
+        """Date and time of the most recent trade in the regular trading session."""
 
         return self._get_datetime(self.regular_market_time)
 

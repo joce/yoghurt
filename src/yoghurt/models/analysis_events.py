@@ -126,8 +126,6 @@ class EarningsEvent(YahooModel):
     company_short_name: str
     """
     Short display name of the reporting company.
-
-    Observed on: calendar events.
     """
 
     date_is_estimate: bool
@@ -136,38 +134,28 @@ class EarningsEvent(YahooModel):
 
     Always ``false`` on every corpus row (all captured rows are already-
     reported, confirmed dates).
-
-    Observed on: calendar events.
     """
 
     earnings: bool
     """
     Always ``true`` on every corpus row; a type-discriminator flag rather
     than a meaningful per-row value.
-
-    Observed on: calendar events.
     """
 
     eps_actual: float
     """
     Reported actual earnings per share.
-
-    Observed on: calendar events.
     """
 
     eps_estimate: float
     """
     Consensus analyst earnings-per-share estimate ahead of the release.
-
-    Observed on: calendar events.
     """
 
     fiscal_year: str
     """
     Fiscal year this release covers, as Yahoo's wire string (for example
     ``"2026"``).
-
-    Observed on: calendar events.
     """
 
     gmt_offset_milliseconds: int = Field(alias="gmtOffsetMilliSeconds")
@@ -179,22 +167,16 @@ class EarningsEvent(YahooModel):
     ``QuoteTypeResult.gmt_off_set_milliseconds``'s ``gmtOffSetMilliseconds``
     (and that field is a wire string, not this numeric type); genuine
     per-endpoint wire divergence, not a modeling inconsistency.
-
-    Observed on: calendar events.
     """
 
     quarter: str
     """
     Fiscal quarter this release covers (for example ``"Q1"``, ``"Q4"``).
-
-    Observed on: calendar events.
     """
 
     rank: int
     """
     Yahoo's internal ranking/priority value for this release.
-
-    Observed on: calendar events.
     """
 
     start_date_time: datetime.datetime
@@ -205,30 +187,22 @@ class EarningsEvent(YahooModel):
     datetime. The parent :class:`EarningsEventDay` carries an IANA
     ``timezone`` name, but it is not threaded onto this row (same
     convention as :class:`EconomicEvent`'s ``event_time``).
-
-    Observed on: calendar events.
     """
 
     start_date_time_type: str
     """
     Yahoo's classification of ``start_date_time``'s precision or session
     (always ``"TAS"`` — time-as-supplied — on every corpus row).
-
-    Observed on: calendar events.
     """
 
     surprise_percent: float
     """
     Percentage difference between ``eps_actual`` and ``eps_estimate``.
-
-    Observed on: calendar events.
     """
 
     ticker: str
     """
     Yahoo ticker symbol this release belongs to.
-
-    Observed on: calendar events.
     """
 
 
@@ -243,15 +217,11 @@ class EarningsEventDay(YahooModel):
     count: int
     """
     Number of releases in ``records`` for this day.
-
-    Observed on: calendar events.
     """
 
     records: list[EarningsEvent]
     """
     Earnings releases scheduled or reported for this day.
-
-    Observed on: calendar events.
     """
 
     timestamp: datetime.datetime
@@ -260,32 +230,24 @@ class EarningsEventDay(YahooModel):
 
     Wire value is epoch milliseconds; pydantic converts it to an aware UTC
     datetime.
-
-    Observed on: calendar events.
     """
 
     timestamp_string: str
     """
     Calendar date for this bucket, as a bare ``"YYYY-MM-DD"`` string in the
     ``timezone`` local zone.
-
-    Observed on: calendar events.
     """
 
     timezone: str
     """
     IANA timezone name ``timestamp``/``timestamp_string`` are local to (for
     example ``"America/New_York"``).
-
-    Observed on: calendar events.
     """
 
     total_count: int
     """
     Total number of releases for this day, matching ``count`` on every
     corpus row (verified).
-
-    Observed on: calendar events.
     """
 
 
@@ -295,8 +257,6 @@ class IpoEvent(YahooModel):
     company_short_name: str
     """
     Short display name of the company going public.
-
-    Observed on: calendar events.
     """
 
     currency_name: str
@@ -306,38 +266,28 @@ class IpoEvent(YahooModel):
     Present as an empty string on some corpus rows (for example a NYSE
     American common-stock pricing) rather than absent; still a required
     key on every row.
-
-    Observed on: calendar events.
     """
 
     deal_id: str
     """
     Yahoo's internal identifier for this IPO deal.
-
-    Observed on: calendar events.
     """
 
     deal_type: str
     """
     Status of the deal (``"Expected"`` on every corpus row).
-
-    Observed on: calendar events.
     """
 
     exchange_short_name: str
     """
     Short name of the listing exchange (for example ``"Nasdaq"``, ``"NYSE
     American"``).
-
-    Observed on: calendar events.
     """
 
     ipo_events: bool
     """
     Always ``true`` on every corpus row; a type-discriminator flag rather
     than a meaningful per-row value.
-
-    Observed on: calendar events.
     """
 
     start_date_time: datetime.datetime
@@ -350,8 +300,6 @@ class IpoEvent(YahooModel):
     in the corpus rules out the two ever diverging. The parent's IANA
     ``timezone`` is not threaded onto this row (same convention as
     :class:`EconomicEvent`'s ``event_time``).
-
-    Observed on: calendar events.
     """
 
     ticker: str
@@ -359,8 +307,6 @@ class IpoEvent(YahooModel):
     Yahoo ticker symbol of the security being priced (for example a rights,
     warrants, or units symbol distinct from the parent company's common
     stock).
-
-    Observed on: calendar events.
     """
 
 
@@ -375,15 +321,11 @@ class IpoEventDay(YahooModel):
     count: int
     """
     Number of pricings in ``records`` for this day.
-
-    Observed on: calendar events.
     """
 
     records: list[IpoEvent]
     """
     IPO pricings scheduled or completed for this day.
-
-    Observed on: calendar events.
     """
 
     timestamp: datetime.datetime
@@ -392,32 +334,24 @@ class IpoEventDay(YahooModel):
 
     Wire value is epoch seconds; pydantic converts it to an aware UTC
     datetime.
-
-    Observed on: calendar events.
     """
 
     timestamp_string: str
     """
     Calendar date for this bucket, as a bare ``"YYYY-MM-DD"`` string in the
     ``timezone`` local zone.
-
-    Observed on: calendar events.
     """
 
     timezone: str
     """
     IANA timezone name ``timestamp``/``timestamp_string`` are local to (for
     example ``"America/New_York"``).
-
-    Observed on: calendar events.
     """
 
     total_count: int
     """
     Total number of pricings for this day, matching ``count`` on every
     corpus row (verified).
-
-    Observed on: calendar events.
     """
 
 
@@ -434,15 +368,11 @@ class SecReportExhibit(YahooModel):
     type: str
     """
     Exhibit type or form code (for example ``"8-K"``, ``"EX-99.1"``).
-
-    Observed on: calendar events.
     """
 
     url: str
     """
     URL of the exhibit document.
-
-    Observed on: calendar events.
     """
 
 
@@ -461,30 +391,22 @@ class SecReport(YahooModel):
     Yahoo's category label for this filing (for example ``"Periodic
     Financial Reports"``, ``"Corporate Changes & Voting Matters"``,
     ``"Proxy Statements"``).
-
-    Observed on: calendar events.
     """
 
     company_name: str
     """
     Full name of the filing company.
-
-    Observed on: calendar events.
     """
 
     description: str
     """
     Prose description of this filing (for example ``"Quarterly report
     pursuant to Section 13 or 15(d)"``).
-
-    Observed on: calendar events.
     """
 
     exhibits: list[SecReportExhibit]
     """
     Individual documents attached to this filing.
-
-    Observed on: calendar events.
     """
 
     filing_date: datetime.date
@@ -494,46 +416,34 @@ class SecReport(YahooModel):
     Wire value is a midnight-UTC-aligned epoch timestamp in milliseconds
     (verified against every corpus value); pydantic converts it to a UTC
     calendar date.
-
-    Observed on: calendar events.
     """
 
     id: str
     """
     Yahoo's internal identifier for this filing (for example
     ``"0001213900-26-070452_1624512"``).
-
-    Observed on: calendar events.
     """
 
     sec_reports: bool = Field(alias="secReports")
     """
     Always ``true`` on every corpus row; a type-discriminator flag rather
     than a meaningful per-row value.
-
-    Observed on: calendar events.
     """
 
     thumbnail_url: str
     """
     URL of a thumbnail image representing this filing.
-
-    Observed on: calendar events.
     """
 
     ticker: str
     """
     Yahoo ticker symbol this filing belongs to.
-
-    Observed on: calendar events.
     """
 
     type: str
     """
     SEC form type of this filing (for example ``"10-Q"``, ``"8-K"``,
     ``"DEFA14A"``).
-
-    Observed on: calendar events.
     """
 
 
@@ -548,15 +458,11 @@ class SecReportDay(YahooModel):
     count: int
     """
     Number of filings in ``records`` for this day.
-
-    Observed on: calendar events.
     """
 
     records: list[SecReport]
     """
     SEC filings made on this day.
-
-    Observed on: calendar events.
     """
 
     timestamp: datetime.datetime
@@ -565,32 +471,24 @@ class SecReportDay(YahooModel):
 
     Wire value is epoch milliseconds; pydantic converts it to an aware UTC
     datetime.
-
-    Observed on: calendar events.
     """
 
     timestamp_string: str
     """
     Calendar date for this bucket, as a bare ``"YYYY-MM-DD"`` string in the
     ``timezone`` local zone.
-
-    Observed on: calendar events.
     """
 
     timezone: str
     """
     IANA timezone name ``timestamp``/``timestamp_string`` are local to (for
     example ``"America/New_York"``).
-
-    Observed on: calendar events.
     """
 
     total_count: int
     """
     Total number of filings for this day, matching ``count`` on every
     corpus row (verified).
-
-    Observed on: calendar events.
     """
 
 
@@ -605,39 +503,29 @@ class EconomicEvent(YahooModel):
     Live-observed as absent on not-yet-released events (June trade-figure
     releases still pending publication, 2026-07-05); not yet backed by a
     corpus capture — every committed corpus row carries it.
-
-    Observed on: calendar events.
     """
 
     country_code: str
     """
     ISO-ish country or region code the release applies to (for example
     ``"US"``, ``"EU"``, ``"JP"``).
-
-    Observed on: calendar events.
     """
 
     description: str
     """
     Prose explanation of what this economic indicator measures.
-
-    Observed on: calendar events.
     """
 
     economic_events: bool
     """
     Always ``true`` on every corpus row; a type-discriminator flag rather
     than a meaningful per-row value.
-
-    Observed on: calendar events.
     """
 
     event: str
     """
     Name of the economic release (for example ``"Non-Farm Payrolls"``,
     ``"CPI YY"``).
-
-    Observed on: calendar events.
     """
 
     event_time: datetime.datetime
@@ -647,22 +535,16 @@ class EconomicEvent(YahooModel):
     Wire value is epoch seconds; pydantic converts it to an aware UTC
     datetime. The parent :class:`EconomicEventDay` carries an IANA
     ``timezone`` name, but it is not threaded onto this row.
-
-    Observed on: calendar events.
     """
 
     period: str
     """
     Reporting period the release covers (for example ``"Jun"``, ``"May"``).
-
-    Observed on: calendar events.
     """
 
     prior: str
     """
     Previously reported value for this release, as Yahoo's wire string.
-
-    Observed on: calendar events.
     """
 
     revised_from: str | None = None
@@ -671,8 +553,6 @@ class EconomicEvent(YahooModel):
     reading.
 
     Present on 2 of 9 corpus rows.
-
-    Observed on: calendar events.
     """
 
 
@@ -682,15 +562,11 @@ class EconomicEventDay(YahooModel):
     count: int
     """
     Number of releases in ``records`` for this day.
-
-    Observed on: calendar events.
     """
 
     records: list[EconomicEvent]
     """
     Economic releases scheduled or reported for this day.
-
-    Observed on: calendar events.
     """
 
     timestamp: datetime.datetime
@@ -702,24 +578,18 @@ class EconomicEventDay(YahooModel):
     ``timezone`` local zone, not necessarily in UTC (verified against
     every corpus value); see ``timestamp_string`` for the authoritative
     calendar date.
-
-    Observed on: calendar events.
     """
 
     timestamp_string: str
     """
     Calendar date for this bucket, as a bare ``"YYYY-MM-DD"`` string in the
     ``timezone`` local zone.
-
-    Observed on: calendar events.
     """
 
     timezone: str
     """
     IANA timezone name ``timestamp``/``timestamp_string`` are local to (for
     example ``"America/New_York"``).
-
-    Observed on: calendar events.
     """
 
     total_count: int
@@ -727,8 +597,6 @@ class EconomicEventDay(YahooModel):
     Total number of releases for this day, matching ``count`` on every
     corpus row (verified); kept as its own wire field rather than
     collapsed, per corpus honesty.
-
-    Observed on: calendar events.
     """
 
 
@@ -751,8 +619,6 @@ class CalendarEventsResult(YahooModel):
     Empty list on the default request (no window covers a real earnings
     day); populated when ``--start-date``/``--end-date`` cover a day the
     symbol actually reported on. See :class:`EarningsEventDay`.
-
-    Observed on: calendar events.
     """
 
     economic_events: list[EconomicEventDay] | None = Field(
@@ -763,8 +629,6 @@ class CalendarEventsResult(YahooModel):
 
     Only requested (and only ever captured) via ``--modules
     economicEvents``; see :class:`EconomicEventDay`.
-
-    Observed on: calendar events.
     """
 
     ipo_events: list[IpoEventDay] | None = Field(default=None, alias="ipoEvents")
@@ -774,8 +638,6 @@ class CalendarEventsResult(YahooModel):
     Empty list on the default request; populated when ``--start-date``/
     ``--end-date`` cover a day the symbol actually priced on. See
     :class:`IpoEventDay`.
-
-    Observed on: calendar events.
     """
 
     sec_reports: list[SecReportDay] | None = Field(default=None, alias="secReports")
@@ -791,8 +653,6 @@ class CalendarEventsResult(YahooModel):
     Distinct from :class:`~yoghurt.models.analysis_insights.InsightsSecReport`
     (the ``insights`` endpoint's differently-shaped SEC filing rows) — no
     corpus evidence ties the two shapes together. See :class:`SecReportDay`.
-
-    Observed on: calendar events.
     """
 
 
@@ -809,24 +669,18 @@ class QuoteTypeResult(YahooModel):
     """
     Short code of the securities exchange (for example ``"NMS"``,
     ``"TOR"``, ``"CCC"``).
-
-    Observed on: quote-type records.
     """
 
     exchange_timezone_name: str
     """
     IANA timezone name of the exchange (for example
     ``"America/New_York"``).
-
-    Observed on: quote-type records.
     """
 
     exchange_timezone_short_name: str
     """
     Short abbreviation of the exchange timezone (for example ``"EDT"``,
     ``"JST"``).
-
-    Observed on: quote-type records.
     """
 
     gmt_off_set_milliseconds: str
@@ -837,15 +691,11 @@ class QuoteTypeResult(YahooModel):
     A string on this endpoint, unlike the numeric
     ``SummaryQuoteType.gmt_off_set_milliseconds``; see the module
     docstring.
-
-    Observed on: quote-type records.
     """
 
     has_selerity_earnings: bool
     """
     Whether Yahoo has Selerity-sourced earnings data for this symbol.
-
-    Observed on: quote-type records.
     """
 
     head_symbol: str | None = None
@@ -854,8 +704,6 @@ class QuoteTypeResult(YahooModel):
     ``"CL=F"``).
 
     Present only on FUTURE records.
-
-    Observed on: quote-type records.
     """
 
     is_esg_populated: bool
@@ -864,8 +712,6 @@ class QuoteTypeResult(YahooModel):
     symbol.
 
     Always ``false`` in the corpus.
-
-    Observed on: quote-type records.
     """
 
     long_name: str | None = None
@@ -873,16 +719,12 @@ class QuoteTypeResult(YahooModel):
     Official long name of the company or security.
 
     Absent on CRYPTOCURRENCY, FUTURE, and OPTION records in the corpus.
-
-    Observed on: quote-type records.
     """
 
     market: str
     """
     Yahoo's internal market-segment identifier (for example
     ``"us_ot_market"``, ``"ca_market"``).
-
-    Observed on: quote-type records.
     """
 
     message_board_id: str | None = None
@@ -890,8 +732,6 @@ class QuoteTypeResult(YahooModel):
     Identifier for the Yahoo! Finance message board for this security.
 
     Absent on FUTURE and OPTION records in the corpus.
-
-    Observed on: quote-type records.
     """
 
     quartr_id: str | None = None
@@ -899,37 +739,27 @@ class QuoteTypeResult(YahooModel):
     Quartr platform identifier for this company, when available.
 
     Present on 9 of 23 corpus records (EQUITY only).
-
-    Observed on: quote-type records.
     """
 
     quote_type: QuoteType
     """
     Classification of this instrument.
-
-    Observed on: quote-type records.
     """
 
     selerity_is_gaap: bool
     """
     Whether Yahoo's Selerity-sourced earnings data for this symbol is
     GAAP-based.
-
-    Observed on: quote-type records.
     """
 
     short_name: str
     """
     Short display name of the company or security.
-
-    Observed on: quote-type records.
     """
 
     symbol: str
     """
     Yahoo ticker symbol.
-
-    Observed on: quote-type records.
     """
 
     underlying_exchange_symbol: str | None = None
@@ -938,8 +768,6 @@ class QuoteTypeResult(YahooModel):
     ``"CLQ26.NYM"``).
 
     Present only on FUTURE records.
-
-    Observed on: quote-type records.
     """
 
     underlying_symbol: str | None = None
@@ -947,8 +775,6 @@ class QuoteTypeResult(YahooModel):
     Symbol of the underlying security or continuation contract.
 
     Present on FUTURE and OPTION records.
-
-    Observed on: quote-type records.
     """
 
 
@@ -958,15 +784,11 @@ class RecommendedSymbol(YahooModel):
     score: float
     """
     Relatedness score for this recommendation (higher is more related).
-
-    Observed on: recommendation records.
     """
 
     symbol: str
     """
     Yahoo ticker symbol of the recommended, related security.
-
-    Observed on: recommendation records.
     """
 
 
@@ -976,15 +798,11 @@ class RecommendationsResult(YahooModel):
     recommended_symbols: list[RecommendedSymbol]
     """
     Related symbols, most related first.
-
-    Observed on: recommendation records.
     """
 
     symbol: str
     """
     Yahoo ticker symbol the recommendations were requested for.
-
-    Observed on: recommendation records.
     """
 
 
@@ -995,22 +813,16 @@ class StockRecommenderFields(YahooModel):
     """
     Entity classification for this document (always ``"ticker"`` in the
     corpus).
-
-    Observed on: stock-recommender records.
     """
 
     id: str
     """
     Entity identifier (for example ``"ticker:AAPL"``).
-
-    Observed on: stock-recommender records.
     """
 
     related_tickers: list[str]
     """
     Related ticker symbols, in Yahoo's returned order.
-
-    Observed on: stock-recommender records.
     """
 
     related_tickers_ts: datetime.datetime
@@ -1019,8 +831,6 @@ class StockRecommenderFields(YahooModel):
 
     Wire value is epoch seconds; pydantic converts it to an aware UTC
     datetime.
-
-    Observed on: stock-recommender records.
     """
 
 
@@ -1030,22 +840,16 @@ class StockRecommenderResult(YahooModel):
     fields: StockRecommenderFields
     """
     The related-tickers payload for this symbol.
-
-    Observed on: stock-recommender records.
     """
 
     id: str
     """
     Full document identifier (for example
     ``"id:entity:entity::ticker:AAPL"``).
-
-    Observed on: stock-recommender records.
     """
 
     path_id: str = Field(alias="pathId")
     """
     Document path identifier (for example
     ``"/document/v1/entity/entity/docid/ticker:AAPL"``).
-
-    Observed on: stock-recommender records.
     """

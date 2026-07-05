@@ -96,8 +96,6 @@ class BalanceSheetStatement(YahooModel):
     Wire value is a ``{raw, fmt}`` wrapper with ``raw`` a midnight-UTC-
     aligned epoch timestamp in seconds (verified against every corpus
     value) and ``fmt`` a human-readable ``"YYYY-MM-DD"`` string.
-
-    Observed on: EQUITY summaries.
     """
 
     max_age: int
@@ -105,8 +103,6 @@ class BalanceSheetStatement(YahooModel):
     Maximum age, in seconds, that Yahoo considers this row fresh.
 
     Always ``1`` in this corpus, distinct from the module-level ``maxAge``.
-
-    Observed on: EQUITY summaries.
     """
 
 
@@ -125,8 +121,6 @@ class CashflowStatement(YahooModel):
     Wire value is a ``{raw, fmt}`` wrapper with ``raw`` a midnight-UTC-
     aligned epoch timestamp in seconds (verified against every corpus
     value) and ``fmt`` a human-readable ``"YYYY-MM-DD"`` string.
-
-    Observed on: EQUITY summaries.
     """
 
     max_age: int
@@ -134,8 +128,6 @@ class CashflowStatement(YahooModel):
     Maximum age, in seconds, that Yahoo considers this row fresh.
 
     Always ``1`` in this corpus, distinct from the module-level ``maxAge``.
-
-    Observed on: EQUITY summaries.
     """
 
     net_income: RawFloat
@@ -144,8 +136,6 @@ class CashflowStatement(YahooModel):
 
     Wire value is a ``{raw, fmt, longFmt}`` wrapper, always populated with a
     real value in this corpus (never observed as ``{}``).
-
-    Observed on: EQUITY summaries.
     """
 
 
@@ -164,8 +154,6 @@ class IncomeStatement(YahooModel):
 
     Wire value is a ``{raw, fmt, longFmt}`` wrapper, always populated with a
     real value in this corpus.
-
-    Observed on: EQUITY summaries.
     """
 
     discontinued_operations: RawFloatOrNone
@@ -176,8 +164,6 @@ class IncomeStatement(YahooModel):
     this corpus; the key itself is universal, so this field stays required
     (no default) per the required-but-nullable convention — see the module
     docstring.
-
-    Observed on: EQUITY summaries.
     """
 
     ebit: RawFloat
@@ -186,8 +172,6 @@ class IncomeStatement(YahooModel):
 
     Wire value is a ``{raw, fmt, longFmt}`` wrapper, always populated with a
     real value in this corpus.
-
-    Observed on: EQUITY summaries.
     """
 
     effect_of_accounting_charges: RawFloatOrNone
@@ -196,8 +180,6 @@ class IncomeStatement(YahooModel):
 
     Wire value is a ``{}`` wrapper (unwraps to ``None``) on every row in
     this corpus; required-but-nullable, see ``discontinued_operations``.
-
-    Observed on: EQUITY summaries.
     """
 
     end_date: RawDate
@@ -207,8 +189,6 @@ class IncomeStatement(YahooModel):
     Wire value is a ``{raw, fmt}`` wrapper with ``raw`` a midnight-UTC-
     aligned epoch timestamp in seconds (verified against every corpus
     value) and ``fmt`` a human-readable ``"YYYY-MM-DD"`` string.
-
-    Observed on: EQUITY summaries.
     """
 
     extraordinary_items: RawFloatOrNone
@@ -217,8 +197,6 @@ class IncomeStatement(YahooModel):
 
     Wire value is a ``{}`` wrapper (unwraps to ``None``) on every row in
     this corpus; required-but-nullable, see ``discontinued_operations``.
-
-    Observed on: EQUITY summaries.
     """
 
     gross_profit: RawFloat
@@ -227,8 +205,6 @@ class IncomeStatement(YahooModel):
 
     Wire value is a ``{raw, fmt, longFmt}`` wrapper, always populated with a
     real value in this corpus.
-
-    Observed on: EQUITY summaries.
     """
 
     income_before_tax: RawFloatOrNone
@@ -237,8 +213,6 @@ class IncomeStatement(YahooModel):
 
     Wire value is a ``{}`` wrapper (unwraps to ``None``) on every row in
     this corpus; required-but-nullable, see ``discontinued_operations``.
-
-    Observed on: EQUITY summaries.
     """
 
     income_tax_expense: RawFloat
@@ -247,8 +221,6 @@ class IncomeStatement(YahooModel):
 
     Wire value is a ``{raw, fmt, longFmt}`` wrapper, always populated with a
     real value in this corpus.
-
-    Observed on: EQUITY summaries.
     """
 
     interest_expense: RawFloatOrNone
@@ -257,8 +229,6 @@ class IncomeStatement(YahooModel):
 
     Wire value is a ``{}`` wrapper (unwraps to ``None``) on every row in
     this corpus; required-but-nullable, see ``discontinued_operations``.
-
-    Observed on: EQUITY summaries.
     """
 
     max_age: int
@@ -266,8 +236,6 @@ class IncomeStatement(YahooModel):
     Maximum age, in seconds, that Yahoo considers this row fresh.
 
     Always ``1`` in this corpus, distinct from the module-level ``maxAge``.
-
-    Observed on: EQUITY summaries.
     """
 
     minority_interest: RawFloatOrNone
@@ -276,8 +244,6 @@ class IncomeStatement(YahooModel):
 
     Wire value is a ``{}`` wrapper (unwraps to ``None``) on every row in
     this corpus; required-but-nullable, see ``discontinued_operations``.
-
-    Observed on: EQUITY summaries.
     """
 
     net_income: RawFloat
@@ -286,8 +252,6 @@ class IncomeStatement(YahooModel):
 
     Wire value is a ``{raw, fmt, longFmt}`` wrapper, always populated with a
     real value in this corpus.
-
-    Observed on: EQUITY summaries.
     """
 
     net_income_applicable_to_common_shares: RawFloatOrNone
@@ -296,8 +260,6 @@ class IncomeStatement(YahooModel):
 
     Wire value is a ``{}`` wrapper (unwraps to ``None``) on every row in
     this corpus; required-but-nullable, see ``discontinued_operations``.
-
-    Observed on: EQUITY summaries.
     """
 
     net_income_from_continuing_ops: RawFloatOrNone
@@ -307,8 +269,6 @@ class IncomeStatement(YahooModel):
 
     Wire value is a ``{}`` wrapper (unwraps to ``None``) on every row in
     this corpus; required-but-nullable, see ``discontinued_operations``.
-
-    Observed on: EQUITY summaries.
     """
 
     non_recurring: RawFloatOrNone
@@ -317,8 +277,6 @@ class IncomeStatement(YahooModel):
 
     Wire value is a ``{}`` wrapper (unwraps to ``None``) on every row in
     this corpus; required-but-nullable, see ``discontinued_operations``.
-
-    Observed on: EQUITY summaries.
     """
 
     operating_income: RawFloatOrNone
@@ -327,8 +285,6 @@ class IncomeStatement(YahooModel):
 
     Wire value is a ``{}`` wrapper (unwraps to ``None``) on every row in
     this corpus; required-but-nullable, see ``discontinued_operations``.
-
-    Observed on: EQUITY summaries.
     """
 
     other_items: RawFloatOrNone
@@ -337,8 +293,6 @@ class IncomeStatement(YahooModel):
 
     Wire value is a ``{}`` wrapper (unwraps to ``None``) on every row in
     this corpus; required-but-nullable, see ``discontinued_operations``.
-
-    Observed on: EQUITY summaries.
     """
 
     other_operating_expenses: RawFloatOrNone
@@ -347,8 +301,6 @@ class IncomeStatement(YahooModel):
 
     Wire value is a ``{}`` wrapper (unwraps to ``None``) on every row in
     this corpus; required-but-nullable, see ``discontinued_operations``.
-
-    Observed on: EQUITY summaries.
     """
 
     research_development: RawFloatOrNone
@@ -357,8 +309,6 @@ class IncomeStatement(YahooModel):
 
     Wire value is a ``{}`` wrapper (unwraps to ``None``) on every row in
     this corpus; required-but-nullable, see ``discontinued_operations``.
-
-    Observed on: EQUITY summaries.
     """
 
     selling_general_administrative: RawFloatOrNone
@@ -367,8 +317,6 @@ class IncomeStatement(YahooModel):
 
     Wire value is a ``{}`` wrapper (unwraps to ``None``) on every row in
     this corpus; required-but-nullable, see ``discontinued_operations``.
-
-    Observed on: EQUITY summaries.
     """
 
     total_operating_expenses: RawFloat
@@ -377,8 +325,6 @@ class IncomeStatement(YahooModel):
 
     Wire value is a ``{raw, fmt, longFmt}`` wrapper, always populated with a
     real value in this corpus.
-
-    Observed on: EQUITY summaries.
     """
 
     total_other_income_expense_net: RawFloatOrNone
@@ -387,8 +333,6 @@ class IncomeStatement(YahooModel):
 
     Wire value is a ``{}`` wrapper (unwraps to ``None``) on every row in
     this corpus; required-but-nullable, see ``discontinued_operations``.
-
-    Observed on: EQUITY summaries.
     """
 
     total_revenue: RawFloat
@@ -397,8 +341,6 @@ class IncomeStatement(YahooModel):
 
     Wire value is a ``{raw, fmt, longFmt}`` wrapper, always populated with a
     real value in this corpus.
-
-    Observed on: EQUITY summaries.
     """
 
 
@@ -413,15 +355,11 @@ class BalanceSheetHistory(YahooModel):
     balance_sheet_statements: list[BalanceSheetStatement]
     """
     Annual balance-sheet rows, most recent first.
-
-    Observed on: EQUITY summaries.
     """
 
     max_age: int
     """
     Maximum age, in seconds, that Yahoo considers this module fresh.
-
-    Observed on: EQUITY summaries.
     """
 
 
@@ -436,15 +374,11 @@ class BalanceSheetHistoryQuarterly(YahooModel):
     balance_sheet_statements: list[BalanceSheetStatement]
     """
     Quarterly balance-sheet rows, most recent first.
-
-    Observed on: EQUITY summaries.
     """
 
     max_age: int
     """
     Maximum age, in seconds, that Yahoo considers this module fresh.
-
-    Observed on: EQUITY summaries.
     """
 
 
@@ -459,15 +393,11 @@ class CashflowStatementHistory(YahooModel):
     cashflow_statements: list[CashflowStatement]
     """
     Annual cashflow-statement rows, most recent first.
-
-    Observed on: EQUITY summaries.
     """
 
     max_age: int
     """
     Maximum age, in seconds, that Yahoo considers this module fresh.
-
-    Observed on: EQUITY summaries.
     """
 
 
@@ -482,15 +412,11 @@ class CashflowStatementHistoryQuarterly(YahooModel):
     cashflow_statements: list[CashflowStatement]
     """
     Quarterly cashflow-statement rows, most recent first.
-
-    Observed on: EQUITY summaries.
     """
 
     max_age: int
     """
     Maximum age, in seconds, that Yahoo considers this module fresh.
-
-    Observed on: EQUITY summaries.
     """
 
 
@@ -500,15 +426,11 @@ class IncomeStatementHistory(YahooModel):
     income_statement_history: list[IncomeStatement]
     """
     Annual income-statement rows, most recent first.
-
-    Observed on: EQUITY summaries.
     """
 
     max_age: int
     """
     Maximum age, in seconds, that Yahoo considers this module fresh.
-
-    Observed on: EQUITY summaries.
     """
 
 
@@ -518,13 +440,9 @@ class IncomeStatementHistoryQuarterly(YahooModel):
     income_statement_history: list[IncomeStatement]
     """
     Quarterly income-statement rows, most recent first.
-
-    Observed on: EQUITY summaries.
     """
 
     max_age: int
     """
     Maximum age, in seconds, that Yahoo considers this module fresh.
-
-    Observed on: EQUITY summaries.
     """

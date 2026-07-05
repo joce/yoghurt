@@ -80,17 +80,11 @@ class TradingPeriod(YahooModel):
 
     See ``end_datetime`` for a timezone-aware convenience localized via a
     fixed offset built from ``gmtoffset``.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
-    MUTUALFUND charts.
     """
 
     gmtoffset: int
     """
     Offset from GMT of the trading period, in seconds.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
-    MUTUALFUND charts.
     """
 
     start: int
@@ -99,17 +93,11 @@ class TradingPeriod(YahooModel):
 
     See ``start_datetime`` for a timezone-aware convenience localized via a
     fixed offset built from ``gmtoffset``.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
-    MUTUALFUND charts.
     """
 
     timezone: str
     """
     Timezone abbreviation in effect for the trading period.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
-    MUTUALFUND charts.
     """
 
     # --- Convenience accessors (not part of the wire model) ---
@@ -159,25 +147,16 @@ class CurrentTradingPeriod(YahooModel):
     post: TradingPeriod
     """
     The post-market trading window.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
-    MUTUALFUND charts.
     """
 
     pre: TradingPeriod
     """
     The pre-market trading window.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
-    MUTUALFUND charts.
     """
 
     regular: TradingPeriod
     """
     The regular trading session window.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
-    MUTUALFUND charts.
     """
 
 
@@ -193,65 +172,41 @@ class ChartMeta(YahooModel):
     """
     Closing price of the security in the previous session, as reported by
     the chart endpoint.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
-    MUTUALFUND charts.
     """
 
     currency: str
     """
     Currency in which the security is traded.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
-    MUTUALFUND charts.
     """
 
     current_trading_period: CurrentTradingPeriod
     """
     The current session's pre-market, regular, and post-market windows.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
-    MUTUALFUND charts.
     """
 
     data_granularity: str
     """
     Interval between data points in the chart (for example, ``"1d"``).
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
-    MUTUALFUND charts.
     """
 
     exchange_name: str
     """
     Short code of the securities exchange on which the security is traded.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
-    MUTUALFUND charts.
     """
 
     exchange_timezone_name: str
     """
     Name of the timezone of the exchange.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
-    MUTUALFUND charts.
     """
 
     fifty_two_week_high: float
     """
     Highest price the security has traded at in the past 52 weeks.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
-    MUTUALFUND charts.
     """
 
     fifty_two_week_low: float
     """
     Lowest price the security has traded at in the past 52 weeks.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
-    MUTUALFUND charts.
     """
 
     first_trade_date: int
@@ -260,41 +215,26 @@ class ChartMeta(YahooModel):
 
     See ``first_trade_datetime`` for a timezone-aware convenience localized
     via ``exchange_timezone_name``.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
-    MUTUALFUND charts.
     """
 
     full_exchange_name: str
     """
     Full name of the securities exchange on which the security is traded.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
-    MUTUALFUND charts.
     """
 
     gmtoffset: int
     """
     Offset from GMT of the exchange, in seconds.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
-    MUTUALFUND charts.
     """
 
     has_pre_post_market_data: bool
     """
     Whether pre-market and post-market data is available for this security.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
-    MUTUALFUND charts.
     """
 
     instrument_type: QuoteType
     """
     Type of financial instrument.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
-    MUTUALFUND charts.
     """
 
     long_name: str | None = None
@@ -319,18 +259,12 @@ class ChartMeta(YahooModel):
     price_hint: int
     """
     Decimal precision indicator for price values.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
-    MUTUALFUND charts.
     """
 
     range: str
     """
     The requested chart range (empty string when the request used explicit
     ``period1``/``period2`` bounds instead of a named range).
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
-    MUTUALFUND charts.
     """
 
     regular_market_day_high: float | None = None
@@ -352,9 +286,6 @@ class ChartMeta(YahooModel):
     regular_market_price: float
     """
     Latest price from the regular trading session.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
-    MUTUALFUND charts.
     """
 
     regular_market_time: int
@@ -364,9 +295,6 @@ class ChartMeta(YahooModel):
 
     See ``regular_market_datetime`` for a timezone-aware convenience
     localized via ``exchange_timezone_name``.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
-    MUTUALFUND charts.
     """
 
     regular_market_volume: int | None = None
@@ -391,25 +319,16 @@ class ChartMeta(YahooModel):
     short_name: str
     """
     Short, user-friendly name for the security.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
-    MUTUALFUND charts.
     """
 
     symbol: str
     """
     Ticker symbol of the security.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
-    MUTUALFUND charts.
     """
 
     timezone: str
     """
     Timezone abbreviation in effect at the exchange.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
-    MUTUALFUND charts.
     """
 
     trading_periods: list[list[TradingPeriod]] | None = None
@@ -426,9 +345,6 @@ class ChartMeta(YahooModel):
     valid_ranges: list[str]
     """
     Chart ranges Yahoo accepts for this security.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
-    MUTUALFUND charts.
     """
 
     # --- Convenience accessors (not part of the wire model) ---
@@ -494,8 +410,6 @@ class ChartDividend(YahooModel):
     corpus. There is no in-model timezone context to localize against, so
     pydantic converts the epoch-seconds wire value to an aware UTC
     datetime; the field keeps its wire name despite the type.
-
-    Observed on: EQUITY charts.
     """
 
 
@@ -552,8 +466,6 @@ class ChartEvents(YahooModel):
     dividends: dict[str, ChartDividend] | None = None
     """
     Dividend events, keyed by epoch-second timestamp string.
-
-    Observed on: EQUITY charts.
     """
 
     splits: dict[str, ChartSplit] | None = None

@@ -111,8 +111,6 @@ class PriceInsightsNewsUrl(YahooModel):
     url: str
     """
     The wrapped URL.
-
-    Observed on: price-insights records.
     """
 
 
@@ -123,15 +121,11 @@ class PriceInsightsNewsProvider(YahooModel):
     """
     Human-readable name of the news provider (for example ``"Yahoo
     Finance"``).
-
-    Observed on: price-insights records.
     """
 
     source_id: str
     """
     Provider identifier (for example ``"yahoofinance.com"``).
-
-    Observed on: price-insights records.
     """
 
 
@@ -141,8 +135,6 @@ class PriceInsightsNewsStockTicker(YahooModel):
     symbol: str
     """
     Yahoo ticker symbol this article is tagged with.
-
-    Observed on: price-insights records.
     """
 
 
@@ -152,15 +144,11 @@ class PriceInsightsNewsPremiumFinance(YahooModel):
     is_premium_free_news: bool
     """
     Whether this premium article is offered free of charge.
-
-    Observed on: price-insights records.
     """
 
     is_premium_news: bool
     """
     Whether this article requires a premium subscription to read.
-
-    Observed on: price-insights records.
     """
 
 
@@ -170,15 +158,11 @@ class PriceInsightsNewsFinance(YahooModel):
     premium_finance: PriceInsightsNewsPremiumFinance
     """
     Premium-access flags for this article.
-
-    Observed on: price-insights records.
     """
 
     stock_tickers: list[PriceInsightsNewsStockTicker]
     """
     Ticker symbols this article is tagged with.
-
-    Observed on: price-insights records.
     """
 
 
@@ -188,29 +172,21 @@ class PriceInsightsNewsThumbnailResolution(YahooModel):
     height: int
     """
     Thumbnail image height, in pixels.
-
-    Observed on: price-insights records.
     """
 
     tag: str
     """
     Resolution variant tag (for example ``"resized"``).
-
-    Observed on: price-insights records.
     """
 
     url: str
     """
     URL of this thumbnail resolution.
-
-    Observed on: price-insights records.
     """
 
     width: int
     """
     Thumbnail image width, in pixels.
-
-    Observed on: price-insights records.
     """
 
 
@@ -220,8 +196,6 @@ class PriceInsightsNewsThumbnail(YahooModel):
     resolutions: list[PriceInsightsNewsThumbnailResolution]
     """
     Available thumbnail image resolutions.
-
-    Observed on: price-insights records.
     """
 
 
@@ -236,36 +210,26 @@ class PriceInsightsNewsArticle(YahooModel):
     canonical_url: PriceInsightsNewsUrl
     """
     Canonical URL wrapper for this article.
-
-    Observed on: price-insights records.
     """
 
     click_through_url: PriceInsightsNewsUrl
     """
     Click-through URL wrapper for this article.
-
-    Observed on: price-insights records.
     """
 
     content_type: str
     """
     Content classification (observed values: ``"STORY"``, ``"VIDEO"``).
-
-    Observed on: price-insights records.
     """
 
     duration: float
     """
     Video duration in seconds; ``0.0`` for non-video content.
-
-    Observed on: price-insights records.
     """
 
     finance: PriceInsightsNewsFinance
     """
     Ticker tagging and premium-access metadata for this article.
-
-    Observed on: price-insights records.
     """
 
     has_video: bool
@@ -274,22 +238,16 @@ class PriceInsightsNewsArticle(YahooModel):
 
     Observed ``false`` on both corpus rows, including the ``"VIDEO"``
     ``content_type`` row.
-
-    Observed on: price-insights records.
     """
 
     id: str
     """
     Unique identifier for this article.
-
-    Observed on: price-insights records.
     """
 
     is_hosted: bool
     """
     Whether Yahoo hosts this content directly.
-
-    Observed on: price-insights records.
     """
 
     preview_url: str | None
@@ -297,15 +255,11 @@ class PriceInsightsNewsArticle(YahooModel):
     Preview URL for this article.
 
     Present but ``null`` on both corpus rows.
-
-    Observed on: price-insights records.
     """
 
     provider: PriceInsightsNewsProvider
     """
     Publisher of this article.
-
-    Observed on: price-insights records.
     """
 
     provider_content_url: str
@@ -313,8 +267,6 @@ class PriceInsightsNewsArticle(YahooModel):
     Provider's own URL for this content.
 
     Present but empty-string on both corpus rows.
-
-    Observed on: price-insights records.
     """
 
     pub_date: datetime.datetime
@@ -323,29 +275,21 @@ class PriceInsightsNewsArticle(YahooModel):
 
     Wire value is an ISO-8601 string with an explicit UTC offset; pydantic
     parses it directly.
-
-    Observed on: price-insights records.
     """
 
     summary: str
     """
     Short summary or dek for this article.
-
-    Observed on: price-insights records.
     """
 
     thumbnail: PriceInsightsNewsThumbnail
     """
     Thumbnail image for this article.
-
-    Observed on: price-insights records.
     """
 
     title: str
     """
     Headline of this article.
-
-    Observed on: price-insights records.
     """
 
 
@@ -358,15 +302,11 @@ class PriceInsightsNewsBlock(YahooModel):
 
     Always empty on ``newsFirstParty`` in the corpus; populated only on
     ``newsThirdParty`` for ``AAPL``/``MSFT``.
-
-    Observed on: price-insights records.
     """
 
     rank: int
     """
     Display rank of this block among a symbol's price-insights sections.
-
-    Observed on: price-insights records.
     """
 
 
@@ -376,22 +316,16 @@ class PriceMovementArticle(YahooModel):
     article_id: str = Field(alias="article_id")
     """
     Unique identifier for this article.
-
-    Observed on: price-insights records.
     """
 
     provider_name: str = Field(alias="provider_name")
     """
     Publisher display name (for example ``"24/7 Wall St."``).
-
-    Observed on: price-insights records.
     """
 
     provider_url: str = Field(alias="provider_url")
     """
     Publisher's home page URL.
-
-    Observed on: price-insights records.
     """
 
     published_date: datetime.datetime = Field(alias="published_date")
@@ -400,36 +334,26 @@ class PriceMovementArticle(YahooModel):
 
     Wire value is an ISO-8601 string with an explicit UTC offset; pydantic
     parses it directly.
-
-    Observed on: price-insights records.
     """
 
     summary: str
     """
     AI-generated summary of this article's content.
-
-    Observed on: price-insights records.
     """
 
     thumbnail_url: str = Field(alias="thumbnail_url")
     """
     URL of this article's thumbnail image.
-
-    Observed on: price-insights records.
     """
 
     title: str
     """
     Headline of this article.
-
-    Observed on: price-insights records.
     """
 
     yahoo_url: str = Field(alias="yahoo_url")
     """
     Yahoo Finance URL for this article.
-
-    Observed on: price-insights records.
     """
 
 
@@ -439,23 +363,17 @@ class PriceMovementData(YahooModel):
     beta: float
     """
     Beta of the security versus its market benchmark.
-
-    Observed on: price-insights records.
     """
 
     industry: str
     """
     Industry classification (for example ``"Consumer Electronics"``).
-
-    Observed on: price-insights records.
     """
 
     market_benchmark_ticker: str = Field(alias="market_benchmark_ticker")
     """
     Ticker symbol of the market benchmark used for comparison (for example
     ``"SPX"``).
-
-    Observed on: price-insights records.
     """
 
     recent_analyst_upgrades_summary: object | None = Field(
@@ -465,8 +383,6 @@ class PriceMovementData(YahooModel):
     Summary of recent analyst rating changes.
 
     Always ``null`` in the corpus; true populated shape unknown.
-
-    Observed on: price-insights records.
     """
 
     recent_insider_transactions: object | None = Field(
@@ -476,8 +392,6 @@ class PriceMovementData(YahooModel):
     Summary of recent insider buy/sell transactions.
 
     Always ``null`` in the corpus; true populated shape unknown.
-
-    Observed on: price-insights records.
     """
 
     recent_news_articles: list[PriceMovementArticle] = Field(
@@ -485,23 +399,17 @@ class PriceMovementData(YahooModel):
     )
     """
     News articles used as context for this price-movement analysis.
-
-    Observed on: price-insights records.
     """
 
     sector: str
     """
     Sector classification (for example ``"Technology"``).
-
-    Observed on: price-insights records.
     """
 
     sector_benchmark_ticker: str = Field(alias="sector_benchmark_ticker")
     """
     Ticker symbol of the sector benchmark used for comparison (for example
     ``"XLK"``).
-
-    Observed on: price-insights records.
     """
 
     sector_percentage_price_change: float = Field(
@@ -510,8 +418,6 @@ class PriceMovementData(YahooModel):
     """
     Percentage price change of the sector benchmark over the analysis
     window.
-
-    Observed on: price-insights records.
     """
 
     spx_percentage_price_change: float = Field(alias="SPX_percentage_price_change")
@@ -520,22 +426,16 @@ class PriceMovementData(YahooModel):
 
     Wire key is irregularly cased (``SPX_percentage_price_change``), unlike
     every sibling field in this block.
-
-    Observed on: price-insights records.
     """
 
     stock_percentage_price_change: float = Field(alias="stock_percentage_price_change")
     """
     Percentage price change of this security over the analysis window.
-
-    Observed on: price-insights records.
     """
 
     stock_ticker: str = Field(alias="stock_ticker")
     """
     Ticker symbol this analysis covers.
-
-    Observed on: price-insights records.
     """
 
 
@@ -545,15 +445,11 @@ class DynamicQuestion(YahooModel):
     id: str
     """
     Unique identifier for this suggested question.
-
-    Observed on: price-insights records.
     """
 
     text: str
     """
     The suggested question's text.
-
-    Observed on: price-insights records.
     """
 
 
@@ -563,8 +459,6 @@ class PriceMovementExplanation(YahooModel):
     bottom_line: str = Field(alias="bottom_line")
     """
     One-sentence takeaway for this price movement.
-
-    Observed on: price-insights records.
     """
 
     observations: dict[str, str]
@@ -572,15 +466,11 @@ class PriceMovementExplanation(YahooModel):
     Supporting observations, keyed by a dynamic, AI-generated headline
     (for example ``"Market context"``, ``"Jim Cramer support"``) rather
     than a fixed key set.
-
-    Observed on: price-insights records.
     """
 
     tldr: str
     """
     Short AI-generated summary of this price movement.
-
-    Observed on: price-insights records.
     """
 
 
@@ -590,15 +480,11 @@ class PriceMovement(YahooModel):
     created_at: datetime.datetime = Field(alias="created_at")
     """
     Timestamp this analysis was generated.
-
-    Observed on: price-insights records.
     """
 
     data: PriceMovementData
     """
     Market-context metrics backing this analysis.
-
-    Observed on: price-insights records.
     """
 
     debug: dict[str, object]
@@ -606,8 +492,6 @@ class PriceMovement(YahooModel):
     Debug metadata bag.
 
     Always an empty ``{}`` in the corpus.
-
-    Observed on: price-insights records.
     """
 
     dynamic_questions: list[DynamicQuestion] = Field(alias="dynamic_questions")
@@ -616,58 +500,42 @@ class PriceMovement(YahooModel):
 
     Always empty in the corpus for this block (populated only on the
     sibling ``news_summary`` block).
-
-    Observed on: price-insights records.
     """
 
     explanation: PriceMovementExplanation
     """
     AI-generated narrative explaining this price movement.
-
-    Observed on: price-insights records.
     """
 
     id: str
     """
     Unique identifier for this analysis.
-
-    Observed on: price-insights records.
     """
 
     query: str
     """
     Natural-language query this analysis answers (for example ``"Explain
     the price movement in AAPL today"``).
-
-    Observed on: price-insights records.
     """
 
     show_insight: bool = Field(alias="show_insight")
     """
     Whether Yahoo's UI should surface this insight.
-
-    Observed on: price-insights records.
     """
 
     symbol_id: str = Field(alias="symbol_id")
     """
     Yahoo's internal identifier for the analyzed symbol.
-
-    Observed on: price-insights records.
     """
 
     ticker: str
     """
     Ticker symbol this analysis covers.
-
-    Observed on: price-insights records.
     """
 
     trace_id: str = Field(alias="trace_id")
     """
     Tracing identifier for this analysis request.
-
-    Observed on: price-insights records.
     """
 
     updated_at: datetime.datetime = Field(alias="updated_at")
@@ -675,8 +543,6 @@ class PriceMovement(YahooModel):
     Timestamp this analysis was last updated.
 
     Matches ``created_at`` on every corpus record.
-
-    Observed on: price-insights records.
     """
 
 
@@ -686,15 +552,11 @@ class NewsSummaryTheme(YahooModel):
     theme_description: str = Field(alias="theme_description")
     """
     Explanation of this theme.
-
-    Observed on: price-insights records.
     """
 
     theme_name: str = Field(alias="theme_name")
     """
     Short name of this theme.
-
-    Observed on: price-insights records.
     """
 
 
@@ -704,15 +566,11 @@ class NewsSummaryDynamicSection(YahooModel):
     section_content: str = Field(alias="section_content")
     """
     Body text of this dynamic section.
-
-    Observed on: price-insights records.
     """
 
     section_title: str = Field(alias="section_title")
     """
     Heading of this dynamic section.
-
-    Observed on: price-insights records.
     """
 
 
@@ -722,43 +580,31 @@ class NewsSummaryBody(YahooModel):
     dynamic_sections: list[NewsSummaryDynamicSection] = Field(alias="dynamic_sections")
     """
     AI-generated topical sections expanding on the summary.
-
-    Observed on: price-insights records.
     """
 
     id: str
     """
     Symbol this summary covers.
-
-    Observed on: price-insights records.
     """
 
     key_events: list[str] = Field(alias="key_events")
     """
     Notable events cited in this summary, as free-text bullet strings.
-
-    Observed on: price-insights records.
     """
 
     summary: str
     """
     Full AI-generated news summary.
-
-    Observed on: price-insights records.
     """
 
     themes: list[NewsSummaryTheme]
     """
     Recurring themes identified across the summarized news.
-
-    Observed on: price-insights records.
     """
 
     tldr: str
     """
     Short AI-generated summary.
-
-    Observed on: price-insights records.
     """
 
 
@@ -768,22 +614,16 @@ class NewsSummaryArticleInfo(YahooModel):
     article_id: str = Field(alias="article_id")
     """
     Unique identifier for this article.
-
-    Observed on: price-insights records.
     """
 
     provider_name: str = Field(alias="provider_name")
     """
     Publisher display name.
-
-    Observed on: price-insights records.
     """
 
     provider_url: str = Field(alias="provider_url")
     """
     Publisher's home page URL.
-
-    Observed on: price-insights records.
     """
 
     published_date: datetime.datetime = Field(alias="published_date")
@@ -792,29 +632,21 @@ class NewsSummaryArticleInfo(YahooModel):
 
     Wire value is an ISO-8601 string with an explicit UTC offset; pydantic
     parses it directly.
-
-    Observed on: price-insights records.
     """
 
     thumbnail_url: str = Field(alias="thumbnail_url")
     """
     URL of this article's thumbnail image.
-
-    Observed on: price-insights records.
     """
 
     title: str
     """
     Headline of this article.
-
-    Observed on: price-insights records.
     """
 
     yahoo_url: str = Field(alias="yahoo_url")
     """
     Yahoo Finance URL for this article.
-
-    Observed on: price-insights records.
     """
 
 
@@ -824,15 +656,11 @@ class NewsSummaryBlock(YahooModel):
     articles_info: list[NewsSummaryArticleInfo] = Field(alias="articles_info")
     """
     Source articles backing this news summary.
-
-    Observed on: price-insights records.
     """
 
     created_at: datetime.datetime = Field(alias="created_at")
     """
     Timestamp this summary was generated.
-
-    Observed on: price-insights records.
     """
 
     debug: dict[str, object]
@@ -840,36 +668,26 @@ class NewsSummaryBlock(YahooModel):
     Debug metadata bag.
 
     Always an empty ``{}`` in the corpus.
-
-    Observed on: price-insights records.
     """
 
     dynamic_questions: list[DynamicQuestion] = Field(alias="dynamic_questions")
     """
     Suggested AI follow-up questions about this summary.
-
-    Observed on: price-insights records.
     """
 
     generation_start_time: datetime.datetime = Field(alias="generation_start_time")
     """
     Timestamp generation of this summary began.
-
-    Observed on: price-insights records.
     """
 
     id: str
     """
     Unique identifier for this summary.
-
-    Observed on: price-insights records.
     """
 
     limit: int
     """
     Maximum number of source articles considered.
-
-    Observed on: price-insights records.
     """
 
     min_score: float = Field(alias="min_score")
@@ -877,36 +695,26 @@ class NewsSummaryBlock(YahooModel):
     Minimum relevance score a source article needed to be considered.
 
     Always ``0.0`` in the corpus.
-
-    Observed on: price-insights records.
     """
 
     news_summary: NewsSummaryBody = Field(alias="news_summary")
     """
     The generated summary content.
-
-    Observed on: price-insights records.
     """
 
     symbol_id: str = Field(alias="symbol_id")
     """
     Yahoo's internal identifier for the summarized symbol.
-
-    Observed on: price-insights records.
     """
 
     trace_id: str = Field(alias="trace_id")
     """
     Tracing identifier for this summary request.
-
-    Observed on: price-insights records.
     """
 
     updated_at: datetime.datetime = Field(alias="updated_at")
     """
     Timestamp this summary was last updated.
-
-    Observed on: price-insights records.
     """
 
 
@@ -920,22 +728,16 @@ class AiAnalysisData(YahooModel):
     news_summary: NewsSummaryBlock = Field(alias="news_summary")
     """
     AI-generated news summary for this symbol.
-
-    Observed on: price-insights records.
     """
 
     price_movement: PriceMovement
     """
     AI-generated price-movement analysis for this symbol.
-
-    Observed on: price-insights records.
     """
 
     symbol: str
     """
     Ticker symbol this analysis covers.
-
-    Observed on: price-insights records.
     """
 
 
@@ -957,15 +759,11 @@ class AiAnalysisBlock(YahooModel):
     under smart mode — ``extra="allow"`` makes both branches valid and
     the exact-match dict scores higher), so a real AI analysis would
     otherwise always validate as a bare dict instead of the typed model.
-
-    Observed on: price-insights records.
     """
 
     rank: int
     """
     Display rank of this block among a symbol's price-insights sections.
-
-    Observed on: price-insights records.
     """
 
 
@@ -984,8 +782,6 @@ class AnalystRatingBlock(YahooModel):
     rank: int
     """
     Display rank of this block among a symbol's price-insights sections.
-
-    Observed on: price-insights records.
     """
 
 
@@ -1005,8 +801,6 @@ class PriceInsights(YahooModel):
 
     Absent on the anomaly-only variant; present (with empty ``data``) on
     thin-coverage symbols.
-
-    Observed on: price-insights records.
     """
 
     analyst_rating: AnalystRatingBlock | None = Field(
@@ -1016,8 +810,6 @@ class PriceInsights(YahooModel):
     Analyst rating history for this symbol.
 
     Absent on the AI-only and anomaly-only variants.
-
-    Observed on: price-insights records.
     """
 
     has_price_anomaly: bool = Field(alias="hasPriceAnomaly")
@@ -1026,8 +818,6 @@ class PriceInsights(YahooModel):
 
     The only field present on every captured variant, including the
     anomaly-only one.
-
-    Observed on: price-insights records.
     """
 
     news_first_party: PriceInsightsNewsBlock | None = Field(
@@ -1038,8 +828,6 @@ class PriceInsights(YahooModel):
 
     Absent on the AI-only and anomaly-only variants; always empty ``news``
     on the default variant in this corpus.
-
-    Observed on: price-insights records.
     """
 
     news_third_party: PriceInsightsNewsBlock | None = Field(
@@ -1049,8 +837,6 @@ class PriceInsights(YahooModel):
     Third-party-authored news for this symbol.
 
     Absent on the AI-only and anomaly-only variants.
-
-    Observed on: price-insights records.
     """
 
 
@@ -1078,8 +864,6 @@ class TechnicalOutlook(YahooModel):
     """
     Overall directional outlook for this term (observed values:
     ``"Bullish"``, ``"Bearish"``).
-
-    Observed on: insights reports.
     """
 
     index_direction: str | None = Field(default=None, alias="indexDirection")
@@ -1090,15 +874,11 @@ class TechnicalOutlook(YahooModel):
     Corpus-confirmed as absent on at least one ETF outlook row (``SPY``'s
     ``shortTermOutlook``) even when sibling outlook rows on the same
     capture carry it; see the class docstring.
-
-    Observed on: insights reports.
     """
 
     index_score: int | None = Field(default=None, alias="indexScore")
     """
     Strength score backing ``index_direction``.
-
-    Observed on: insights reports.
     """
 
     index_score_description: str | None = Field(
@@ -1107,23 +887,17 @@ class TechnicalOutlook(YahooModel):
     """
     Prose description of ``index_score`` (for example ``"Bullish
     Evidence"``).
-
-    Observed on: insights reports.
     """
 
     score: int
     """
     Strength score backing ``direction``.
-
-    Observed on: insights reports.
     """
 
     score_description: str = Field(alias="scoreDescription")
     """
     Prose description of ``score`` (for example ``"Very Strong Bullish
     Evidence"``).
-
-    Observed on: insights reports.
     """
 
     sector_direction: str | None = Field(default=None, alias="sectorDirection")
@@ -1133,15 +907,11 @@ class TechnicalOutlook(YahooModel):
 
     Corpus-confirmed as EQUITY-only (absent on every ``SPY`` outlook row);
     see the class docstring.
-
-    Observed on: insights reports.
     """
 
     sector_score: int | None = Field(default=None, alias="sectorScore")
     """
     Strength score backing ``sector_direction``.
-
-    Observed on: insights reports.
     """
 
     sector_score_description: str | None = Field(
@@ -1149,15 +919,11 @@ class TechnicalOutlook(YahooModel):
     )
     """
     Prose description of ``sector_score``.
-
-    Observed on: insights reports.
     """
 
     state_description: str = Field(alias="stateDescription")
     """
     Prose summary of the technical state driving this outlook.
-
-    Observed on: insights reports.
     """
 
 
@@ -1167,23 +933,17 @@ class TechnicalEvents(YahooModel):
     intermediate_term_outlook: TechnicalOutlook = Field(alias="intermediateTermOutlook")
     """
     Technical outlook over the intermediate term.
-
-    Observed on: insights reports.
     """
 
     long_term_outlook: TechnicalOutlook = Field(alias="longTermOutlook")
     """
     Technical outlook over the long term.
-
-    Observed on: insights reports.
     """
 
     provider: str
     """
     Source of this technical analysis (always ``"Trading Central"`` in the
     corpus).
-
-    Observed on: insights reports.
     """
 
     sector: str | None = None
@@ -1192,15 +952,11 @@ class TechnicalEvents(YahooModel):
 
     Corpus-confirmed as EQUITY-only (absent on the ``SPY`` capture; see the
     module docstring).
-
-    Observed on: insights reports.
     """
 
     short_term_outlook: TechnicalOutlook = Field(alias="shortTermOutlook")
     """
     Technical outlook over the short term.
-
-    Observed on: insights reports.
     """
 
 
@@ -1211,29 +967,21 @@ class KeyTechnicals(YahooModel):
     """
     Source of this technical analysis (always ``"Trading Central"`` in the
     corpus).
-
-    Observed on: insights reports.
     """
 
     resistance: float
     """
     Technical resistance price level.
-
-    Observed on: insights reports.
     """
 
     stop_loss: float = Field(alias="stopLoss")
     """
     Suggested stop-loss price level.
-
-    Observed on: insights reports.
     """
 
     support: float
     """
     Technical support price level.
-
-    Observed on: insights reports.
     """
 
 
@@ -1250,8 +998,6 @@ class Valuation(YahooModel):
     Numeric valuation-gauge position (observed range: ``0.0``-``0.5``).
 
     Corpus-confirmed as EQUITY-only (absent on ``SPY``).
-
-    Observed on: insights reports.
     """
 
     description: str | None = None
@@ -1260,8 +1006,6 @@ class Valuation(YahooModel):
     Value"``).
 
     Corpus-confirmed as EQUITY-only (absent on ``SPY``).
-
-    Observed on: insights reports.
     """
 
     discount: str | None = None
@@ -1270,16 +1014,12 @@ class Valuation(YahooModel):
     (for example ``"-6%"``, ``"14%"``).
 
     Corpus-confirmed as EQUITY-only (absent on ``SPY``).
-
-    Observed on: insights reports.
     """
 
     provider: str
     """
     Source of this valuation assessment (always ``"Trading Central"`` in
     the corpus).
-
-    Observed on: insights reports.
     """
 
     relative_value: str | None = Field(default=None, alias="relativeValue")
@@ -1287,8 +1027,6 @@ class Valuation(YahooModel):
     Relative valuation label (for example ``"Premium"``).
 
     Present on 1 of 2 populated corpus captures.
-
-    Observed on: insights reports.
     """
 
 
@@ -1301,22 +1039,16 @@ class InstrumentInfo(YahooModel):
     key_technicals: KeyTechnicals = Field(alias="keyTechnicals")
     """
     Key technical price levels for this symbol.
-
-    Observed on: insights reports.
     """
 
     technical_events: TechnicalEvents = Field(alias="technicalEvents")
     """
     Technical outlook across short/intermediate/long terms.
-
-    Observed on: insights reports.
     """
 
     valuation: Valuation
     """
     Valuation assessment for this symbol.
-
-    Observed on: insights reports.
     """
 
 
@@ -1341,43 +1073,31 @@ class CompanySnapshotScores(YahooModel):
     dividends: float | None = None
     """
     Dividend-strength score, on a 0-1 scale.
-
-    Observed on: insights reports.
     """
 
     earnings_reports: float | None = Field(default=None, alias="earningsReports")
     """
     Earnings-report-strength score, on a 0-1 scale.
-
-    Observed on: insights reports.
     """
 
     hiring: float | None = None
     """
     Hiring-momentum score, on a 0-1 scale.
-
-    Observed on: insights reports.
     """
 
     innovativeness: float | None = None
     """
     Innovation score, on a 0-1 scale.
-
-    Observed on: insights reports.
     """
 
     insider_sentiments: float | None = Field(default=None, alias="insiderSentiments")
     """
     Insider-sentiment score, on a 0-1 scale.
-
-    Observed on: insights reports.
     """
 
     sustainability: float | None = None
     """
     Sustainability score, on a 0-1 scale.
-
-    Observed on: insights reports.
     """
 
 
@@ -1392,22 +1112,16 @@ class CompanySnapshot(YahooModel):
     company: CompanySnapshotScores
     """
     This company's scores.
-
-    Observed on: insights reports.
     """
 
     sector: CompanySnapshotScores
     """
     Sector-average baseline scores for comparison.
-
-    Observed on: insights reports.
     """
 
     sector_info: str = Field(alias="sectorInfo")
     """
     Sector classification (for example ``"Technology"``).
-
-    Observed on: insights reports.
     """
 
 
@@ -1423,8 +1137,6 @@ class InsightsRecommendation(YahooModel):
     """
     Source of this recommendation (always ``"Argus Research"`` in the
     corpus).
-
-    Observed on: insights reports.
     """
 
     rating: str
@@ -1432,8 +1144,6 @@ class InsightsRecommendation(YahooModel):
     Recommendation rating (always ``"BUY"`` in the corpus; live-observed
     as also ``"HOLD"``, not yet backed by a corpus capture, see the module
     docstring).
-
-    Observed on: insights reports.
     """
 
     target_price: float | None = Field(default=None, alias="targetPrice")
@@ -1442,8 +1152,6 @@ class InsightsRecommendation(YahooModel):
 
     Live-observed as absent on a ``"HOLD"``-rated recommendation (BABA);
     not yet backed by a corpus capture, see the module docstring.
-
-    Observed on: insights reports.
     """
 
 
@@ -1453,8 +1161,6 @@ class InsightsUpsell(YahooModel):
     company_name: str = Field(alias="companyName")
     """
     Full company name.
-
-    Observed on: insights reports.
     """
 
 
@@ -1465,16 +1171,12 @@ class ResearchReport(YahooModel):
     """
     Provider's investment rating (for example ``"Neutral"``,
     ``"Bullish"``).
-
-    Observed on: insights reports.
     """
 
     provider: str
     """
     Source of this research report (always ``"Morningstar"`` in the
     corpus).
-
-    Observed on: insights reports.
     """
 
     report_date: datetime.datetime = Field(alias="reportDate")
@@ -1483,29 +1185,21 @@ class ResearchReport(YahooModel):
 
     Wire value is an ISO-8601 string with an explicit UTC offset; pydantic
     parses it directly.
-
-    Observed on: insights reports.
     """
 
     report_id: str = Field(alias="reportId")
     """
     Unique identifier for this report.
-
-    Observed on: insights reports.
     """
 
     summary: str
     """
     Report summary text.
-
-    Observed on: insights reports.
     """
 
     title: str
     """
     Report title.
-
-    Observed on: insights reports.
     """
 
 
@@ -1518,8 +1212,6 @@ class UpsellSearchDD(YahooModel):
     research_reports: ResearchReport = Field(alias="researchReports")
     """
     A featured research report for this symbol.
-
-    Observed on: insights reports.
     """
 
 
@@ -1532,31 +1224,23 @@ class InsightsEvent(YahooModel):
 
     Wire value is epoch seconds; pydantic converts it to an aware UTC
     datetime. Matches ``start_date`` on every corpus row.
-
-    Observed on: insights reports.
     """
 
     event_type: str = Field(alias="eventType")
     """
     Name of the technical event (for example ``"Commodity Channel
     Index"``).
-
-    Observed on: insights reports.
     """
 
     image_url: str = Field(alias="imageUrl")
     """
     URL of an icon representing this event.
-
-    Observed on: insights reports.
     """
 
     price_period: str = Field(alias="pricePeriod")
     """
     Price bar period this event was detected on (observed value:
     ``"D"``, daily).
-
-    Observed on: insights reports.
     """
 
     start_date: datetime.datetime = Field(alias="startDate")
@@ -1565,23 +1249,17 @@ class InsightsEvent(YahooModel):
 
     Wire value is epoch seconds; pydantic converts it to an aware UTC
     datetime.
-
-    Observed on: insights reports.
     """
 
     trade_type: str = Field(alias="tradeType")
     """
     Trade direction this event signals (observed value: ``"L"``, long).
-
-    Observed on: insights reports.
     """
 
     trading_horizon: str = Field(alias="tradingHorizon")
     """
     Trading horizon this event applies to (observed value: ``"S"``,
     short-term).
-
-    Observed on: insights reports.
     """
 
 
@@ -1591,15 +1269,11 @@ class InsightsReport(YahooModel):
     head_html: str = Field(alias="headHtml")
     """
     Short headline for this report.
-
-    Observed on: insights reports.
     """
 
     id: str
     """
     Unique identifier for this report.
-
-    Observed on: insights reports.
     """
 
     investment_rating: str | None = Field(default=None, alias="investmentRating")
@@ -1609,15 +1283,11 @@ class InsightsReport(YahooModel):
     Present only on the corpus's single ``"Analyst Report"``-type row (1 of
     8); absent on every other report type (stock-pick lists, technical
     assessments, thematic portfolios, insider-activity digests).
-
-    Observed on: insights reports.
     """
 
     provider: str
     """
     Source of this report (always ``"Argus Research"`` in the corpus).
-
-    Observed on: insights reports.
     """
 
     report_date: datetime.datetime = Field(alias="reportDate")
@@ -1626,8 +1296,6 @@ class InsightsReport(YahooModel):
 
     Wire value is an ISO-8601 string with an explicit UTC offset; pydantic
     parses it directly.
-
-    Observed on: insights reports.
     """
 
     report_title: str = Field(alias="reportTitle")
@@ -1636,8 +1304,6 @@ class InsightsReport(YahooModel):
 
     Matches ``title`` on every corpus row (verified); kept as its own wire
     field rather than collapsed, per corpus honesty.
-
-    Observed on: insights reports.
     """
 
     target_price: float | None = Field(default=None, alias="targetPrice")
@@ -1646,15 +1312,11 @@ class InsightsReport(YahooModel):
 
     Present only on the corpus's single ``"Analyst Report"``-type row (1 of
     8); see ``investment_rating``.
-
-    Observed on: insights reports.
     """
 
     tickers: list[str]
     """
     Ticker symbols this report discusses.
-
-    Observed on: insights reports.
     """
 
     title: str
@@ -1662,8 +1324,6 @@ class InsightsReport(YahooModel):
     Full report body text.
 
     Matches ``report_title`` on every corpus row; see ``report_title``.
-
-    Observed on: insights reports.
     """
 
 
@@ -1674,15 +1334,11 @@ class SignificantDevelopment(YahooModel):
     """
     Calendar date of this development, as a bare ``"YYYY-MM-DD"`` wire
     string.
-
-    Observed on: insights reports.
     """
 
     headline: str
     """
     Headline describing this significant development.
-
-    Observed on: insights reports.
     """
 
 
@@ -1695,22 +1351,16 @@ class InsightsSecReportExhibit(YahooModel):
 
     Present on 34 of 290 corpus exhibits, always alongside ``type:
     "EXCEL"`` (Yahoo's Excel-format financial-report exhibits).
-
-    Observed on: insights reports.
     """
 
     type: str
     """
     Exhibit type or form code (for example ``"10-Q"``, ``"EX-31.1"``).
-
-    Observed on: insights reports.
     """
 
     url: str
     """
     URL of the exhibit document.
-
-    Observed on: insights reports.
     """
 
 
@@ -1725,22 +1375,16 @@ class InsightsSecReport(YahooModel):
     """
     Prose description of this filing (for example ``"Quarterly report
     pursuant to Section 13 or 15(d)"``).
-
-    Observed on: insights reports.
     """
 
     edgar_url: str = Field(alias="edgarUrl")
     """
     URL of the filing's Yahoo Finance SEC-filing page.
-
-    Observed on: insights reports.
     """
 
     exhibits: list[InsightsSecReportExhibit]
     """
     Individual documents attached to this filing.
-
-    Observed on: insights reports.
     """
 
     filing_date: datetime.date = Field(alias="filingDate")
@@ -1750,43 +1394,31 @@ class InsightsSecReport(YahooModel):
     Wire value is a midnight-UTC-aligned epoch timestamp in milliseconds
     (verified against every corpus value); pydantic converts it to a UTC
     calendar date.
-
-    Observed on: insights reports.
     """
 
     form_type: str = Field(alias="formType")
     """
     SEC form code (for example ``"10-Q"``, ``"8-K"``).
-
-    Observed on: insights reports.
     """
 
     id: str
     """
     Unique identifier for this filing.
-
-    Observed on: insights reports.
     """
 
     snapshot_url: str = Field(alias="snapshotUrl")
     """
     URL of a thumbnail image of this filing.
-
-    Observed on: insights reports.
     """
 
     title: str
     """
     Filing title (for example ``"10-Q : Periodic Financial Reports"``).
-
-    Observed on: insights reports.
     """
 
     type: str
     """
     Filing category (for example ``"Periodic Financial Reports"``).
-
-    Observed on: insights reports.
     """
 
 
@@ -1815,8 +1447,6 @@ class Insights(YahooModel):
     Absent on the corpus's thin ``RY.TO`` capture; corpus-confirmed
     EQUITY-only (absent on ``SPY`` and every index/crypto/forex/futures
     capture). See the module docstring.
-
-    Observed on: insights reports.
     """
 
     events: list[InsightsEvent] | None = None
@@ -1826,8 +1456,6 @@ class Insights(YahooModel):
     Absent on the corpus's thin ``RY.TO`` capture; corpus-confirmed present
     on EQUITY and ETF (``SPY``), absent on index/crypto/forex/futures. See
     the module docstring.
-
-    Observed on: insights reports.
     """
 
     instrument_info: InstrumentInfo | None = Field(default=None, alias="instrumentInfo")
@@ -1837,8 +1465,6 @@ class Insights(YahooModel):
     Absent on the corpus's thin ``RY.TO`` capture; corpus-confirmed present
     on EQUITY and ETF (``SPY``), absent on index/crypto/forex/futures. See
     the module docstring.
-
-    Observed on: insights reports.
     """
 
     recommendation: InsightsRecommendation | None = None
@@ -1847,8 +1473,6 @@ class Insights(YahooModel):
 
     Corpus-confirmed EQUITY-only (absent on ``SPY`` and every
     index/crypto/forex/futures capture). See the module docstring.
-
-    Observed on: insights reports.
     """
 
     reports: list[InsightsReport] | None = None
@@ -1857,8 +1481,6 @@ class Insights(YahooModel):
 
     Absent on the corpus's thin ``RY.TO`` capture; corpus-confirmed
     EQUITY-only. See the module docstring.
-
-    Observed on: insights reports.
     """
 
     sec_reports: list[InsightsSecReport] | None = Field(
@@ -1870,8 +1492,6 @@ class Insights(YahooModel):
     Absent on the corpus's thin ``RY.TO`` capture; corpus-confirmed present
     on EQUITY symbols and at least one ETF (``SPY``). See the module
     docstring.
-
-    Observed on: insights reports.
     """
 
     sig_devs: list[SignificantDevelopment] = Field(alias="sigDevs")
@@ -1881,15 +1501,11 @@ class Insights(YahooModel):
     The only field, besides ``symbol``, ever observed universal — present
     (though often empty) on every corpus record, EQUITY through
     index/crypto/forex/futures.
-
-    Observed on: insights reports.
     """
 
     symbol: str
     """
     Yahoo ticker symbol this record covers.
-
-    Observed on: insights reports.
     """
 
     upsell: InsightsUpsell | None = None
@@ -1898,8 +1514,6 @@ class Insights(YahooModel):
 
     Corpus-confirmed EQUITY-only (absent on ``SPY`` and every
     index/crypto/forex/futures capture). See the module docstring.
-
-    Observed on: insights reports.
     """
 
     upsell_search_d_d: UpsellSearchDD | None = None
@@ -1907,6 +1521,4 @@ class Insights(YahooModel):
     A featured research report used for upsell display.
 
     Absent on the corpus's thin ``RY.TO`` capture.
-
-    Observed on: insights reports.
     """

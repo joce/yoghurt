@@ -97,15 +97,11 @@ class OptionsAnalysisPcr(YahooModel):
     pcr_notional: float = Field(alias="pcr_notional")
     """
     Put/call ratio computed by notional value.
-
-    Observed on: analyst records.
     """
 
     pcr_volume: float = Field(alias="pcr_volume")
     """
     Put/call ratio computed by contract volume.
-
-    Observed on: analyst records.
     """
 
     quote_date: str = Field(alias="quote_date")
@@ -113,15 +109,11 @@ class OptionsAnalysisPcr(YahooModel):
     Timestamp this ratio was computed for, as Yahoo's wire
     ``"YYYY-MM-DD HH:MM:SS"`` string (no UTC offset; not parsed as a
     datetime to avoid guessing an implied timezone).
-
-    Observed on: analyst records.
     """
 
     underlying_symbol: str = Field(alias="underlying_symbol")
     """
     Ticker symbol this ratio covers.
-
-    Observed on: analyst records.
     """
 
 
@@ -131,22 +123,16 @@ class OptionsAnalysisTimeframeInsights(YahooModel):
     one_month: str = Field(alias="one_month")
     """
     AI-generated commentary on the one-month put/call ratio trend.
-
-    Observed on: analyst records.
     """
 
     one_week: str = Field(alias="one_week")
     """
     AI-generated commentary on the one-week put/call ratio trend.
-
-    Observed on: analyst records.
     """
 
     one_year: str = Field(alias="one_year")
     """
     AI-generated commentary on the one-year put/call ratio trend.
-
-    Observed on: analyst records.
     """
 
 
@@ -156,8 +142,6 @@ class OptionsAnalysisKeyTakeaways(YahooModel):
     teaser: str
     """
     Short, headline-style teaser summarizing the options analysis.
-
-    Observed on: analyst records.
     """
 
     timeframe_insights: OptionsAnalysisTimeframeInsights = Field(
@@ -165,15 +149,11 @@ class OptionsAnalysisKeyTakeaways(YahooModel):
     )
     """
     Put/call ratio commentary across three lookback windows.
-
-    Observed on: analyst records.
     """
 
     tldr: str
     """
     Short AI-generated summary of the options analysis.
-
-    Observed on: analyst records.
     """
 
 
@@ -183,8 +163,6 @@ class OptionsAnalysis(YahooModel):
     created_at: datetime.datetime = Field(alias="created_at")
     """
     Timestamp this analysis was generated.
-
-    Observed on: analyst records.
     """
 
     date: str
@@ -193,8 +171,6 @@ class OptionsAnalysis(YahooModel):
     ``"YYYY-MM-DD HH:MM:SS"`` string (no UTC offset; not parsed as a
     datetime to avoid guessing an implied timezone). Matches
     ``pcr.quote_date`` on every corpus record.
-
-    Observed on: analyst records.
     """
 
     debug: dict[str, object]
@@ -202,8 +178,6 @@ class OptionsAnalysis(YahooModel):
     Debug metadata bag.
 
     Always an empty ``{}`` in the corpus.
-
-    Observed on: analyst records.
     """
 
     id: str
@@ -211,15 +185,11 @@ class OptionsAnalysis(YahooModel):
     Unique identifier for this analysis.
 
     Matches ``trace_id`` on every corpus record.
-
-    Observed on: analyst records.
     """
 
     key_takeaways: OptionsAnalysisKeyTakeaways = Field(alias="key_takeaways")
     """
     AI-generated narrative summarizing this symbol's options positioning.
-
-    Observed on: analyst records.
     """
 
     options_data: dict[str, object] = Field(alias="options_data")
@@ -227,8 +197,6 @@ class OptionsAnalysis(YahooModel):
     Raw options-chain data bag.
 
     Always an empty ``{}`` in the corpus; true populated shape unknown.
-
-    Observed on: analyst records.
     """
 
     options_window_data: dict[str, object] = Field(alias="options_window_data")
@@ -236,29 +204,21 @@ class OptionsAnalysis(YahooModel):
     Windowed options-chain data bag.
 
     Always an empty ``{}`` in the corpus; true populated shape unknown.
-
-    Observed on: analyst records.
     """
 
     pcr: OptionsAnalysisPcr
     """
     Put/call ratio figures backing this analysis.
-
-    Observed on: analyst records.
     """
 
     symbol_id: str = Field(alias="symbol_id")
     """
     Yahoo's internal identifier for the analyzed symbol.
-
-    Observed on: analyst records.
     """
 
     ticker: str
     """
     Ticker symbol this analysis covers.
-
-    Observed on: analyst records.
     """
 
     trace_id: str = Field(alias="trace_id")
@@ -266,8 +226,6 @@ class OptionsAnalysis(YahooModel):
     Tracing identifier for this analysis request.
 
     Matches ``id`` on every corpus record.
-
-    Observed on: analyst records.
     """
 
     updated_at: datetime.datetime = Field(alias="updated_at")
@@ -275,8 +233,6 @@ class OptionsAnalysis(YahooModel):
     Timestamp this analysis was last updated.
 
     Matches ``created_at`` on every corpus record.
-
-    Observed on: analyst records.
     """
 
 
@@ -289,29 +245,21 @@ class InsiderActivity(YahooModel):
     ISO-8601 string with no UTC offset (unlike this module's other
     timestamps; not parsed as a datetime to avoid guessing an implied
     timezone).
-
-    Observed on: analyst records.
     """
 
     highlights: str
     """
     Short AI-generated summary of recent insider transaction activity.
-
-    Observed on: analyst records.
     """
 
     key_takeaways: str = Field(alias="key_takeaways")
     """
     AI-generated narrative expanding on ``highlights``, in Markdown.
-
-    Observed on: analyst records.
     """
 
     key_takeaways_structured: list[str] = Field(alias="key_takeaways_structured")
     """
     ``key_takeaways``, split into individual bullet-point strings.
-
-    Observed on: analyst records.
     """
 
 
@@ -321,8 +269,6 @@ class HoldingsInsights(YahooModel):
     created_at: datetime.datetime = Field(alias="created_at")
     """
     Timestamp this analysis was generated.
-
-    Observed on: analyst records.
     """
 
     debug: dict[str, object]
@@ -330,8 +276,6 @@ class HoldingsInsights(YahooModel):
     Debug metadata bag.
 
     Always an empty ``{}`` in the corpus.
-
-    Observed on: analyst records.
     """
 
     id: str
@@ -339,8 +283,6 @@ class HoldingsInsights(YahooModel):
     Unique identifier for this analysis.
 
     Matches ``trace_id`` on every corpus record.
-
-    Observed on: analyst records.
     """
 
     insider_activity: InsiderActivity = Field(alias="insiderActivity")
@@ -350,15 +292,11 @@ class HoldingsInsights(YahooModel):
     The only field in this module carrying a camelCase wire key
     (``insiderActivity``) rather than snake_case; explicit alias, per the
     module docstring.
-
-    Observed on: analyst records.
     """
 
     symbol_id: str = Field(alias="symbol_id")
     """
     Yahoo's internal identifier for the analyzed symbol.
-
-    Observed on: analyst records.
     """
 
     trace_id: str = Field(alias="trace_id")
@@ -366,8 +304,6 @@ class HoldingsInsights(YahooModel):
     Tracing identifier for this analysis request.
 
     Matches ``id`` on every corpus record.
-
-    Observed on: analyst records.
     """
 
     updated_at: datetime.datetime = Field(alias="updated_at")
@@ -375,8 +311,6 @@ class HoldingsInsights(YahooModel):
     Timestamp this analysis was last updated.
 
     Matches ``created_at`` on every corpus record.
-
-    Observed on: analyst records.
     """
 
 
@@ -388,15 +322,11 @@ class AnalystOverviewBody(YahooModel):
     Supporting observations, keyed by a dynamic, AI-generated headline
     (for example ``"Rising Component Costs"``, ``"AI Investment"``) rather
     than a fixed key set.
-
-    Observed on: analyst records.
     """
 
     tldr: str
     """
     Short AI-generated summary of this symbol's overall outlook.
-
-    Observed on: analyst records.
     """
 
 
@@ -408,15 +338,11 @@ class AnalystOverview(YahooModel):
     Timestamp this analysis was last refreshed, as a bare naive-local
     ISO-8601 string with no UTC offset; see
     :class:`InsiderActivity`'s field of the same name.
-
-    Observed on: analyst records.
     """
 
     created_at: datetime.datetime = Field(alias="created_at")
     """
     Timestamp this analysis was generated.
-
-    Observed on: analyst records.
     """
 
     debug: dict[str, object]
@@ -424,8 +350,6 @@ class AnalystOverview(YahooModel):
     Debug metadata bag.
 
     Always an empty ``{}`` in the corpus.
-
-    Observed on: analyst records.
     """
 
     dynamic_questions: list[object] = Field(alias="dynamic_questions")
@@ -445,29 +369,21 @@ class AnalystOverview(YahooModel):
     Unique identifier for this analysis.
 
     Matches ``trace_id`` on every corpus record.
-
-    Observed on: analyst records.
     """
 
     overview: AnalystOverviewBody
     """
     The generated overview content.
-
-    Observed on: analyst records.
     """
 
     symbol_id: str = Field(alias="symbol_id")
     """
     Yahoo's internal identifier for the analyzed symbol.
-
-    Observed on: analyst records.
     """
 
     ticker: str
     """
     Ticker symbol this analysis covers.
-
-    Observed on: analyst records.
     """
 
     trace_id: str = Field(alias="trace_id")
@@ -475,8 +391,6 @@ class AnalystOverview(YahooModel):
     Tracing identifier for this analysis request.
 
     Matches ``id`` on every corpus record.
-
-    Observed on: analyst records.
     """
 
     updated_at: datetime.datetime = Field(alias="updated_at")
@@ -484,8 +398,6 @@ class AnalystOverview(YahooModel):
     Timestamp this analysis was last updated.
 
     Matches ``created_at`` on every corpus record.
-
-    Observed on: analyst records.
     """
 
 
@@ -495,51 +407,37 @@ class RtrSummary(YahooModel):
     id: str
     """
     Symbol this summary covers.
-
-    Observed on: analyst records.
     """
 
     price_target: str = Field(alias="price_target")
     """
     AI-generated narrative on the analyst price-target range.
-
-    Observed on: analyst records.
     """
 
     ratings_summary: str = Field(alias="ratings_summary")
     """
     AI-generated narrative summarizing current analyst ratings.
-
-    Observed on: analyst records.
     """
 
     recent_upgrades: str = Field(alias="recent_upgrades")
     """
     AI-generated narrative on recent rating changes.
-
-    Observed on: analyst records.
     """
 
     tldr: str
     """
     Short AI-generated summary of analyst sentiment.
-
-    Observed on: analyst records.
     """
 
     viewpoint: str
     """
     Short label for the dominant analyst viewpoint (for example
     ``"Diverse Analyst Opinions"``, ``"Consensus"``).
-
-    Observed on: analyst records.
     """
 
     viewpoint_details: str = Field(alias="viewpoint_details")
     """
     AI-generated narrative expanding on ``viewpoint``.
-
-    Observed on: analyst records.
     """
 
 
@@ -552,8 +450,6 @@ class Rtr(YahooModel):
     created_at: datetime.datetime = Field(alias="created_at")
     """
     Timestamp this analysis was generated.
-
-    Observed on: analyst records.
     """
 
     debug: dict[str, object]
@@ -561,15 +457,11 @@ class Rtr(YahooModel):
     Debug metadata bag.
 
     Always an empty ``{}`` in the corpus.
-
-    Observed on: analyst records.
     """
 
     generation_start_time: datetime.datetime = Field(alias="generation_start_time")
     """
     Timestamp generation of this summary began.
-
-    Observed on: analyst records.
     """
 
     id: str
@@ -577,22 +469,16 @@ class Rtr(YahooModel):
     Unique identifier for this summary.
 
     Matches ``trace_id`` on every corpus record.
-
-    Observed on: analyst records.
     """
 
     rtr_summary: RtrSummary = Field(alias="rtr_summary")
     """
     The generated ratings/price-target summary content.
-
-    Observed on: analyst records.
     """
 
     symbol_id: str = Field(alias="symbol_id")
     """
     Yahoo's internal identifier for the analyzed symbol.
-
-    Observed on: analyst records.
     """
 
     trace_id: str = Field(alias="trace_id")
@@ -600,15 +486,11 @@ class Rtr(YahooModel):
     Tracing identifier for this summary request.
 
     Matches ``id`` on every corpus record.
-
-    Observed on: analyst records.
     """
 
     updated_at: datetime.datetime = Field(alias="updated_at")
     """
     Timestamp this summary was last updated.
-
-    Observed on: analyst records.
     """
 
 
@@ -621,15 +503,11 @@ class FinancialInsightsEarningsCalendarEntry(YahooModel):
 
     Wire value is an ISO-8601 string with an explicit UTC offset; pydantic
     parses it directly.
-
-    Observed on: analyst records.
     """
 
     fiscal_period: str = Field(alias="fiscal_period")
     """
     Fiscal quarter label (for example ``"Q3"``).
-
-    Observed on: analyst records.
     """
 
     fiscal_year: int = Field(alias="fiscal_year")
@@ -641,8 +519,6 @@ class FinancialInsightsEarningsCalendarEntry(YahooModel):
     :class:`EarningsTranscriptsInsights` block, which sends the same
     concept as a string; a genuine wire-type divergence between blocks of
     this same endpoint, not a modeling inconsistency.
-
-    Observed on: analyst records.
     """
 
 
@@ -653,15 +529,11 @@ class LatestEarningsMetadata(YahooModel):
     """
     Calendar date the latest earnings were disclosed, as a bare
     ``"YYYY-MM-DD"`` wire string.
-
-    Observed on: analyst records.
     """
 
     fiscal_period: str = Field(alias="fiscal_period")
     """
     Fiscal quarter label (for example ``"Q2"``).
-
-    Observed on: analyst records.
     """
 
     fiscal_year: int = Field(alias="fiscal_year")
@@ -671,24 +543,18 @@ class LatestEarningsMetadata(YahooModel):
     A wire integer, matching
     :class:`FinancialInsightsEarningsCalendarEntry`'s ``fiscal_year``; see
     that field's docstring for the sibling block's differing wire type.
-
-    Observed on: analyst records.
     """
 
     period_end_date: datetime.date = Field(alias="period_end_date")
     """
     Calendar date the latest disclosed fiscal period ended, as a bare
     ``"YYYY-MM-DD"`` wire string.
-
-    Observed on: analyst records.
     """
 
     period_start_date: datetime.date = Field(alias="period_start_date")
     """
     Calendar date the latest disclosed fiscal period started, as a bare
     ``"YYYY-MM-DD"`` wire string.
-
-    Observed on: analyst records.
     """
 
 
@@ -700,15 +566,11 @@ class FinancialInsights(YahooModel):
     AI-generated valuation/profitability/growth commentary, keyed by a
     dynamic category headline (for example ``"Valuation"``,
     ``"Profitability"``, ``"Growth Metrics"``) rather than a fixed key set.
-
-    Observed on: analyst records.
     """
 
     created_at: datetime.datetime = Field(alias="created_at")
     """
     Timestamp this analysis was generated.
-
-    Observed on: analyst records.
     """
 
     debug: dict[str, object]
@@ -716,8 +578,6 @@ class FinancialInsights(YahooModel):
     Debug metadata bag.
 
     Always an empty ``{}`` in the corpus.
-
-    Observed on: analyst records.
     """
 
     earnings_calendar: list[FinancialInsightsEarningsCalendarEntry] = Field(
@@ -725,8 +585,6 @@ class FinancialInsights(YahooModel):
     )
     """
     Recent and upcoming earnings-release dates.
-
-    Observed on: analyst records.
     """
 
     id: str
@@ -734,8 +592,6 @@ class FinancialInsights(YahooModel):
     Unique identifier for this analysis.
 
     Matches ``trace_id`` on every corpus record.
-
-    Observed on: analyst records.
     """
 
     latest_earnings_metadata: LatestEarningsMetadata = Field(
@@ -743,22 +599,16 @@ class FinancialInsights(YahooModel):
     )
     """
     Metadata describing the most recently disclosed earnings period.
-
-    Observed on: analyst records.
     """
 
     symbol_id: str = Field(alias="symbol_id")
     """
     Yahoo's internal identifier for the analyzed symbol.
-
-    Observed on: analyst records.
     """
 
     tldr: str
     """
     Short AI-generated summary of this symbol's financial profile.
-
-    Observed on: analyst records.
     """
 
     trace_id: str = Field(alias="trace_id")
@@ -766,8 +616,6 @@ class FinancialInsights(YahooModel):
     Tracing identifier for this analysis request.
 
     Matches ``id`` on every corpus record.
-
-    Observed on: analyst records.
     """
 
     updated_at: datetime.datetime = Field(alias="updated_at")
@@ -775,8 +623,6 @@ class FinancialInsights(YahooModel):
     Timestamp this analysis was last updated.
 
     Matches ``created_at`` on every corpus record.
-
-    Observed on: analyst records.
     """
 
 
@@ -786,22 +632,16 @@ class EarningsAnalystFocusQuestion(YahooModel):
     question: str
     """
     Analyst question, as paraphrased by the AI summary.
-
-    Observed on: analyst records.
     """
 
     response: str
     """
     Management's response, as paraphrased by the AI summary.
-
-    Observed on: analyst records.
     """
 
     significance: str
     """
     AI-generated commentary on why this exchange matters to investors.
-
-    Observed on: analyst records.
     """
 
 
@@ -814,15 +654,11 @@ class EarningsAnalystFocus(YahooModel):
     """
     Notable analyst questions and management's responses from the
     earnings call.
-
-    Observed on: analyst records.
     """
 
     overall_sentiment: str = Field(alias="overall_sentiment")
     """
     AI-generated summary of the analysts' overall tone on the call.
-
-    Observed on: analyst records.
     """
 
 
@@ -832,29 +668,21 @@ class EarningsQaHighlights(YahooModel):
     analyst_sentiment: str = Field(alias="analyst_sentiment")
     """
     AI-generated summary of analyst sentiment during the Q&A session.
-
-    Observed on: analyst records.
     """
 
     key_themes: str = Field(alias="key_themes")
     """
     AI-generated summary of recurring Q&A themes.
-
-    Observed on: analyst records.
     """
 
     management_tone: str = Field(alias="management_tone")
     """
     AI-generated assessment of management's tone during the Q&A session.
-
-    Observed on: analyst records.
     """
 
     notable_exchanges: str = Field(alias="notable_exchanges")
     """
     AI-generated summary of the most notable Q&A exchanges.
-
-    Observed on: analyst records.
     """
 
 
@@ -864,22 +692,16 @@ class EarningsNotableQuote(YahooModel):
     context: str
     """
     AI-generated commentary on why this quote matters.
-
-    Observed on: analyst records.
     """
 
     quote: str
     """
     Verbatim (or near-verbatim) quote from the earnings call.
-
-    Observed on: analyst records.
     """
 
     speaker: str
     """
     Name and title of the person quoted (for example ``"Tim Cook, CEO"``).
-
-    Observed on: analyst records.
     """
 
 
@@ -890,8 +712,6 @@ class EarningsAnalysis(YahooModel):
     """
     Analyst questions and management's responses from the call, plus
     overall analyst sentiment.
-
-    Observed on: analyst records.
     """
 
     key_insights: dict[str, str] = Field(alias="key_insights")
@@ -901,8 +721,6 @@ class EarningsAnalysis(YahooModel):
     than a fixed key set. Every value is the same content as the matching
     :class:`key_insights_structured <EarningsAnalysis>` entry, flattened to
     a single prose block instead of itemized sub-points.
-
-    Observed on: analyst records.
     """
 
     key_insights_structured: dict[str, dict[str, str]] = Field(
@@ -913,36 +731,26 @@ class EarningsAnalysis(YahooModel):
     dynamic, AI-generated sub-point headline (for example ``"iPhone"``
     under ``"Segment Insights"``) rather than a fixed key set at either
     level.
-
-    Observed on: analyst records.
     """
 
     notable_quotes: list[EarningsNotableQuote] = Field(alias="notable_quotes")
     """
     Notable verbatim quotes from the earnings call.
-
-    Observed on: analyst records.
     """
 
     qa_highlights: EarningsQaHighlights = Field(alias="qa_highlights")
     """
     AI-generated summary of the earnings call's Q&A session.
-
-    Observed on: analyst records.
     """
 
     teaser_tldr: str = Field(alias="teaser_tldr")
     """
     Short, headline-style teaser summarizing the earnings call.
-
-    Observed on: analyst records.
     """
 
     tldr: str
     """
     Short AI-generated summary of the earnings call.
-
-    Observed on: analyst records.
     """
 
 
@@ -952,8 +760,6 @@ class EarningsTranscriptsInsights(YahooModel):
     created_at: datetime.datetime = Field(alias="created_at")
     """
     Timestamp this analysis was generated.
-
-    Observed on: analyst records.
     """
 
     debug: dict[str, object]
@@ -961,22 +767,16 @@ class EarningsTranscriptsInsights(YahooModel):
     Debug metadata bag.
 
     Always an empty ``{}`` in the corpus.
-
-    Observed on: analyst records.
     """
 
     earnings_analysis: EarningsAnalysis = Field(alias="earnings_analysis")
     """
     The generated earnings-call analysis content.
-
-    Observed on: analyst records.
     """
 
     fiscal_period: str = Field(alias="fiscal_period")
     """
     Fiscal quarter label (for example ``"Q2"``).
-
-    Observed on: analyst records.
     """
 
     fiscal_year: str = Field(alias="fiscal_year")
@@ -987,8 +787,6 @@ class EarningsTranscriptsInsights(YahooModel):
     :class:`FinancialInsightsEarningsCalendarEntry`'s/
     :class:`LatestEarningsMetadata`'s ``fiscal_year``, which send the same
     concept as an integer; see those fields' docstrings.
-
-    Observed on: analyst records.
     """
 
     id: str
@@ -996,15 +794,11 @@ class EarningsTranscriptsInsights(YahooModel):
     Unique identifier for this analysis.
 
     Matches ``trace_id`` on every corpus record.
-
-    Observed on: analyst records.
     """
 
     symbol_id: str = Field(alias="symbol_id")
     """
     Yahoo's internal identifier for the analyzed symbol.
-
-    Observed on: analyst records.
     """
 
     trace_id: str = Field(alias="trace_id")
@@ -1012,8 +806,6 @@ class EarningsTranscriptsInsights(YahooModel):
     Tracing identifier for this analysis request.
 
     Matches ``id`` on every corpus record.
-
-    Observed on: analyst records.
     """
 
     updated_at: datetime.datetime = Field(alias="updated_at")
@@ -1021,8 +813,6 @@ class EarningsTranscriptsInsights(YahooModel):
     Timestamp this analysis was last updated.
 
     Matches ``created_at`` on every corpus record.
-
-    Observed on: analyst records.
     """
 
 
@@ -1044,22 +834,16 @@ class AnalystResult(YahooModel):
     )
     """
     AI-generated analysis of the most recent earnings call transcript.
-
-    Observed on: analyst records.
     """
 
     financial_insights: FinancialInsights = Field(alias="financial_insights")
     """
     AI-generated valuation/profitability/growth commentary.
-
-    Observed on: analyst records.
     """
 
     holdings_insights: HoldingsInsights = Field(alias="holdings_insights")
     """
     AI-generated summary of recent insider trading activity.
-
-    Observed on: analyst records.
     """
 
     news_summary: NewsSummaryBlock = Field(alias="news_summary")
@@ -1068,22 +852,16 @@ class AnalystResult(YahooModel):
 
     Reused from :mod:`yoghurt.models.analysis_insights`; see the module
     docstring.
-
-    Observed on: analyst records.
     """
 
     options_analysis: OptionsAnalysis = Field(alias="options_analysis")
     """
     Put/call ratio analysis and commentary for this symbol.
-
-    Observed on: analyst records.
     """
 
     overview: AnalystOverview
     """
     AI-generated high-level overview of this symbol.
-
-    Observed on: analyst records.
     """
 
     price_movement: PriceMovement = Field(alias="price_movement")
@@ -1096,22 +874,16 @@ class AnalystResult(YahooModel):
     but is a single word (so ``to_camel`` cannot tell the difference) —
     this one is genuinely multi-word and needs the explicit alias to avoid
     the auto-generated ``priceMovement``.
-
-    Observed on: analyst records.
     """
 
     rtr: Rtr
     """
     AI-generated ratings/price-target summary for this symbol.
-
-    Observed on: analyst records.
     """
 
     symbol_id: str = Field(alias="symbol_id")
     """
     Yahoo's internal identifier for the analyzed symbol.
-
-    Observed on: analyst records.
     """
 
 
@@ -1136,31 +908,23 @@ class AnalystRatingRow(YahooModel):
     (for example stock splits) since it was issued.
 
     Matches ``pt_current`` on every corpus row.
-
-    Observed on: top-rating buckets.
     """
 
     analyst: str
     """
     Name of the rating firm (for example ``"CLSA"``, ``"Bernstein"``).
-
-    Observed on: top-rating buckets.
     """
 
     announcement_date: datetime.date = Field(alias="announcement_date")
     """
     Calendar date this rating was announced, as a bare ``"YYYY-MM-DD"``
     wire string.
-
-    Observed on: top-rating buckets.
     """
 
     datapoints: int
     """
     Number of historical rating/price-target data points backing this
     analyst's scores.
-
-    Observed on: top-rating buckets.
     """
 
     dir: RawFloat = Field(alias="dir")
@@ -1178,8 +942,6 @@ class AnalystRatingRow(YahooModel):
     Wrapped as ``{"raw": ..., "fmt": ...}`` on the wire, unlike the sibling
     bucket key of the same name at the :class:`TopRatingsResult` level,
     which is not wrapped; see that class's docstring.
-
-    Observed on: top-rating buckets.
     """
 
     fin_score: RawFloat = Field(alias="fin_score")
@@ -1187,8 +949,6 @@ class AnalystRatingRow(YahooModel):
     This analyst's overall financial score.
 
     Wrapped as ``{"raw": ..., "fmt": ...}`` on the wire.
-
-    Observed on: top-rating buckets.
     """
 
     mm: RawFloat = Field(alias="mm")
@@ -1196,8 +956,6 @@ class AnalystRatingRow(YahooModel):
     This analyst's "market maker" (or similar) score.
 
     Wrapped as ``{"raw": ..., "fmt": ...}`` on the wire.
-
-    Observed on: top-rating buckets.
     """
 
     pt: RawFloat = Field(alias="pt")
@@ -1205,8 +963,6 @@ class AnalystRatingRow(YahooModel):
     This analyst's price-target score.
 
     Wrapped as ``{"raw": ..., "fmt": ...}`` on the wire.
-
-    Observed on: top-rating buckets.
     """
 
     pt_current: float = Field(alias="pt_current")
@@ -1214,8 +970,6 @@ class AnalystRatingRow(YahooModel):
     This analyst's current (unadjusted) price target.
 
     Matches ``adjusted_pt_current`` on every corpus row.
-
-    Observed on: top-rating buckets.
     """
 
     rating_current: str = Field(alias="rating_current")
@@ -1224,8 +978,6 @@ class AnalystRatingRow(YahooModel):
 
     Only ``"Outperform"``/``"Buy"`` observed across this 2-capture,
     8-row corpus — too thin to type as a closed-vocabulary enum.
-
-    Observed on: top-rating buckets.
     """
 
     rating_sentiment: int = Field(alias="rating_sentiment")
@@ -1234,22 +986,16 @@ class AnalystRatingRow(YahooModel):
 
     Always ``1`` across this 2-capture, 8-row corpus; too thin to
     characterize its full range.
-
-    Observed on: top-rating buckets.
     """
 
     ticker: str
     """
     Ticker symbol this rating covers.
-
-    Observed on: top-rating buckets.
     """
 
     uuid: str
     """
     Unique identifier for this analyst's rating record.
-
-    Observed on: top-rating buckets.
     """
 
 
@@ -1268,28 +1014,20 @@ class TopRatingsResult(YahooModel):
     dir: AnalystRatingRow = Field(alias="dir")
     """
     The analyst currently ranking highest on the "direction" metric.
-
-    Observed on: top-rating buckets.
     """
 
     fin_score: AnalystRatingRow = Field(alias="fin_score")
     """
     The analyst currently ranking highest on overall financial score.
-
-    Observed on: top-rating buckets.
     """
 
     mm: AnalystRatingRow = Field(alias="mm")
     """
     The analyst currently ranking highest on the "market maker" (or
     similar) metric.
-
-    Observed on: top-rating buckets.
     """
 
     pt: AnalystRatingRow = Field(alias="pt")
     """
     The analyst currently ranking highest on price-target score.
-
-    Observed on: top-rating buckets.
     """

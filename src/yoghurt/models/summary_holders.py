@@ -95,8 +95,6 @@ class InsiderHolder(YahooModel):
 
     Wire value is a ``{raw, fmt}`` wrapper on every corpus entry
     (universal); see :mod:`yoghurt.models._base`.
-
-    Observed on: EQUITY summaries.
     """
 
     max_age: int
@@ -104,15 +102,11 @@ class InsiderHolder(YahooModel):
     Maximum age, in seconds, that Yahoo considers this entry fresh.
 
     Always ``1`` in this corpus.
-
-    Observed on: EQUITY summaries.
     """
 
     name: str
     """
     Insider's full name, typically upper-case (for example ``"COOK TIMOTHY D"``).
-
-    Observed on: EQUITY summaries.
     """
 
     position_direct: RawInt | None = None
@@ -122,8 +116,6 @@ class InsiderHolder(YahooModel):
     Wire value is a ``{raw, fmt, longFmt}`` wrapper when present. Mutually
     exclusive with ``position_indirect``/``position_summary`` on any given
     row; see the module docstring.
-
-    Observed on: EQUITY summaries.
     """
 
     position_direct_date: RawDate | None = None
@@ -132,8 +124,6 @@ class InsiderHolder(YahooModel):
 
     Wire value is a ``{raw, fmt}`` wrapper when present, alongside
     ``position_direct``.
-
-    Observed on: EQUITY summaries.
     """
 
     position_indirect: RawInt | None = None
@@ -144,8 +134,6 @@ class InsiderHolder(YahooModel):
     Wire value is a ``{raw, fmt, longFmt}`` wrapper when present. Mutually
     exclusive with ``position_direct``/``position_summary``; see the module
     docstring.
-
-    Observed on: EQUITY summaries.
     """
 
     position_indirect_date: RawDate | None = None
@@ -154,8 +142,6 @@ class InsiderHolder(YahooModel):
 
     Wire value is a ``{raw, fmt}`` wrapper when present, alongside
     ``position_indirect``.
-
-    Observed on: EQUITY summaries.
     """
 
     position_summary: RawInt | None = None
@@ -166,8 +152,6 @@ class InsiderHolder(YahooModel):
     Wire value is a ``{raw, fmt, longFmt}`` wrapper when present. Mutually
     exclusive with ``position_direct``/``position_indirect``; see the
     module docstring.
-
-    Observed on: EQUITY summaries.
     """
 
     position_summary_date: RawDate | None = None
@@ -176,24 +160,18 @@ class InsiderHolder(YahooModel):
 
     Wire value is a ``{raw, fmt}`` wrapper when present, alongside
     ``position_summary``.
-
-    Observed on: EQUITY summaries.
     """
 
     relation: str
     """
     Insider's relationship to the company (for example ``"Chief Executive
     Officer"``, ``"Director"``).
-
-    Observed on: EQUITY summaries.
     """
 
     transaction_description: str
     """
     Description of this insider's most recent reported transaction type
     (for example ``"Sale"``, ``"Stock Gift"``).
-
-    Observed on: EQUITY summaries.
     """
 
     url: str
@@ -201,8 +179,6 @@ class InsiderHolder(YahooModel):
     URL of additional filing detail for this insider.
 
     Always an empty string in this corpus.
-
-    Observed on: EQUITY summaries.
     """
 
 
@@ -212,15 +188,11 @@ class InsiderHolders(YahooModel):
     holders: list[InsiderHolder]
     """
     Insider holder entries.
-
-    Observed on: EQUITY summaries.
     """
 
     max_age: int
     """
     Maximum age, in seconds, that Yahoo considers this module fresh.
-
-    Observed on: EQUITY summaries.
     """
 
 
@@ -230,16 +202,12 @@ class InsiderTransaction(YahooModel):
     filer_name: str
     """
     Name of the insider who filed this transaction.
-
-    Observed on: EQUITY summaries.
     """
 
     filer_relation: str
     """
     Filer's relationship to the company (for example ``"Officer"``,
     ``"Director"``).
-
-    Observed on: EQUITY summaries.
     """
 
     filer_url: str
@@ -247,8 +215,6 @@ class InsiderTransaction(YahooModel):
     URL of additional filing detail for this transaction.
 
     Always an empty string in this corpus.
-
-    Observed on: EQUITY summaries.
     """
 
     max_age: int
@@ -256,8 +222,6 @@ class InsiderTransaction(YahooModel):
     Maximum age, in seconds, that Yahoo considers this entry fresh.
 
     Always ``1`` in this corpus.
-
-    Observed on: EQUITY summaries.
     """
 
     money_text: str
@@ -265,8 +229,6 @@ class InsiderTransaction(YahooModel):
     Free-text money description for this transaction.
 
     Always an empty string in this corpus.
-
-    Observed on: EQUITY summaries.
     """
 
     ownership: str
@@ -276,8 +238,6 @@ class InsiderTransaction(YahooModel):
 
     Three values observed across 581 corpus entries — a real but thin
     vocabulary, so this stays plain ``str``.
-
-    Observed on: EQUITY summaries.
     """
 
     shares: RawInt
@@ -286,8 +246,6 @@ class InsiderTransaction(YahooModel):
 
     Wire value is a ``{raw, fmt, longFmt}`` wrapper on every corpus entry
     (universal); see :mod:`yoghurt.models._base`.
-
-    Observed on: EQUITY summaries.
     """
 
     start_date: RawDate
@@ -296,8 +254,6 @@ class InsiderTransaction(YahooModel):
 
     Wire value is a ``{raw, fmt}`` wrapper on every corpus entry
     (universal).
-
-    Observed on: EQUITY summaries.
     """
 
     transaction_text: str
@@ -305,8 +261,6 @@ class InsiderTransaction(YahooModel):
     Free-text description of this transaction (for example ``"Sale at
     price 295.14 per share."``); an empty string when Yahoo has no
     descriptive text to report.
-
-    Observed on: EQUITY summaries.
     """
 
     value: RawInt | None = None
@@ -316,8 +270,6 @@ class InsiderTransaction(YahooModel):
     Wire value is a ``{raw, fmt, longFmt}`` wrapper when present. Absent
     (not merely ``{}``) on 169 of 581 corpus entries, for example
     transactions with no disclosed per-share price.
-
-    Observed on: EQUITY summaries.
     """
 
 
@@ -327,15 +279,11 @@ class InsiderTransactions(YahooModel):
     max_age: int
     """
     Maximum age, in seconds, that Yahoo considers this module fresh.
-
-    Observed on: EQUITY summaries.
     """
 
     transactions: list[InsiderTransaction]
     """
     Insider transaction entries, most recent first.
-
-    Observed on: EQUITY summaries.
     """
 
 
@@ -352,15 +300,11 @@ class OwnershipEntry(YahooModel):
     Maximum age, in seconds, that Yahoo considers this entry fresh.
 
     Always ``1`` in this corpus.
-
-    Observed on: EQUITY summaries.
     """
 
     organization: str
     """
     Name of the institution or fund holding this position.
-
-    Observed on: EQUITY summaries.
     """
 
     pct_change: RawFloat
@@ -369,8 +313,6 @@ class OwnershipEntry(YahooModel):
 
     Wire value is a ``{raw, fmt}`` wrapper on every corpus entry
     (universal, never ``{}``); see :mod:`yoghurt.models._base`.
-
-    Observed on: EQUITY summaries.
     """
 
     pct_held: RawFloat
@@ -379,8 +321,6 @@ class OwnershipEntry(YahooModel):
 
     Wire value is a ``{raw, fmt}`` wrapper on every corpus entry
     (universal, never ``{}``).
-
-    Observed on: EQUITY summaries.
     """
 
     position: RawInt
@@ -389,8 +329,6 @@ class OwnershipEntry(YahooModel):
 
     Wire value is a ``{raw, fmt, longFmt}`` wrapper on every corpus entry
     (universal, never ``{}``).
-
-    Observed on: EQUITY summaries.
     """
 
     report_date: RawDate
@@ -399,8 +337,6 @@ class OwnershipEntry(YahooModel):
 
     Wire value is a ``{raw, fmt}`` wrapper on every corpus entry
     (universal, never ``{}``).
-
-    Observed on: EQUITY summaries.
     """
 
     value: RawInt
@@ -409,8 +345,6 @@ class OwnershipEntry(YahooModel):
 
     Wire value is a ``{raw, fmt, longFmt}`` wrapper on every corpus entry
     (universal, never ``{}``).
-
-    Observed on: EQUITY summaries.
     """
 
 
@@ -420,15 +354,11 @@ class InstitutionOwnership(YahooModel):
     max_age: int
     """
     Maximum age, in seconds, that Yahoo considers this module fresh.
-
-    Observed on: EQUITY summaries.
     """
 
     ownership_list: list[OwnershipEntry]
     """
     Institutional ownership position entries.
-
-    Observed on: EQUITY summaries.
     """
 
 
@@ -443,15 +373,11 @@ class FundOwnership(YahooModel):
     max_age: int
     """
     Maximum age, in seconds, that Yahoo considers this module fresh.
-
-    Observed on: EQUITY summaries.
     """
 
     ownership_list: list[OwnershipEntry]
     """
     Fund ownership position entries.
-
-    Observed on: EQUITY summaries.
     """
 
 
@@ -478,15 +404,11 @@ class MajorDirectHolders(YahooModel):
     Direct major shareholder entries.
 
     Always an empty list in this corpus.
-
-    Observed on: EQUITY summaries.
     """
 
     max_age: int
     """
     Maximum age, in seconds, that Yahoo considers this module fresh.
-
-    Observed on: EQUITY summaries.
     """
 
 
@@ -496,36 +418,26 @@ class MajorHoldersBreakdown(YahooModel):
     insiders_percent_held: float
     """
     Percentage of outstanding shares held by company insiders.
-
-    Observed on: EQUITY summaries.
     """
 
     institutions_count: int
     """
     Number of institutions reporting a position in this security.
-
-    Observed on: EQUITY summaries.
     """
 
     institutions_float_percent_held: float
     """
     Percentage of the freely tradable float held by institutions.
-
-    Observed on: EQUITY summaries.
     """
 
     institutions_percent_held: float
     """
     Percentage of outstanding shares held by institutions.
-
-    Observed on: EQUITY summaries.
     """
 
     max_age: int
     """
     Maximum age, in seconds, that Yahoo considers this module fresh.
-
-    Observed on: EQUITY summaries.
     """
 
 
@@ -539,15 +451,11 @@ class NetSharePurchaseActivity(YahooModel):
     buy_info_count: int
     """
     Number of insider buy transactions in ``period``.
-
-    Observed on: EQUITY summaries.
     """
 
     buy_info_shares: int
     """
     Total shares bought by insiders in ``period``.
-
-    Observed on: EQUITY summaries.
     """
 
     buy_percent_insider_shares: float | None = None
@@ -556,43 +464,31 @@ class NetSharePurchaseActivity(YahooModel):
 
     Present only on the corpus's three US-listed captures (``AAPL``,
     ``MSFT``, ``OKLO``); see the module docstring.
-
-    Observed on: EQUITY summaries.
     """
 
     max_age: int
     """
     Maximum age, in seconds, that Yahoo considers this module fresh.
-
-    Observed on: EQUITY summaries.
     """
 
     net_info_count: int
     """
     Net number of insider buy/sell transactions in ``period``.
-
-    Observed on: EQUITY summaries.
     """
 
     net_info_shares: int
     """
     Net shares bought (or sold, if negative) by insiders in ``period``.
-
-    Observed on: EQUITY summaries.
     """
 
     net_inst_buying_percent: float
     """
     Net institutional buying as a percentage of institutional holdings.
-
-    Observed on: EQUITY summaries.
     """
 
     net_inst_shares_buying: int
     """
     Net shares bought by institutions.
-
-    Observed on: EQUITY summaries.
     """
 
     net_percent_insider_shares: float | None = None
@@ -601,8 +497,6 @@ class NetSharePurchaseActivity(YahooModel):
 
     Present only on the corpus's three US-listed captures (``AAPL``,
     ``MSFT``, ``OKLO``); see the module docstring.
-
-    Observed on: EQUITY summaries.
     """
 
     period: str
@@ -611,15 +505,11 @@ class NetSharePurchaseActivity(YahooModel):
 
     Only ever observed as ``"6m"`` in this corpus — thin evidence, stays
     plain ``str``.
-
-    Observed on: EQUITY summaries.
     """
 
     sell_info_count: int
     """
     Number of insider sell transactions in ``period``.
-
-    Observed on: EQUITY summaries.
     """
 
     sell_info_shares: int | None = None
@@ -628,8 +518,6 @@ class NetSharePurchaseActivity(YahooModel):
 
     Present only on the corpus's three US-listed captures (``AAPL``,
     ``MSFT``, ``OKLO``); see the module docstring.
-
-    Observed on: EQUITY summaries.
     """
 
     sell_percent_insider_shares: float | None = None
@@ -638,13 +526,9 @@ class NetSharePurchaseActivity(YahooModel):
 
     Present only on the corpus's three US-listed captures (``AAPL``,
     ``MSFT``, ``OKLO``); see the module docstring.
-
-    Observed on: EQUITY summaries.
     """
 
     total_insider_shares: int
     """
     Total number of shares held by insiders.
-
-    Observed on: EQUITY summaries.
     """

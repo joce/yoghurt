@@ -123,101 +123,73 @@ class TrendingQuote(YahooModel):
     crypto_tradeable: bool
     """
     Whether this instrument can be traded as cryptocurrency.
-
-    Observed on: trending records.
     """
 
     custom_price_alert_confidence: PriceAlertConfidence
     """
     Yahoo's confidence level for its price-alert feature on this symbol.
-
-    Observed on: trending records.
     """
 
     esg_populated: bool
     """
     Whether Yahoo has ESG (environmental/social/governance) data for this
     symbol.
-
-    Observed on: trending records.
     """
 
     exchange: str
     """
     Short code of the securities exchange (for example ``"CCC"``).
-
-    Observed on: trending records.
     """
 
     exchange_data_delayed_by: int
     """
     Minutes this exchange's data is delayed by.
-
-    Observed on: trending records.
     """
 
     exchange_timezone_name: str
     """
     IANA timezone name of the exchange (for example ``"UTC"``).
-
-    Observed on: trending records.
     """
 
     exchange_timezone_short_name: str
     """
     Short abbreviation of the exchange timezone (for example ``"UTC"``).
-
-    Observed on: trending records.
     """
 
     first_trade_date_milliseconds: int
     """
     Epoch-milliseconds timestamp of this instrument's first trade.
-
-    Observed on: trending records.
     """
 
     full_exchange_name: str
     """
     Full display name of the exchange (for example ``"CCC"``).
-
-    Observed on: trending records.
     """
 
     gmt_off_set_milliseconds: int
     """
     Offset from GMT of the exchange, in milliseconds.
-
-    Observed on: trending records.
     """
 
     has_pre_post_market_data: bool
     """
     Whether pre-market/after-hours data is available for this symbol.
-
-    Observed on: trending records.
     """
 
     language: str
     """
     Locale Yahoo rendered this record in (for example ``"en-US"``).
-
-    Observed on: trending records.
     """
 
     market: str
     """
     Yahoo's internal market-segment identifier (for example
     ``"ccc_market"``).
-
-    Observed on: trending records.
     """
 
     market_state: MarketState = Field(alias="marketState")
     """
     Current trading session phase.
-
-    Observed on: trending records.
     """
 
     price_hint: int | None = None
@@ -226,66 +198,48 @@ class TrendingQuote(YahooModel):
 
     Present on 1 of 5 corpus rows (the lone INDEX row); the four
     CRYPTOCURRENCY rows omit it.
-
-    Observed on: trending records.
     """
 
     quote_source_name: str = Field(alias="quoteSourceName")
     """
     Human-readable name of the quote data source (for example
     ``"CoinMarketCap"``, ``"Delayed Quote"``).
-
-    Observed on: trending records.
     """
 
     quote_type: QuoteType
     """
     Classification of this instrument.
-
-    Observed on: trending records.
     """
 
     region: str
     """
     Yahoo region this record was served for (for example ``"US"``).
-
-    Observed on: trending records.
     """
 
     regular_market_price: float = Field(alias="regularMarketPrice")
     """
     Most recent regular-session trade price.
-
-    Observed on: trending records.
     """
 
     regular_market_time: int = Field(alias="regularMarketTime")
     """
     Epoch-seconds timestamp of ``regular_market_price``.
-
-    Observed on: trending records.
     """
 
     source_interval: int
     """
     Refresh interval, in minutes, of the underlying data source.
-
-    Observed on: trending records.
     """
 
     symbol: str
     """
     Yahoo ticker symbol.
-
-    Observed on: trending records.
     """
 
     tradeable: bool
     """
     Whether this instrument can be traded through Yahoo's brokerage
     integration.
-
-    Observed on: trending records.
     """
 
     trending_score: float = Field(alias="trendingScore")
@@ -293,23 +247,17 @@ class TrendingQuote(YahooModel):
     Yahoo's internal trending-rank score for this symbol (higher is more
     trending); no equivalent field on
     :class:`~yoghurt.models.quote.Quote`.
-
-    Observed on: trending records.
     """
 
     triggerable: bool
     """
     Whether this symbol supports Yahoo's price-alert triggers.
-
-    Observed on: trending records.
     """
 
     type_disp: str = Field(alias="typeDisp")
     """
     Human-readable display label for ``quote_type`` (for example
     ``"Cryptocurrency"``, ``"Index"``).
-
-    Observed on: trending records.
     """
 
 
@@ -320,31 +268,23 @@ class TrendingResult(YahooModel):
     """
     Number of rows in ``quotes``, matching ``len(quotes)`` on the corpus
     capture.
-
-    Observed on: trending records.
     """
 
     job_timestamp: int = Field(alias="jobTimestamp")
     """
     Epoch-milliseconds timestamp of the batch job that computed this
     trending list.
-
-    Observed on: trending records.
     """
 
     quotes: list[TrendingQuote]
     """
     Trending symbols, most trending first.
-
-    Observed on: trending records.
     """
 
     start_interval: int = Field(alias="startInterval")
     """
     Yahoo-internal interval identifier for this trending computation (for
     example ``202607040300``); exact encoding unconfirmed.
-
-    Observed on: trending records.
     """
 
 
@@ -366,15 +306,11 @@ class MarketSummaryQuote(YahooModel):
     Whether this is a continuation-contract symbol.
 
     Present only on FUTURE rows (3 of 15 corpus rows).
-
-    Observed on: market-summary records.
     """
 
     crypto_tradeable: bool
     """
     Whether this instrument can be traded as cryptocurrency.
-
-    Observed on: market-summary records.
     """
 
     currency: str | None = None
@@ -382,80 +318,58 @@ class MarketSummaryQuote(YahooModel):
     ISO currency code this quote is denominated in.
 
     Present only on CURRENCY rows (3 of 15 corpus rows).
-
-    Observed on: market-summary records.
     """
 
     custom_price_alert_confidence: PriceAlertConfidence
     """
     Yahoo's confidence level for its price-alert feature on this symbol.
-
-    Observed on: market-summary records.
     """
 
     esg_populated: bool
     """
     Whether Yahoo has ESG (environmental/social/governance) data for this
     symbol.
-
-    Observed on: market-summary records.
     """
 
     exchange: str
     """
     Short code of the securities exchange (for example ``"SNP"``,
     ``"NYM"``, ``"CCY"``).
-
-    Observed on: market-summary records.
     """
 
     exchange_data_delayed_by: int
     """
     Minutes this exchange's data is delayed by.
-
-    Observed on: market-summary records.
     """
 
     exchange_timezone_name: str
     """
     IANA timezone name of the exchange.
-
-    Observed on: market-summary records.
     """
 
     exchange_timezone_short_name: str
     """
     Short abbreviation of the exchange timezone.
-
-    Observed on: market-summary records.
     """
 
     first_trade_date_milliseconds: int
     """
     Epoch-milliseconds timestamp of this instrument's first trade.
-
-    Observed on: market-summary records.
     """
 
     full_exchange_name: str
     """
     Full display name of the exchange.
-
-    Observed on: market-summary records.
     """
 
     gmt_off_set_milliseconds: int
     """
     Offset from GMT of the exchange, in milliseconds.
-
-    Observed on: market-summary records.
     """
 
     has_pre_post_market_data: bool
     """
     Whether pre-market/after-hours data is available for this symbol.
-
-    Observed on: market-summary records.
     """
 
     head_symbol_as_string: str | None = Field(default=None, alias="headSymbolAsString")
@@ -464,15 +378,11 @@ class MarketSummaryQuote(YahooModel):
     ``"CL=F"``).
 
     Present only on FUTURE rows (3 of 15 corpus rows).
-
-    Observed on: market-summary records.
     """
 
     language: str
     """
     Locale Yahoo rendered this record in.
-
-    Observed on: market-summary records.
     """
 
     long_name: str | None = None
@@ -480,22 +390,16 @@ class MarketSummaryQuote(YahooModel):
     Official long name of the security.
 
     Present on 12 of 15 corpus rows.
-
-    Observed on: market-summary records.
     """
 
     market: str
     """
     Yahoo's internal market-segment identifier.
-
-    Observed on: market-summary records.
     """
 
     market_state: MarketState = Field(alias="marketState")
     """
     Current trading session phase.
-
-    Observed on: market-summary records.
     """
 
     price_hint: int | None = None
@@ -505,8 +409,6 @@ class MarketSummaryQuote(YahooModel):
     Present on 10 of 15 corpus rows; unlike
     :class:`~yoghurt.models.quote.Quote`, where this field is universal,
     it is not consistently sent here.
-
-    Observed on: market-summary records.
     """
 
     quote_source_name: str | None = Field(default=None, alias="quoteSourceName")
@@ -515,22 +417,16 @@ class MarketSummaryQuote(YahooModel):
     ``"Delayed Quote"``).
 
     Present on 14 of 15 corpus rows.
-
-    Observed on: market-summary records.
     """
 
     quote_type: QuoteType
     """
     Classification of this instrument.
-
-    Observed on: market-summary records.
     """
 
     region: str
     """
     Yahoo region this record was served for.
-
-    Observed on: market-summary records.
     """
 
     regular_market_change: float = Field(alias="regularMarketChange")
@@ -540,79 +436,57 @@ class MarketSummaryQuote(YahooModel):
     A bare wire float here, matching
     :class:`~yoghurt.models.quote.Quote`'s field of the same name (not
     ``{raw, fmt}``-wrapped).
-
-    Observed on: market-summary records.
     """
 
     regular_market_change_percent: float = Field(alias="regularMarketChangePercent")
     """
     Percent change from the previous regular-session close.
-
-    Observed on: market-summary records.
     """
 
     regular_market_previous_close: float = Field(alias="regularMarketPreviousClose")
     """
     Previous regular-session closing price.
-
-    Observed on: market-summary records.
     """
 
     regular_market_price: float = Field(alias="regularMarketPrice")
     """
     Most recent regular-session trade price.
-
-    Observed on: market-summary records.
     """
 
     regular_market_time: int = Field(alias="regularMarketTime")
     """
     Epoch-seconds timestamp of ``regular_market_price``.
-
-    Observed on: market-summary records.
     """
 
     short_name: str
     """
     Short display name of the security.
-
-    Observed on: market-summary records.
     """
 
     source_interval: int
     """
     Refresh interval, in minutes, of the underlying data source.
-
-    Observed on: market-summary records.
     """
 
     symbol: str
     """
     Yahoo ticker symbol.
-
-    Observed on: market-summary records.
     """
 
     tradeable: bool
     """
     Whether this instrument can be traded through Yahoo's brokerage
     integration.
-
-    Observed on: market-summary records.
     """
 
     triggerable: bool
     """
     Whether this symbol supports Yahoo's price-alert triggers.
-
-    Observed on: market-summary records.
     """
 
     type_disp: str = Field(alias="typeDisp")
     """
     Human-readable display label for ``quote_type``.
-
-    Observed on: market-summary records.
     """
 
 
@@ -632,8 +506,6 @@ class MarketInfoModule(YahooModel):
     Instrument classification every symbol in ``tickers`` shares (for
     example ``CURRENCY`` for the ``currencies`` module, ``FUTURE`` for
     ``commodities``).
-
-    Observed on: market-info tiles.
     """
 
     tickers: list[str]
@@ -642,16 +514,12 @@ class MarketInfoModule(YahooModel):
 
     May contain duplicate symbols (the corpus ``currencies`` module repeats
     ``"EURJPY=X"``); preserved as observed, not de-duplicated.
-
-    Observed on: market-info tiles.
     """
 
     type: str
     """
     Yahoo's internal payload-kind tag; always ``"screener_payload"`` in the
     corpus.
-
-    Observed on: market-info tiles.
     """
 
 
@@ -670,15 +538,11 @@ class MarketInfoResult(YahooModel):
     commodities: MarketInfoModule | None = None
     """
     Commodity futures tile.
-
-    Observed on: market-info tiles.
     """
 
     currencies: MarketInfoModule | None = None
     """
     Currency-pair tile.
-
-    Observed on: market-info tiles.
     """
 
 
@@ -695,23 +559,17 @@ class MarketTimeZone(YahooModel):
     Whether daylight-saving time is active, as Yahoo's wire string
     (``"true"``/``"false"``) rather than a bool — kept as-is since coercing
     arbitrary strings to bool risks silently accepting typos.
-
-    Observed on: market-time record.
     """
 
     gmtoffset: str
     """
     Offset from GMT, in seconds, as a wire string (for example
     ``"-14400"``).
-
-    Observed on: market-time record.
     """
 
     short: str
     """
     Short timezone abbreviation (for example ``"EDT"``).
-
-    Observed on: market-time record.
     """
 
     text: str = Field(alias="$text")
@@ -720,8 +578,6 @@ class MarketTimeZone(YahooModel):
 
     Wire key is ``"$text"``, an XML-derived artifact of Yahoo's underlying
     data source.
-
-    Observed on: market-time record.
     """
 
 
@@ -734,30 +590,22 @@ class MarketTimeEntry(YahooModel):
 
     Wire value is an ISO-8601 string with an explicit UTC offset; pydantic
     parses it directly.
-
-    Observed on: market-time record.
     """
 
     id: str
     """
     Short market identifier (for example ``"us"``).
-
-    Observed on: market-time record.
     """
 
     message: str
     """
     Human-readable session-status message (for example ``"U.S. markets
     closed"``).
-
-    Observed on: market-time record.
     """
 
     name: str
     """
     Display name of the market group (for example ``"U.S. markets"``).
-
-    Observed on: market-time record.
     """
 
     open: datetime.datetime
@@ -766,8 +614,6 @@ class MarketTimeEntry(YahooModel):
 
     Wire value is an ISO-8601 string with an explicit UTC offset; pydantic
     parses it directly.
-
-    Observed on: market-time record.
     """
 
     status: str
@@ -776,8 +622,6 @@ class MarketTimeEntry(YahooModel):
 
     Only ``"closed"`` observed in this single-capture corpus; too thin to
     type as a closed-vocabulary enum.
-
-    Observed on: market-time record.
     """
 
     time: datetime.datetime
@@ -786,22 +630,16 @@ class MarketTimeEntry(YahooModel):
 
     Wire value is an ISO-8601 string with an explicit UTC offset; pydantic
     parses it directly.
-
-    Observed on: market-time record.
     """
 
     timezone: list[MarketTimeZone]
     """
     Single-element list wrapping this market's timezone details.
-
-    Observed on: market-time record.
     """
 
     yfit_market_id: str = Field(alias="yfit_market_id")
     """
     Yahoo-internal market identifier (for example ``"us_market"``).
-
-    Observed on: market-time record.
     """
 
     yfit_market_status: str = Field(alias="yfit_market_status")
@@ -811,8 +649,6 @@ class MarketTimeEntry(YahooModel):
 
     Only this one value observed in this single-capture corpus; too thin
     to type as a closed-vocabulary enum.
-
-    Observed on: market-time record.
     """
 
 
@@ -822,8 +658,6 @@ class MarketTimeGroup(YahooModel):
     market_time: list[MarketTimeEntry] = Field(alias="marketTime")
     """
     Markets/exchanges reported in this group.
-
-    Observed on: market-time record.
     """
 
 
@@ -833,8 +667,6 @@ class MarketTimeMeta(YahooModel):
     status: str
     """
     Request status label; always ``"success"`` in the corpus.
-
-    Observed on: market-time record.
     """
 
 
@@ -850,29 +682,21 @@ class MarketTimeResult(YahooModel):
     lang: str
     """
     Locale Yahoo rendered this record in.
-
-    Observed on: market-time record.
     """
 
     market_times: list[MarketTimeGroup] = Field(alias="marketTimes")
     """
     Market-group entries; a single-element list in the corpus.
-
-    Observed on: market-time record.
     """
 
     meta: list[MarketTimeMeta]
     """
     Request status metadata.
-
-    Observed on: market-time record.
     """
 
     version: int
     """
     Envelope schema version; always ``5`` in the corpus.
-
-    Observed on: market-time record.
     """
 
 
@@ -887,15 +711,11 @@ class SectorOverview(YahooModel):
     companies_count: int = Field(alias="companiesCount")
     """
     Number of companies classified under this sector.
-
-    Observed on: sector records.
     """
 
     description: str
     """
     Prose description of the industries and companies this sector covers.
-
-    Observed on: sector records.
     """
 
     employee_count: RawFloat = Field(alias="employeeCount")
@@ -903,15 +723,11 @@ class SectorOverview(YahooModel):
     Aggregate employee headcount across this sector's companies.
 
     Wrapped as ``{"raw": ..., "fmt": ..., "longFmt": ...}`` on the wire.
-
-    Observed on: sector records.
     """
 
     industries_count: int = Field(alias="industriesCount")
     """
     Number of industries this sector is broken down into.
-
-    Observed on: sector records.
     """
 
     market_cap: RawFloat = Field(alias="marketCap")
@@ -919,8 +735,6 @@ class SectorOverview(YahooModel):
     Aggregate market capitalization across this sector's companies.
 
     Wrapped as ``{"raw": ..., "fmt": ..., "longFmt": ...}`` on the wire.
-
-    Observed on: sector records.
     """
 
     market_weight: RawFloat = Field(alias="marketWeight")
@@ -929,15 +743,11 @@ class SectorOverview(YahooModel):
     ``0.31`` for 31%).
 
     Wrapped as ``{"raw": ..., "fmt": ...}`` on the wire.
-
-    Observed on: sector records.
     """
 
     message_board_id: str = Field(alias="messageBoardId")
     """
     Identifier for the Yahoo! Finance message board for this sector.
-
-    Observed on: sector records.
     """
 
 
@@ -949,8 +759,6 @@ class SectorPerformance(YahooModel):
     Percent price change over the trailing five years, as a fraction.
 
     Wrapped as ``{"raw": ..., "fmt": ...}`` on the wire.
-
-    Observed on: sector records.
     """
 
     one_year_change_percent: RawFloat = Field(alias="oneYearChangePercent")
@@ -958,8 +766,6 @@ class SectorPerformance(YahooModel):
     Percent price change over the trailing one year, as a fraction.
 
     Wrapped as ``{"raw": ..., "fmt": ...}`` on the wire.
-
-    Observed on: sector records.
     """
 
     reg_market_change_percent: RawFloat = Field(alias="regMarketChangePercent")
@@ -968,8 +774,6 @@ class SectorPerformance(YahooModel):
     as a fraction.
 
     Wrapped as ``{"raw": ..., "fmt": ...}`` on the wire.
-
-    Observed on: sector records.
     """
 
     three_year_change_percent: RawFloat = Field(alias="threeYearChangePercent")
@@ -977,8 +781,6 @@ class SectorPerformance(YahooModel):
     Percent price change over the trailing three years, as a fraction.
 
     Wrapped as ``{"raw": ..., "fmt": ...}`` on the wire.
-
-    Observed on: sector records.
     """
 
     ytd_change_percent: RawFloat = Field(alias="ytdChangePercent")
@@ -986,8 +788,6 @@ class SectorPerformance(YahooModel):
     Percent price change year-to-date, as a fraction.
 
     Wrapped as ``{"raw": ..., "fmt": ...}`` on the wire.
-
-    Observed on: sector records.
     """
 
 
@@ -1005,15 +805,11 @@ class SectorBenchmarkPerformance(YahooModel):
     Percent price change over the trailing five years, as a fraction.
 
     Wrapped as ``{"raw": ..., "fmt": ...}`` on the wire.
-
-    Observed on: sector records.
     """
 
     name: str
     """
     Display name of the benchmark index (for example ``"S&P 500"``).
-
-    Observed on: sector records.
     """
 
     one_year_change_percent: RawFloat = Field(alias="oneYearChangePercent")
@@ -1021,8 +817,6 @@ class SectorBenchmarkPerformance(YahooModel):
     Percent price change over the trailing one year, as a fraction.
 
     Wrapped as ``{"raw": ..., "fmt": ...}`` on the wire.
-
-    Observed on: sector records.
     """
 
     reg_market_change_percent: RawFloat = Field(alias="regMarketChangePercent")
@@ -1031,8 +825,6 @@ class SectorBenchmarkPerformance(YahooModel):
     as a fraction.
 
     Wrapped as ``{"raw": ..., "fmt": ...}`` on the wire.
-
-    Observed on: sector records.
     """
 
     three_year_change_percent: RawFloat = Field(alias="threeYearChangePercent")
@@ -1040,8 +832,6 @@ class SectorBenchmarkPerformance(YahooModel):
     Percent price change over the trailing three years, as a fraction.
 
     Wrapped as ``{"raw": ..., "fmt": ...}`` on the wire.
-
-    Observed on: sector records.
     """
 
     ytd_change_percent: RawFloat = Field(alias="ytdChangePercent")
@@ -1049,8 +839,6 @@ class SectorBenchmarkPerformance(YahooModel):
     Percent price change year-to-date, as a fraction.
 
     Wrapped as ``{"raw": ..., "fmt": ...}`` on the wire.
-
-    Observed on: sector records.
     """
 
 
@@ -1062,8 +850,6 @@ class SectorCompany(YahooModel):
     Most recent trade price.
 
     Wrapped as ``{"raw": ..., "fmt": ...}`` on the wire.
-
-    Observed on: sector records.
     """
 
     market_cap: RawFloat = Field(alias="marketCap")
@@ -1071,8 +857,6 @@ class SectorCompany(YahooModel):
     Market capitalization.
 
     Wrapped as ``{"raw": ..., "fmt": ..., "longFmt": ...}`` on the wire.
-
-    Observed on: sector records.
     """
 
     market_weight: RawFloat = Field(alias="marketWeight")
@@ -1081,8 +865,6 @@ class SectorCompany(YahooModel):
     fraction.
 
     Wrapped as ``{"raw": ..., "fmt": ...}`` on the wire.
-
-    Observed on: sector records.
     """
 
     name: str | None = None
@@ -1090,15 +872,11 @@ class SectorCompany(YahooModel):
     Company display name.
 
     Absent on 1 of 200 corpus rows (symbol ``AHR``).
-
-    Observed on: sector records.
     """
 
     rating: str
     """
     Aggregate analyst rating label (for example ``"Strong Buy"``).
-
-    Observed on: sector records.
     """
 
     reg_market_change_percent: RawFloat = Field(alias="regMarketChangePercent")
@@ -1107,15 +885,11 @@ class SectorCompany(YahooModel):
     as a fraction.
 
     Wrapped as ``{"raw": ..., "fmt": ...}`` on the wire.
-
-    Observed on: sector records.
     """
 
     symbol: str
     """
     Yahoo ticker symbol.
-
-    Observed on: sector records.
     """
 
     target_price: RawFloat = Field(alias="targetPrice")
@@ -1123,8 +897,6 @@ class SectorCompany(YahooModel):
     Aggregate analyst price target.
 
     Wrapped as ``{"raw": ..., "fmt": ...}`` on the wire.
-
-    Observed on: sector records.
     """
 
     ytd_return: RawFloat = Field(alias="ytdReturn")
@@ -1132,8 +904,6 @@ class SectorCompany(YahooModel):
     Year-to-date return, as a fraction.
 
     Wrapped as ``{"raw": ..., "fmt": ...}`` on the wire.
-
-    Observed on: sector records.
     """
 
 
@@ -1149,8 +919,6 @@ class SectorFund(YahooModel):
     Annual fund expense ratio, as a fraction.
 
     Wrapped as ``{"raw": ..., "fmt": ...}`` on the wire.
-
-    Observed on: sector records.
     """
 
     last_price: RawFloat = Field(alias="lastPrice")
@@ -1158,8 +926,6 @@ class SectorFund(YahooModel):
     Most recent trade price (NAV).
 
     Wrapped as ``{"raw": ..., "fmt": ...}`` on the wire.
-
-    Observed on: sector records.
     """
 
     name: str | None = None
@@ -1169,8 +935,6 @@ class SectorFund(YahooModel):
     Absent on 10 of 40 ``topMutualFunds`` rows (Fidelity share-class
     tickers such as ``FFONX``/``FFOJX``/``FFOTX``/``FFOQX``/``FFOMX``,
     which omit it consistently); always present on ``topETFs`` rows.
-
-    Observed on: sector records.
     """
 
     net_assets: RawFloat = Field(alias="netAssets")
@@ -1178,15 +942,11 @@ class SectorFund(YahooModel):
     Total net assets under management.
 
     Wrapped as ``{"raw": ..., "fmt": ..., "longFmt": ...}`` on the wire.
-
-    Observed on: sector records.
     """
 
     symbol: str
     """
     Yahoo ticker symbol.
-
-    Observed on: sector records.
     """
 
     ytd_return: RawFloat = Field(alias="ytdReturn")
@@ -1194,8 +954,6 @@ class SectorFund(YahooModel):
     Year-to-date return, as a fraction.
 
     Wrapped as ``{"raw": ..., "fmt": ...}`` on the wire.
-
-    Observed on: sector records.
     """
 
 
@@ -1208,8 +966,6 @@ class SectorIndustry(YahooModel):
 
     Absent on the first ``industries`` row of every corpus capture (Yahoo's
     "All Industries" aggregate row); present on every other row.
-
-    Observed on: sector records.
     """
 
     market_weight: RawFloat = Field(alias="marketWeight")
@@ -1218,16 +974,12 @@ class SectorIndustry(YahooModel):
     fraction.
 
     Wrapped as ``{"raw": ..., "fmt": ...}`` on the wire.
-
-    Observed on: sector records.
     """
 
     name: str
     """
     Industry display name (for example ``"All Industries"``,
     ``"Semiconductors"``).
-
-    Observed on: sector records.
     """
 
     reg_market_change_percent: RawFloat = Field(alias="regMarketChangePercent")
@@ -1236,8 +988,6 @@ class SectorIndustry(YahooModel):
     as a fraction.
 
     Wrapped as ``{"raw": ..., "fmt": ...}`` on the wire.
-
-    Observed on: sector records.
     """
 
     symbol: str | None = None
@@ -1246,8 +996,6 @@ class SectorIndustry(YahooModel):
 
     Absent on the first ``industries`` row of every corpus capture (Yahoo's
     "All Industries" aggregate row); present on every other row.
-
-    Observed on: sector records.
     """
 
     ytd_return: RawFloat = Field(alias="ytdReturn")
@@ -1255,8 +1003,6 @@ class SectorIndustry(YahooModel):
     Year-to-date return, as a fraction.
 
     Wrapped as ``{"raw": ..., "fmt": ...}`` on the wire.
-
-    Observed on: sector records.
     """
 
 
@@ -1267,15 +1013,11 @@ class SectorResearchReport(YahooModel):
     """
     Short report headline (for example ``"Analyst Report: Entegris,
     Inc."``).
-
-    Observed on: sector records.
     """
 
     id: str
     """
     Unique identifier for this report.
-
-    Observed on: sector records.
     """
 
     investment_rating: str | None = Field(default=None, alias="investmentRating")
@@ -1285,15 +1027,11 @@ class SectorResearchReport(YahooModel):
 
     Optional at the row level: absent on some rows within the same capture,
     and absent on every row of the ``energy`` capture.
-
-    Observed on: sector records.
     """
 
     provider: str
     """
     Research provider name (for example ``"Morningstar"``).
-
-    Observed on: sector records.
     """
 
     report_date: datetime.datetime = Field(alias="reportDate")
@@ -1302,23 +1040,17 @@ class SectorResearchReport(YahooModel):
 
     Wire value is an ISO-8601 string with an explicit UTC offset; pydantic
     parses it directly.
-
-    Observed on: sector records.
     """
 
     report_title: str = Field(alias="reportTitle")
     """
     Prose report summary/abstract.
-
-    Observed on: sector records.
     """
 
     report_type: str = Field(alias="reportType")
     """
     Report classification label; always ``"Analyst Report"`` in the
     corpus.
-
-    Observed on: sector records.
     """
 
     target_price: float | None = Field(default=None, alias="targetPrice")
@@ -1329,8 +1061,6 @@ class SectorResearchReport(YahooModel):
     fields (:class:`SectorCompany.target_price`), which are ``{raw, fmt}``
     wrapped; optional at the row level, per the same evidence as
     ``investment_rating``.
-
-    Observed on: sector records.
     """
 
     target_price_status: str | None = Field(default=None, alias="targetPriceStatus")
@@ -1339,8 +1069,6 @@ class SectorResearchReport(YahooModel):
 
     Optional at the row level, per the same evidence as
     ``investment_rating``.
-
-    Observed on: sector records.
     """
 
 
@@ -1350,37 +1078,27 @@ class SectorResult(YahooModel):
     industries: list[SectorIndustry]
     """
     Industry breakdown within this sector.
-
-    Observed on: sector records.
     """
 
     key: str
     """
     URL-safe sector slug (for example ``"technology"``); the wire value
     for the ``sector`` path parameter.
-
-    Observed on: sector records.
     """
 
     name: str
     """
     Sector display name (for example ``"Technology"``).
-
-    Observed on: sector records.
     """
 
     overview: SectorOverview
     """
     Aggregate sector-level statistics.
-
-    Observed on: sector records.
     """
 
     performance: SectorPerformance
     """
     This sector's own price-performance metrics.
-
-    Observed on: sector records.
     """
 
     performance_overview_benchmark: SectorBenchmarkPerformance = Field(
@@ -1389,42 +1107,30 @@ class SectorResult(YahooModel):
     """
     A benchmark index's price-performance metrics, for comparison (always
     the S&P 500 in the corpus).
-
-    Observed on: sector records.
     """
 
     research_reports: list[SectorResearchReport] = Field(alias="researchReports")
     """
     Recent analyst research reports on companies within this sector.
-
-    Observed on: sector records.
     """
 
     symbol: str
     """
     Yahoo symbol for this sector's tracking index (for example
     ``"^YH311"``).
-
-    Observed on: sector records.
     """
 
     top_companies: list[SectorCompany] = Field(alias="topCompanies")
     """
     Largest companies by market weight within this sector.
-
-    Observed on: sector records.
     """
 
     top_etfs: list[SectorFund] = Field(alias="topETFs")
     """
     Largest ETFs tracking this sector.
-
-    Observed on: sector records.
     """
 
     top_mutual_funds: list[SectorFund] = Field(alias="topMutualFunds")
     """
     Largest mutual funds tracking this sector.
-
-    Observed on: sector records.
     """

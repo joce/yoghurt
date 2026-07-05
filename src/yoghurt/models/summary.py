@@ -177,9 +177,6 @@ class QuoteSummary(YahooModel):
     corporate_actions: CorporateActions | None = None
     """
     Recent corporate actions (splits, dividends, and similar events).
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
-    MUTUALFUND, OPTION summaries.
     """
 
     default_key_statistics: DefaultKeyStatistics | None = None
@@ -241,9 +238,6 @@ class QuoteSummary(YahooModel):
 
     Despite the name, observed on every quoteType in the corpus this was
     typed against, not just EQUITY.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
-    MUTUALFUND, OPTION summaries.
     """
 
     financial_data: FinancialData | None = None
@@ -379,9 +373,6 @@ class QuoteSummary(YahooModel):
     price: Price | None = None
     """
     Compact real-time price snapshot.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
-    MUTUALFUND, OPTION summaries.
     """
 
     quote_type: SummaryQuoteType | None = None
@@ -390,9 +381,6 @@ class QuoteSummary(YahooModel):
 
     Distinct from :class:`~yoghurt.models.quote.Quote`; see
     :mod:`yoghurt.models.summary_identity`.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
-    MUTUALFUND, OPTION summaries.
     """
 
     quote_unadjusted_performance_overview: QuoteUnadjustedPerformanceOverview | None = (
@@ -400,9 +388,6 @@ class QuoteSummary(YahooModel):
     )
     """
     Unadjusted (dividend/split-naive) return performance vs. a benchmark.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
-    MUTUALFUND, OPTION summaries.
     """
 
     recommendation_trend: RecommendationTrend | None = None
@@ -432,9 +417,6 @@ class QuoteSummary(YahooModel):
     summary_detail: SummaryDetail | None = None
     """
     Wider price/valuation snapshot.
-
-    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
-    MUTUALFUND, OPTION summaries.
     """
 
     summary_profile: SummaryProfile | None = None

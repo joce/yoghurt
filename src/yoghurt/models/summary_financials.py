@@ -95,8 +95,6 @@ class Earnings(YahooModel):
 
     Absent (not merely null) on low-analyst-coverage captures (``7203.T``,
     ``BAC-PL``); always accompanied by ``earnings_low``/``earnings_high``.
-
-    Observed on: EQUITY summaries.
     """
 
     earnings_call_date: list[datetime.datetime]
@@ -109,8 +107,6 @@ class Earnings(YahooModel):
     ``datetime.datetime`` per tier 3 of the epoch-typing ruling (no
     in-model timezone context), mirroring
     :class:`~yoghurt.models.chart.ChartDividend`'s precedent.
-
-    Observed on: EQUITY summaries.
     """
 
     earnings_date: list[datetime.datetime]
@@ -121,8 +117,6 @@ class Earnings(YahooModel):
     every corpus value); typed as aware-UTC ``datetime.datetime`` per tier
     3 of the epoch-typing ruling, same as ``earnings_call_date``. Can be an
     empty list (``BAC-PL``'s sole observed example).
-
-    Observed on: EQUITY summaries.
     """
 
     earnings_high: float | None = None
@@ -131,8 +125,6 @@ class Earnings(YahooModel):
 
     Absent (not merely null) on low-analyst-coverage captures (``7203.T``,
     ``BAC-PL``); always accompanied by ``earnings_average``/``earnings_low``.
-
-    Observed on: EQUITY summaries.
     """
 
     earnings_low: float | None = None
@@ -141,36 +133,26 @@ class Earnings(YahooModel):
 
     Absent (not merely null) on low-analyst-coverage captures (``7203.T``,
     ``BAC-PL``); always accompanied by ``earnings_average``/``earnings_high``.
-
-    Observed on: EQUITY summaries.
     """
 
     is_earnings_date_estimate: bool
     """
     Whether the earnings announcement date is an estimate rather than confirmed.
-
-    Observed on: EQUITY summaries.
     """
 
     revenue_average: float
     """
     Mean analyst revenue estimate for the upcoming earnings report.
-
-    Observed on: EQUITY summaries.
     """
 
     revenue_high: float
     """
     Highest analyst revenue estimate for the upcoming earnings report.
-
-    Observed on: EQUITY summaries.
     """
 
     revenue_low: float
     """
     Lowest analyst revenue estimate for the upcoming earnings report.
-
-    Observed on: EQUITY summaries.
     """
 
 
@@ -184,15 +166,11 @@ class CalendarEvents(YahooModel):
     Wire value is a midnight-UTC-aligned epoch timestamp in seconds;
     pydantic converts it to a UTC calendar date (verified against every
     corpus value).
-
-    Observed on: EQUITY summaries.
     """
 
     earnings: Earnings
     """
     Details of the upcoming earnings announcement and call.
-
-    Observed on: EQUITY summaries.
     """
 
     ex_dividend_date: datetime.date | None = None
@@ -202,15 +180,11 @@ class CalendarEvents(YahooModel):
     Wire value is a midnight-UTC-aligned epoch timestamp in seconds;
     pydantic converts it to a UTC calendar date (verified against every
     corpus value).
-
-    Observed on: EQUITY summaries.
     """
 
     max_age: int
     """
     Maximum age, in seconds, that Yahoo considers this module fresh.
-
-    Observed on: EQUITY summaries.
     """
 
 
@@ -224,15 +198,11 @@ class FinancialsTemplate(YahooModel):
 
     Three values across nine captures is not enough evidence for a closed
     vocabulary, so this stays plain ``str``.
-
-    Observed on: EQUITY summaries.
     """
 
     max_age: int
     """
     Maximum age, in seconds, that Yahoo considers this module fresh.
-
-    Observed on: EQUITY summaries.
     """
 
 
@@ -242,113 +212,81 @@ class FinancialData(YahooModel):
     current_price: float
     """
     Latest market price used as the basis for these financial metrics.
-
-    Observed on: EQUITY summaries.
     """
 
     current_ratio: float | None = None
     """
     Current assets divided by current liabilities.
-
-    Observed on: EQUITY summaries.
     """
 
     debt_to_equity: float | None = None
     """
     Total debt divided by total shareholder equity, as a percentage.
-
-    Observed on: EQUITY summaries.
     """
 
     earnings_growth: float | None = None
     """
     Year-over-year growth in earnings.
-
-    Observed on: EQUITY summaries.
     """
 
     ebitda: float | None = None
     """
     Earnings before interest, taxes, depreciation, and amortization.
-
-    Observed on: EQUITY summaries.
     """
 
     ebitda_margins: float
     """
     EBITDA as a percentage of total revenue.
-
-    Observed on: EQUITY summaries.
     """
 
     financial_currency: str
     """
     Currency in which these financial figures are reported.
-
-    Observed on: EQUITY summaries.
     """
 
     free_cashflow: float | None = None
     """
     Operating cash flow minus capital expenditures.
-
-    Observed on: EQUITY summaries.
     """
 
     gross_margins: float
     """
     Gross profit as a percentage of total revenue.
-
-    Observed on: EQUITY summaries.
     """
 
     gross_profits: float | None = None
     """
     Total revenue minus cost of goods sold.
-
-    Observed on: EQUITY summaries.
     """
 
     max_age: int
     """
     Maximum age, in seconds, that Yahoo considers this module fresh.
-
-    Observed on: EQUITY summaries.
     """
 
     number_of_analyst_opinions: int | None = None
     """
     Number of analysts contributing to the price-target consensus.
-
-    Observed on: EQUITY summaries.
     """
 
     operating_cashflow: float
     """
     Cash generated from normal business operations.
-
-    Observed on: EQUITY summaries.
     """
 
     operating_margins: float
     """
     Operating income as a percentage of total revenue.
-
-    Observed on: EQUITY summaries.
     """
 
     profit_margins: float
     """
     Net income as a percentage of total revenue.
-
-    Observed on: EQUITY summaries.
     """
 
     quick_ratio: float | None = None
     """
     Liquid assets (excluding inventory) divided by current liabilities.
-
-    Observed on: EQUITY summaries.
     """
 
     recommendation_key: str
@@ -358,99 +296,71 @@ class FinancialData(YahooModel):
     Not typed as a closed vocabulary: this batch's corpus has only two
     distinct values (``"buy"``, ``"none"``), too little evidence to
     enumerate Yahoo's full recommendation-key set.
-
-    Observed on: EQUITY summaries.
     """
 
     recommendation_mean: float | None = None
     """
     Mean analyst recommendation score (lower is more bullish).
-
-    Observed on: EQUITY summaries.
     """
 
     return_on_assets: float
     """
     Net income as a percentage of total assets.
-
-    Observed on: EQUITY summaries.
     """
 
     return_on_equity: float
     """
     Net income as a percentage of shareholder equity.
-
-    Observed on: EQUITY summaries.
     """
 
     revenue_growth: float | None = None
     """
     Year-over-year growth in total revenue.
-
-    Observed on: EQUITY summaries.
     """
 
     revenue_per_share: float | None = None
     """
     Total revenue divided by shares outstanding.
-
-    Observed on: EQUITY summaries.
     """
 
     target_high_price: float | None = None
     """
     Highest analyst price target.
-
-    Observed on: EQUITY summaries.
     """
 
     target_low_price: float | None = None
     """
     Lowest analyst price target.
-
-    Observed on: EQUITY summaries.
     """
 
     target_mean_price: float | None = None
     """
     Mean analyst price target.
-
-    Observed on: EQUITY summaries.
     """
 
     target_median_price: float | None = None
     """
     Median analyst price target.
-
-    Observed on: EQUITY summaries.
     """
 
     total_cash: float
     """
     Total cash and cash equivalents held by the company.
-
-    Observed on: EQUITY summaries.
     """
 
     total_cash_per_share: float
     """
     Total cash divided by shares outstanding.
-
-    Observed on: EQUITY summaries.
     """
 
     total_debt: float
     """
     Total interest-bearing debt held by the company.
-
-    Observed on: EQUITY summaries.
     """
 
     total_revenue: float | None = None
     """
     Total revenue over the trailing twelve months.
-
-    Observed on: EQUITY summaries.
     """
 
 
@@ -506,8 +416,6 @@ class DefaultKeyStatistics(YahooModel):
     MUTUALFUND alike) but only ever non-null on the three ETF captures
     (``QQQ``, ``SPY``, ``VT``); required-but-nullable per the batch c1
     precedent.
-
-    Observed on: EQUITY, ETF, INDEX, MUTUALFUND summaries.
     """
 
     date_short_interest: datetime.date | None = None
@@ -601,8 +509,6 @@ class DefaultKeyStatistics(YahooModel):
     MUTUALFUND alike) but only ever non-null on the three ETF captures
     (``QQQ``, ``SPY``, ``VT``); required-but-nullable per the batch c1
     precedent.
-
-    Observed on: EQUITY, ETF, INDEX, MUTUALFUND summaries.
     """
 
     fund_inception_date: datetime.date | None = None
@@ -691,8 +597,6 @@ class DefaultKeyStatistics(YahooModel):
     Present on every capture in this corpus (EQUITY, ETF, INDEX,
     MUTUALFUND alike) but only ever non-null on a subset of EQUITY
     captures; required-but-nullable per the batch c1 precedent.
-
-    Observed on: EQUITY, ETF, INDEX, MUTUALFUND summaries.
     """
 
     latest_share_class: str | None
@@ -701,8 +605,6 @@ class DefaultKeyStatistics(YahooModel):
 
     Present on every capture in this corpus but never observed non-null;
     required-but-nullable per the batch c1 precedent.
-
-    Observed on: EQUITY, ETF, INDEX, MUTUALFUND summaries.
     """
 
     lead_investor: str | None
@@ -711,8 +613,6 @@ class DefaultKeyStatistics(YahooModel):
 
     Present on every capture in this corpus but never observed non-null;
     required-but-nullable per the batch c1 precedent.
-
-    Observed on: EQUITY, ETF, INDEX, MUTUALFUND summaries.
     """
 
     legal_type: str | None
@@ -723,15 +623,11 @@ class DefaultKeyStatistics(YahooModel):
     MUTUALFUND alike) but only ever non-null on the three ETF captures
     (``QQQ``, ``SPY``, ``VT``); required-but-nullable per the batch c1
     precedent.
-
-    Observed on: EQUITY, ETF, INDEX, MUTUALFUND summaries.
     """
 
     max_age: int
     """
     Maximum age, in seconds, that Yahoo considers this module fresh.
-
-    Observed on: EQUITY, ETF, INDEX, MUTUALFUND summaries.
     """
 
     morning_star_overall_rating: float | None = None
@@ -787,8 +683,6 @@ class DefaultKeyStatistics(YahooModel):
     price_hint: int
     """
     Decimal precision indicator for price values.
-
-    Observed on: EQUITY, ETF, INDEX, MUTUALFUND summaries.
     """
 
     price_to_book: float | None = None

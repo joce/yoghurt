@@ -88,23 +88,17 @@ class SecFilingExhibit(YahooModel):
 
     Present on 103 of 1330 corpus exhibits, always alongside ``type:
     "EXCEL"`` (Yahoo's Excel-format financial-report exhibits).
-
-    Observed on: EQUITY summaries.
     """
 
     type: str
     """
     Exhibit type or form code (for example ``"10-Q"``, ``"EX-31.1"``,
     ``"EXCEL"``).
-
-    Observed on: EQUITY summaries.
     """
 
     url: str
     """
     URL of the exhibit document.
-
-    Observed on: EQUITY summaries.
     """
 
 
@@ -119,15 +113,11 @@ class SecFiling(YahooModel):
     Always matches ``epoch_date``'s calendar date on every corpus entry
     (verified); a genuine redundant pair kept as their own wire types
     rather than collapsed into one, per the module docstring.
-
-    Observed on: EQUITY summaries.
     """
 
     edgar_url: str
     """
     URL of the filing's Yahoo Finance SEC-filing page.
-
-    Observed on: EQUITY summaries.
     """
 
     epoch_date: datetime.date
@@ -138,15 +128,11 @@ class SecFiling(YahooModel):
     (verified against every one of the 432 corpus entries); pydantic
     converts it to a UTC calendar date directly (tier 1 of the
     epoch-typing ruling) — a bare epoch, not a ``{raw, fmt}`` wrapper.
-
-    Observed on: EQUITY summaries.
     """
 
     exhibits: list[SecFilingExhibit]
     """
     Documents attached to this filing.
-
-    Observed on: EQUITY summaries.
     """
 
     max_age: int
@@ -154,15 +140,11 @@ class SecFiling(YahooModel):
     Maximum age, in seconds, that Yahoo considers this entry fresh.
 
     Always ``1`` in this corpus.
-
-    Observed on: EQUITY summaries.
     """
 
     title: str
     """
     Human-readable description of the filing's purpose.
-
-    Observed on: EQUITY summaries.
     """
 
     type: str
@@ -172,8 +154,6 @@ class SecFiling(YahooModel):
 
     38 distinct values observed across 432 corpus entries — a real but
     open-ended vocabulary, so this stays plain ``str``.
-
-    Observed on: EQUITY summaries.
     """
 
 
@@ -183,15 +163,11 @@ class SecFilings(YahooModel):
     filings: list[SecFiling]
     """
     SEC filing entries, most recent first.
-
-    Observed on: EQUITY summaries.
     """
 
     max_age: int
     """
     Maximum age, in seconds, that Yahoo considers this module fresh.
-
-    Observed on: EQUITY summaries.
     """
 
 
@@ -201,15 +177,11 @@ class RecommendationTrendEntry(YahooModel):
     buy: int
     """
     Number of analysts rating this security "buy".
-
-    Observed on: EQUITY summaries.
     """
 
     hold: int
     """
     Number of analysts rating this security "hold".
-
-    Observed on: EQUITY summaries.
     """
 
     period: str
@@ -219,29 +191,21 @@ class RecommendationTrendEntry(YahooModel):
 
     Only four values observed, one of each per capture; not enough
     evidence for a closed vocabulary, so this stays plain ``str``.
-
-    Observed on: EQUITY summaries.
     """
 
     sell: int
     """
     Number of analysts rating this security "sell".
-
-    Observed on: EQUITY summaries.
     """
 
     strong_buy: int
     """
     Number of analysts rating this security "strong buy".
-
-    Observed on: EQUITY summaries.
     """
 
     strong_sell: int
     """
     Number of analysts rating this security "strong sell".
-
-    Observed on: EQUITY summaries.
     """
 
 
@@ -251,15 +215,11 @@ class RecommendationTrend(YahooModel):
     max_age: int
     """
     Maximum age, in seconds, that Yahoo considers this module fresh.
-
-    Observed on: EQUITY summaries.
     """
 
     trend: list[RecommendationTrendEntry]
     """
     Trailing monthly analyst-recommendation-count rows, most recent first.
-
-    Observed on: EQUITY summaries.
     """
 
 
@@ -273,15 +233,11 @@ class UpgradeDowngradeEntry(YahooModel):
 
     Five values observed across 2518 corpus entries — a real but thin
     vocabulary, so this stays plain ``str``.
-
-    Observed on: EQUITY summaries.
     """
 
     current_price_target: float
     """
     Analyst's price target after this action.
-
-    Observed on: EQUITY summaries.
     """
 
     epoch_grade_date: datetime.datetime
@@ -293,23 +249,17 @@ class UpgradeDowngradeEntry(YahooModel):
     ``datetime.datetime`` per tier 3 of the epoch-typing ruling — a bare
     epoch, not a ``{raw, fmt}`` wrapper, and distinct from
     ``secFilings.filings[].epochDate``'s calendar-date alignment.
-
-    Observed on: EQUITY summaries.
     """
 
     firm: str
     """
     Name of the analyst firm issuing this action.
-
-    Observed on: EQUITY summaries.
     """
 
     from_grade: str
     """
     Rating grade prior to this action (for example ``"Outperform"``); an
     empty string when this is an initiating action with no prior grade.
-
-    Observed on: EQUITY summaries.
     """
 
     price_target_action: str
@@ -322,24 +272,18 @@ class UpgradeDowngradeEntry(YahooModel):
     accompanied this ratings action), not a null; seven values observed
     across 2518 corpus entries is thin evidence for a closed vocabulary,
     so this stays plain ``str``.
-
-    Observed on: EQUITY summaries.
     """
 
     prior_price_target: float
     """
     Analyst's price target before this action (``0.0`` when there was no
     prior target).
-
-    Observed on: EQUITY summaries.
     """
 
     to_grade: str
     """
     Rating grade assigned by this action (for example ``"Buy"``,
     ``"Hold"``, ``"Neutral"``).
-
-    Observed on: EQUITY summaries.
     """
 
 
@@ -349,15 +293,11 @@ class UpgradeDowngradeHistory(YahooModel):
     history: list[UpgradeDowngradeEntry]
     """
     Analyst ratings-action entries, most recent first.
-
-    Observed on: EQUITY summaries.
     """
 
     max_age: int
     """
     Maximum age, in seconds, that Yahoo considers this module fresh.
-
-    Observed on: EQUITY summaries.
     """
 
 
@@ -369,8 +309,6 @@ class TrendEstimate(YahooModel):
     Projected growth rate for this period.
 
     A bare ``float`` on every observed row, never a ``{raw, fmt}`` wrapper.
-
-    Observed on: EQUITY summaries.
     """
 
     period: str
@@ -380,8 +318,6 @@ class TrendEstimate(YahooModel):
 
     Five values observed, one of each per capture; not enough evidence for
     a closed vocabulary, so this stays plain ``str``.
-
-    Observed on: EQUITY summaries.
     """
 
 
@@ -402,15 +338,11 @@ class TrendEstimateGroup(YahooModel):
     Always empty on ``sectorTrend``/``industryTrend`` in this corpus (see
     the module docstring); populated with 5 entries on every ``indexTrend``
     capture.
-
-    Observed on: EQUITY summaries.
     """
 
     max_age: int
     """
     Maximum age, in seconds, that Yahoo considers this module fresh.
-
-    Observed on: EQUITY summaries.
     """
 
     symbol: str | None
@@ -422,6 +354,4 @@ class TrendEstimateGroup(YahooModel):
     ``sectorTrend``, ``industryTrend`` alike) but only ever non-null on
     ``indexTrend`` (always ``"SP5"``); required-but-nullable per the batch
     c1 precedent.
-
-    Observed on: EQUITY summaries.
     """

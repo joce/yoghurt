@@ -68,43 +68,31 @@ class OptionContract(YahooModel):
     ask: float
     """
     Lowest price a seller is willing to accept for the contract.
-
-    Observed on: call, put contracts.
     """
 
     bid: float
     """
     Highest price a buyer is willing to pay for the contract.
-
-    Observed on: call, put contracts.
     """
 
     change: float
     """
     Change in the contract's last price from the previous session.
-
-    Observed on: call, put contracts.
     """
 
     contract_size: str
     """
     Contract size category (observed value: ``"REGULAR"``).
-
-    Observed on: call, put contracts.
     """
 
     contract_symbol: str
     """
     Yahoo's unique identifier for the option contract.
-
-    Observed on: call, put contracts.
     """
 
     currency: str
     """
     Currency in which the contract is quoted.
-
-    Observed on: call, put contracts.
     """
 
     expiration: datetime.date
@@ -114,30 +102,22 @@ class OptionContract(YahooModel):
     Wire value is a midnight-UTC-aligned epoch timestamp in seconds;
     pydantic converts it to a UTC calendar date (verified against every
     corpus contract).
-
-    Observed on: call, put contracts.
     """
 
     implied_volatility: float
     """
     Market's forecast of the underlying security's volatility implied by
     the contract's price.
-
-    Observed on: call, put contracts.
     """
 
     in_the_money: bool
     """
     Whether the contract is currently in the money.
-
-    Observed on: call, put contracts.
     """
 
     last_price: float
     """
     Price of the contract's most recent trade.
-
-    Observed on: call, put contracts.
     """
 
     last_trade_date: datetime.datetime
@@ -147,29 +127,21 @@ class OptionContract(YahooModel):
     Wire value is an epoch timestamp in seconds with no in-model timezone
     context to localize against; pydantic converts it to an aware UTC
     datetime.
-
-    Observed on: call, put contracts.
     """
 
     open_interest: int
     """
     Total number of outstanding contracts that have not been settled.
-
-    Observed on: call, put contracts.
     """
 
     percent_change: float
     """
     Percent change in the contract's last price from the previous session.
-
-    Observed on: call, put contracts.
     """
 
     strike: float
     """
     Contractually specified price at which the contract can be exercised.
-
-    Observed on: call, put contracts.
     """
 
     volume: int | None = None
@@ -178,8 +150,6 @@ class OptionContract(YahooModel):
 
     Absent on a minority of illiquid strikes (present on 353 of 365
     corpus contracts).
-
-    Observed on: call, put contracts.
     """
 
 
@@ -189,8 +159,6 @@ class OptionExpiration(YahooModel):
     calls: list[OptionContract]
     """
     Call contracts for this expiration date.
-
-    Observed on option chain expirations.
     """
 
     expiration_date: datetime.date
@@ -200,23 +168,17 @@ class OptionExpiration(YahooModel):
     Wire value is a midnight-UTC-aligned epoch timestamp in seconds;
     pydantic converts it to a UTC calendar date (verified against every
     corpus expiration).
-
-    Observed on option chain expirations.
     """
 
     has_mini_options: bool
     """
     Whether mini options (covering fewer underlying shares than a
     standard contract) are available for this expiration date.
-
-    Observed on option chain expirations.
     """
 
     puts: list[OptionContract]
     """
     Put contracts for this expiration date.
-
-    Observed on option chain expirations.
     """
 
 
@@ -230,15 +192,11 @@ class OptionChain(YahooModel):
     Wire values are midnight-UTC-aligned epoch timestamps in seconds;
     pydantic converts each to a UTC calendar date (verified against every
     corpus value).
-
-    Observed on option chains.
     """
 
     has_mini_options: bool
     """
     Whether mini options are available for this symbol.
-
-    Observed on option chains.
     """
 
     options: list[OptionExpiration]
@@ -247,27 +205,19 @@ class OptionChain(YahooModel):
     per request (the expiration selected via the ``date`` parameter, or
     the nearest one by default); the field is a list because the wire
     shape allows for more.
-
-    Observed on option chains.
     """
 
     quote: Quote
     """
     The full quote record for the underlying security.
-
-    Observed on option chains.
     """
 
     strikes: list[float]
     """
     Every strike price Yahoo offers across this symbol's option chain.
-
-    Observed on option chains.
     """
 
     underlying_symbol: str
     """
     Ticker symbol of the security underlying this option chain.
-
-    Observed on option chains.
     """

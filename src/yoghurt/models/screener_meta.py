@@ -178,15 +178,11 @@ class ScreenerFieldCategory(YahooModel):
     """
     URL-safe category slug (for example ``"keystats"``); 48 distinct
     values observed across the corpus.
-
-    Observed on: screener instrument fields.
     """
 
     display_name: str = Field(alias="displayName")
     """
     Human-readable category name (for example ``"Share Statistics"``).
-
-    Observed on: screener instrument fields.
     """
 
 
@@ -200,15 +196,11 @@ class ScreenerFieldCriteria(YahooModel):
     on ``operator`` and the field's own type (for example ``["beta",
     -0.2, 0.2]`` for a ``BTWN`` chip, ``["exchange", "NMS"]`` for an ``EQ``
     chip on a string-valued field).
-
-    Observed on: screener instrument fields.
     """
 
     operator: ScreenerCriteriaOperator
     """
     Comparison operator this quick-pick chip applies.
-
-    Observed on: screener instrument fields.
     """
 
 
@@ -218,8 +210,6 @@ class ScreenerFieldLabel(YahooModel):
     criteria: ScreenerFieldCriteria
     """
     The filter criteria this chip applies when selected.
-
-    Observed on: screener instrument fields.
     """
 
     dependent_filter_label: str | None = Field(
@@ -230,15 +220,11 @@ class ScreenerFieldLabel(YahooModel):
     example an ``industry`` label naming its parent ``sector`` label).
 
     Present on 725 of 3597 corpus labels; ``None`` on the rest.
-
-    Observed on: screener instrument fields.
     """
 
     display_name: str = Field(alias="displayName")
     """
     Human-readable chip label (for example ``"< -0.2"``, ``"NasdaqGS"``).
-
-    Observed on: screener instrument fields.
     """
 
 
@@ -248,8 +234,6 @@ class ScreenerField(YahooModel):
     category: ScreenerFieldCategory
     """
     The category this field is grouped under in Yahoo's screener UI.
-
-    Observed on: screener instrument fields.
     """
 
     depend_for: list[str] | None = Field(default=None, alias="dependFor")
@@ -259,8 +243,6 @@ class ScreenerField(YahooModel):
 
     Present on 7 of 1666 corpus field specs, spread across 7 instruments
     (each instrument's own ``sector`` field); absent elsewhere.
-
-    Observed on: screener instrument fields.
     """
 
     dependent_field: str | None = Field(default=None, alias="dependentField")
@@ -270,29 +252,21 @@ class ScreenerField(YahooModel):
 
     Present on 5 of 1666 corpus field specs, spread across 5 instruments
     (each instrument's own ``industry`` field); absent elsewhere.
-
-    Observed on: screener instrument fields.
     """
 
     deprecated: bool
     """
     Whether Yahoo has marked this field deprecated.
-
-    Observed on: screener instrument fields.
     """
 
     display_name: str = Field(alias="displayName")
     """
     Human-readable field name (for example ``"Beta"``).
-
-    Observed on: screener instrument fields.
     """
 
     dropdown_supported: bool = Field(alias="dropdownSupported")
     """
     Whether Yahoo's screener UI offers this field as a dropdown filter.
-
-    Observed on: screener instrument fields.
     """
 
     enable_search: bool | None = Field(default=None, alias="enableSearch")
@@ -301,8 +275,6 @@ class ScreenerField(YahooModel):
 
     Present on 17 of 1666 corpus field specs, spread across 12
     instruments; absent elsewhere.
-
-    Observed on: screener instrument fields.
     """
 
     field_id: str = Field(alias="fieldId")
@@ -310,24 +282,18 @@ class ScreenerField(YahooModel):
     Yahoo's field identifier, matching this entry's own key in the
     ``fields`` mapping (for example ``"beta"``,
     ``"peratio.lasttwelvemonths"``).
-
-    Observed on: screener instrument fields.
     """
 
     is_premium: bool = Field(alias="isPremium")
     """
     Whether the underlying data for this field is paywalled; the schema
     entry itself is always returned regardless.
-
-    Observed on: screener instrument fields.
     """
 
     labels: list[ScreenerFieldLabel]
     """
     Quick-pick filter chips Yahoo's screener UI offers for this field.
     Frequently empty (most ``NUMBER`` fields carry no preset chips).
-
-    Observed on: screener instrument fields.
     """
 
     search_source: str | None = Field(default=None, alias="searchSource")
@@ -337,22 +303,16 @@ class ScreenerField(YahooModel):
 
     Present on 17 of 1666 corpus field specs, spread across 12
     instruments; absent elsewhere.
-
-    Observed on: screener instrument fields.
     """
 
     sortable: bool
     """
     Whether this field can be used as a screener/visualization sort key.
-
-    Observed on: screener instrument fields.
     """
 
     type: ScreenerFieldType
     """
     Wire data type of this field's values.
-
-    Observed on: screener instrument fields.
     """
 
 
@@ -365,8 +325,6 @@ class ScreenerInstrumentFieldsResult(YahooModel):
     id. Can be empty (Yahoo's documented ``privatecompany`` quirk; no
     corpus capture for that instrument, but the shape trivially supports
     it).
-
-    Observed on: screener instrument fields.
     """
 
 
@@ -383,15 +341,11 @@ class TimeseriesFieldClass(YahooModel):
     Wire field-class identifier (for example
     ``"sigdev_corporate_deals"``); the value used as a ``timeseries``
     ``type=`` selector.
-
-    Observed on: timeseries field classes.
     """
 
     display_name: str = Field(alias="displayName")
     """
     Human-readable field-class name (for example ``"Corporate Deals"``).
-
-    Observed on: timeseries field classes.
     """
 
 
@@ -407,8 +361,6 @@ class TimeseriesFieldsResult(YahooModel):
     """
     Every fundamentals timeseries field class Yahoo exposes (13 rows in
     the single corpus capture).
-
-    Observed on: timeseries field classes.
     """
 
 
@@ -435,93 +387,67 @@ class ScreenerDiscoverQuote(YahooModel):
 
     Present on 31 of 44 corpus rows (equities with analyst coverage; ETF
     rows never carry it).
-
-    Observed on: screener-discover records.
     """
 
     crypto_tradeable: bool
     """
     Whether this instrument can be traded as cryptocurrency.
-
-    Observed on: screener-discover records.
     """
 
     custom_price_alert_confidence: PriceAlertConfidence
     """
     Yahoo's confidence level for its price-alert feature on this symbol.
-
-    Observed on: screener-discover records.
     """
 
     esg_populated: bool
     """
     Whether Yahoo has ESG (environmental/social/governance) data for this
     symbol.
-
-    Observed on: screener-discover records.
     """
 
     exchange: str
     """
     Short code of the securities exchange (for example ``"NMS"``).
-
-    Observed on: screener-discover records.
     """
 
     exchange_data_delayed_by: int
     """
     Minutes this exchange's data is delayed by.
-
-    Observed on: screener-discover records.
     """
 
     exchange_timezone_name: str
     """
     IANA timezone name of the exchange.
-
-    Observed on: screener-discover records.
     """
 
     exchange_timezone_short_name: str
     """
     Short abbreviation of the exchange timezone.
-
-    Observed on: screener-discover records.
     """
 
     first_trade_date_milliseconds: int
     """
     Epoch-milliseconds timestamp of this instrument's first trade.
-
-    Observed on: screener-discover records.
     """
 
     full_exchange_name: str
     """
     Full display name of the exchange.
-
-    Observed on: screener-discover records.
     """
 
     gmt_off_set_milliseconds: int
     """
     Offset from GMT of the exchange, in milliseconds.
-
-    Observed on: screener-discover records.
     """
 
     has_pre_post_market_data: bool
     """
     Whether pre-market/after-hours data is available for this symbol.
-
-    Observed on: screener-discover records.
     """
 
     language: str
     """
     Locale Yahoo rendered this record in.
-
-    Observed on: screener-discover records.
     """
 
     long_name: str | None = None
@@ -529,22 +455,16 @@ class ScreenerDiscoverQuote(YahooModel):
     Official long name of the security.
 
     Present on 43 of 44 corpus rows.
-
-    Observed on: screener-discover records.
     """
 
     market: str
     """
     Yahoo's internal market-segment identifier.
-
-    Observed on: screener-discover records.
     """
 
     market_state: MarketState = Field(alias="marketState")
     """
     Current trading session phase.
-
-    Observed on: screener-discover records.
     """
 
     net_assets: float | None = Field(default=None, alias="netAssets")
@@ -554,8 +474,6 @@ class ScreenerDiscoverQuote(YahooModel):
     A bare wire float (unlike the ``sector`` endpoint's ``{raw, fmt,
     longFmt}``-wrapped fund fields). Present on 5 of 44 corpus rows (ETF
     rows only).
-
-    Observed on: screener-discover records.
     """
 
     post_market_change: float | None = Field(default=None, alias="postMarketChange")
@@ -563,8 +481,6 @@ class ScreenerDiscoverQuote(YahooModel):
     Absolute price change during the post-market session.
 
     Present on 43 of 44 corpus rows.
-
-    Observed on: screener-discover records.
     """
 
     post_market_change_percent: float | None = Field(
@@ -574,8 +490,6 @@ class ScreenerDiscoverQuote(YahooModel):
     Percent price change during the post-market session.
 
     Present on 43 of 44 corpus rows.
-
-    Observed on: screener-discover records.
     """
 
     post_market_price: float | None = Field(default=None, alias="postMarketPrice")
@@ -583,8 +497,6 @@ class ScreenerDiscoverQuote(YahooModel):
     Most recent post-market trade price.
 
     Present on 43 of 44 corpus rows.
-
-    Observed on: screener-discover records.
     """
 
     post_market_time: int | None = Field(default=None, alias="postMarketTime")
@@ -592,8 +504,6 @@ class ScreenerDiscoverQuote(YahooModel):
     Epoch-seconds timestamp of ``post_market_price``.
 
     Present on 43 of 44 corpus rows.
-
-    Observed on: screener-discover records.
     """
 
     price_hint: int
@@ -602,108 +512,78 @@ class ScreenerDiscoverQuote(YahooModel):
 
     Unlike :class:`~yoghurt.models.markets.MarketSummaryQuote`, universal
     across this endpoint's corpus rows.
-
-    Observed on: screener-discover records.
     """
 
     quote_source_name: str = Field(alias="quoteSourceName")
     """
     Human-readable name of the quote data source (for example
     ``"Nasdaq Real Time Price"``, ``"Delayed Quote"``).
-
-    Observed on: screener-discover records.
     """
 
     quote_type: QuoteType
     """
     Classification of this instrument.
-
-    Observed on: screener-discover records.
     """
 
     region: str
     """
     Yahoo region this record was served for.
-
-    Observed on: screener-discover records.
     """
 
     regular_market_change: float = Field(alias="regularMarketChange")
     """
     Absolute change from the previous regular-session close.
-
-    Observed on: screener-discover records.
     """
 
     regular_market_change_percent: float = Field(alias="regularMarketChangePercent")
     """
     Percent change from the previous regular-session close.
-
-    Observed on: screener-discover records.
     """
 
     regular_market_previous_close: float = Field(alias="regularMarketPreviousClose")
     """
     Previous regular-session closing price.
-
-    Observed on: screener-discover records.
     """
 
     regular_market_price: float = Field(alias="regularMarketPrice")
     """
     Most recent regular-session trade price.
-
-    Observed on: screener-discover records.
     """
 
     regular_market_time: int = Field(alias="regularMarketTime")
     """
     Epoch-seconds timestamp of ``regular_market_price``.
-
-    Observed on: screener-discover records.
     """
 
     short_name: str
     """
     Short display name of the security.
-
-    Observed on: screener-discover records.
     """
 
     source_interval: int
     """
     Refresh interval, in minutes, of the underlying data source.
-
-    Observed on: screener-discover records.
     """
 
     symbol: str
     """
     Yahoo ticker symbol.
-
-    Observed on: screener-discover records.
     """
 
     tradeable: bool
     """
     Whether this instrument can be traded through Yahoo's brokerage
     integration.
-
-    Observed on: screener-discover records.
     """
 
     triggerable: bool
     """
     Whether this symbol supports Yahoo's price-alert triggers.
-
-    Observed on: screener-discover records.
     """
 
     type_disp: str = Field(alias="typeDisp")
     """
     Human-readable display label for ``quote_type``.
-
-    Observed on: screener-discover records.
     """
 
 
@@ -714,22 +594,16 @@ class ScreenerDiscoverIdeaSection(YahooModel):
     """
     Yahoo's stable identifier for this idea module (for example
     ``"MOST_ACTIVES"``, ``"DAY_GAINERS"``).
-
-    Observed on: screener-discover records.
     """
 
     creation_date: int = Field(alias="creationDate")
     """
     Epoch-milliseconds timestamp this idea module was created.
-
-    Observed on: screener-discover records.
     """
 
     description: str
     """
     Prose description of this idea module.
-
-    Observed on: screener-discover records.
     """
 
     entity_id_type: str | None = Field(default=None, alias="entityIdType")
@@ -739,30 +613,22 @@ class ScreenerDiscoverIdeaSection(YahooModel):
 
     Present only on modules whose rows aren't plain ticker references;
     mutually exclusive with ``quote_type`` in the corpus.
-
-    Observed on: screener-discover records.
     """
 
     id: str
     """
     Unique identifier for this idea module.
-
-    Observed on: screener-discover records.
     """
 
     is_premium: bool = Field(alias="isPremium")
     """
     Whether this idea module requires a Yahoo premium subscription.
-
-    Observed on: screener-discover records.
     """
 
     last_updated: int = Field(alias="lastUpdated")
     """
     Epoch-milliseconds timestamp this idea module's rows were last
     refreshed.
-
-    Observed on: screener-discover records.
     """
 
     predefined_scr: bool = Field(alias="predefinedScr")
@@ -770,8 +636,6 @@ class ScreenerDiscoverIdeaSection(YahooModel):
     Whether this idea module is also queryable via ``screener-predefined``.
 
     Always ``True`` in the corpus.
-
-    Observed on: screener-discover records.
     """
 
     quote_type: QuoteType | None = Field(default=None, alias="quoteType")
@@ -780,8 +644,6 @@ class ScreenerDiscoverIdeaSection(YahooModel):
     module is quote-scoped.
 
     Mutually exclusive with ``entity_id_type`` in the corpus.
-
-    Observed on: screener-discover records.
     """
 
     records: list[dict[str, object]]
@@ -796,30 +658,22 @@ class ScreenerDiscoverIdeaSection(YahooModel):
     module docstring's "screener-predefined" section) rather than
     inventing a misleading fixed schema for open-ended, Yahoo-selected
     field lists.
-
-    Observed on: screener-discover records.
     """
 
     title: str
     """
     Display title for this idea module (for example ``"Most Actives"``).
-
-    Observed on: screener-discover records.
     """
 
     total: int
     """
     Total number of rows Yahoo has for this idea module (can exceed
     ``len(records)``, which is capped short in the corpus).
-
-    Observed on: screener-discover records.
     """
 
     version_id: int = Field(alias="versionId")
     """
     Yahoo-internal version counter for this idea module's definition.
-
-    Observed on: screener-discover records.
     """
 
 
@@ -830,8 +684,6 @@ class NeoInvestmentIdeas(YahooModel):
     """
     Curated idea modules Yahoo surfaces on its discover page (9 in the
     single corpus capture).
-
-    Observed on: screener-discover records.
     """
 
 
@@ -841,8 +693,6 @@ class ScreenerDiscoverSections(YahooModel):
     neo_investment_ideas: NeoInvestmentIdeas = Field(alias="neo_investment_ideas")
     """
     The single idea-section key observed in the corpus.
-
-    Observed on: screener-discover records.
     """
 
 
@@ -860,15 +710,11 @@ class ScreenerDiscoverResult(YahooModel):
     ``sections`` (keyed by symbol; 44 entries in the single corpus
     capture). See the module docstring for the reuse-decision evidence
     ruling out :class:`~yoghurt.models.quote.Quote`.
-
-    Observed on: screener-discover records.
     """
 
     sections: ScreenerDiscoverSections
     """
     Curated idea-module groupings.
-
-    Observed on: screener-discover records.
     """
 
 
@@ -886,16 +732,12 @@ class ScreenerCriteriaMetaFilter(YahooModel):
     filter dependent on a ``sector`` selection).
 
     Always empty in the corpus.
-
-    Observed on: screener-predefined records.
     """
 
     field: str
     """
     Screener field id this filter applies to (for example ``"dayvolume"``,
     matching a :class:`ScreenerField.field_id`).
-
-    Observed on: screener-predefined records.
     """
 
     labels_selected: list[int] = Field(alias="labelsSelected")
@@ -903,8 +745,6 @@ class ScreenerCriteriaMetaFilter(YahooModel):
     Indices into the field's quick-pick ``labels`` array that this filter
     corresponds to, when the filter was built from preset chips rather
     than a raw value.
-
-    Observed on: screener-predefined records.
     """
 
     operators: list[str]
@@ -913,8 +753,6 @@ class ScreenerCriteriaMetaFilter(YahooModel):
     :class:`ScreenerCriteriaOperator`, kept as bare ``str`` here since this
     is a distinct wire location and thin, single-endpoint-family evidence
     doesn't independently confirm the same closed vocabulary).
-
-    Observed on: screener-predefined records.
     """
 
     sub_field: str | None = Field(default=None, alias="subField")
@@ -922,16 +760,12 @@ class ScreenerCriteriaMetaFilter(YahooModel):
     Sub-field qualifier for a compound field, when applicable.
 
     Always ``None`` in the corpus.
-
-    Observed on: screener-predefined records.
     """
 
     values: list[str | int]
     """
     Raw comparison values for this filter (for example ``[15000]`` for a
     ``GT`` volume filter, ``["CCC"]`` for an ``EQ`` exchange filter).
-
-    Observed on: screener-predefined records.
     """
 
 
@@ -943,8 +777,6 @@ class ScreenerCriteriaMeta(YahooModel):
     Applied filters defining this predefined screener (empty for the
     ``PRIVATE_COMPANY`` screener in the corpus, which instead filters
     purely by ``quote_type``).
-
-    Observed on: screener-predefined records.
     """
 
     include_fields: list[str] = Field(alias="includeFields")
@@ -952,15 +784,11 @@ class ScreenerCriteriaMeta(YahooModel):
     Screener field ids Yahoo selected for this screener's ``records`` rows
     (for example ``["ticker", "fiftytwowkpercentchange", ...]``); this is
     what drives ``records``' per-screener row shape.
-
-    Observed on: screener-predefined records.
     """
 
     offset: int
     """
     Zero-based row offset this request started from.
-
-    Observed on: screener-predefined records.
     """
 
     quote_type: str = Field(alias="quoteType")
@@ -971,37 +799,27 @@ class ScreenerCriteriaMeta(YahooModel):
     lowercase variants inside ``rawCriteria`` for the same concept and a
     dedicated ``PRIVATE_COMPANY``-only enum member has no other corpus
     confirmation at this wire location.
-
-    Observed on: screener-predefined records.
     """
 
     size: int
     """
     Maximum number of rows requested.
-
-    Observed on: screener-predefined records.
     """
 
     sort_field: str = Field(alias="sortField")
     """
     Screener field id rows are sorted by.
-
-    Observed on: screener-predefined records.
     """
 
     sort_type: str = Field(alias="sortType")
     """
     Sort direction (``"ASC"``/``"DESC"``).
-
-    Observed on: screener-predefined records.
     """
 
     top_operator: str = Field(alias="topOperator")
     """
     How ``criteria`` filters combine (for example ``"AND"``,
     ``"MATCH_ALL"``).
-
-    Observed on: screener-predefined records.
     """
 
 
@@ -1017,50 +835,36 @@ class ScreenerPredefinedResult(YahooModel):
     """
     Yahoo's stable screener identifier (for example ``"MOST_ACTIVES"``),
     matching the ``scr_ids`` value used to request it.
-
-    Observed on: screener-predefined records.
     """
 
     count: int
     """
     Number of rows in ``records`` for this response page.
-
-    Observed on: screener-predefined records.
     """
 
     criteria_meta: ScreenerCriteriaMeta = Field(alias="criteriaMeta")
     """
     Structured filter/sort definition backing this screener.
-
-    Observed on: screener-predefined records.
     """
 
     description: str
     """
     Prose description of this screener.
-
-    Observed on: screener-predefined records.
     """
 
     icon_url: str = Field(alias="iconUrl")
     """
     URL of this screener's display icon.
-
-    Observed on: screener-predefined records.
     """
 
     id: str
     """
     Unique identifier for this screener.
-
-    Observed on: screener-predefined records.
     """
 
     is_premium: bool = Field(alias="isPremium")
     """
     Whether this screener requires a Yahoo premium subscription.
-
-    Observed on: screener-predefined records.
     """
 
     predefined_scr: bool = Field(alias="predefinedScr")
@@ -1069,8 +873,6 @@ class ScreenerPredefinedResult(YahooModel):
 
     Always ``True`` in the corpus (every capture is, by definition, a
     predefined-screener request).
-
-    Observed on: screener-predefined records.
     """
 
     raw_criteria: str = Field(alias="rawCriteria")
@@ -1078,8 +880,6 @@ class ScreenerPredefinedResult(YahooModel):
     JSON-encoded string form of the filter/sort criteria (a serialized
     duplicate of ``criteria_meta``, kept as the raw wire string rather
     than double-parsed).
-
-    Observed on: screener-predefined records.
     """
 
     records: list[dict[str, object]]
@@ -1092,31 +892,23 @@ class ScreenerPredefinedResult(YahooModel):
     left untyped rather than modeled as a fixed row schema or reused as
     :class:`~yoghurt.models.quote.Quote`/:class:`ScreenerDiscoverQuote`
     (neither shape appears on this wire location in the corpus).
-
-    Observed on: screener-predefined records.
     """
 
     start: int
     """
     Zero-based row offset of this response page (matches the requested
     ``start``).
-
-    Observed on: screener-predefined records.
     """
 
     title: str
     """
     Display title for this screener (for example ``"Most Actives"``).
-
-    Observed on: screener-predefined records.
     """
 
     total: int
     """
     Total number of rows Yahoo has for this screener (can exceed
     ``count``/``len(records)``).
-
-    Observed on: screener-predefined records.
     """
 
     use_records: bool = Field(alias="useRecords")
@@ -1125,8 +917,6 @@ class ScreenerPredefinedResult(YahooModel):
 
     Always ``True`` in the corpus; corresponds to the
     ``use_records_response`` API/CLI parameter.
-
-    Observed on: screener-predefined records.
     """
 
     user_has_read_record: bool = Field(alias="userHasReadRecord")
@@ -1135,13 +925,9 @@ class ScreenerPredefinedResult(YahooModel):
     screener's disclosure record.
 
     Always ``False`` in the corpus.
-
-    Observed on: screener-predefined records.
     """
 
     version_id: int = Field(alias="versionId")
     """
     Yahoo-internal version counter for this screener's definition.
-
-    Observed on: screener-predefined records.
     """

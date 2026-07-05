@@ -139,15 +139,11 @@ class EarningsChartQuarter(YahooModel):
 
     Absent (not merely null) on a quarter that hasn't reported yet (the
     corpus's one example: ``OKLO``'s ``1Q2026`` row).
-
-    Observed on: EQUITY summaries.
     """
 
     calendar_quarter: str
     """
     Calendar-quarter label for this row (for example ``"2Q2025"``).
-
-    Observed on: EQUITY summaries.
     """
 
     date: str
@@ -158,8 +154,6 @@ class EarningsChartQuarter(YahooModel):
     A bare quarter-label string, not an epoch — a genuine type divergence
     from ``financialsChart.yearly[].date`` (a year integer) despite the
     shared wire key; see the module docstring.
-
-    Observed on: EQUITY summaries.
     """
 
     difference: str | None = None
@@ -171,15 +165,11 @@ class EarningsChartQuarter(YahooModel):
     reinterpretation, mirroring ``CorporateActionMeta.amount``'s precedent
     in :mod:`yoghurt.models.summary_identity`. Absent (not merely null) on
     a quarter that hasn't reported yet.
-
-    Observed on: EQUITY summaries.
     """
 
     estimate: float
     """
     Analyst-estimated EPS for this quarter.
-
-    Observed on: EQUITY summaries.
     """
 
     fiscal_quarter: str
@@ -187,8 +177,6 @@ class EarningsChartQuarter(YahooModel):
     Fiscal-quarter label for this row (for example ``"3Q2025"``), which
     may differ from the calendar quarter depending on the company's fiscal
     calendar.
-
-    Observed on: EQUITY summaries.
     """
 
     period_end_date: datetime.date
@@ -198,8 +186,6 @@ class EarningsChartQuarter(YahooModel):
     Wire value is a midnight-UTC-aligned epoch timestamp in seconds;
     pydantic converts it to a UTC calendar date (verified against every
     corpus value).
-
-    Observed on: EQUITY summaries.
     """
 
     reported_date: datetime.datetime | None = None
@@ -210,8 +196,6 @@ class EarningsChartQuarter(YahooModel):
     every corpus value), typed as aware-UTC ``datetime.datetime`` per tier
     3 of the epoch-typing ruling (no in-model timezone context). Absent
     (not merely null) on a quarter that hasn't reported yet.
-
-    Observed on: EQUITY summaries.
     """
 
     surprise_pct: str | None = None
@@ -222,8 +206,6 @@ class EarningsChartQuarter(YahooModel):
     Wire value is a string, not a float — corpus wins over the tempting
     reinterpretation. Absent (not merely null) on a quarter that hasn't
     reported yet.
-
-    Observed on: EQUITY summaries.
     """
 
 
@@ -233,15 +215,11 @@ class EarningsChart(YahooModel):
     current_calendar_quarter: str
     """
     Label of the current calendar quarter (for example ``"2Q2026"``).
-
-    Observed on: EQUITY summaries.
     """
 
     current_fiscal_quarter: str
     """
     Label of the current fiscal quarter (for example ``"3Q2026"``).
-
-    Observed on: EQUITY summaries.
     """
 
     current_period_end_date: datetime.date
@@ -251,8 +229,6 @@ class EarningsChart(YahooModel):
     Wire value is a midnight-UTC-aligned epoch timestamp in seconds;
     pydantic converts it to a UTC calendar date (verified against every
     corpus value).
-
-    Observed on: EQUITY summaries.
     """
 
     current_quarter_estimate: float | None = None
@@ -261,23 +237,17 @@ class EarningsChart(YahooModel):
 
     Absent (not merely null) on the corpus's two lowest-analyst-coverage
     captures (``7203.T``, ``BAC-PL``).
-
-    Observed on: EQUITY summaries.
     """
 
     current_quarter_estimate_date: str
     """
     Fiscal-quarter-within-year label for the current estimate (for example
     ``"2Q"``).
-
-    Observed on: EQUITY summaries.
     """
 
     current_quarter_estimate_year: int
     """
     Calendar year of the current quarter estimate.
-
-    Observed on: EQUITY summaries.
     """
 
     earnings_date: list[datetime.datetime]
@@ -289,22 +259,16 @@ class EarningsChart(YahooModel):
     3 of the epoch-typing ruling, mirroring
     ``calendarEvents.earnings.earnings_date`` in
     :mod:`yoghurt.models.summary_financials`.
-
-    Observed on: EQUITY summaries.
     """
 
     is_earnings_date_estimate: bool
     """
     Whether the earnings announcement date is an estimate rather than confirmed.
-
-    Observed on: EQUITY summaries.
     """
 
     quarterly: list[EarningsChartQuarter]
     """
     Historical quarterly EPS actuals and estimates, oldest first.
-
-    Observed on: EQUITY summaries.
     """
 
 
@@ -319,29 +283,21 @@ class FinancialsChartYear(YahooModel):
     type divergence from ``earningsChart.quarterly[].date`` and
     ``financialsChart.quarterly[].date`` despite the shared wire key; see
     the module docstring.
-
-    Observed on: EQUITY summaries.
     """
 
     earnings: float
     """
     Total annual earnings (net income).
-
-    Observed on: EQUITY summaries.
     """
 
     profit_margin: float
     """
     Annual earnings as a percentage of annual revenue.
-
-    Observed on: EQUITY summaries.
     """
 
     revenue: float
     """
     Total annual revenue.
-
-    Observed on: EQUITY summaries.
     """
 
 
@@ -356,36 +312,26 @@ class FinancialsChartQuarter(YahooModel):
     ``earningsChart.quarterly[].date``'s shape but distinct from
     ``financialsChart.yearly[].date`` (a year integer); see the module
     docstring.
-
-    Observed on: EQUITY summaries.
     """
 
     earnings: float
     """
     Total quarterly earnings (net income).
-
-    Observed on: EQUITY summaries.
     """
 
     fiscal_quarter: str
     """
     Fiscal-quarter label for this row (for example ``"3Q2025"``).
-
-    Observed on: EQUITY summaries.
     """
 
     profit_margin: float
     """
     Quarterly earnings as a percentage of quarterly revenue.
-
-    Observed on: EQUITY summaries.
     """
 
     revenue: float
     """
     Total quarterly revenue.
-
-    Observed on: EQUITY summaries.
     """
 
 
@@ -395,15 +341,11 @@ class FinancialsChart(YahooModel):
     quarterly: list[FinancialsChartQuarter]
     """
     Historical quarterly revenue, earnings, and margin, oldest first.
-
-    Observed on: EQUITY summaries.
     """
 
     yearly: list[FinancialsChartYear]
     """
     Historical annual revenue, earnings, and margin, oldest first.
-
-    Observed on: EQUITY summaries.
     """
 
 
@@ -419,36 +361,26 @@ class EarningsModule(YahooModel):
     """
     Which EPS methodology (``"gaap"``/``"non-gaap"``) the ``earnings``
     module mirrors.
-
-    Observed on: EQUITY summaries.
     """
 
     earnings_chart: EarningsChart
     """
     Quarterly EPS actuals, estimates, and the current quarter's outlook.
-
-    Observed on: EQUITY summaries.
     """
 
     financial_currency: str
     """
     Currency in which these earnings figures are reported.
-
-    Observed on: EQUITY summaries.
     """
 
     financials_chart: FinancialsChart
     """
     Annual and quarterly revenue/earnings/margin history.
-
-    Observed on: EQUITY summaries.
     """
 
     max_age: int
     """
     Maximum age, in seconds, that Yahoo considers this module fresh.
-
-    Observed on: EQUITY summaries.
     """
 
 
@@ -458,8 +390,6 @@ class EarningsHistoryEntry(YahooModel):
     currency: str
     """
     Currency in which this entry's EPS figures are reported.
-
-    Observed on: EQUITY summaries.
     """
 
     eps_actual: RawFloat | None = None
@@ -469,8 +399,6 @@ class EarningsHistoryEntry(YahooModel):
     Wire value is a ``{raw, fmt}`` wrapper when present. Absent (not
     merely null or ``{}``) on a quarter that hasn't reported yet (the
     corpus's one example: ``OKLO``'s ``-1q`` row).
-
-    Observed on: EQUITY summaries.
     """
 
     eps_difference: RawFloat | None = None
@@ -479,8 +407,6 @@ class EarningsHistoryEntry(YahooModel):
 
     Wire value is a ``{raw, fmt}`` wrapper when present. Absent (not
     merely null or ``{}``) on a quarter that hasn't reported yet.
-
-    Observed on: EQUITY summaries.
     """
 
     eps_estimate: RawFloat
@@ -489,23 +415,17 @@ class EarningsHistoryEntry(YahooModel):
 
     Wire value is a ``{raw, fmt}`` wrapper on every corpus entry
     (universal); see :mod:`yoghurt.models._base`.
-
-    Observed on: EQUITY summaries.
     """
 
     max_age: int
     """
     Maximum age, in seconds, that Yahoo considers this entry fresh.
-
-    Observed on: EQUITY summaries.
     """
 
     period: str
     """
     Relative-quarter label for this entry (observed values: ``"-4q"``,
     ``"-3q"``, ``"-2q"``, ``"-1q"``).
-
-    Observed on: EQUITY summaries.
     """
 
     quarter: RawDate
@@ -516,8 +436,6 @@ class EarningsHistoryEntry(YahooModel):
     (universal), with ``raw`` an epoch-seconds calendar date (verified
     midnight-UTC-aligned) and ``fmt`` a human-readable ``"YYYY-MM-DD"``
     string; see :mod:`yoghurt.models._base`.
-
-    Observed on: EQUITY summaries.
     """
 
     surprise_percent: RawFloat | None = None
@@ -526,8 +444,6 @@ class EarningsHistoryEntry(YahooModel):
 
     Wire value is a ``{raw, fmt}`` wrapper when present. Absent (not
     merely null or ``{}``) on a quarter that hasn't reported yet.
-
-    Observed on: EQUITY summaries.
     """
 
 
@@ -537,22 +453,16 @@ class EarningsHistory(YahooModel):
     default_methodology: str
     """
     Which EPS methodology (``"gaap"``/``"non-gaap"``) these figures use.
-
-    Observed on: EQUITY summaries.
     """
 
     history: list[EarningsHistoryEntry]
     """
     Trailing quarterly EPS actual-vs-estimate entries, oldest first.
-
-    Observed on: EQUITY summaries.
     """
 
     max_age: int
     """
     Maximum age, in seconds, that Yahoo considers this module fresh.
-
-    Observed on: EQUITY summaries.
     """
 
 
@@ -566,8 +476,6 @@ class EarningsEstimate(YahooModel):
     Wire value is a ``{raw, fmt}`` wrapper, or ``{}`` (unwraps to
     ``None``) when Yahoo has no analyst coverage for this period (the
     corpus's example: ``BAC-PL``); see :mod:`yoghurt.models._base`.
-
-    Observed on: EQUITY summaries.
     """
 
     earnings_currency: str | None = None
@@ -576,8 +484,6 @@ class EarningsEstimate(YahooModel):
 
     Null (rather than a wrapper) alongside the rest of this group's
     ``{}`` fields on the corpus's no-analyst-coverage example (``BAC-PL``).
-
-    Observed on: EQUITY summaries.
     """
 
     growth: RawFloatOrNone = None
@@ -586,8 +492,6 @@ class EarningsEstimate(YahooModel):
 
     Wire value is a ``{raw, fmt}`` wrapper, or ``{}`` (unwraps to
     ``None``) when Yahoo has no analyst coverage for this period.
-
-    Observed on: EQUITY summaries.
     """
 
     high: RawFloatOrNone = None
@@ -596,8 +500,6 @@ class EarningsEstimate(YahooModel):
 
     Wire value is a ``{raw, fmt}`` wrapper, or ``{}`` (unwraps to
     ``None``) when Yahoo has no analyst coverage for this period.
-
-    Observed on: EQUITY summaries.
     """
 
     low: RawFloatOrNone = None
@@ -606,8 +508,6 @@ class EarningsEstimate(YahooModel):
 
     Wire value is a ``{raw, fmt}`` wrapper, or ``{}`` (unwraps to
     ``None``) when Yahoo has no analyst coverage for this period.
-
-    Observed on: EQUITY summaries.
     """
 
     number_of_analysts: RawIntOrNone = None
@@ -616,8 +516,6 @@ class EarningsEstimate(YahooModel):
 
     Wire value is a ``{raw, fmt, longFmt}`` wrapper, or ``{}`` (unwraps to
     ``None``) when Yahoo has no analyst coverage for this period.
-
-    Observed on: EQUITY summaries.
     """
 
     year_ago_eps: RawFloatOrNone = None
@@ -626,8 +524,6 @@ class EarningsEstimate(YahooModel):
 
     Wire value is a ``{raw, fmt}`` wrapper, or ``{}`` (unwraps to
     ``None``) when Yahoo has no analyst coverage for this period.
-
-    Observed on: EQUITY summaries.
     """
 
 
@@ -642,8 +538,6 @@ class RevenueEstimate(YahooModel):
     (universal, unlike its ``earningsEstimate`` counterpart — this group
     is never observed fully ``{}`` in this corpus); see
     :mod:`yoghurt.models._base`.
-
-    Observed on: EQUITY summaries.
     """
 
     growth: RawFloat
@@ -651,8 +545,6 @@ class RevenueEstimate(YahooModel):
     Projected year-over-year revenue growth for this period.
 
     Wire value is a ``{raw, fmt}`` wrapper on every corpus entry.
-
-    Observed on: EQUITY summaries.
     """
 
     high: RawFloat
@@ -660,8 +552,6 @@ class RevenueEstimate(YahooModel):
     Highest analyst revenue estimate for this period.
 
     Wire value is a ``{raw, fmt, longFmt}`` wrapper on every corpus entry.
-
-    Observed on: EQUITY summaries.
     """
 
     low: RawFloat
@@ -669,8 +559,6 @@ class RevenueEstimate(YahooModel):
     Lowest analyst revenue estimate for this period.
 
     Wire value is a ``{raw, fmt, longFmt}`` wrapper on every corpus entry.
-
-    Observed on: EQUITY summaries.
     """
 
     number_of_analysts: RawInt
@@ -678,15 +566,11 @@ class RevenueEstimate(YahooModel):
     Number of analysts contributing to this estimate.
 
     Wire value is a ``{raw, fmt, longFmt}`` wrapper on every corpus entry.
-
-    Observed on: EQUITY summaries.
     """
 
     revenue_currency: str
     """
     Currency in which these revenue estimates are reported.
-
-    Observed on: EQUITY summaries.
     """
 
     year_ago_revenue: RawFloat
@@ -694,8 +578,6 @@ class RevenueEstimate(YahooModel):
     Actual revenue for the same period one year prior.
 
     Wire value is a ``{raw, fmt, longFmt}`` wrapper on every corpus entry.
-
-    Observed on: EQUITY summaries.
     """
 
 
@@ -708,8 +590,6 @@ class EpsTrend(YahooModel):
 
     Wire value is a ``{raw, fmt}`` wrapper, or ``{}`` (unwraps to
     ``None``) when Yahoo has no analyst coverage for this period.
-
-    Observed on: EQUITY summaries.
     """
 
     eps_trend_currency: str | None = None
@@ -718,8 +598,6 @@ class EpsTrend(YahooModel):
 
     Null (rather than a wrapper) alongside the rest of this group's
     ``{}`` fields on the corpus's no-analyst-coverage example (``BAC-PL``).
-
-    Observed on: EQUITY summaries.
     """
 
     ninety_days_ago: RawFloatOrNone = Field(default=None, alias="90daysAgo")
@@ -731,8 +609,6 @@ class EpsTrend(YahooModel):
     explicit alias override. Wire value is a ``{raw, fmt}`` wrapper, or
     ``{}`` (unwraps to ``None``) when Yahoo has no analyst coverage for
     this period.
-
-    Observed on: EQUITY summaries.
     """
 
     seven_days_ago: RawFloatOrNone = Field(default=None, alias="7daysAgo")
@@ -742,8 +618,6 @@ class EpsTrend(YahooModel):
     Wire spelling is ``7daysAgo``; see ``ninety_days_ago`` for the alias
     rationale. Wire value is a ``{raw, fmt}`` wrapper, or ``{}`` (unwraps
     to ``None``) when Yahoo has no analyst coverage for this period.
-
-    Observed on: EQUITY summaries.
     """
 
     sixty_days_ago: RawFloatOrNone = Field(default=None, alias="60daysAgo")
@@ -753,8 +627,6 @@ class EpsTrend(YahooModel):
     Wire spelling is ``60daysAgo``; see ``ninety_days_ago`` for the alias
     rationale. Wire value is a ``{raw, fmt}`` wrapper, or ``{}`` (unwraps
     to ``None``) when Yahoo has no analyst coverage for this period.
-
-    Observed on: EQUITY summaries.
     """
 
     thirty_days_ago: RawFloatOrNone = Field(default=None, alias="30daysAgo")
@@ -764,8 +636,6 @@ class EpsTrend(YahooModel):
     Wire spelling is ``30daysAgo``; see ``ninety_days_ago`` for the alias
     rationale. Wire value is a ``{raw, fmt}`` wrapper, or ``{}`` (unwraps
     to ``None``) when Yahoo has no analyst coverage for this period.
-
-    Observed on: EQUITY summaries.
     """
 
 
@@ -778,8 +648,6 @@ class EpsRevisions(YahooModel):
 
     Wire value is a ``{raw, fmt, longFmt}`` wrapper, or ``{}`` (unwraps to
     ``None``) when Yahoo has no analyst coverage for this period.
-
-    Observed on: EQUITY summaries.
     """
 
     down_last_7_days: RawIntOrNone = Field(default=None, alias="downLast7Days")
@@ -790,8 +658,6 @@ class EpsRevisions(YahooModel):
     ``None``) when Yahoo has no analyst coverage for this period, or when
     ``fmt`` would be a literal zero (Yahoo omits ``fmt`` rather than
     sending ``"0"`` — the wrapper still resolves ``raw`` in that case).
-
-    Observed on: EQUITY summaries.
     """
 
     down_last_90_days: RawIntOrNone = Field(default=None, alias="downLast90days")
@@ -807,8 +673,6 @@ class EpsRevisions(YahooModel):
     corpus trend rows, not merely the no-analyst-coverage examples —
     Yahoo appears to never populate this particular revision window in
     this corpus.
-
-    Observed on: EQUITY summaries.
     """
 
     eps_revisions_currency: str | None = None
@@ -817,8 +681,6 @@ class EpsRevisions(YahooModel):
 
     Null (rather than a wrapper) alongside the rest of this group's
     ``{}`` fields on the corpus's no-analyst-coverage example (``BAC-PL``).
-
-    Observed on: EQUITY summaries.
     """
 
     up_last_30_days: RawIntOrNone = Field(default=None, alias="upLast30days")
@@ -827,8 +689,6 @@ class EpsRevisions(YahooModel):
 
     Wire value is a ``{raw, fmt, longFmt}`` wrapper, or ``{}`` (unwraps to
     ``None``) when Yahoo has no analyst coverage for this period.
-
-    Observed on: EQUITY summaries.
     """
 
     up_last_7_days: RawIntOrNone = Field(default=None, alias="upLast7days")
@@ -837,8 +697,6 @@ class EpsRevisions(YahooModel):
 
     Wire value is a ``{raw, fmt, longFmt}`` wrapper, or ``{}`` (unwraps to
     ``None``) when Yahoo has no analyst coverage for this period.
-
-    Observed on: EQUITY summaries.
     """
 
 
@@ -852,8 +710,6 @@ class EarningsTrendEntry(YahooModel):
     earnings_estimate: EarningsEstimate
     """
     Consensus EPS estimate details for this period.
-
-    Observed on: EQUITY summaries.
     """
 
     end_date: datetime.date
@@ -863,22 +719,16 @@ class EarningsTrendEntry(YahooModel):
     A bare ISO calendar-date string (for example ``"2026-06-30"``) on the
     wire, unlike this batch's other date-shaped fields, which are
     epoch-based; pydantic parses it directly into ``datetime.date``.
-
-    Observed on: EQUITY summaries.
     """
 
     eps_revisions: EpsRevisions
     """
     Counts of recent upward/downward EPS estimate revisions.
-
-    Observed on: EQUITY summaries.
     """
 
     eps_trend: EpsTrend
     """
     Consensus EPS estimate as tracked over the past 7/30/60/90 days.
-
-    Observed on: EQUITY summaries.
     """
 
     growth: RawFloatOrNone = None
@@ -888,15 +738,11 @@ class EarningsTrendEntry(YahooModel):
     Wire value is a ``{raw, fmt}`` wrapper, or ``{}`` (unwraps to
     ``None``) when Yahoo has no analyst coverage for this period (the
     corpus's examples: ``7203.T``, ``BAC-PL``).
-
-    Observed on: EQUITY summaries.
     """
 
     max_age: int
     """
     Maximum age, in seconds, that Yahoo considers this entry fresh.
-
-    Observed on: EQUITY summaries.
     """
 
     period: str
@@ -906,15 +752,11 @@ class EarningsTrendEntry(YahooModel):
 
     Only four values, one of each per capture; not enough evidence for a
     closed vocabulary, so this stays plain ``str``.
-
-    Observed on: EQUITY summaries.
     """
 
     revenue_estimate: RevenueEstimate
     """
     Consensus revenue estimate details for this period.
-
-    Observed on: EQUITY summaries.
     """
 
 
@@ -924,23 +766,17 @@ class EarningsTrend(YahooModel):
     default_methodology: str
     """
     Which EPS methodology (``"gaap"``/``"non-gaap"``) these figures use.
-
-    Observed on: EQUITY summaries.
     """
 
     max_age: int
     """
     Maximum age, in seconds, that Yahoo considers this module fresh.
-
-    Observed on: EQUITY summaries.
     """
 
     trend: list[EarningsTrendEntry]
     """
     Forward-looking earnings/revenue estimate entries, one per tracked
     period (observed: current and next quarter, current and next year).
-
-    Observed on: EQUITY summaries.
     """
 
 
@@ -954,15 +790,11 @@ class EarningsCallTranscript(YahooModel):
     Session-anchored timestamp (never midnight-aligned, verified against
     every corpus value), typed as aware-UTC ``datetime.datetime`` per tier
     3 of the epoch-typing ruling (no in-model timezone context).
-
-    Observed on: EQUITY summaries.
     """
 
     event_id: int
     """
     Yahoo's internal identifier for the earnings event.
-
-    Observed on: EQUITY summaries.
     """
 
     event_type: str
@@ -973,52 +805,38 @@ class EarningsCallTranscript(YahooModel):
 
     Two observed forms across 396 entries is not enough evidence for a
     closed vocabulary, so this stays plain ``str``.
-
-    Observed on: EQUITY summaries.
     """
 
     fiscal_period: str
     """
     Fiscal quarter this transcript covers (observed values: ``"Q1"``,
     ``"Q2"``, ``"Q3"``, ``"Q4"``).
-
-    Observed on: EQUITY summaries.
     """
 
     fiscal_year: int
     """
     Fiscal year this transcript covers.
-
-    Observed on: EQUITY summaries.
     """
 
     max_age: int
     """
     Maximum age, in seconds, that Yahoo considers this entry fresh.
-
-    Observed on: EQUITY summaries.
     """
 
     s3_url: str
     """
     Internal storage URL for the transcript's underlying data.
-
-    Observed on: EQUITY summaries.
     """
 
     title: str
     """
     Human-readable title of the transcript (for example ``"AAPL Q2 FY2026
     earnings call transcript"``).
-
-    Observed on: EQUITY summaries.
     """
 
     transcript_id: int
     """
     Yahoo's internal identifier for this transcript.
-
-    Observed on: EQUITY summaries.
     """
 
     type: str
@@ -1027,8 +845,6 @@ class EarningsCallTranscript(YahooModel):
 
     Two observed values across 396 entries is not enough evidence for a
     closed vocabulary, so this stays plain ``str``.
-
-    Observed on: EQUITY summaries.
     """
 
     updated: datetime.datetime
@@ -1038,15 +854,11 @@ class EarningsCallTranscript(YahooModel):
     Session-anchored timestamp (never midnight-aligned, verified against
     every corpus value), typed as aware-UTC ``datetime.datetime`` per tier
     3 of the epoch-typing ruling.
-
-    Observed on: EQUITY summaries.
     """
 
     url: str
     """
     URL of the transcript's Yahoo Finance page.
-
-    Observed on: EQUITY summaries.
     """
 
 
@@ -1056,13 +868,9 @@ class EarningsCallTranscripts(YahooModel):
     max_age: int
     """
     Maximum age, in seconds, that Yahoo considers this module fresh.
-
-    Observed on: EQUITY summaries.
     """
 
     transcripts: list[EarningsCallTranscript]
     """
     Earnings call transcript entries, most recent first.
-
-    Observed on: EQUITY summaries.
     """
