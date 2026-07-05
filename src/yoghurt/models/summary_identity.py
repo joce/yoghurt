@@ -24,7 +24,8 @@ Reconciliation notes:
   :class:`CompanyOfficer` is this batch's RawFmt proving ground.
 - A handful of fields (for example ``summaryDetail.algorithm``,
   ``.coinMarketCapLink``, ``.fromCurrency``, ``.lastMarket``,
-  ``.toCurrency``; ``price.fromCurrency``/``.lastMarket``/``.toCurrency``)
+  ``.toCurrency``; ``price.fromCurrency``/``.lastMarket``/``.toCurrency``/
+  ``.underlyingSymbol``/``.longName``)
   are present on every corpus record but their value is null on all but
   one or two captures. Per the evidence-driven optionality rule (required
   iff the *key* is universal, independent of its value), these are
@@ -48,9 +49,10 @@ Reconciliation notes:
   experience; the sole populated example (``RY.TO``) has ``header``,
   ``message``, and a nested ``meta`` block (``eventType``, ``dateEpochMs``,
   ``amount``) that ``Quote``'s never-populated placeholder does not carry
-  at all. ``meta.dateEpochMs`` is a calendar-date epoch in *milliseconds*
-  (verified midnight-UTC-aligned against the sole example after dividing by
-  1000) rather than this corpus's usual seconds; per the
+  at all. ``meta.dateEpochMs`` is an epoch in *milliseconds* (the sole
+  example is 04:00 UTC — a session-anchored timestamp, NOT midnight-
+  aligned, so only the derived ``.date()`` is exposed) rather than this
+  corpus's usual seconds; per the
   ``first_trade_date_milliseconds`` precedent in
   :class:`~yoghurt.models.quote.Quote`, the wire ``int`` stays (named for
   its unit) and a ``@cached_property`` derives the ``datetime.date``.

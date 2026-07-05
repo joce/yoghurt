@@ -111,6 +111,13 @@ def test_raw_int_unwraps_wrapper_with_null_fmt() -> None:
     assert holder.raw_int == 0
 
 
+def test_raw_int_unwraps_raw_only_wrapper() -> None:
+    """A wrapper carrying only the raw key (no fmt/longFmt) unwraps cleanly."""
+
+    holder = _RawFmtHolder.model_validate({"rawInt": {"raw": _RAW_SMALL_INT}})
+    assert holder.raw_int == _RAW_SMALL_INT
+
+
 def test_raw_int_rejects_unknown_wrapper_key() -> None:
     """A wrapper key outside {raw, fmt, longFmt} fails validation (drift alarm)."""
 
