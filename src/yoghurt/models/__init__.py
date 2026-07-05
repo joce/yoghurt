@@ -81,6 +81,17 @@ from yoghurt.models.summary_statements import (
     IncomeStatementHistory,
     IncomeStatementHistoryQuarterly,
 )
+from yoghurt.models.summary_trends import (
+    RecommendationTrend,
+    RecommendationTrendEntry,
+    SecFiling,
+    SecFilingExhibit,
+    SecFilings,
+    TrendEstimate,
+    TrendEstimateGroup,
+    UpgradeDowngradeEntry,
+    UpgradeDowngradeHistory,
+)
 
 __all__ = [
     "AssetProfile",
@@ -137,12 +148,21 @@ __all__ = [
     "Quote",
     "QuoteType",
     "QuoteUnadjustedPerformanceOverview",
+    "RecommendationTrend",
+    "RecommendationTrendEntry",
     "RevenueEstimate",
+    "SecFiling",
+    "SecFilingExhibit",
+    "SecFilings",
     "SummaryCorporateAction",
     "SummaryDetail",
     "SummaryProfile",
     "SummaryQuoteType",
     "TradingPeriod",
+    "TrendEstimate",
+    "TrendEstimateGroup",
+    "UpgradeDowngradeEntry",
+    "UpgradeDowngradeHistory",
     "YahooModel",
     "validate_model",
 ]
