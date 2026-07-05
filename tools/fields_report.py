@@ -367,6 +367,31 @@ def quote_summary_module_kind(record: Mapping[str, Any]) -> str:
     return record.kind if isinstance(record, _KindTaggedModule) else "?"
 
 
+def quote_summary_records(
+    corpus_dir: Path = CORPUS_QUOTE_SUMMARY_DIR,
+) -> Iterator[dict[str, Any]]:
+    """Yield the whole module set from every valid quote-summary capture.
+
+    Unlike :func:`quote_summary_module_records`, which yields one module's
+    payload at a time, this yields ``quoteSummary.result[0]`` whole (every
+    module the capture carries) — the evidence base for the
+    :class:`~yoghurt.models.summary.QuoteSummary` whole-endpoint container
+    gate. Skips captures with no ``quoteSummary.result`` (the deliberate
+    invalid-symbol probe).
+
+    Args:
+        corpus_dir: Directory of quote-summary corpus captures.
+    """
+
+    for path in sorted(corpus_dir.glob("*.json")):
+        payload = _load_json(path)
+        results: list[dict[str, Any]] = (
+            payload.get("quoteSummary", {}).get("result") or []
+        )
+        if results:
+            yield results[0]
+
+
 _STREAMS: Final[dict[str, Callable[[], Iterator[Mapping[str, Any]]]]] = {
     "quote": quote_records,
     "chart-meta": chart_meta_records,

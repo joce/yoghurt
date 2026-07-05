@@ -35,7 +35,7 @@ Parquet is written with **polars** (a core dependency); chart/screener/visualiza
 - `src/yoghurt/parquet_writer.py` -> Parquet output for chart/screener/visualization.
 - `src/yoghurt/query.py` -> screener/visualization DSL parsing.
 - `src/yoghurt/exceptions.py` -> public exception hierarchy.
-- `src/yoghurt/models/` -> typed pydantic response models (Part 3+): `_base.py` (YahooModel base), `enums.py` (closed vocabularies), `quote.py` (Quote), `chart.py` (ChartMeta/Spark meta/chart events), `options.py` (OptionChain/OptionContract/OptionExpiration).
+- `src/yoghurt/models/` -> typed pydantic response models (Part 3+): `_base.py` (YahooModel base, Raw* wrapper-tolerant types), `enums.py` (closed vocabularies), `quote.py` (Quote), `chart.py` (ChartMeta/Spark meta/chart events), `options.py` (OptionChain/OptionContract/OptionExpiration), `summary_*.py` (the 41 quote-summary modules, one file per batch family), `summary.py` (QuoteSummary, the quote-summary container).
 - `src/yoghurt/__init__.py` -> lazy public surface, py.typed.
 - `tests/` -> pytest tests mirroring `src/yoghurt/`.
 
@@ -67,7 +67,8 @@ When adding or editing a CLI command:
 ## Response model conventions
 - All response models subclass yoghurt.models.YahooModel (frozen, to_camel aliases with explicit Field(alias=...) for irregular wire spellings, populate_by_name, extra="allow", str_strip_whitespace — the last is a quote-informed default; confirm per endpoint family).
 - The corpus is authoritative for wire spellings, presence, and types; prior art (Doubloon) second; researched docs (src/yoghurt/docs/*.md) third.
-- Optionality is evidence-driven: required exactly for keys present in 100% of that endpoint's corpus records (tools/fields_report.py-style report), else Optional.
+- Optionality is evidence-driven: required exactly for keys present in 100% of that endpoint's corpus records (tools/fields_report.py-style report), else Optional. A field whose wire key is present in 100% of records but whose value is sometimes/always null is still required (`T | None` with no default); its docstring must state the null-rate or non-null-only condition so the distinction is never silent.
+- Wrapped `{raw, fmt, longFmt}` values unwrap to raw via the Raw* types; `{}` unwraps to None on Raw*OrNone fields; unknown wrapper keys fail validation.
 - Closed vocabularies are (str, Enum) classes in yoghurt/models/enums.py with WIRE casing, defined once, corpus-coverage-tested; values known only from prior use are noted in the enum docstring.
 - Closed vocabularies are reused across endpoint families when values coincide (e.g. QuoteType for chart's instrumentType); when a new family verifies an existing enum against its own corpus, note it in the enum's docstring rather than minting a duplicate.
 - Every field docstring ends with exactly one applicability form: "Observed on: <types> <endpoint-noun>." / "Not observed in the corpus; known from prior use on <types> <endpoint-noun>." / "Observed only as empty lists in the corpus." The endpoint noun (quotes / charts / contracts / chains / …) is fixed per model module and stated in that module's docstring. The corpus capture date lives once in the module docstring.

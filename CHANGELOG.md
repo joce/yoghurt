@@ -33,6 +33,17 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `analyst_ratings` (corpus-verified against an 830-row capture), plus
   `empty_types`/`unrecognized_types` bookkeeping so no returned type is
   silently dropped. Every frame keeps its declared schema even when empty.
+- Typed response models for all 41 `quote-summary` modules (corpus-verified
+  against 23 real quote-summary captures across EQUITY, ETF, MUTUALFUND,
+  CRYPTOCURRENCY, CURRENCY, FUTURE, INDEX, and OPTION quoteTypes), plus a new
+  `QuoteSummary` container model (one optional field per module) in
+  `yoghurt.models`. Introduces the `Raw*`/`Raw*OrNone` family
+  (`RawFloat`/`RawInt`/`RawDate` and their nullable counterparts) for
+  fields that wrap a value as `{raw, fmt, longFmt}` instead of sending it
+  bare. `fundProfile`/`fundPerformance`/`topHoldings` (ETF/MUTUALFUND-only)
+  rest on a thinner 4-capture evidence base than the rest of this endpoint
+  family; see their module docstrings for the fields typed from a single
+  observation.
 
 ### Changed
 
@@ -62,6 +73,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `Quote` gained matching `earnings_call_datetime_start`/
   `earnings_call_datetime_end` conveniences for parity with its other
   epoch fields.
+- `Ticker.quote_summary()` now returns a typed `QuoteSummary` instead of the
+  raw parsed payload; `modules` still narrows which fields Yahoo populates
+  (unrequested or inapplicable modules validate as `None`).
 
 ### Internal
 

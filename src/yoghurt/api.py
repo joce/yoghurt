@@ -19,7 +19,14 @@ from yoghurt._bridge import run
 from yoghurt.commands import COMMANDS_BY_NAME
 from yoghurt.exceptions import SymbolNotFoundError, YahooApiError
 from yoghurt.frames import Chart, Frame, Spark, Timeseries
-from yoghurt.models import ChartEvents, ChartMeta, OptionChain, Quote, validate_model
+from yoghurt.models import (
+    ChartEvents,
+    ChartMeta,
+    OptionChain,
+    Quote,
+    QuoteSummary,
+    validate_model,
+)
 from yoghurt.tabular import (
     TabularShapeError,
     build_chart_frame,
@@ -270,7 +277,7 @@ class Ticker:
         enable_private_company: bool | None = None,
         enable_qsp_expanded_earnings: bool | None = None,
         overnight_price: bool | None = None,
-    ) -> dict[str, Any]:
+    ) -> QuoteSummary:
         """Fetch quoteSummary modules for this symbol.
 
         ``enable_private_company=True`` includes private-company data;
@@ -278,11 +285,22 @@ class Ticker:
         earnings fields; ``overnight_price=True`` requests overnight price
         fields.
 
+        ``balance_sheet_history``/``balance_sheet_history_quarterly`` and
+        ``cashflow_statement_history``/``cashflow_statement_history_quarterly``
+        carry only ``end_date``/``max_age`` (cashflow: plus ``net_income``)
+        in the corpus this was typed against — Yahoo does not currently
+        populate line items on these modules; see
+        ``yoghurt.models.summary_statements``.
+
         Returns:
-            dict[str, Any]: The full parsed response payload.
+            QuoteSummary: The validated quote-summary record, with one
+            optional field per requested (and applicable) module.
+
+        Raises:
+            SymbolNotFoundError: If Yahoo returns no record for the symbol.
         """
 
-        return run(
+        payload = run(
             _core.call_endpoint(
                 "quote-summary",
                 symbol=self.symbol,
@@ -296,6 +314,10 @@ class Ticker:
                 ),
             )
         )
+        results = payload["quoteSummary"]["result"]
+        if not results:
+            raise SymbolNotFoundError(self.symbol)
+        return validate_model(QuoteSummary, results[0])
 
     def options(
         self,

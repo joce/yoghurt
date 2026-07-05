@@ -13,7 +13,14 @@ import yoghurt._core as core
 from yoghurt.api import Ticker
 from yoghurt.exceptions import SymbolNotFoundError, YahooApiError
 from yoghurt.frames import Spark, Timeseries
-from yoghurt.models import ChartEvents, ChartMeta, OptionChain, Quote, QuoteType
+from yoghurt.models import (
+    ChartEvents,
+    ChartMeta,
+    OptionChain,
+    Quote,
+    QuoteSummary,
+    QuoteType,
+)
 from yoghurt.tabular import TabularShapeError
 
 if TYPE_CHECKING:
@@ -448,6 +455,57 @@ def test_ticker_quote_summary_passes_boolean_wire_names(
     _, params = fake.calls[0]
     assert params["enableQSPExpandedEarnings"] is False
     assert params["overnightPrice"] is False
+
+
+def test_ticker_quote_summary_returns_typed_quote_summary(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """quote_summary() unwraps the one-record result list into a typed QuoteSummary."""
+    _install_fake(monkeypatch, _corpus_text("quote-summary/AAPL.json"))
+    summary = Ticker("AAPL").quote_summary()
+    assert isinstance(summary, QuoteSummary)
+    assert summary.price is not None
+    assert summary.price.symbol == "AAPL"
+    assert summary.quote_type is not None
+    assert summary.quote_type.symbol == "AAPL"
+
+
+def test_ticker_quote_summary_unrequested_modules_are_none(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Modules absent from an EQUITY capture (fund-only modules) validate as None."""
+    _install_fake(monkeypatch, _corpus_text("quote-summary/AAPL.json"))
+    summary = Ticker("AAPL").quote_summary(modules=["price", "summaryDetail"])
+    assert summary.price is not None
+    assert summary.summary_detail is not None
+    assert summary.fund_profile is None
+    assert summary.fund_performance is None
+    assert summary.top_holdings is None
+
+
+def test_ticker_quote_summary_empty_result_raises_symbol_not_found_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Yahoo's 200-with-empty-result quoteSummary shape becomes SymbolNotFoundError."""
+    payload = json.loads(_corpus_text("quote-summary/AAPL.json"))
+    payload["quoteSummary"]["result"] = []
+    _install_fake(monkeypatch, json.dumps(payload))
+    with pytest.raises(SymbolNotFoundError):
+        Ticker("AAPL").quote_summary()
+
+
+def test_ticker_quote_summary_model_violation_raises_yahoo_api_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A record that fails QuoteSummary validation surfaces as YahooApiError."""
+    payload = json.loads(_corpus_text("quote-summary/AAPL.json"))
+    payload["quoteSummary"]["result"][0]["price"]["regularMarketPrice"] = "abc"
+    _install_fake(monkeypatch, json.dumps(payload))
+    with pytest.raises(YahooApiError) as exc_info:
+        Ticker("AAPL").quote_summary()
+    assert exc_info.value.code == "model-validation"
+    assert type(exc_info.value) is YahooApiError
+    assert isinstance(exc_info.value.__cause__, pydantic.ValidationError)
 
 
 def test_ticker_repr() -> None:

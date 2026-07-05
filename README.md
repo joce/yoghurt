@@ -47,8 +47,11 @@ like the CLI):
    economic events, analyst ratings) plus `empty_types`/`unrecognized_types`
    bookkeeping. `Ticker.quote()`/`quotes()` return `Quote` (pydantic) models.
    `Ticker.options()` returns a typed `OptionChain` (pydantic), including the
-   underlying security's `Quote`. Other endpoints return parsed `dict`s
-   today; typed response models land endpoint by endpoint.
+   underlying security's `Quote`. `Ticker.quote_summary()` returns a typed
+   `QuoteSummary` (pydantic), with one optional field per requested-and-
+   applicable `quote-summary` module (41 total, all typed). Other endpoints
+   return parsed `dict`s today; typed response models land endpoint by
+   endpoint.
 2. **Parsed raw** — `yoghurt.raw(path, params)` for any Yahoo query path.
 3. **Raw async** — `yoghurt.YahooClient`, the async client the CLI itself
    uses.

@@ -28,6 +28,7 @@ from yoghurt.models.enums import (
 )
 from yoghurt.models.options import OptionChain, OptionContract, OptionExpiration
 from yoghurt.models.quote import CorporateAction, Quote
+from yoghurt.models.summary import QuoteSummary
 from yoghurt.models.summary_earnings import (
     EarningsCallTranscript,
     EarningsCallTranscripts,
@@ -206,6 +207,7 @@ __all__ = [
     "PriceAlertConfidence",
     "QuarterlyReturn",
     "Quote",
+    "QuoteSummary",
     "QuoteType",
     "QuoteUnadjustedPerformanceOverview",
     "RankInCategory",
