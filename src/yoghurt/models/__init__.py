@@ -28,6 +28,13 @@ from yoghurt.models.enums import (
 )
 from yoghurt.models.options import OptionChain, OptionContract, OptionExpiration
 from yoghurt.models.quote import CorporateAction, Quote
+from yoghurt.models.summary_financials import (
+    CalendarEvents,
+    DefaultKeyStatistics,
+    Earnings,
+    FinancialData,
+    FinancialsTemplate,
+)
 from yoghurt.models.summary_identity import (
     AssetProfile,
     Benchmark,
@@ -49,6 +56,7 @@ from yoghurt.models.summary_identity import (
 __all__ = [
     "AssetProfile",
     "Benchmark",
+    "CalendarEvents",
     "ChartDividend",
     "ChartEvents",
     "ChartMeta",
@@ -58,8 +66,12 @@ __all__ = [
     "CorporateActionMeta",
     "CorporateActions",
     "CurrentTradingPeriod",
+    "DefaultKeyStatistics",
+    "Earnings",
     "EquityPerformance",
     "ExecutiveTeamMember",
+    "FinancialData",
+    "FinancialsTemplate",
     "MarketState",
     "OptionChain",
     "OptionContract",
