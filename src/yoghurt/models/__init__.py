@@ -75,6 +75,7 @@ from yoghurt.models.summary_funds import (
     RiskStatisticsEntry,
     TopHoldings,
     TrailingReturns,
+    TrailingReturnsCat,
     TrailingReturnsNav,
 )
 from yoghurt.models.summary_holders import (
@@ -228,6 +229,7 @@ __all__ = [
     "TopHoldings",
     "TradingPeriod",
     "TrailingReturns",
+    "TrailingReturnsCat",
     "TrailingReturnsNav",
     "TrendEstimate",
     "TrendEstimateGroup",
