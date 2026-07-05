@@ -59,6 +59,9 @@ ENVELOPES: Final[dict[str, str | None]] = {
 }
 _NOT_FOUND_CODE: Final[str] = "Not Found"  # Yahoo's verbatim wire value (see corpus)
 _HTTP_NOT_FOUND: Final[int] = 404
+_ENVELOPE_ROOTS: Final[frozenset[str]] = frozenset(
+    key for key in ENVELOPES.values() if key is not None
+)
 
 
 def _as_object_dict(value: object) -> dict[str, Any] | None:
@@ -86,6 +89,29 @@ def _envelope_error(command: str, payload: object) -> dict[str, Any] | None:
     if envelope is None:
         return None
     return _as_object_dict(envelope.get("error"))
+
+
+def _scan_envelope_error(payload: object) -> dict[str, Any] | None:
+    """Find an enveloped error object under any known envelope root.
+
+    For :func:`call_raw` only, whose synthetic command carries no
+    ``ENVELOPES`` entry: an arbitrary path can still answer with any of the
+    known Yahoo envelopes, so error mapping scans every root a real command
+    uses rather than giving up.
+
+    Returns:
+        dict[str, Any] | None: The first error object found, or None.
+    """
+    payload_dict = _as_object_dict(payload)
+    if payload_dict is None:
+        return None
+    for key in payload_dict.keys() & _ENVELOPE_ROOTS:
+        envelope = _as_object_dict(payload_dict.get(key))
+        if envelope is not None:
+            error = _as_object_dict(envelope.get("error"))
+            if error is not None:
+                return error
+    return None
 
 
 def _raise_for_envelope_error(
@@ -172,6 +198,9 @@ def map_http_error(
         except json.JSONDecodeError:
             payload = None
         error = _envelope_error(command, payload)
+        if error is None and command not in ENVELOPES:
+            # call_raw's synthetic command: any known envelope root counts.
+            error = _scan_envelope_error(payload)
         if error is not None:
             _raise_for_envelope_error(
                 error, symbol=symbol, http_status=exc.status_code, cause=exc
@@ -376,8 +405,11 @@ async def call_raw(
 
     Unlike :func:`call_endpoint`, this bypasses ``COMMANDS_BY_NAME`` entirely:
     no path template, no param coercion or validation, and no envelope
-    lookup. The body is parsed with the same malformed-response contract as
-    every other call.
+    lookup on a successful body. HTTP failures still route through
+    :func:`map_http_error`, which — for this synthetic command only — scans
+    every known envelope root (:func:`_scan_envelope_error`) so enveloped
+    Yahoo errors keep their library mapping. The body is parsed with the
+    same malformed-response contract as every other call.
 
     Returns:
         dict[str, Any]: The parsed response payload, exactly as Yahoo sent it.

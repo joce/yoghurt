@@ -77,6 +77,36 @@ def test_http_error_without_usable_body_reraises_original() -> None:
         map_http_error("quote", request_error, symbol="AAPL")
 
 
+def test_raw_http_error_with_enveloped_body_maps_to_api_error() -> None:
+    """raw()'s synthetic command still recognizes any known envelope root.
+
+    ``ENVELOPES`` has no ``"raw"`` entry, so the command-specific lookup
+    finds nothing; the known-roots scan must pick up the enveloped error
+    (here a real corpus chart 404 body) and keep the documented mapping —
+    ``yoghurt.api.raw``'s docstring promises it.
+    """
+    request_error = YahooRequestError(
+        _HTTP_NOT_FOUND, "https://x", body=_corpus_text("chart/ZZZZXYZQ.json")
+    )
+    with pytest.raises(YahooApiError) as exc_info:
+        map_http_error("raw", request_error)
+    assert exc_info.value.code == "Not Found"
+
+
+def test_raw_http_error_without_recognizable_body_reraises_original() -> None:
+    """raw() with a bare, unenveloped error body keeps the transport error.
+
+    Same shape stock-recommender serves for its 404 (corpus:
+    ``stock-recommender/ZZZZXYZQ.json``): no envelope root, no ``detail``
+    key — nothing ties the failure to a symbol, so nothing is invented.
+    """
+    request_error = YahooRequestError(
+        _HTTP_NOT_FOUND, "https://x", body='{"message": "Not Found"}'
+    )
+    with pytest.raises(YahooRequestError):
+        map_http_error("raw", request_error)
+
+
 @pytest.mark.parametrize(
     "rel",
     ["chart/ZZZZXYZQ.json", "spark/ZZZZXYZQ.json"],
