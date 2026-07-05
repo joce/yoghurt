@@ -523,12 +523,21 @@ def stock_recommender_records(
 ) -> Iterator[_KindTagged]:
     """Yield each stock-recommender capture's bare (non-enveloped) payload.
 
+    Skips the deliberate invalid-symbol probe (``ZZZZXYZQ``): unlike every
+    other endpoint in this batch, its 404 body is a bare, differently-shaped
+    error payload (``{"message": "Not Found"}``, no ``fields``/``id``/
+    ``pathId``) rather than data this model could ever validate — the 404
+    is truly unmappable (see ``yoghurt.api.Ticker.stock_recommender``'s
+    docstring), so it is not a "record" at all.
+
     Kind is looked up from the quote-type corpus's symbol -> quoteType map
     via ``fields.id`` (wire-spelled ``"ticker:<symbol>"``).
     """
 
     symbol_kinds = _quote_type_symbol_map()
     for path in sorted(corpus_dir.glob("*.json")):
+        if path.stem == _INVALID_SYMBOL_STEM:
+            continue
         payload = _load_json(path)
         entity_id = str(payload.get("fields", {}).get("id", ""))
         symbol = entity_id.removeprefix("ticker:")

@@ -7,12 +7,15 @@ from pathlib import Path
 import pytest
 
 from tools.probe import (
+    _CROSS_ASSET_SYMBOLS,  # pyright: ignore[reportPrivateUsage]
     _QUARANTINED_EVENT_TYPES,  # pyright: ignore[reportPrivateUsage]
     INVALID_SYMBOL,
     SYMBOLS,
     ProbeCase,
     _contract_cases,  # pyright: ignore[reportPrivateUsage]
+    _cross_asset_cases,  # pyright: ignore[reportPrivateUsage]
     _first_contract_symbol,  # pyright: ignore[reportPrivateUsage]
+    _invalid_cases,  # pyright: ignore[reportPrivateUsage]
     _run_all,  # pyright: ignore[reportPrivateUsage]
     _run_case,  # pyright: ignore[reportPrivateUsage]
     _timeseries_all_type_cases,  # pyright: ignore[reportPrivateUsage]
@@ -51,6 +54,64 @@ def test_symbol_matrix_is_probed_for_quote() -> None:
     for symbol in SYMBOLS:
         assert symbol in quote_cases
     assert INVALID_SYMBOL in quote_cases
+
+
+_EXPECTED_INVALID_SYMBOL_COMMANDS = {
+    "quote",
+    "quote-summary",
+    "quote-type",
+    "chart",
+    "spark",
+    "timeseries",
+    "analyst",
+    "calendar-events",
+    "recommendations-by-symbol",
+    "stock-recommender",
+    "price-insights",
+    "insights",
+    "ratings-top",
+    "options",
+}
+
+
+def test_invalid_symbol_cases_cover_every_error_prone_command() -> None:
+    """Every error-prone command gets an INVALID_SYMBOL case (Part 4 gate).
+
+    Extends the original quote/chart/spark/timeseries/analyst set with the
+    seven commands that previously had no captured invalid-symbol shape:
+    calendar-events, recommendations-by-symbol, stock-recommender,
+    price-insights, insights, ratings-top, options.
+    """
+    cases = _invalid_cases()
+    commands = {c.command for c in cases}
+    assert commands == _EXPECTED_INVALID_SYMBOL_COMMANDS
+    for case in cases:
+        assert case.case == INVALID_SYMBOL
+
+
+_EXPECTED_CROSS_ASSET_CASE_COUNT = 15
+
+
+def test_cross_asset_cases_cover_insights_family() -> None:
+    """insights/price-insights/recommendations-by-symbol get 5 cross-asset cases each.
+
+    These three endpoints were only probed against EQUITY_SUBSET
+    (AAPL/MSFT/RY.TO); live checks during Part 3d found real
+    applicability differences across asset classes the corpus never
+    captured (see the model docstrings in
+    ``yoghurt.models.analysis_insights``). ``_CROSS_ASSET_SYMBOLS`` mirrors
+    the AGENTS.md baseline probe's non-equity coverage.
+    """
+    cases = _cross_asset_cases()
+    by_command: dict[str, set[str]] = {}
+    for case in cases:
+        by_command.setdefault(case.command, set()).add(case.case)
+    assert by_command == {
+        "insights": set(_CROSS_ASSET_SYMBOLS),
+        "price-insights": set(_CROSS_ASSET_SYMBOLS),
+        "recommendations-by-symbol": set(_CROSS_ASSET_SYMBOLS),
+    }
+    assert len(cases) == _EXPECTED_CROSS_ASSET_CASE_COUNT
 
 
 def test_quarantined_event_types_excluded_from_bulk_chunks() -> None:

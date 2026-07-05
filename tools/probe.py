@@ -338,14 +338,9 @@ def _equity_subset_cases() -> list[ProbeCase]:
             ),
             ProbeCase("stock-recommender", sym, ("stock-recommender", sym)),
         ]
-    # README documents index recommendations too.
-    cases.append(
-        ProbeCase(
-            "recommendations-by-symbol",
-            "^GSPC",
-            ("recommendations-by-symbol", "^GSPC"),
-        )
-    )
+    # README documents index recommendations too; ^GSPC now rides in
+    # _cross_asset_cases() instead of a standalone case here (same
+    # command/argv, folded in to avoid a duplicate case key).
     for sym in OPTIONABLE:
         cases.append(ProbeCase("options", sym, ("options", sym)))
     # Documented price-insights shape variants: modules=ai drops the
@@ -499,8 +494,53 @@ def _invalid_cases() -> list[ProbeCase]:
         "spark": ("spark", INVALID_SYMBOL),
         "timeseries": ("timeseries", INVALID_SYMBOL),
         "analyst": ("analyst", INVALID_SYMBOL),
+        "calendar-events": ("calendar-events", INVALID_SYMBOL),
+        "recommendations-by-symbol": ("recommendations-by-symbol", INVALID_SYMBOL),
+        "stock-recommender": ("stock-recommender", INVALID_SYMBOL),
+        "price-insights": ("price-insights", INVALID_SYMBOL),
+        "insights": ("insights", INVALID_SYMBOL),
+        "ratings-top": ("ratings-top", INVALID_SYMBOL),
+        "options": ("options", INVALID_SYMBOL),
     }
     return [ProbeCase(command, INVALID_SYMBOL, argv) for command, argv in argvs.items()]
+
+
+# Cross-asset cases (the Part-4 chip item): insights/price-insights/
+# recommendations-by-symbol were only probed against EQUITY_SUBSET
+# (AAPL/MSFT/RY.TO); live checks during Part 3d found real applicability
+# differences across asset classes that the corpus itself never captured.
+# These five symbols mirror the AGENTS.md baseline probe's non-equity
+# coverage (ETF, index, crypto, forex, futures) so the corpus can finally
+# back those live-only findings with real evidence.
+_CROSS_ASSET_SYMBOLS: Final[tuple[str, ...]] = (
+    "SPY",
+    "^GSPC",
+    "BTC-USD",
+    "EURUSD=X",
+    "ES=F",
+)
+
+
+def _cross_asset_cases() -> list[ProbeCase]:
+    """Cross-asset-class cases for insights/price-insights/recommendations.
+
+    Returns:
+        list[ProbeCase]: One case per command per ``_CROSS_ASSET_SYMBOLS``
+        entry (15 cases).
+    """
+
+    cases: list[ProbeCase] = []
+    for sym in _CROSS_ASSET_SYMBOLS:
+        cases += [
+            ProbeCase("insights", sym, ("insights", sym)),
+            ProbeCase("price-insights", sym, ("price-insights", sym)),
+            ProbeCase(
+                "recommendations-by-symbol",
+                sym,
+                ("recommendations-by-symbol", sym),
+            ),
+        ]
+    return cases
 
 
 def _raw_case() -> list[ProbeCase]:
@@ -566,6 +606,7 @@ def build_cases() -> list[ProbeCase]:
         + _chart_variant_cases()
         + _timeseries_all_type_cases()
         + _equity_subset_cases()
+        + _cross_asset_cases()
         + _market_cases()
         + _dsl_cases()
         + _invalid_cases()

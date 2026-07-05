@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "case_count": 244,
+    "case_count": 266,
     "fetched_at": "2026-07-04T04:35:12.640976+00:00"
   },
   "analyst/AAPL": {
@@ -224,6 +224,15 @@
       "VTSAX"
     ],
     "file": "calendar-events/VTSAX.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "calendar-events/ZZZZXYZQ": {
+    "argv": [
+      "calendar-events",
+      "ZZZZXYZQ"
+    ],
+    "file": "calendar-events/ZZZZXYZQ.json",
     "http_status": 200,
     "status": "ok"
   },
@@ -659,6 +668,33 @@
     "http_status": 200,
     "status": "ok"
   },
+  "insights/BTC-USD": {
+    "argv": [
+      "insights",
+      "BTC-USD"
+    ],
+    "file": "insights/BTC-USD.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "insights/ES=F": {
+    "argv": [
+      "insights",
+      "ES=F"
+    ],
+    "file": "insights/ES_F.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "insights/EURUSD=X": {
+    "argv": [
+      "insights",
+      "EURUSD=X"
+    ],
+    "file": "insights/EURUSD_X.json",
+    "http_status": 200,
+    "status": "ok"
+  },
   "insights/MSFT": {
     "argv": [
       "insights",
@@ -674,6 +710,33 @@
       "RY.TO"
     ],
     "file": "insights/RY.TO.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "insights/SPY": {
+    "argv": [
+      "insights",
+      "SPY"
+    ],
+    "file": "insights/SPY.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "insights/ZZZZXYZQ": {
+    "argv": [
+      "insights",
+      "ZZZZXYZQ"
+    ],
+    "file": "insights/ZZZZXYZQ.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "insights/^GSPC": {
+    "argv": [
+      "insights",
+      "^GSPC"
+    ],
+    "file": "insights/_GSPC.json",
     "http_status": 200,
     "status": "ok"
   },
@@ -728,6 +791,15 @@
     "http_status": 200,
     "status": "ok"
   },
+  "options/ZZZZXYZQ": {
+    "argv": [
+      "options",
+      "ZZZZXYZQ"
+    ],
+    "file": "options/ZZZZXYZQ.json",
+    "http_status": 200,
+    "status": "ok"
+  },
   "price-insights/AAPL": {
     "argv": [
       "price-insights",
@@ -758,6 +830,33 @@
     "http_status": 200,
     "status": "ok"
   },
+  "price-insights/BTC-USD": {
+    "argv": [
+      "price-insights",
+      "BTC-USD"
+    ],
+    "file": "price-insights/BTC-USD.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "price-insights/ES=F": {
+    "argv": [
+      "price-insights",
+      "ES=F"
+    ],
+    "file": "price-insights/ES_F.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "price-insights/EURUSD=X": {
+    "argv": [
+      "price-insights",
+      "EURUSD=X"
+    ],
+    "file": "price-insights/EURUSD_X.json",
+    "http_status": 200,
+    "status": "ok"
+  },
   "price-insights/MSFT": {
     "argv": [
       "price-insights",
@@ -773,6 +872,33 @@
       "RY.TO"
     ],
     "file": "price-insights/RY.TO.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "price-insights/SPY": {
+    "argv": [
+      "price-insights",
+      "SPY"
+    ],
+    "file": "price-insights/SPY.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "price-insights/ZZZZXYZQ": {
+    "argv": [
+      "price-insights",
+      "ZZZZXYZQ"
+    ],
+    "file": "price-insights/ZZZZXYZQ.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "price-insights/^GSPC": {
+    "argv": [
+      "price-insights",
+      "^GSPC"
+    ],
+    "file": "price-insights/_GSPC.json",
     "http_status": 200,
     "status": "ok"
   },
@@ -1561,6 +1687,16 @@
     "http_status": 404,
     "status": "http_error"
   },
+  "ratings-top/ZZZZXYZQ": {
+    "argv": [
+      "ratings-top",
+      "ZZZZXYZQ"
+    ],
+    "detail": "Yahoo request rejected with HTTP 404 for https://query1.finance.yahoo.com/v2/ratings/top/ZZZZXYZQ?exclude_noncurrent=true&lang=en-US&region=US",
+    "file": "ratings-top/ZZZZXYZQ.json",
+    "http_status": 404,
+    "status": "http_error"
+  },
   "raw/quote_AAPL": {
     "argv": [
       "raw",
@@ -1581,6 +1717,33 @@
     "http_status": 200,
     "status": "ok"
   },
+  "recommendations-by-symbol/BTC-USD": {
+    "argv": [
+      "recommendations-by-symbol",
+      "BTC-USD"
+    ],
+    "file": "recommendations-by-symbol/BTC-USD.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "recommendations-by-symbol/ES=F": {
+    "argv": [
+      "recommendations-by-symbol",
+      "ES=F"
+    ],
+    "file": "recommendations-by-symbol/ES_F.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "recommendations-by-symbol/EURUSD=X": {
+    "argv": [
+      "recommendations-by-symbol",
+      "EURUSD=X"
+    ],
+    "file": "recommendations-by-symbol/EURUSD_X.json",
+    "http_status": 200,
+    "status": "ok"
+  },
   "recommendations-by-symbol/MSFT": {
     "argv": [
       "recommendations-by-symbol",
@@ -1596,6 +1759,24 @@
       "RY.TO"
     ],
     "file": "recommendations-by-symbol/RY.TO.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "recommendations-by-symbol/SPY": {
+    "argv": [
+      "recommendations-by-symbol",
+      "SPY"
+    ],
+    "file": "recommendations-by-symbol/SPY.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "recommendations-by-symbol/ZZZZXYZQ": {
+    "argv": [
+      "recommendations-by-symbol",
+      "ZZZZXYZQ"
+    ],
+    "file": "recommendations-by-symbol/ZZZZXYZQ.json",
     "http_status": 200,
     "status": "ok"
   },
@@ -2161,6 +2342,16 @@
     "http_status": 200,
     "status": "ok"
   },
+  "stock-recommender/ZZZZXYZQ": {
+    "argv": [
+      "stock-recommender",
+      "ZZZZXYZQ"
+    ],
+    "detail": "Yahoo request rejected with HTTP 404 for https://finance.yahoo.com/xhr/stock-recommender?symbol=ZZZZXYZQ",
+    "file": "stock-recommender/ZZZZXYZQ.json",
+    "http_status": 404,
+    "status": "http_error"
+  },
   "timeseries-fields/default": {
     "argv": [
       "timeseries-fields"
@@ -2225,6 +2416,21 @@
     "file": "timeseries/AAPL_economicEventsLong.json",
     "http_status": 200,
     "status": "ok"
+  },
+  "timeseries/AAPL_spEarnings": {
+    "argv": [
+      "timeseries",
+      "AAPL",
+      "--type",
+      "spEarningsReleaseEvents",
+      "--period1",
+      "2020-01-01",
+      "--period2",
+      "2026-07-04"
+    ],
+    "detail": "Yahoo response is not valid JSON: Invalid \\escape (still corrupt on retest 2026-07-05; same malformed-escape failure as the original 2026-07-04 capture)",
+    "http_status": null,
+    "status": "error"
   },
   "timeseries/AAPL_types_00": {
     "argv": [

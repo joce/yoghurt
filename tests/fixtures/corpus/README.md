@@ -27,4 +27,22 @@ hand-added `tools/probe.py` cases requesting one event type over a long
 sweep. The probe plan also includes a dedicated `AAPL_spEarnings` case; Yahoo
 currently serves malformed JSON for `spEarningsReleaseEvents` on every
 symbol, so that case is expected to record a manifest `status: "error"`
-(no corpus file) on full probe runs, not a probe bug.
+(no corpus file) on full probe runs, not a probe bug. Retested live
+2026-07-05 (P4-1): still corrupt, same invalid-JSON-escape failure as the
+original 2026-07-04 capture; next retest should be opportunistic (no fixed
+date), on the next corpus refresh.
+
+**2026-07-05 surgical addition (P4-1, corpus reinforcement):** invalid-symbol
+(`ZZZZXYZQ`) cases added for the seven endpoints that previously lacked one
+(`calendar-events`, `recommendations-by-symbol`, `stock-recommender`,
+`price-insights`, `insights`, `ratings-top`, `options`), plus cross-asset
+(`SPY`, `^GSPC`, `BTC-USD`, `EURUSD=X`, `ES=F`) cases for `insights`,
+`price-insights`, and `recommendations-by-symbol` (widening those three
+endpoints beyond `EQUITY_SUBSET`). All new captures parsed as valid JSON and
+are committed; see `src/yoghurt/models/analysis_events.py` and
+`src/yoghurt/models/analysis_insights.py`'s module docstrings for what the
+widened evidence confirmed (several fields previously typed Optional from
+live-only observation during Part 3d are now backed by real corpus
+captures). `recommendations-by-symbol/^GSPC.json` was refetched (same shape,
+fresh live recommendation scores) since it now rides the cross-asset case
+instead of a standalone one.

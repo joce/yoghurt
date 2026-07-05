@@ -1,1 +1,1 @@
-{"finance":{"result":[{"symbol":"^GSPC","recommendedSymbols":[{"symbol":"^TYX","score":0.171186},{"symbol":"^IXIC","score":0.164858},{"symbol":"^DJI","score":0.140643},{"symbol":"GE","score":0.095619},{"symbol":"MCD","score":0.09199}]}],"error":null}}
+{"finance":{"result":[{"symbol":"^GSPC","recommendedSymbols":[{"symbol":"^TYX","score":0.171171},{"symbol":"^IXIC","score":0.164852},{"symbol":"^DJI","score":0.140647},{"symbol":"GE","score":0.095611},{"symbol":"MCD","score":0.09198}]}],"error":null}}
