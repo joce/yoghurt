@@ -11,7 +11,14 @@ from yoghurt.models import YahooModel
 
 # Raw* types are pydantic field annotations resolved at class-creation time,
 # so (unlike a plain type-hint import) they must be available at runtime.
-from yoghurt.models._base import RawDate, RawFloat, RawInt  # noqa: TC001
+from yoghurt.models._base import (  # noqa: TC001
+    RawDate,
+    RawDateOrNone,
+    RawFloat,
+    RawFloatOrNone,
+    RawInt,
+    RawIntOrNone,
+)
 
 _MARKET_CAP = 42
 _RAW_TOTAL_PAY = 16759518
@@ -67,8 +74,11 @@ class _RawFmtHolder(YahooModel):
     """Minimal fixture model exercising every Raw* value type."""
 
     raw_date: RawDate | None = None
+    raw_date_or_none: RawDateOrNone = None
     raw_float: RawFloat | None = None
+    raw_float_or_none: RawFloatOrNone = None
     raw_int: RawInt | None = None
+    raw_int_or_none: RawIntOrNone = None
 
 
 def test_raw_int_accepts_bare_scalar() -> None:
@@ -126,16 +136,55 @@ def test_raw_int_rejects_unknown_wrapper_key() -> None:
 
 
 def test_raw_int_rejects_empty_dict() -> None:
-    """An empty-dict wrapper is not special-cased: it has never been observed.
+    """Plain Raw* (not Raw*OrNone) still rejects {} when the field has no default.
 
-    See the ``_unwrap_raw`` docstring in ``yoghurt.models._base``: mapping
-    ``{}`` to ``None`` would be improvising past the evidence. It should
-    fail validation like any other wrapper missing a ``raw`` key, not
-    silently resolve to ``None``.
+    ``{}`` unwraps to ``None`` at the validator level (see
+    ``test_raw_int_or_none_unwraps_empty_dict_to_none`` below), but a plain
+    ``RawInt`` field (no ``| None`` in its own annotation) still rejects
+    that resolved ``None`` at the ``int`` core-validation step — this is
+    the documented reason ``Raw*OrNone`` exists as a separate family
+    rather than always writing ``Raw* | None``.
     """
 
-    with pytest.raises(ValidationError, match="missing 'raw' key"):
+    with pytest.raises(ValidationError, match="int_type"):
         _RawFmtHolder.model_validate({"rawInt": {}})
+
+
+def test_raw_int_or_none_unwraps_empty_dict_to_none() -> None:
+    """RawIntOrNone maps an empty-dict wrapper to None (batch c2 evidence)."""
+
+    holder = _RawFmtHolder.model_validate({"rawIntOrNone": {}})
+    assert holder.raw_int_or_none is None
+
+
+def test_raw_float_or_none_unwraps_empty_dict_to_none() -> None:
+    """RawFloatOrNone maps an empty-dict wrapper to None (batch c2 evidence)."""
+
+    holder = _RawFmtHolder.model_validate({"rawFloatOrNone": {}})
+    assert holder.raw_float_or_none is None
+
+
+def test_raw_date_or_none_unwraps_empty_dict_to_none() -> None:
+    """RawDateOrNone maps an empty-dict wrapper to None."""
+
+    holder = _RawFmtHolder.model_validate({"rawDateOrNone": {}})
+    assert holder.raw_date_or_none is None
+
+
+def test_raw_int_or_none_still_unwraps_populated_wrapper() -> None:
+    """RawIntOrNone still resolves a populated wrapper to its raw value."""
+
+    holder = _RawFmtHolder.model_validate(
+        {"rawIntOrNone": {"raw": _RAW_SMALL_INT, "fmt": "3", "longFmt": "3"}}
+    )
+    assert holder.raw_int_or_none == _RAW_SMALL_INT
+
+
+def test_raw_int_or_none_accepts_bare_none() -> None:
+    """RawIntOrNone accepts a bare null the same as any optional field."""
+
+    holder = _RawFmtHolder.model_validate({"rawIntOrNone": None})
+    assert holder.raw_int_or_none is None
 
 
 def test_raw_date_unwraps_epoch_to_calendar_date() -> None:

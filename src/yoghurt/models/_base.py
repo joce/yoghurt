@@ -1,9 +1,11 @@
 """Shared configuration for all Yahoo response models.
 
 Also home to the ``Raw*`` wrapper-tolerant value types (:data:`RawFloat`,
-:data:`RawInt`, :data:`RawDate`): some nested Yahoo rows (never top-level
-quote-summary module fields) wrap a value as ``{"raw": ..., "fmt": ...,
-"longFmt": ...}`` instead of sending the bare scalar directly, for example
+:data:`RawInt`, :data:`RawDate`, and their nullable counterparts
+:data:`RawFloatOrNone`, :data:`RawIntOrNone`, :data:`RawDateOrNone`): some
+nested Yahoo rows (never top-level quote-summary module fields) wrap a
+value as ``{"raw": ..., "fmt": ..., "longFmt": ...}`` instead of sending
+the bare scalar directly, for example
 ``assetProfile.companyOfficers[].totalPay``. The ``Raw*`` types accept
 either shape and always resolve to the bare ``raw`` value:
 
@@ -13,17 +15,30 @@ either shape and always resolve to the bare ``raw`` value:
   are discarded. Any other key in the mapping fails validation, so wrapper
   drift (an unexpected new key inside the wrapper) surfaces loudly instead
   of silently passing through.
-- An empty mapping ``{}`` is *not* special-cased: it has never been
-  observed in the corpus (verified across every quote-summary capture as
-  of the 2026-07-04 corpus), so it is rejected the same as any other
-  mapping whose keys don't resolve a ``raw`` value. If Yahoo is ever
-  observed sending ``{}`` for an absent wrapped value, this validator
-  should map it to ``None`` and the field made optional at that point —
-  not before.
+- An empty mapping ``{}`` resolves to ``None``: batch c2's
+  ``earningsTrend.trend[].earningsEstimate``/``.epsTrend``/
+  ``.epsRevisions`` (and the row-level ``growth``) send ``{}`` in place of
+  every wrapped field when Yahoo has no analyst estimate to report (for
+  example ``BAC-PL``, ``7203.T`` — see
+  ``tests/fixtures/corpus/quote-summary/``), confirming the scenario the
+  batch c1 docstring flagged as unobserved-so-far.
 
-``RawDate`` additionally means the resolved ``raw`` epoch-seconds value is
-a calendar date (statement ``endDate``s and similar), per the epoch-typing
-tiers in ``AGENTS.md``: it converts straight to :class:`datetime.date`.
+  Any field that can observe ``{}`` on the wire MUST use the
+  ``Raw*OrNone`` variant, never plain ``Raw* | None``: pydantic applies a
+  ``BeforeValidator`` *inside* the annotation it decorates, so
+  ``Annotated[float, BeforeValidator(_unwrap_raw)] | None`` still routes a
+  validator-returned ``None`` back into the ``float`` branch of the union
+  and fails, instead of falling through to the ``None`` branch. The
+  ``Raw*OrNone`` aliases below apply the validator to the whole ``T |
+  None`` annotation instead, so a resolved ``None`` (bare ``null``, or an
+  unwrapped ``{}``) validates correctly. Use plain ``Raw*`` (optionally
+  with `` | None = None`` for a merely-absent-not-``{}`` field) only where
+  the corpus has never shown ``{}`` for that exact field.
+
+``RawDate``/``RawDateOrNone`` additionally mean the resolved ``raw``
+epoch-seconds value is a calendar date (statement ``endDate``s and
+similar), per the epoch-typing tiers in ``AGENTS.md``: it converts
+straight to :class:`datetime.date`.
 """
 
 from __future__ import annotations
@@ -48,20 +63,23 @@ def _unwrap_raw(value: object) -> object:
     """Resolve a bare scalar or a ``{raw, fmt, longFmt}`` wrapper to ``raw``.
 
     Returns:
-        object: ``value`` unchanged when it isn't a mapping; otherwise the
-        wrapper's ``"raw"`` entry.
+        object: ``value`` unchanged when it isn't a mapping; ``None`` for
+        an empty mapping ``{}`` (Yahoo's spelling for an absent wrapped
+        value, per the module docstring); otherwise the wrapper's
+        ``"raw"`` entry.
 
     Raises:
-        ValueError: If ``value`` is a mapping with a key outside
-            ``{"raw", "fmt", "longFmt"}``, or a mapping with no ``"raw"``
-            key at all (including ``{}``) — see the module docstring for
-            why ``{}`` is not special-cased.
+        ValueError: If ``value`` is a non-empty mapping with a key outside
+            ``{"raw", "fmt", "longFmt"}``, or a non-empty mapping with no
+            ``"raw"`` key at all.
     """
 
     if not isinstance(value, dict):
         return value
 
     mapping = cast("dict[str, Any]", value)
+    if not mapping:
+        return None
     unknown_keys = set(mapping) - _WRAPPER_KEYS
     if unknown_keys:
         message = f"unexpected keys in raw/fmt wrapper: {sorted(unknown_keys)}"
@@ -75,12 +93,16 @@ def _unwrap_raw(value: object) -> object:
 RawFloat = Annotated[float, BeforeValidator(_unwrap_raw)]
 """A ``float`` that also accepts a ``{raw, fmt, longFmt}`` wrapper.
 
-See the module docstring for the unwrap rule.
+Never observed as ``{}`` in the corpus for the fields that use this
+variant; use :data:`RawFloatOrNone` instead where ``{}`` has been
+observed. See the module docstring for the unwrap rule.
 """
 
 RawInt = Annotated[int, BeforeValidator(_unwrap_raw)]
 """An ``int`` that also accepts a ``{raw, fmt, longFmt}`` wrapper.
 
+Never observed as ``{}`` in the corpus for the fields that use this
+variant; use :data:`RawIntOrNone` instead where ``{}`` has been observed.
 See the module docstring for the unwrap rule.
 """
 
@@ -89,8 +111,39 @@ RawDate = Annotated[datetime.date, BeforeValidator(_unwrap_raw)]
 
 The unwrapped ``raw`` value is epoch-seconds with calendar-date meaning
 (for example, a financial statement's ``endDate``); pydantic converts it
-to a UTC :class:`datetime.date` after unwrapping. See the module
-docstring for the unwrap rule.
+to a UTC :class:`datetime.date` after unwrapping. Never observed as
+``{}`` in the corpus for the fields that use this variant; use
+:data:`RawDateOrNone` instead where ``{}`` has been observed. See the
+module docstring for the unwrap rule.
+"""
+
+RawFloatOrNone = Annotated[float | None, BeforeValidator(_unwrap_raw)]
+"""A nullable ``float`` that also accepts a ``{raw, fmt, longFmt}``
+wrapper or an empty-mapping ``{}`` (both resolve to ``None``).
+
+Required (no default) where the wire key is universal but its value can
+resolve to ``None``; add `` = None`` at the field site where the key
+itself is only sometimes present. See the module docstring for why this
+must be used (instead of plain ``RawFloat | None``) whenever ``{}`` has
+been observed for a field.
+"""
+
+RawIntOrNone = Annotated[int | None, BeforeValidator(_unwrap_raw)]
+"""A nullable ``int`` that also accepts a ``{raw, fmt, longFmt}`` wrapper
+or an empty-mapping ``{}`` (both resolve to ``None``).
+
+See :data:`RawFloatOrNone` for the requiredness convention and the module
+docstring for why this must be used (instead of plain ``RawInt | None``)
+whenever ``{}`` has been observed for a field.
+"""
+
+RawDateOrNone = Annotated[datetime.date | None, BeforeValidator(_unwrap_raw)]
+"""A nullable ``datetime.date`` that also accepts a ``{raw, fmt,
+longFmt}`` wrapper or an empty-mapping ``{}`` (both resolve to ``None``).
+
+See :data:`RawFloatOrNone` for the requiredness convention and the module
+docstring for why this must be used (instead of plain ``RawDate | None``)
+whenever ``{}`` has been observed for a field.
 """
 
 
