@@ -17,7 +17,7 @@ Parquet is written with **polars** (a core dependency); chart/screener/visualiza
 - Lint: `uv run ruff check .`
 - Format: `uv run ruff format .`
 - Type check: `uv run pyright`
-- Spell check: `npm run spell` or `make spell`
+- Spell check: `npm run spell` or `make spell` (inside a `.claude/worktrees/` checkout, cspell's gitignore walk hits the parent repo's `.claude/` ignore and checks 0 files — use `npx cspell . --no-gitignore` there; normal checkouts and CI are unaffected)
 - Spell changed files: `npm run spell:changed` or `make spell-changed`
 - Full check: `uv run tox`
 
@@ -68,6 +68,7 @@ When adding or editing a CLI command:
 - All response models subclass yoghurt.models.YahooModel (frozen, to_camel aliases with explicit Field(alias=...) for irregular wire spellings, populate_by_name, extra="allow", str_strip_whitespace — the last is a quote-informed default; confirm per endpoint family).
 - The corpus is authoritative for wire spellings, presence, and types; prior art (Doubloon) second; researched docs (src/yoghurt/docs/*.md) third.
 - Optionality is evidence-driven: required exactly for keys present in 100% of that endpoint's corpus records (tools/fields_report.py-style report), else Optional. A field whose wire key is present in 100% of records but whose value is sometimes/always null is still required (`T | None` with no default); its docstring must state the null-rate or non-null-only condition so the distinction is never silent.
+- Live cross-asset-class verification (per the Yahoo API state probes baseline) may LOOSEN a corpus-derived required field to Optional when it demonstrates the field is inapplicable to instrument types outside the corpus's coverage — evidence outranking a thin corpus. It must never TIGHTEN a field into required from live observation alone. Every such loosening: (a) field docstring states the live-observed condition and symbols/date, (b) class or module docstring summarizes the divergence from the corpus universal-key set, (c) a dedicated test pins `required_aliases < universal_keys` so a future corpus refresh cannot silently reintroduce it.
 - Wrapped `{raw, fmt, longFmt}` values unwrap to raw via the Raw* types; `{}` unwraps to None on Raw*OrNone fields; unknown wrapper keys fail validation.
 - Closed vocabularies are (str, Enum) classes in yoghurt/models/enums.py with WIRE casing, defined once, corpus-coverage-tested; values known only from prior use are noted in the enum docstring.
 - Closed vocabularies are reused across endpoint families when values coincide (e.g. QuoteType for chart's instrumentType); when a new family verifies an existing enum against its own corpus, note it in the enum's docstring rather than minting a duplicate.

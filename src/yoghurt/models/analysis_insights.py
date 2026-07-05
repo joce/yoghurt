@@ -921,10 +921,12 @@ class AiAnalysisBlock(YahooModel):
     report.
 
     ``union_mode="left_to_right"`` is required here: pydantic's default
-    "smart" union mode does not reliably prefer the more specific
+    "smart" union mode consistently fails to prefer the more specific
     ``AiAnalysisData`` branch over the permissive ``dict[str, object]``
-    branch for a populated payload, so a real AI analysis would otherwise
-    sometimes validate as a bare dict instead of the typed model.
+    branch (verified 3/3 populated corpus captures pick the dict branch
+    under smart mode — ``extra="allow"`` makes both branches valid and
+    the exact-match dict scores higher), so a real AI analysis would
+    otherwise always validate as a bare dict instead of the typed model.
 
     Observed on: price-insights records.
     """
