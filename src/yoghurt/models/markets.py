@@ -27,9 +27,9 @@ spanning INDEX/FUTURE/CURRENCY/CRYPTOCURRENCY quoteTypes. Per the plan's
 decision procedure, every row was first script-validated directly against
 the existing :class:`~yoghurt.models.quote.Quote` model: zero rows land any
 field on ``model_extra`` (every wire key across all 15 rows is already
-known to ``Quote``), but 8 of ``Quote``'s 35 required fields are *not*
-universally present here (``currency``: 3/15; ``priceHint``: 10/15; all six
-``fiftyTwoWeek*`` fields: 0/15 — Yahoo's market-summary tiles never carry a
+known to ``Quote``), but 9 of ``Quote``'s 35 required fields are *not*
+universally present here (``currency``: 3/15; ``priceHint``: 10/15; all seven
+required ``fiftyTwoWeek*`` fields: 0/15 — Yahoo's market-summary tiles never carry a
 52-week range at all). Zero-extras held, but the required-set clause of the
 decision procedure did not, so per the plan this endpoint gets its own
 distinct :class:`MarketSummaryQuote` rather than reusing ``Quote``. It has
@@ -357,7 +357,7 @@ class MarketSummaryQuote(YahooModel):
 
     Distinct from :class:`~yoghurt.models.quote.Quote`; see the module
     docstring for the script-validated reuse-decision evidence (zero
-    extras, but 8 of ``Quote``'s 35 required fields are not universal here).
+    extras, but 9 of ``Quote``'s 35 required fields are not universal here).
     """
 
     contract_symbol: bool | None = Field(default=None, alias="contractSymbol")

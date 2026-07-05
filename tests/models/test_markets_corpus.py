@@ -10,7 +10,7 @@ required-field set is pinned to its corpus-measured universal keys via
 ``test_market_summary_rows_have_no_extras_against_quote`` and
 ``test_market_summary_required_quote_fields_are_not_all_universal`` for the
 script-validated finding that :class:`~yoghurt.models.quote.Quote` cannot be
-reused (zero extras, but 8 of its 35 required fields are not universal).
+reused (zero extras, but 9 of its 35 required fields are not universal).
 """
 
 from __future__ import annotations
@@ -229,9 +229,9 @@ def test_market_summary_rows_have_no_extras_against_quote() -> None:
 
 
 def test_market_summary_required_quote_fields_are_not_all_universal() -> None:
-    """Reuse-decision evidence: 8 of Quote's required fields aren't universal.
+    """Reuse-decision evidence: 9 of Quote's required fields aren't universal.
 
-    ``currency``, ``priceHint``, and all six ``fiftyTwoWeek*`` fields are
+    ``currency``, ``priceHint``, and all seven required ``fiftyTwoWeek*`` fields are
     not universal across the market-summary corpus, which is why
     :class:`~yoghurt.models.markets.MarketSummaryQuote` is a distinct model
     rather than a reuse of :class:`~yoghurt.models.quote.Quote`.
