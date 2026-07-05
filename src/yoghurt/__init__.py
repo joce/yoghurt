@@ -1,9 +1,11 @@
-"""Yahoo Finance data, one call at a time, with no response modeling to fight.
+"""Fully-typed Yahoo Finance data, one call at a time.
 
 Yoghurt is a synchronous library over Yahoo Finance's undocumented endpoints:
-call a method, get back a plain dict or a typed :class:`~yoghurt.frames.Frame`
-you can convert to polars, pandas, or Arrow — for example, ``import yoghurt``
-then ``bars = yoghurt.Ticker("AAPL").chart(interval="1d").to_polars()``.
+call a method, get back a corpus-verified pydantic model (see
+:mod:`yoghurt.models`) or a typed :class:`~yoghurt.frames.Frame` you can
+convert to polars, pandas, or Arrow — for example, ``import yoghurt`` then
+``bars = yoghurt.Ticker("AAPL").chart(interval="1d").to_polars()`` or
+``price = yoghurt.Ticker("AAPL").quote().regular_market_price``.
 """
 
 from __future__ import annotations

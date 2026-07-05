@@ -138,10 +138,13 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `Ticker.calendar_events()`, `.recommendations()`, `.stock_recommender()`,
   `.price_insights()`, and `.insights()` now return typed models
   (`CalendarEventsResult`, `RecommendationsResult`, `StockRecommenderResult`,
-  `PriceInsights`, `Insights`) instead of raw parsed payloads. None of these
-  five endpoints has a captured invalid-symbol response shape, so an
-  unrecognized symbol surfaces as `YahooApiError` (code `"model-validation"`)
-  rather than `SymbolNotFoundError`.
+  `PriceInsights`, `Insights`) instead of raw parsed payloads. For
+  `recommendations()`, `price_insights()`, and `insights()`, an unrecognized
+  symbol surfaces as `YahooApiError` (code `"model-validation"`) rather than
+  `SymbolNotFoundError` (no invalid-symbol response shape is captured for
+  them); `calendar_events()` returns a valid empty result for unknown
+  symbols, and `stock_recommender()`'s 404 body carries no mappable payload
+  so it surfaces as `YahooRequestError`.
 - `Ticker.analyst()` and `.ratings_top()` now return typed models
   (`AnalystResult`, `TopRatingsResult`) instead of raw parsed payloads.
 - A 404 with a bare `{"detail": ...}` body on a symbol-bound call now maps

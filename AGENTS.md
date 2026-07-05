@@ -30,7 +30,7 @@ Parquet is written with **polars** (a core dependency); chart/screener/visualiza
 - `src/yoghurt/_bridge.py` -> background-loop sync bridge.
 - `src/yoghurt/_core.py` -> async endpoint core: envelopes, error mapping, shared client.
 - `src/yoghurt/api.py` -> public sync Ticker + module functions.
-- `src/yoghurt/frames.py` -> Frame/Chart result types.
+- `src/yoghurt/frames.py` -> Frame/Chart/Spark/Timeseries result types.
 - `src/yoghurt/tabular.py` -> response flattening shared by frames and parquet, including the timeseries fundamentals/geographic-segments/economic-events/analyst-ratings flattener.
 - `src/yoghurt/parquet_writer.py` -> Parquet output for chart/screener/visualization.
 - `src/yoghurt/query.py` -> screener/visualization DSL parsing.
@@ -60,7 +60,7 @@ When adding or editing a CLI command:
 - Error contract: symbol lookups raise SymbolNotFoundError; Yahoo error payloads raise YahooApiError; empty query results return empty Frames (never None, never raise); transport failures raise YahooRequestError/YahooUnavailableError.
 - One conversion vocabulary on every tabular result: to_polars, to_pandas, to_arrow, to_dicts, save_parquet. Conversions take no shaping arguments.
 - One name per concept; no aliases; no value-dependent return types.
-- Kwargs mirror CLI command metadata 1:1 (wire-name keys); booleans whose CLI flag inverts the wire value are named after the wire param. lang/region ride their defaults until the typed-model layer.
+- Kwargs mirror CLI command metadata 1:1 (wire-name keys); booleans whose CLI flag inverts the wire value are named after the wire param. lang/region ride their defaults; per-call overrides remain deliberately unexposed.
 - Response models (Part 3+) are frozen pydantic models with extra="allow"; internal metadata records are frozen dataclasses; orchestrators are plain classes.
 - The corpus at tests/fixtures/corpus/ is the evidence for response shapes; parser code and tests reference corpus files, not hand-invented JSON, wherever a real capture exists.
 

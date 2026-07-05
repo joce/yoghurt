@@ -1,8 +1,8 @@
 """Public synchronous yoghurt API.
 
 Yahoo's shared ``lang``/``region`` wire params ride their CommandSpec
-defaults; per-call overrides are deliberately deferred (they will arrive
-with the typed-model layer). Parameter names mirror the CLI's command
+defaults; per-call overrides remain deliberately unexposed (revisit at
+release prep if a real need appears). Parameter names mirror the CLI's command
 metadata, except booleans whose CLI flag inverts the wire value — those
 use the wire name so the kwarg's meaning matches its effect.
 """
@@ -146,6 +146,10 @@ class Ticker:
         include_pre_post: bool | None = None,
     ) -> Chart:
         """Fetch OHLCV bars.
+
+        An unknown symbol raises ``SymbolNotFoundError`` via the shared
+        error mapping (Yahoo answers with an enveloped 404; corpus:
+        ``chart/ZZZZXYZQ.json``) before this method sees the payload.
 
         Returns:
             Chart: Typed bars frame plus the typed chart meta and (when
