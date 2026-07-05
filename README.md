@@ -83,10 +83,29 @@ session-cache behavior before first use.
 - Reusable Yahoo session cache for faster one-shot CLI calls.
 - A `raw` command for Yahoo query paths that do not have dedicated metadata yet.
 
-## Install From Source
+## Install
 
-Yoghurt is currently intended to run from a local checkout. It is a Python 3.10+
-project managed with [uv](https://docs.astral.sh/uv/).
+Yoghurt requires Python 3.10+.
+
+```powershell
+pip install yoghurt
+```
+
+`screener`/`visualization` results support `to_pandas()` when the optional
+`pandas` extra is installed:
+
+```powershell
+pip install "yoghurt[pandas]"
+```
+
+```powershell
+yoghurt --help
+```
+
+### Install From Source
+
+For development, or to run against an unreleased checkout, use
+[uv](https://docs.astral.sh/uv/):
 
 ```powershell
 uv sync --all-groups
