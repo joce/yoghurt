@@ -27,6 +27,20 @@ Streams:
   capture (for example ``quote-summary:price``); kind = the same capture's
   own ``quoteType`` module payload (``quoteType.quoteType``), so applicability
   never depends on filename conventions.
+- ``calendar-events``: finance.result per calendar-events capture; kind is
+  fixed (the module-keyed result shape has no quoteType/instrumentType of
+  its own).
+- ``quote-type``: quoteType.result[0] per valid quote-type capture (skips
+  the invalid-symbol probe); kind = the record's own quoteType.
+- ``recommendations-by-symbol``: finance.result[0] per capture; kind is
+  looked up from the quote-type corpus's symbol -> quoteType map.
+- ``stock-recommender``: the bare payload per capture; kind is looked up
+  from the quote-type corpus's symbol -> quoteType map via ``fields.id``.
+- ``price-insights``: each per-symbol record in finance.result (itself a
+  symbol-keyed mapping, not a list); kind is looked up from the quote-type
+  corpus's symbol -> quoteType map.
+- ``insights``: finance.result[] per capture; kind is looked up from the
+  quote-type corpus's symbol -> quoteType map.
 """
 
 from __future__ import annotations
@@ -392,6 +406,162 @@ def quote_summary_records(
             yield results[0]
 
 
+CORPUS_CALENDAR_EVENTS_DIR: Final[Path] = CORPUS_ROOT / "calendar-events"
+CORPUS_QUOTE_TYPE_DIR: Final[Path] = CORPUS_ROOT / "quote-type"
+CORPUS_RECOMMENDATIONS_DIR: Final[Path] = CORPUS_ROOT / "recommendations-by-symbol"
+CORPUS_STOCK_RECOMMENDER_DIR: Final[Path] = CORPUS_ROOT / "stock-recommender"
+CORPUS_PRICE_INSIGHTS_DIR: Final[Path] = CORPUS_ROOT / "price-insights"
+CORPUS_INSIGHTS_DIR: Final[Path] = CORPUS_ROOT / "insights"
+
+
+def calendar_events_records(
+    corpus_dir: Path = CORPUS_CALENDAR_EVENTS_DIR,
+) -> Iterator[dict[str, Any]]:
+    """Yield each calendar-events capture's ``finance.result``.
+
+    Kind is fixed (``"calendar-events"``): the result's module-keyed shape
+    (``earnings``/``economicEvents``/``ipoEvents``/``secReports``) has no
+    quoteType or instrumentType of its own to key applicability by.
+    """
+
+    for path in sorted(corpus_dir.glob("*.json")):
+        payload = _load_json(path)
+        result: dict[str, Any] | None = payload.get("finance", {}).get("result")
+        if result:
+            yield result
+
+
+def _quote_type_symbol_map(
+    corpus_dir: Path = CORPUS_QUOTE_TYPE_DIR,
+) -> dict[str, str]:
+    """Build a symbol -> quoteType map from every valid quote-type capture.
+
+    Returns:
+        dict[str, str]: Symbol to quoteType, for every corpus record that
+        carries both fields.
+    """
+
+    mapping: dict[str, str] = {}
+    for path in sorted(corpus_dir.glob("*.json")):
+        if path.stem == _INVALID_SYMBOL_STEM:
+            continue
+        payload = _load_json(path)
+        records: list[dict[str, Any]] = payload.get("quoteType", {}).get("result") or []
+        for record in records:
+            symbol = record.get("symbol")
+            quote_type = record.get("quoteType")
+            if isinstance(symbol, str) and isinstance(quote_type, str):
+                mapping[symbol] = quote_type
+    return mapping
+
+
+def quote_type_records(
+    corpus_dir: Path = CORPUS_QUOTE_TYPE_DIR,
+) -> Iterator[dict[str, Any]]:
+    """Yield each valid quote-type capture's single result record.
+
+    Skips the deliberate invalid-symbol probe (``ZZZZXYZQ``, empty
+    ``result: []``). Kind is the record's own ``quoteType`` field.
+    """
+
+    for path in sorted(corpus_dir.glob("*.json")):
+        if path.stem == _INVALID_SYMBOL_STEM:
+            continue
+        payload = _load_json(path)
+        results: list[dict[str, Any]] = payload.get("quoteType", {}).get("result") or []
+        if results:
+            yield results[0]
+
+
+def recommendations_records(
+    corpus_dir: Path = CORPUS_RECOMMENDATIONS_DIR,
+) -> Iterator[_KindTagged]:
+    """Yield each recommendations-by-symbol capture's single result record.
+
+    Kind is looked up from the quote-type corpus's symbol -> quoteType map,
+    since this endpoint's own payload carries no type field.
+    """
+
+    symbol_kinds = _quote_type_symbol_map()
+    for path in sorted(corpus_dir.glob("*.json")):
+        payload = _load_json(path)
+        records: list[dict[str, Any]] = payload.get("finance", {}).get("result") or []
+        for record in records:
+            symbol = record.get("symbol")
+            kind = symbol_kinds.get(symbol, "") if isinstance(symbol, str) else ""
+            yield _KindTagged(record, kind)
+
+
+def stock_recommender_records(
+    corpus_dir: Path = CORPUS_STOCK_RECOMMENDER_DIR,
+) -> Iterator[_KindTagged]:
+    """Yield each stock-recommender capture's bare (non-enveloped) payload.
+
+    Kind is looked up from the quote-type corpus's symbol -> quoteType map
+    via ``fields.id`` (wire-spelled ``"ticker:<symbol>"``).
+    """
+
+    symbol_kinds = _quote_type_symbol_map()
+    for path in sorted(corpus_dir.glob("*.json")):
+        payload = _load_json(path)
+        entity_id = str(payload.get("fields", {}).get("id", ""))
+        symbol = entity_id.removeprefix("ticker:")
+        kind = symbol_kinds.get(symbol, "")
+        yield _KindTagged(payload, kind)
+
+
+def price_insights_records(
+    corpus_dir: Path = CORPUS_PRICE_INSIGHTS_DIR,
+) -> Iterator[_KindTagged]:
+    """Yield each price-insights capture's per-symbol record(s).
+
+    ``finance.result`` is itself a symbol-keyed mapping (not a list); this
+    yields each symbol's record in turn. Kind is looked up from the
+    quote-type corpus's symbol -> quoteType map.
+    """
+
+    symbol_kinds = _quote_type_symbol_map()
+    for path in sorted(corpus_dir.glob("*.json")):
+        payload = _load_json(path)
+        result: dict[str, Any] = payload.get("finance", {}).get("result") or {}
+        for symbol, record in result.items():
+            kind = symbol_kinds.get(symbol, "")
+            yield _KindTagged(record, kind)
+
+
+def insights_records(
+    corpus_dir: Path = CORPUS_INSIGHTS_DIR,
+) -> Iterator[_KindTagged]:
+    """Yield each insights capture's result record(s).
+
+    Kind is looked up from the quote-type corpus's symbol -> quoteType map.
+    """
+
+    symbol_kinds = _quote_type_symbol_map()
+    for path in sorted(corpus_dir.glob("*.json")):
+        payload = _load_json(path)
+        records: list[dict[str, Any]] = payload.get("finance", {}).get("result") or []
+        for record in records:
+            symbol = record.get("symbol")
+            kind = symbol_kinds.get(symbol, "") if isinstance(symbol, str) else ""
+            yield _KindTagged(record, kind)
+
+
+def quote_type_lookup_kind(record: Mapping[str, Any]) -> str:
+    """Read the quoteType kind off a record tagged via the quote-type symbol map.
+
+    Shared by ``recommendations-by-symbol``, ``stock-recommender``,
+    ``price-insights``, and ``insights`` streams, none of which self-report
+    a quoteType/instrumentType field of their own.
+
+    Returns:
+        str: The looked-up quoteType (for example ``"EQUITY"``), or ``"?"``
+        for an untagged record.
+    """
+
+    return record.kind if isinstance(record, _KindTagged) else "?"
+
+
 _STREAMS: Final[dict[str, Callable[[], Iterator[Mapping[str, Any]]]]] = {
     "quote": quote_records,
     "chart-meta": chart_meta_records,
@@ -399,6 +569,12 @@ _STREAMS: Final[dict[str, Callable[[], Iterator[Mapping[str, Any]]]]] = {
     "chart-and-spark-meta": chart_and_spark_meta_records,
     "option-contracts": option_contract_records,
     "option-chains": option_chain_records,
+    "calendar-events": calendar_events_records,
+    "quote-type": quote_type_records,
+    "recommendations-by-symbol": recommendations_records,
+    "stock-recommender": stock_recommender_records,
+    "price-insights": price_insights_records,
+    "insights": insights_records,
 }
 
 _KIND_OF: Final[dict[str, Callable[[Mapping[str, Any]], str]]] = {
@@ -408,6 +584,12 @@ _KIND_OF: Final[dict[str, Callable[[Mapping[str, Any]], str]]] = {
     "chart-and-spark-meta": _instrument_kind,
     "option-contracts": contract_kind,
     "option-chains": lambda _record: "chain",
+    "calendar-events": lambda _record: "calendar-events",
+    "quote-type": _quote_kind,
+    "recommendations-by-symbol": quote_type_lookup_kind,
+    "stock-recommender": quote_type_lookup_kind,
+    "price-insights": quote_type_lookup_kind,
+    "insights": quote_type_lookup_kind,
 }
 
 _QUOTE_SUMMARY_PREFIX: Final[str] = "quote-summary:"
