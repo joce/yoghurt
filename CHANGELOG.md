@@ -55,6 +55,13 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   captured shape variants (a full default response, an AI-analysis-only
   response, and a price-anomaly-only response) from one model; every field
   except `has_price_anomaly` is optional as a result.
+- Typed `AnalystResult` and `TopRatingsResult`/`AnalystRatingRow` response
+  models for the `analyst` and `ratings-top` endpoints, in the new
+  `yoghurt.models.analysis_ratings`. `AnalystResult.price_movement`/
+  `.news_summary` reuse the existing `PriceMovement`/`NewsSummaryBlock`
+  models from `yoghurt.models.analysis_insights` rather than duplicating
+  them, after confirming both endpoints' AI-service payloads are
+  shape-identical.
 
 ### Changed
 

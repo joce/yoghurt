@@ -41,6 +41,12 @@ Streams:
   corpus's symbol -> quoteType map.
 - ``insights``: finance.result[] per capture; kind is looked up from the
   quote-type corpus's symbol -> quoteType map.
+- ``analyst``: the bare payload per valid (non-error) capture; kind is
+  looked up from the quote-type corpus's symbol -> quoteType map via the
+  capture's own ``symbol_id``-adjacent ``price_movement.ticker`` field.
+- ``ratings-top``: the bare payload per valid (non-error) capture; kind is
+  looked up from the quote-type corpus's symbol -> quoteType map via the
+  capture's ``dir.ticker`` field.
 """
 
 from __future__ import annotations
@@ -547,6 +553,51 @@ def insights_records(
             yield _KindTagged(record, kind)
 
 
+CORPUS_ANALYST_DIR: Final[Path] = CORPUS_ROOT / "analyst"
+CORPUS_RATINGS_TOP_DIR: Final[Path] = CORPUS_ROOT / "ratings-top"
+
+
+def analyst_records(
+    corpus_dir: Path = CORPUS_ANALYST_DIR,
+) -> Iterator[_KindTagged]:
+    """Yield each valid (non-error) analyst capture's bare payload.
+
+    Skips error-shaped captures (``{"detail": ...}``, no ``symbol_id``
+    key — both the deliberate invalid-symbol probe and, in this corpus,
+    the thin-coverage ``RY.TO`` probe). Kind is looked up from the
+    quote-type corpus's symbol -> quoteType map via ``price_movement.ticker``.
+    """
+
+    symbol_kinds = _quote_type_symbol_map()
+    for path in sorted(corpus_dir.glob("*.json")):
+        payload = _load_json(path)
+        if "symbol_id" not in payload:
+            continue
+        symbol = str(payload.get("price_movement", {}).get("ticker", ""))
+        kind = symbol_kinds.get(symbol, "")
+        yield _KindTagged(payload, kind)
+
+
+def ratings_top_records(
+    corpus_dir: Path = CORPUS_RATINGS_TOP_DIR,
+) -> Iterator[_KindTagged]:
+    """Yield each valid (non-error) ratings-top capture's bare payload.
+
+    Skips error-shaped captures (``{"detail": ...}``, no ``dir`` key — the
+    corpus's ``RY.TO`` not-found probe). Kind is looked up from the
+    quote-type corpus's symbol -> quoteType map via ``dir.ticker``.
+    """
+
+    symbol_kinds = _quote_type_symbol_map()
+    for path in sorted(corpus_dir.glob("*.json")):
+        payload = _load_json(path)
+        if "dir" not in payload:
+            continue
+        symbol = str(payload.get("dir", {}).get("ticker", ""))
+        kind = symbol_kinds.get(symbol, "")
+        yield _KindTagged(payload, kind)
+
+
 def quote_type_lookup_kind(record: Mapping[str, Any]) -> str:
     """Read the quoteType kind off a record tagged via the quote-type symbol map.
 
@@ -575,6 +626,8 @@ _STREAMS: Final[dict[str, Callable[[], Iterator[Mapping[str, Any]]]]] = {
     "stock-recommender": stock_recommender_records,
     "price-insights": price_insights_records,
     "insights": insights_records,
+    "analyst": analyst_records,
+    "ratings-top": ratings_top_records,
 }
 
 _KIND_OF: Final[dict[str, Callable[[Mapping[str, Any]], str]]] = {
@@ -590,6 +643,8 @@ _KIND_OF: Final[dict[str, Callable[[Mapping[str, Any]], str]]] = {
     "stock-recommender": quote_type_lookup_kind,
     "price-insights": quote_type_lookup_kind,
     "insights": quote_type_lookup_kind,
+    "analyst": quote_type_lookup_kind,
+    "ratings-top": quote_type_lookup_kind,
 }
 
 _QUOTE_SUMMARY_PREFIX: Final[str] = "quote-summary:"
