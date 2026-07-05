@@ -113,8 +113,8 @@ def test_insights_rich_capture_has_every_optional_block() -> None:
     assert result.instrument_info.valuation.relative_value == "Premium"
 
 
-def test_insights_thin_capture_omits_every_optional_block() -> None:
-    """RY.TO's insights capture only populates the four universal fields."""
+def test_insights_thin_capture_omits_most_optional_blocks() -> None:
+    """RY.TO populates only recommendation/upsell beyond sig_devs/symbol."""
 
     payload = _load("insights/RY.TO.json")
     result = Insights.model_validate(payload["finance"]["result"][0])
@@ -126,7 +126,94 @@ def test_insights_thin_capture_omits_every_optional_block() -> None:
     assert result.reports is None
     assert result.sec_reports is None
     assert result.upsell_search_d_d is None
+    assert result.recommendation is not None
     assert result.recommendation.rating == "BUY"
+    assert result.upsell is not None
+
+
+def test_insights_non_equity_symbol_has_only_sig_devs_and_symbol() -> None:
+    """A live BTC-USD capture has only symbol/sig_devs; recommendation/upsell are None.
+
+    Not corpus-backed (this endpoint's corpus is EQUITY-only); recorded
+    from a live Yahoo response observed during development. See the model
+    module's docstring.
+    """
+
+    record: dict[str, Any] = {"symbol": "BTC-USD", "sigDevs": []}
+    result = Insights.model_validate(record)
+
+    assert result.symbol == "BTC-USD"
+    assert result.sig_devs == []
+    assert result.recommendation is None
+    assert result.upsell is None
+    assert result.instrument_info is None
+    assert result.company_snapshot is None
+
+
+def test_insights_etf_symbol_has_instrument_info_but_no_recommendation() -> None:
+    """A live SPY capture has instrument_info but no recommendation/upsell.
+
+    Not corpus-backed; recorded from a live Yahoo response observed during
+    development. ``technical_events.sector`` and the outlook rows'
+    sector/index comparison fields are absent, and ``valuation`` carries
+    only ``provider``. See the model module's docstring.
+    """
+
+    record: dict[str, Any] = {
+        "symbol": "SPY",
+        "instrumentInfo": {
+            "technicalEvents": {
+                "provider": "Trading Central",
+                "shortTermOutlook": {
+                    "stateDescription": "All events are bullish.",
+                    "direction": "Bullish",
+                    "score": 2,
+                    "scoreDescription": "Bullish Evidence",
+                },
+                "intermediateTermOutlook": {
+                    "stateDescription": "All events are bullish.",
+                    "direction": "Bullish",
+                    "score": 2,
+                    "scoreDescription": "Bullish Evidence",
+                    "indexDirection": "Bullish",
+                    "indexScore": 2,
+                    "indexScoreDescription": "Bullish Evidence",
+                },
+                "longTermOutlook": {
+                    "stateDescription": "All events are bullish.",
+                    "direction": "Bullish",
+                    "score": 2,
+                    "scoreDescription": "Bullish Evidence",
+                    "indexDirection": "Bullish",
+                    "indexScore": 2,
+                    "indexScoreDescription": "Bullish Evidence",
+                },
+            },
+            "keyTechnicals": {
+                "provider": "Trading Central",
+                "support": 682.115,
+                "resistance": 748.17,
+                "stopLoss": 717.653029,
+            },
+            "valuation": {"provider": "Trading Central"},
+        },
+        "events": [],
+        "sigDevs": [],
+        "secReports": [],
+    }
+    result = Insights.model_validate(record)
+
+    assert result.symbol == "SPY"
+    assert result.recommendation is None
+    assert result.upsell is None
+    assert result.company_snapshot is None
+    assert result.instrument_info is not None
+    technical_events = result.instrument_info.technical_events
+    assert technical_events.sector is None
+    assert technical_events.short_term_outlook.index_direction is None
+    assert technical_events.intermediate_term_outlook.index_direction == "Bullish"
+    assert result.instrument_info.valuation.color is None
+    assert result.instrument_info.valuation.provider == "Trading Central"
 
 
 def test_insights_valuation_relative_value_absent_on_msft() -> None:

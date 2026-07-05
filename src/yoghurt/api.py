@@ -20,11 +20,17 @@ from yoghurt.commands import COMMANDS_BY_NAME
 from yoghurt.exceptions import SymbolNotFoundError, YahooApiError
 from yoghurt.frames import Chart, Frame, Spark, Timeseries
 from yoghurt.models import (
+    CalendarEventsResult,
     ChartEvents,
     ChartMeta,
+    Insights,
     OptionChain,
+    PriceInsights,
     Quote,
     QuoteSummary,
+    QuoteTypeResult,
+    RecommendationsResult,
+    StockRecommenderResult,
     validate_model,
 )
 from yoghurt.tabular import (
@@ -239,14 +245,14 @@ class Ticker:
         formatted: bool | None = None,
         enable_private_company: bool | None = None,
         overnight_price: bool | None = None,
-    ) -> dict[str, Any]:
+    ) -> QuoteTypeResult:
         """Fetch instrument classification metadata for this symbol.
 
         ``enable_private_company=True`` includes private-company data;
         ``overnight_price=True`` requests overnight price fields.
 
         Returns:
-            dict[str, Any]: The single quoteType record.
+            QuoteTypeResult: The validated quoteType record.
 
         Raises:
             SymbolNotFoundError: If Yahoo returns no record for the symbol.
@@ -267,7 +273,7 @@ class Ticker:
         results = payload["quoteType"]["result"]
         if not results:
             raise SymbolNotFoundError(self.symbol)
-        return results[0]
+        return validate_model(QuoteTypeResult, results[0])
 
     def quote_summary(
         self,
@@ -425,17 +431,18 @@ class Ticker:
         end_date: DateLike | None = None,
         economic_events_high_importance_only: bool | None = None,
         economic_events_region_filter: str | None = None,
-    ) -> dict[str, Any]:
+    ) -> CalendarEventsResult:
         """Fetch earnings, IPO, economic, and SEC filing events for this symbol.
 
         ``economic_events_high_importance_only=True`` limits economic events
-        to high-importance ones.
+        to high-importance ones. ``modules`` selects which event family the
+        result populates; unrequested families are ``None``.
 
         Returns:
-            dict[str, Any]: The full parsed response payload.
+            CalendarEventsResult: The validated calendar-events record.
         """
 
-        return run(
+        payload = run(
             _core.call_endpoint(
                 "calendar-events",
                 symbol=self.symbol,
@@ -452,6 +459,7 @@ class Ticker:
                 ),
             )
         )
+        return validate_model(CalendarEventsResult, payload["finance"]["result"])
 
     def analyst(self, *, debug_flag: bool | None = None) -> dict[str, Any]:
         """Fetch analyst intelligence for this symbol.
@@ -494,14 +502,21 @@ class Ticker:
         modules: list[str] | None = None,
         ai_modules: list[str] | None = None,
         check_anomaly: bool | None = None,
-    ) -> dict[str, Any]:
+    ) -> PriceInsights:
         """Fetch AI-generated price insights for this symbol.
 
+        ``modules``/``ai_modules`` narrow which blocks Yahoo populates;
+        unrequested blocks are ``None``. ``check_anomaly=True`` requests
+        Yahoo's price-anomaly detection. The corpus has no captured
+        invalid-symbol shape for this endpoint, so an unrecognized symbol
+        surfaces as a model-validation failure rather than
+        ``SymbolNotFoundError``.
+
         Returns:
-            dict[str, Any]: The full parsed response payload.
+            PriceInsights: The validated price-insights record.
         """
 
-        return run(
+        payload = run(
             _core.call_endpoint(
                 "price-insights",
                 symbol=self.symbol,
@@ -513,6 +528,8 @@ class Ticker:
                 ),
             )
         )
+        record = payload["finance"]["result"].get(self.symbol, {})
+        return validate_model(PriceInsights, record)
 
     def insights(
         self,
@@ -522,18 +539,21 @@ class Ticker:
         get_all_research_reports: bool | None = None,
         reports_count: int | None = None,
         ssl: bool | None = None,
-    ) -> dict[str, Any]:
+    ) -> Insights:
         """Fetch research reports and insights for this symbol.
 
         ``disable_related_reports=True`` omits related research reports;
         ``get_all_research_reports=True`` requests all available research
         reports; ``ssl=True`` requests SSL URLs in Yahoo response fields.
+        The corpus has no captured invalid-symbol shape for this endpoint,
+        so an unrecognized symbol surfaces as a model-validation failure
+        rather than ``SymbolNotFoundError``.
 
         Returns:
-            dict[str, Any]: The full parsed response payload.
+            Insights: The validated insights record.
         """
 
-        return run(
+        payload = run(
             _core.call_endpoint(
                 "insights",
                 symbol=self.symbol,
@@ -547,36 +567,52 @@ class Ticker:
                 ),
             )
         )
+        results: list[dict[str, Any]] = payload["finance"]["result"]
+        record: dict[str, Any] = results[0] if results else {}
+        return validate_model(Insights, record)
 
-    def recommendations(self, *, fields: list[str] | None = None) -> dict[str, Any]:
+    def recommendations(
+        self, *, fields: list[str] | None = None
+    ) -> RecommendationsResult:
         """Fetch related-symbol recommendations for this symbol.
 
+        The corpus has no captured invalid-symbol shape for this endpoint,
+        so an unrecognized symbol surfaces as a model-validation failure
+        rather than ``SymbolNotFoundError``. Yahoo also sends an empty
+        result (not an error) for some instrument types with no
+        recommendations to report (live-observed on FUTURE symbols such as
+        ``ES=F``), which surfaces the same way.
+
         Returns:
-            dict[str, Any]: The full parsed response payload.
+            RecommendationsResult: The validated recommendations record.
         """
 
-        return run(
+        payload = run(
             _core.call_endpoint(
                 "recommendations-by-symbol",
                 symbol=self.symbol,
                 values=_values(symbol=self.symbol, fields=fields),
             )
         )
+        results: list[dict[str, Any]] = payload["finance"]["result"]
+        record: dict[str, Any] = results[0] if results else {}
+        return validate_model(RecommendationsResult, record)
 
-    def stock_recommender(self) -> dict[str, Any]:
+    def stock_recommender(self) -> StockRecommenderResult:
         """Fetch related-tickers peers for this equity symbol.
 
         Returns:
-            dict[str, Any]: The full parsed response payload.
+            StockRecommenderResult: The validated stock-recommender record.
         """
 
-        return run(
+        payload = run(
             _core.call_endpoint(
                 "stock-recommender",
                 symbol=self.symbol,
                 values=_values(symbol=self.symbol),
             )
         )
+        return validate_model(StockRecommenderResult, payload)
 
 
 def _tabular_frame(payload: dict[str, Any], route: str) -> Frame:

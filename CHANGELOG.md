@@ -44,6 +44,17 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   rest on a thinner 4-capture evidence base than the rest of this endpoint
   family; see their module docstrings for the fields typed from a single
   observation.
+- Typed `QuoteTypeResult`, `CalendarEventsResult` (plus `EconomicEvent`/
+  `EconomicEventDay`), `RecommendationsResult`/`RecommendedSymbol`, and
+  `StockRecommenderResult`/`StockRecommenderFields` response models for the
+  `quote-type`, `calendar-events`, `recommendations-by-symbol`, and
+  `stock-recommender` endpoints, in the new `yoghurt.models.analysis_events`.
+- Typed `PriceInsights` and `Insights` response models for the
+  `price-insights` and `insights` endpoints, in the new
+  `yoghurt.models.analysis_insights`. `PriceInsights` validates all three
+  captured shape variants (a full default response, an AI-analysis-only
+  response, and a price-anomaly-only response) from one model; every field
+  except `has_price_anomaly` is optional as a result.
 
 ### Changed
 
@@ -76,6 +87,15 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `Ticker.quote_summary()` now returns a typed `QuoteSummary` instead of the
   raw parsed payload; `modules` still narrows which fields Yahoo populates
   (unrequested or inapplicable modules validate as `None`).
+- `Ticker.quote_type()` now returns a typed `QuoteTypeResult` instead of a raw
+  dict; empty results still raise `SymbolNotFoundError`.
+- `Ticker.calendar_events()`, `.recommendations()`, `.stock_recommender()`,
+  `.price_insights()`, and `.insights()` now return typed models
+  (`CalendarEventsResult`, `RecommendationsResult`, `StockRecommenderResult`,
+  `PriceInsights`, `Insights`) instead of raw parsed payloads. None of these
+  five endpoints has a captured invalid-symbol response shape, so an
+  unrecognized symbol surfaces as `YahooApiError` (code `"model-validation"`)
+  rather than `SymbolNotFoundError`.
 
 ### Internal
 

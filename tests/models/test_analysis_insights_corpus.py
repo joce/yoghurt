@@ -193,8 +193,18 @@ def test_insights_validates_with_no_extra_fields(
     assert not nested, message
 
 
-def test_insights_required_field_set_matches_corpus_universal_keys() -> None:
-    """recommendation/sig_devs/symbol/upsell are required; the rest are optional."""
+def test_insights_required_field_set_is_a_subset_of_corpus_universal_keys() -> None:
+    """Only sig_devs/symbol are required; the corpus's own universal set is wider.
+
+    This endpoint's 3-capture corpus is EQUITY-only (AAPL/MSFT/RY.TO), so
+    its universal-key set also includes ``recommendation``/``upsell`` —
+    but live cross-asset-class checks during development (ETF and
+    index/crypto/forex symbols; see the model module's docstring) showed
+    both are EQUITY-only in practice, not applicable to the endpoint as a
+    whole. The model's required set is therefore a strict subset of this
+    thin corpus's universal set rather than an exact match, unlike every
+    other model in this batch.
+    """
 
     report = collect_presence(insights_records(), kind_of=quote_type_lookup_kind)
     universal_keys = {key for key, field in report.fields.items() if field.universal}
@@ -206,8 +216,8 @@ def test_insights_required_field_set_matches_corpus_universal_keys() -> None:
     }
 
     assert len(universal_keys) == _EXPECTED_INSIGHTS_REQUIRED_FIELD_COUNT
-    assert required_aliases == universal_keys
-    assert required_aliases == {"recommendation", "sigDevs", "symbol", "upsell"}
+    assert required_aliases < universal_keys
+    assert required_aliases == {"sigDevs", "symbol"}
 
 
 def test_insights_thin_ry_to_capture_omits_optional_blocks() -> None:

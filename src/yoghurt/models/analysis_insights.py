@@ -1032,6 +1032,14 @@ class TechnicalOutlook(YahooModel):
 
     ``direction``/``sector_direction``/``index_direction`` are typed
     ``str``, not a closed-vocabulary enum; see the module docstring.
+    Live cross-asset-class checks during development (not yet backed by a
+    corpus capture; see the module docstring's caveat) found
+    ``sector_direction``/``sector_score``/``sector_score_description``
+    EQUITY-only and ``index_direction``/``index_score``/
+    ``index_score_description`` present on EQUITY and most ETF captures
+    but absent even on some ETF outlooks (SPY's ``shortTermOutlook``
+    lacked them while its ``intermediateTermOutlook``/``longTermOutlook``
+    had them), so all six are optional.
     """
 
     direction: str
@@ -1042,22 +1050,28 @@ class TechnicalOutlook(YahooModel):
     Observed on: insights reports.
     """
 
-    index_direction: str = Field(alias="indexDirection")
+    index_direction: str | None = Field(default=None, alias="indexDirection")
     """
     Directional outlook for the broader index over this term (observed
     values: ``"Bullish"``, ``"Bearish"``).
 
+    Live-observed as absent on at least one ETF outlook row even when
+    sibling outlook rows on the same capture carry it; see the class
+    docstring.
+
     Observed on: insights reports.
     """
 
-    index_score: int = Field(alias="indexScore")
+    index_score: int | None = Field(default=None, alias="indexScore")
     """
     Strength score backing ``index_direction``.
 
     Observed on: insights reports.
     """
 
-    index_score_description: str = Field(alias="indexScoreDescription")
+    index_score_description: str | None = Field(
+        default=None, alias="indexScoreDescription"
+    )
     """
     Prose description of ``index_score`` (for example ``"Bullish
     Evidence"``).
@@ -1080,22 +1094,27 @@ class TechnicalOutlook(YahooModel):
     Observed on: insights reports.
     """
 
-    sector_direction: str = Field(alias="sectorDirection")
+    sector_direction: str | None = Field(default=None, alias="sectorDirection")
     """
     Directional outlook for the sector over this term (observed values:
     ``"Bullish"``, ``"Bearish"``).
 
+    Live-observed as EQUITY-only (absent on every ETF outlook row checked);
+    see the class docstring.
+
     Observed on: insights reports.
     """
 
-    sector_score: int = Field(alias="sectorScore")
+    sector_score: int | None = Field(default=None, alias="sectorScore")
     """
     Strength score backing ``sector_direction``.
 
     Observed on: insights reports.
     """
 
-    sector_score_description: str = Field(alias="sectorScoreDescription")
+    sector_score_description: str | None = Field(
+        default=None, alias="sectorScoreDescription"
+    )
     """
     Prose description of ``sector_score``.
 
@@ -1135,9 +1154,12 @@ class TechnicalEvents(YahooModel):
     Observed on: insights reports.
     """
 
-    sector: str
+    sector: str | None = None
     """
     Sector classification (for example ``"Technology"``).
+
+    Live-observed as EQUITY-only (absent on ETF symbols checked; not yet
+    backed by a corpus capture, see the module docstring).
 
     Observed on: insights reports.
     """
@@ -1184,27 +1206,38 @@ class KeyTechnicals(YahooModel):
 
 
 class Valuation(YahooModel):
-    """The ``instrumentInfo.valuation`` block of an :class:`Insights`."""
+    """The ``instrumentInfo.valuation`` block of an :class:`Insights`.
 
-    color: float
+    Live-observed as far thinner on ETF symbols (SPY/QQQ/VT carry only
+    ``provider``) than on the corpus's EQUITY captures; not yet backed by
+    a corpus capture, see the module docstring.
+    """
+
+    color: float | None = None
     """
     Numeric valuation-gauge position (observed range: ``0.0``-``0.5``).
+
+    Live-observed as EQUITY-only.
 
     Observed on: insights reports.
     """
 
-    description: str
+    description: str | None = None
     """
     Prose valuation assessment (for example ``"Overvalued"``, ``"Near Fair
     Value"``).
 
+    Live-observed as EQUITY-only.
+
     Observed on: insights reports.
     """
 
-    discount: str
+    discount: str | None = None
     """
     Discount or premium to fair value, as a signed wire percentage string
     (for example ``"-6%"``, ``"14%"``).
+
+    Live-observed as EQUITY-only.
 
     Observed on: insights reports.
     """
@@ -1258,46 +1291,57 @@ class InstrumentInfo(YahooModel):
 class CompanySnapshotScores(YahooModel):
     """A ``company``/``sector`` score block in a :class:`CompanySnapshot`.
 
-    Both blocks share this fixed six-metric shape (verified against every
-    populated corpus capture).
+    Both blocks share this fixed six-metric key vocabulary, but every
+    field is optional: live checks during development (not yet backed by
+    a corpus capture beyond the two rich EQUITY corpus captures, see the
+    module docstring) found ``company`` genuinely drops keys per symbol
+    (for example OKLO carries only ``earnings_reports``/
+    ``insider_sentiments``; BABA carries ``dividends``/``hiring``/
+    ``innovativeness``/``sustainability`` but not ``earnings_reports``),
+    unlike the corpus's AAPL/MSFT captures where ``company`` happened to
+    carry all six. ``sector`` has only ever been observed with all six
+    keys present (always the fixed midpoint ``0.5`` on every metric in
+    the corpus — a category-average baseline, not a per-sector-specific
+    figure) but is typed the same way for consistency between the two
+    uses of this shared model.
     """
 
-    dividends: float
+    dividends: float | None = None
     """
     Dividend-strength score, on a 0-1 scale.
 
     Observed on: insights reports.
     """
 
-    earnings_reports: float = Field(alias="earningsReports")
+    earnings_reports: float | None = Field(default=None, alias="earningsReports")
     """
     Earnings-report-strength score, on a 0-1 scale.
 
     Observed on: insights reports.
     """
 
-    hiring: float
+    hiring: float | None = None
     """
     Hiring-momentum score, on a 0-1 scale.
 
     Observed on: insights reports.
     """
 
-    innovativeness: float
+    innovativeness: float | None = None
     """
     Innovation score, on a 0-1 scale.
 
     Observed on: insights reports.
     """
 
-    insider_sentiments: float = Field(alias="insiderSentiments")
+    insider_sentiments: float | None = Field(default=None, alias="insiderSentiments")
     """
     Insider-sentiment score, on a 0-1 scale.
 
     Observed on: insights reports.
     """
 
-    sustainability: float
+    sustainability: float | None = None
     """
     Sustainability score, on a 0-1 scale.
 
@@ -1308,9 +1352,9 @@ class CompanySnapshotScores(YahooModel):
 class CompanySnapshot(YahooModel):
     """The ``companySnapshot`` block of an :class:`Insights`.
 
-    Absent entirely on the corpus's thin ``RY.TO`` capture. ``sector`` is
-    always the fixed midpoint ``0.5`` on every metric in the corpus (a
-    category-average baseline, not a per-sector-specific figure).
+    Absent entirely on the corpus's thin ``RY.TO`` capture, and
+    live-observed as absent on foreign listings (0700.HK/7203.T/SHEL.L;
+    not yet backed by a corpus capture, see the module docstring).
     """
 
     company: CompanySnapshotScores
@@ -1336,7 +1380,12 @@ class CompanySnapshot(YahooModel):
 
 
 class InsightsRecommendation(YahooModel):
-    """The ``recommendation`` block of an :class:`Insights`."""
+    """The ``recommendation`` block of an :class:`Insights`.
+
+    ``rating``/``target_price`` are typed ``str``/``float``, not a
+    closed-vocabulary enum or always-required field, respectively; see
+    each field's docstring.
+    """
 
     provider: str
     """
@@ -1348,14 +1397,19 @@ class InsightsRecommendation(YahooModel):
 
     rating: str
     """
-    Recommendation rating (always ``"BUY"`` in the corpus).
+    Recommendation rating (always ``"BUY"`` in the corpus; live-observed
+    as also ``"HOLD"``, not yet backed by a corpus capture, see the module
+    docstring).
 
     Observed on: insights reports.
     """
 
-    target_price: float = Field(alias="targetPrice")
+    target_price: float | None = Field(default=None, alias="targetPrice")
     """
     Analyst target price.
+
+    Live-observed as absent on a ``"HOLD"``-rated recommendation (BABA);
+    not yet backed by a corpus capture, see the module docstring.
 
     Observed on: insights reports.
     """
@@ -1707,11 +1761,20 @@ class InsightsSecReport(YahooModel):
 class Insights(YahooModel):
     """The ``insights`` endpoint's single per-symbol record.
 
-    Every field except ``recommendation``/``sig_devs``/``symbol``/
-    ``upsell`` is optional: the corpus's thin ``RY.TO`` capture omits
-    ``company_snapshot``/``events``/``instrument_info``/``reports``/
-    ``sec_reports``/``upsell_search_d_d`` entirely. See the module
-    docstring.
+    Only ``sig_devs``/``symbol`` are required. The corpus itself is
+    EQUITY-only (AAPL/MSFT rich, RY.TO thin — see the module docstring),
+    but live cross-asset-class checks against ETF (SPY/QQQ/VT) and
+    no-analysis-coverage symbols (BTC-USD/EURUSD=X/^GSPC/ES=F) during
+    development surfaced applicability this endpoint's 3-capture corpus
+    could not: ``recommendation``/``upsell``/``company_snapshot``/
+    ``reports``/``upsell_search_d_d`` are EQUITY-only in practice (never
+    observed on ETF or index/crypto/forex symbols, live), ``instrument_info``/
+    ``events`` extend to ETF but not further, and ``sec_reports`` can appear
+    on some ETFs (observed live on SPY) though never on the non-EQUITY
+    corpus capture. These live findings are not yet backed by a corpus
+    capture for this endpoint beyond the original 3 EQUITY symbols; flag for
+    a corpus refresh that widens this endpoint's probe scope beyond
+    EQUITY_SUBSET.
     """
 
     company_snapshot: CompanySnapshot | None = Field(
@@ -1720,7 +1783,9 @@ class Insights(YahooModel):
     """
     Company-vs-sector scoring snapshot for this symbol.
 
-    Absent on the corpus's thin ``RY.TO`` capture.
+    Absent on the corpus's thin ``RY.TO`` capture; live-observed as
+    EQUITY-only (absent on ETF and index/crypto/forex symbols). See the
+    module docstring.
 
     Observed on: insights reports.
     """
@@ -1729,7 +1794,9 @@ class Insights(YahooModel):
     """
     Detected technical events for this symbol.
 
-    Absent on the corpus's thin ``RY.TO`` capture.
+    Absent on the corpus's thin ``RY.TO`` capture; live-observed on EQUITY
+    and ETF symbols, absent on index/crypto/forex symbols. See the module
+    docstring.
 
     Observed on: insights reports.
     """
@@ -1738,14 +1805,19 @@ class Insights(YahooModel):
     """
     Technical outlook, key levels, and valuation for this symbol.
 
-    Absent on the corpus's thin ``RY.TO`` capture.
+    Absent on the corpus's thin ``RY.TO`` capture; live-observed on EQUITY
+    and ETF symbols, absent on index/crypto/forex symbols. See the module
+    docstring.
 
     Observed on: insights reports.
     """
 
-    recommendation: InsightsRecommendation
+    recommendation: InsightsRecommendation | None = None
     """
     Headline analyst recommendation for this symbol.
+
+    Live-observed as EQUITY-only (absent on ETF and index/crypto/forex
+    symbols). See the module docstring.
 
     Observed on: insights reports.
     """
@@ -1754,7 +1826,8 @@ class Insights(YahooModel):
     """
     Research report summaries mentioning this symbol.
 
-    Absent on the corpus's thin ``RY.TO`` capture.
+    Absent on the corpus's thin ``RY.TO`` capture; live-observed as
+    EQUITY-only. See the module docstring.
 
     Observed on: insights reports.
     """
@@ -1765,7 +1838,8 @@ class Insights(YahooModel):
     """
     Recent SEC filings for this symbol.
 
-    Absent on the corpus's thin ``RY.TO`` capture.
+    Absent on the corpus's thin ``RY.TO`` capture; live-observed on EQUITY
+    symbols and at least one ETF (SPY). See the module docstring.
 
     Observed on: insights reports.
     """
@@ -1773,6 +1847,10 @@ class Insights(YahooModel):
     sig_devs: list[SignificantDevelopment] = Field(alias="sigDevs")
     """
     Significant recent developments for this symbol.
+
+    The only field, besides ``symbol``, ever observed universal — present
+    (though often empty) on every corpus record and every live cross-asset
+    check performed during development.
 
     Observed on: insights reports.
     """
@@ -1784,9 +1862,12 @@ class Insights(YahooModel):
     Observed on: insights reports.
     """
 
-    upsell: InsightsUpsell
+    upsell: InsightsUpsell | None = None
     """
     Basic company identity used for upsell display.
+
+    Live-observed as EQUITY-only (absent on ETF and index/crypto/forex
+    symbols). See the module docstring.
 
     Observed on: insights reports.
     """

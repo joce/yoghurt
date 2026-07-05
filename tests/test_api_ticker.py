@@ -14,12 +14,18 @@ from yoghurt.api import Ticker
 from yoghurt.exceptions import SymbolNotFoundError, YahooApiError
 from yoghurt.frames import Spark, Timeseries
 from yoghurt.models import (
+    CalendarEventsResult,
     ChartEvents,
     ChartMeta,
+    Insights,
     OptionChain,
+    PriceInsights,
     Quote,
     QuoteSummary,
     QuoteType,
+    QuoteTypeResult,
+    RecommendationsResult,
+    StockRecommenderResult,
 )
 from yoghurt.tabular import TabularShapeError
 
@@ -149,10 +155,11 @@ def test_ticker_quote_passes_new_wire_params(monkeypatch: pytest.MonkeyPatch) ->
 def test_ticker_quote_type_returns_single_record(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """quote_type() unwraps the one-record result list."""
+    """quote_type() unwraps the one-record result list into a typed QuoteTypeResult."""
     fake = _install_fake(monkeypatch, _corpus_text("quote-type/AAPL.json"))
     record = Ticker("AAPL").quote_type()
-    assert record["symbol"] == "AAPL"
+    assert isinstance(record, QuoteTypeResult)
+    assert record.symbol == "AAPL"
     path, _ = fake.calls[0]
     assert path == "/v1/finance/quoteType/AAPL"
 
@@ -164,6 +171,18 @@ def test_ticker_quote_type_empty_result_raises_symbol_error(
     _install_fake(monkeypatch, _corpus_text("quote-type/ZZZZXYZQ.json"))
     with pytest.raises(SymbolNotFoundError):
         Ticker("ZZZZXYZQ").quote_type()
+
+
+def test_ticker_quote_type_model_violation_raises_yahoo_api_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A record that fails QuoteTypeResult validation surfaces as YahooApiError."""
+    payload = json.loads(_corpus_text("quote-type/AAPL.json"))
+    del payload["quoteType"]["result"][0]["symbol"]
+    _install_fake(monkeypatch, json.dumps(payload))
+    with pytest.raises(YahooApiError) as exc_info:
+        Ticker("AAPL").quote_type()
+    assert exc_info.value.code == "model-validation"
 
 
 def test_ticker_chart_builds_typed_bars(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -518,10 +537,6 @@ def test_ticker_strips_symbol_whitespace() -> None:
     assert Ticker(" AAPL ").symbol == "AAPL"
 
 
-def _invoke_calendar_events(ticker: Ticker) -> object:
-    return ticker.calendar_events()
-
-
 def _invoke_analyst(ticker: Ticker) -> object:
     return ticker.analyst()
 
@@ -530,29 +545,7 @@ def _invoke_ratings_top(ticker: Ticker) -> object:
     return ticker.ratings_top()
 
 
-def _invoke_price_insights(ticker: Ticker) -> object:
-    return ticker.price_insights()
-
-
-def _invoke_insights(ticker: Ticker) -> object:
-    return ticker.insights()
-
-
-def _invoke_recommendations(ticker: Ticker) -> object:
-    return ticker.recommendations()
-
-
-def _invoke_stock_recommender(ticker: Ticker) -> object:
-    return ticker.stock_recommender()
-
-
 _METHOD_CASES = (
-    pytest.param(
-        _invoke_calendar_events,
-        "calendar-events/AAPL.json",
-        "/ws/screeners/v1/finance/calendar-events",
-        id="calendar_events",
-    ),
     pytest.param(
         _invoke_analyst,
         "analyst/AAPL.json",
@@ -564,30 +557,6 @@ _METHOD_CASES = (
         "ratings-top/AAPL.json",
         "/v2/ratings/top/AAPL",
         id="ratings_top",
-    ),
-    pytest.param(
-        _invoke_price_insights,
-        "price-insights/AAPL.json",
-        "/ws/company-fundamentals/v1/finance/price-insights",
-        id="price_insights",
-    ),
-    pytest.param(
-        _invoke_insights,
-        "insights/AAPL.json",
-        "/ws/insights/v3/finance/insights",
-        id="insights",
-    ),
-    pytest.param(
-        _invoke_recommendations,
-        "recommendations-by-symbol/AAPL.json",
-        "/v6/finance/recommendationsbysymbol/AAPL",
-        id="recommendations",
-    ),
-    pytest.param(
-        _invoke_stock_recommender,
-        "stock-recommender/AAPL.json",
-        "/xhr/stock-recommender",
-        id="stock_recommender",
     ),
 )
 
@@ -606,3 +575,121 @@ def test_ticker_method_calls_expected_path_and_returns_payload(
     path, _ = fake.calls[0]
     assert path == expected_path
     assert result == json.loads(body)
+
+
+def test_ticker_calendar_events_returns_typed_result(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """calendar_events() returns a typed CalendarEventsResult."""
+    fake = _install_fake(monkeypatch, _corpus_text("calendar-events/AAPL.json"))
+    result = Ticker("AAPL").calendar_events()
+    assert isinstance(result, CalendarEventsResult)
+    assert result.earnings == []
+    path, _ = fake.calls[0]
+    assert path == "/ws/screeners/v1/finance/calendar-events"
+
+
+def test_ticker_calendar_events_model_violation_raises_yahoo_api_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A malformed calendar-events payload surfaces as YahooApiError."""
+    payload = json.loads(_corpus_text("calendar-events/AAPL.json"))
+    payload["finance"]["result"]["earnings"] = "not-a-list"
+    _install_fake(monkeypatch, json.dumps(payload))
+    with pytest.raises(YahooApiError) as exc_info:
+        Ticker("AAPL").calendar_events()
+    assert exc_info.value.code == "model-validation"
+
+
+def test_ticker_price_insights_returns_typed_result(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """price_insights() unwraps this symbol's record into a typed PriceInsights."""
+    fake = _install_fake(monkeypatch, _corpus_text("price-insights/AAPL.json"))
+    result = Ticker("AAPL").price_insights()
+    assert isinstance(result, PriceInsights)
+    assert result.has_price_anomaly is True
+    path, _ = fake.calls[0]
+    assert path == "/ws/company-fundamentals/v1/finance/price-insights"
+
+
+def test_ticker_price_insights_model_violation_raises_yahoo_api_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A symbol missing from the result map surfaces as YahooApiError."""
+    _install_fake(monkeypatch, _corpus_text("price-insights/AAPL.json"))
+    with pytest.raises(YahooApiError) as exc_info:
+        Ticker("ZZZZXYZQ").price_insights()
+    assert exc_info.value.code == "model-validation"
+
+
+def test_ticker_insights_returns_typed_result(monkeypatch: pytest.MonkeyPatch) -> None:
+    """insights() unwraps the one-record result list into a typed Insights."""
+    fake = _install_fake(monkeypatch, _corpus_text("insights/AAPL.json"))
+    result = Ticker("AAPL").insights()
+    assert isinstance(result, Insights)
+    assert result.symbol == "AAPL"
+    path, _ = fake.calls[0]
+    assert path == "/ws/insights/v3/finance/insights"
+
+
+def test_ticker_insights_model_violation_raises_yahoo_api_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """An empty insights result list surfaces as YahooApiError."""
+    payload = json.loads(_corpus_text("insights/AAPL.json"))
+    payload["finance"]["result"] = []
+    _install_fake(monkeypatch, json.dumps(payload))
+    with pytest.raises(YahooApiError) as exc_info:
+        Ticker("AAPL").insights()
+    assert exc_info.value.code == "model-validation"
+
+
+def test_ticker_recommendations_returns_typed_result(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """recommendations() unwraps the one-record result list into a typed model."""
+    fake = _install_fake(
+        monkeypatch, _corpus_text("recommendations-by-symbol/AAPL.json")
+    )
+    result = Ticker("AAPL").recommendations()
+    assert isinstance(result, RecommendationsResult)
+    assert result.symbol == "AAPL"
+    path, _ = fake.calls[0]
+    assert path == "/v6/finance/recommendationsbysymbol/AAPL"
+
+
+def test_ticker_recommendations_model_violation_raises_yahoo_api_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """An empty recommendations result list surfaces as YahooApiError."""
+    payload = json.loads(_corpus_text("recommendations-by-symbol/AAPL.json"))
+    payload["finance"]["result"] = []
+    _install_fake(monkeypatch, json.dumps(payload))
+    with pytest.raises(YahooApiError) as exc_info:
+        Ticker("AAPL").recommendations()
+    assert exc_info.value.code == "model-validation"
+
+
+def test_ticker_stock_recommender_returns_typed_result(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """stock_recommender() returns a typed StockRecommenderResult."""
+    fake = _install_fake(monkeypatch, _corpus_text("stock-recommender/AAPL.json"))
+    result = Ticker("AAPL").stock_recommender()
+    assert isinstance(result, StockRecommenderResult)
+    assert result.fields.entity_type == "ticker"
+    path, _ = fake.calls[0]
+    assert path == "/xhr/stock-recommender"
+
+
+def test_ticker_stock_recommender_model_violation_raises_yahoo_api_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A malformed stock-recommender payload surfaces as YahooApiError."""
+    payload = json.loads(_corpus_text("stock-recommender/AAPL.json"))
+    del payload["fields"]
+    _install_fake(monkeypatch, json.dumps(payload))
+    with pytest.raises(YahooApiError) as exc_info:
+        Ticker("AAPL").stock_recommender()
+    assert exc_info.value.code == "model-validation"
