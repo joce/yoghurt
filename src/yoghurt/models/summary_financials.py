@@ -416,6 +416,8 @@ class DefaultKeyStatistics(YahooModel):
     MUTUALFUND alike) but only ever non-null on the three ETF captures
     (``QQQ``, ``SPY``, ``VT``); required-but-nullable per the batch c1
     precedent.
+
+    Observed on: EQUITY, ETF, INDEX, MUTUALFUND summaries.
     """
 
     date_short_interest: datetime.date | None = None
@@ -509,6 +511,8 @@ class DefaultKeyStatistics(YahooModel):
     MUTUALFUND alike) but only ever non-null on the three ETF captures
     (``QQQ``, ``SPY``, ``VT``); required-but-nullable per the batch c1
     precedent.
+
+    Observed on: EQUITY, ETF, INDEX, MUTUALFUND summaries.
     """
 
     fund_inception_date: datetime.date | None = None
@@ -597,6 +601,8 @@ class DefaultKeyStatistics(YahooModel):
     Present on every capture in this corpus (EQUITY, ETF, INDEX,
     MUTUALFUND alike) but only ever non-null on a subset of EQUITY
     captures; required-but-nullable per the batch c1 precedent.
+
+    Observed on: EQUITY, ETF, INDEX, MUTUALFUND summaries.
     """
 
     latest_share_class: str | None
@@ -605,6 +611,8 @@ class DefaultKeyStatistics(YahooModel):
 
     Present on every capture in this corpus but never observed non-null;
     required-but-nullable per the batch c1 precedent.
+
+    Observed on: EQUITY, ETF, INDEX, MUTUALFUND summaries.
     """
 
     lead_investor: str | None
@@ -613,6 +621,8 @@ class DefaultKeyStatistics(YahooModel):
 
     Present on every capture in this corpus but never observed non-null;
     required-but-nullable per the batch c1 precedent.
+
+    Observed on: EQUITY, ETF, INDEX, MUTUALFUND summaries.
     """
 
     legal_type: str | None
@@ -623,11 +633,15 @@ class DefaultKeyStatistics(YahooModel):
     MUTUALFUND alike) but only ever non-null on the three ETF captures
     (``QQQ``, ``SPY``, ``VT``); required-but-nullable per the batch c1
     precedent.
+
+    Observed on: EQUITY, ETF, INDEX, MUTUALFUND summaries.
     """
 
     max_age: int
     """
     Maximum age, in seconds, that Yahoo considers this module fresh.
+
+    Observed on: EQUITY, ETF, INDEX, MUTUALFUND summaries.
     """
 
     morning_star_overall_rating: float | None = None
@@ -683,6 +697,8 @@ class DefaultKeyStatistics(YahooModel):
     price_hint: int
     """
     Decimal precision indicator for price values.
+
+    Observed on: EQUITY, ETF, INDEX, MUTUALFUND summaries.
     """
 
     price_to_book: float | None = None

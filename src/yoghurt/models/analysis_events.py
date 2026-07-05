@@ -209,9 +209,7 @@ class EarningsEvent(YahooModel):
 class EarningsEventDay(YahooModel):
     """One calendar day's bucket of :class:`EarningsEvent` releases.
 
-    Same wrapper shape as :class:`EconomicEventDay`; see that class for the
-    per-field applicability notes shared by every calendar-events day
-    bucket.
+    Same wrapper shape as :class:`EconomicEventDay`.
     """
 
     count: int
@@ -313,9 +311,7 @@ class IpoEvent(YahooModel):
 class IpoEventDay(YahooModel):
     """One calendar day's bucket of :class:`IpoEvent` pricings.
 
-    Same wrapper shape as :class:`EconomicEventDay`; see that class for the
-    per-field applicability notes shared by every calendar-events day
-    bucket.
+    Same wrapper shape as :class:`EconomicEventDay`.
     """
 
     count: int
@@ -450,9 +446,7 @@ class SecReport(YahooModel):
 class SecReportDay(YahooModel):
     """One calendar day's bucket of :class:`SecReport` filings.
 
-    Same wrapper shape as :class:`EconomicEventDay`; see that class for the
-    per-field applicability notes shared by every calendar-events day
-    bucket.
+    Same wrapper shape as :class:`EconomicEventDay`.
     """
 
     count: int

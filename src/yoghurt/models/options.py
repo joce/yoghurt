@@ -44,14 +44,12 @@ refresh. Reconciliation notes:
   package. ``expirationDates`` is a list of the same calendar-date epoch
   shape (verified midnight-UTC-aligned) and is typed
   ``list[datetime.date]``.
-- Applicability-line wording: this family's "kinds" (call/put contracts,
-  or the chain as a whole) are not instrument types the way quoteType or
-  instrumentType are elsewhere in this package. Contract fields use
-  "Observed on: call, put contracts." to name what varies (both kinds,
-  here, since every contract field is universal or near-universal across
-  both); chain- and expiration-level fields use the plain "Observed on
-  option chains."/"Observed on option chain expirations." form since
-  there is no kind axis to name at that level.
+- Applicability: this family's "kinds" (call/put contracts, or the chain
+  as a whole) are not instrument types the way quoteType or
+  instrumentType are elsewhere in this package, and applicability is
+  uniform within every class here (each contract field is observed across
+  both kinds; chain- and expiration-level fields have no kind axis at
+  all), so no field carries a per-field applicability line.
 """
 
 from __future__ import annotations

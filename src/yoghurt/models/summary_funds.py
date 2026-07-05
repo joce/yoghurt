@@ -140,6 +140,8 @@ class FundManagementInfo(YahooModel):
 
     Present (though null on every ETF capture) on all 4 corpus captures;
     only ever non-null on the sole MUTUALFUND capture.
+
+    Observed on: ETF, MUTUALFUND summaries.
     """
 
     manager_name: str | None
@@ -148,6 +150,8 @@ class FundManagementInfo(YahooModel):
 
     Present (though null on every ETF capture, empty string on the sole
     MUTUALFUND capture) on all 4 corpus captures.
+
+    Observed on: ETF, MUTUALFUND summaries.
     """
 
     startdate: datetime.date | None = None
@@ -186,6 +190,8 @@ class FundFees(YahooModel):
 
     Universal across all 4 corpus captures, the only field shared by every
     quoteType this module has been observed on.
+
+    Observed on: ETF, MUTUALFUND summaries.
     """
 
     gross_exp_ratio: float | None = None
@@ -214,6 +220,8 @@ class FundFees(YahooModel):
 
     A dynamic numeric bag rather than a fixed-field model; see the module
     docstring. Always an empty ``{}`` on every ETF capture.
+
+    Observed on: ETF, MUTUALFUND summaries.
     """
 
     total_net_assets: float | None = None
@@ -251,6 +259,8 @@ class FundFeesCat(YahooModel):
     Category-average annual expense ratio.
 
     Universal across all 4 corpus captures.
+
+    Observed on: ETF, MUTUALFUND summaries.
     """
 
     projection_values_cat: dict[str, float]
@@ -260,6 +270,8 @@ class FundFeesCat(YahooModel):
 
     A dynamic numeric bag; see :class:`FundFees.projection_values` and the
     module docstring. Always an empty ``{}`` on every ETF capture.
+
+    Observed on: ETF, MUTUALFUND summaries.
     """
 
     total_net_assets: float | None = None
@@ -287,27 +299,37 @@ class FundProfile(YahooModel):
 
     Always empty on ETF captures in this corpus; populated (122 entries)
     only on ``VTSAX``.
+
+    Observed on: ETF, MUTUALFUND summaries.
     """
 
     category_name: str
     """
     Morningstar-style category classification (for example ``"Large
     Growth"``, ``"Large Blend"``).
+
+    Observed on: ETF, MUTUALFUND summaries.
     """
 
     family: str
     """
     Fund family or sponsor (for example ``"Invesco"``, ``"Vanguard"``).
+
+    Observed on: ETF, MUTUALFUND summaries.
     """
 
     fees_expenses_investment: FundFees
     """
     Fee and expense details for this fund.
+
+    Observed on: ETF, MUTUALFUND summaries.
     """
 
     fees_expenses_investment_cat: FundFeesCat
     """
     Category-average fee and expense details, for comparison.
+
+    Observed on: ETF, MUTUALFUND summaries.
     """
 
     init_investment: float | None = None
@@ -332,16 +354,22 @@ class FundProfile(YahooModel):
     management_info: FundManagementInfo
     """
     Portfolio manager details for this fund.
+
+    Observed on: ETF, MUTUALFUND summaries.
     """
 
     max_age: int
     """
     Maximum age, in seconds, that Yahoo considers this module fresh.
+
+    Observed on: ETF, MUTUALFUND summaries.
     """
 
     style_box_url: str
     """
     URL of the fund's Morningstar-style style-box image.
+
+    Observed on: ETF, MUTUALFUND summaries.
     """
 
     subseq_investment: float | None = None
@@ -368,6 +396,8 @@ class FundPerformanceOverview(YahooModel):
     Wire value is a midnight-UTC-aligned epoch timestamp in seconds
     (verified against every corpus value); pydantic converts it to a UTC
     calendar date.
+
+    Observed on: ETF, MUTUALFUND summaries.
     """
 
     best_one_yr_total_return: float | None = None
@@ -391,6 +421,8 @@ class FundPerformanceOverview(YahooModel):
     five_yr_avg_return_pct: float
     """
     Average annual return over the trailing 5 years.
+
+    Observed on: ETF, MUTUALFUND summaries.
     """
 
     morning_star_return_rating: float | None = None
@@ -423,11 +455,15 @@ class FundPerformanceOverview(YahooModel):
     one_year_total_return: float
     """
     Total return over the trailing 1 year.
+
+    Observed on: ETF, MUTUALFUND summaries.
     """
 
     three_year_total_return: float
     """
     Total return over the trailing 3 years.
+
+    Observed on: ETF, MUTUALFUND summaries.
     """
 
     worst_three_yr_total_return: float | None = None
@@ -442,6 +478,8 @@ class FundPerformanceOverview(YahooModel):
     ytd_return_pct: float
     """
     Year-to-date return.
+
+    Observed on: ETF, MUTUALFUND summaries.
     """
 
 
@@ -693,26 +731,36 @@ class RiskStatisticsCatEntry(YahooModel):
     alpha: float
     """
     Category-average Jensen's alpha for ``year``.
+
+    Observed on: ETF, MUTUALFUND summaries.
     """
 
     beta: float
     """
     Category-average beta for ``year``.
+
+    Observed on: ETF, MUTUALFUND summaries.
     """
 
     mean_annual_return: float
     """
     Category-average mean annual return over ``year``.
+
+    Observed on: ETF, MUTUALFUND summaries.
     """
 
     r_squared: float
     """
     Category-average R-squared for ``year``.
+
+    Observed on: ETF, MUTUALFUND summaries.
     """
 
     sharpe_ratio: float
     """
     Category-average Sharpe ratio over ``year``.
+
+    Observed on: ETF, MUTUALFUND summaries.
     """
 
     std_dev: float | None = None
@@ -727,12 +775,16 @@ class RiskStatisticsCatEntry(YahooModel):
     treynor_ratio: float
     """
     Category-average Treynor ratio over ``year``.
+
+    Observed on: ETF, MUTUALFUND summaries.
     """
 
     year: str
     """
     Trailing-period label for this row (observed values: ``"5y"``,
     ``"3y"``, ``"10y"``).
+
+    Observed on: ETF, MUTUALFUND summaries.
     """
 
 
@@ -751,6 +803,8 @@ class RiskOverviewStatistics(YahooModel):
     risk_statistics: list[RiskStatisticsEntry]
     """
     Risk/return statistics by trailing period.
+
+    Observed on: ETF, MUTUALFUND summaries.
     """
 
 
@@ -929,12 +983,16 @@ class FundPerformance(YahooModel):
     annual_total_returns: AnnualTotalReturns
     """
     Historical annual total returns, fund and category.
+
+    Observed on: ETF, MUTUALFUND summaries.
     """
 
     fund_category_name: str
     """
     Morningstar-style category classification (for example ``"Large
     Growth"``).
+
+    Observed on: ETF, MUTUALFUND summaries.
     """
 
     load_adjusted_returns: LoadAdjustedReturns | None = None
@@ -949,21 +1007,29 @@ class FundPerformance(YahooModel):
     max_age: int
     """
     Maximum age, in seconds, that Yahoo considers this module fresh.
+
+    Observed on: ETF, MUTUALFUND summaries.
     """
 
     past_quarterly_returns: PastQuarterlyReturns
     """
     Historical quarterly returns.
+
+    Observed on: ETF, MUTUALFUND summaries.
     """
 
     performance_overview: FundPerformanceOverview
     """
     Headline performance metrics for this fund.
+
+    Observed on: ETF, MUTUALFUND summaries.
     """
 
     performance_overview_cat: FundPerformanceOverviewCat
     """
     Category-average headline performance metrics, for comparison.
+
+    Observed on: ETF, MUTUALFUND summaries.
     """
 
     rank_in_category: RankInCategory | None = None
@@ -978,26 +1044,36 @@ class FundPerformance(YahooModel):
     risk_overview_statistics: RiskOverviewStatistics
     """
     Risk/return statistics for this fund by trailing period.
+
+    Observed on: ETF, MUTUALFUND summaries.
     """
 
     risk_overview_statistics_cat: RiskOverviewStatisticsCat
     """
     Category-average risk/return statistics, for comparison.
+
+    Observed on: ETF, MUTUALFUND summaries.
     """
 
     trailing_returns: TrailingReturns
     """
     Trailing total returns by period.
+
+    Observed on: ETF, MUTUALFUND summaries.
     """
 
     trailing_returns_cat: TrailingReturnsCat
     """
     Category-average trailing total returns, for comparison.
+
+    Observed on: ETF, MUTUALFUND summaries.
     """
 
     trailing_returns_nav: TrailingReturnsNav
     """
     NAV-based trailing total returns by period.
+
+    Observed on: ETF, MUTUALFUND summaries.
     """
 
 

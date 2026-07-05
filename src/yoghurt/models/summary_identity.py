@@ -163,6 +163,9 @@ class PerformanceOverview(YahooModel):
     Wire value is a midnight-UTC-aligned epoch timestamp in seconds;
     pydantic converts it to a UTC calendar date (verified against every
     corpus value).
+
+    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
+    MUTUALFUND, OPTION summaries.
     """
 
     five_days_return: float | None = None
@@ -271,11 +274,17 @@ class EquityPerformance(YahooModel):
     max_age: int
     """
     Maximum age, in seconds, that Yahoo considers this module fresh.
+
+    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
+    MUTUALFUND, OPTION summaries.
     """
 
     performance_overview: PerformanceOverview
     """
     Return performance for the requested security.
+
+    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
+    MUTUALFUND, OPTION summaries.
     """
 
     performance_overview_benchmark: PerformanceOverview | None = None
@@ -305,11 +314,17 @@ class QuoteUnadjustedPerformanceOverview(YahooModel):
     max_age: int
     """
     Maximum age, in seconds, that Yahoo considers this module fresh.
+
+    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
+    MUTUALFUND, OPTION summaries.
     """
 
     performance_overview: PerformanceOverview
     """
     Unadjusted return performance for the requested security.
+
+    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
+    MUTUALFUND, OPTION summaries.
     """
 
     performance_overview_benchmark: PerformanceOverview | None = None
@@ -349,26 +364,41 @@ class Price(YahooModel):
     currency: str
     """
     Currency in which the security is traded.
+
+    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
+    MUTUALFUND, OPTION summaries.
     """
 
     currency_symbol: str
     """
     Symbol of the currency in which the security is traded (for example, ``"$"``).
+
+    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
+    MUTUALFUND, OPTION summaries.
     """
 
     exchange: str
     """
     Short code of the securities exchange on which the security is traded.
+
+    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
+    MUTUALFUND, OPTION summaries.
     """
 
     exchange_data_delayed_by: int
     """
     Delay in data from the exchange, typically in minutes.
+
+    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
+    MUTUALFUND, OPTION summaries.
     """
 
     exchange_name: str
     """
     Short name of the securities exchange on which the security is traded.
+
+    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
+    MUTUALFUND, OPTION summaries.
     """
 
     expire_date: int | None = None
@@ -419,11 +449,17 @@ class Price(YahooModel):
     observed here is also a member of that enum, but this field is
     reconciled independently rather than assumed compatible without a
     dedicated corpus check; revisit once one is done.
+
+    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
+    MUTUALFUND, OPTION summaries.
     """
 
     max_age: int
     """
     Maximum age, in seconds, that Yahoo considers this module fresh.
+
+    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
+    MUTUALFUND, OPTION summaries.
     """
 
     open_interest: int | None = None
@@ -483,6 +519,9 @@ class Price(YahooModel):
     price_hint: int
     """
     Decimal precision indicator for price values.
+
+    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
+    MUTUALFUND, OPTION summaries.
     """
 
     quote_source_name: str | None = None
@@ -491,21 +530,33 @@ class Price(YahooModel):
 
     Absent on the two bond-yield INDEX captures in the corpus (``^IRX``,
     ``^TNX``); present on every other INDEX capture.
+
+    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
+    MUTUALFUND, OPTION summaries.
     """
 
     quote_type: QuoteType
     """
     Type of quote.
+
+    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
+    MUTUALFUND, OPTION summaries.
     """
 
     regular_market_change: float
     """
     Change in the security's price in regular trading.
+
+    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
+    MUTUALFUND, OPTION summaries.
     """
 
     regular_market_change_percent: float
     """
     Percent change in the security's price in regular trading.
+
+    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
+    MUTUALFUND, OPTION summaries.
     """
 
     regular_market_day_high: float | None = None
@@ -535,17 +586,26 @@ class Price(YahooModel):
     regular_market_previous_close: float
     """
     Closing price of the security in the previous regular trading session.
+
+    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
+    MUTUALFUND, OPTION summaries.
     """
 
     regular_market_price: float
     """
     Latest price from the regular trading session.
+
+    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
+    MUTUALFUND, OPTION summaries.
     """
 
     regular_market_source: str
     """
     Data source for the regular-session price (observed values:
     ``"FREE_REALTIME"``, ``"DELAYED"``).
+
+    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
+    MUTUALFUND, OPTION summaries.
     """
 
     regular_market_time: int
@@ -556,6 +616,9 @@ class Price(YahooModel):
     is derived here: the exchange timezone lives on the sibling
     ``quoteType`` module (:class:`SummaryQuoteType`), not on ``Price``
     itself, in this corpus.
+
+    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
+    MUTUALFUND, OPTION summaries.
     """
 
     regular_market_volume: int | None = None
@@ -569,6 +632,9 @@ class Price(YahooModel):
     short_name: str
     """
     Short, user-friendly name for the quote or security.
+
+    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
+    MUTUALFUND, OPTION summaries.
     """
 
     strike_price: float | None = None
@@ -587,6 +653,9 @@ class Price(YahooModel):
     ``underlying_symbol`` instead — the reverse of
     ``SummaryQuoteType.symbol``/``.underlying_symbol``. See the module
     docstring.
+
+    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
+    MUTUALFUND, OPTION summaries.
     """
 
     to_currency: str | None
@@ -643,6 +712,9 @@ class SummaryQuoteType(YahooModel):
     exchange: str
     """
     Short code of the securities exchange on which the security is traded.
+
+    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
+    MUTUALFUND, OPTION summaries.
     """
 
     first_trade_date_epoch_utc: int | None = None
@@ -659,6 +731,9 @@ class SummaryQuoteType(YahooModel):
     gmt_off_set_milliseconds: int
     """
     Offset from GMT of the exchange, in milliseconds.
+
+    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
+    MUTUALFUND, OPTION summaries.
     """
 
     long_name: str | None = None
@@ -672,6 +747,9 @@ class SummaryQuoteType(YahooModel):
     max_age: int
     """
     Maximum age, in seconds, that Yahoo considers this module fresh.
+
+    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
+    MUTUALFUND, OPTION summaries.
     """
 
     message_board_id: str | None = None
@@ -685,11 +763,17 @@ class SummaryQuoteType(YahooModel):
     quote_type: QuoteType
     """
     Type of quote.
+
+    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
+    MUTUALFUND, OPTION summaries.
     """
 
     short_name: str
     """
     Short, user-friendly name for the quote or security.
+
+    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
+    MUTUALFUND, OPTION summaries.
     """
 
     symbol: str
@@ -699,16 +783,25 @@ class SummaryQuoteType(YahooModel):
     For FUTURE summaries, this is the resolved contract symbol (for
     example ``"CLQ26.NYM"``), the reverse of ``price.symbol`` (the
     requested continuous-contract symbol). See the module docstring.
+
+    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
+    MUTUALFUND, OPTION summaries.
     """
 
     time_zone_full_name: str
     """
     Name of the timezone of the exchange.
+
+    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
+    MUTUALFUND, OPTION summaries.
     """
 
     time_zone_short_name: str
     """
     Short name of the timezone of the exchange.
+
+    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
+    MUTUALFUND, OPTION summaries.
     """
 
     underlying_symbol: str
@@ -717,11 +810,17 @@ class SummaryQuoteType(YahooModel):
     example ``"CL=F"``); the resolved contract symbol is ``symbol``
     instead. Equal to ``symbol`` for every other observed quoteType. See
     the module docstring.
+
+    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
+    MUTUALFUND, OPTION summaries.
     """
 
     uuid: str
     """
     Yahoo's internal unique identifier for this security.
+
+    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
+    MUTUALFUND, OPTION summaries.
     """
 
     # --- Convenience accessors (not part of the wire model) ---
@@ -754,6 +853,9 @@ class SummaryDetail(YahooModel):
     Internal Yahoo! Finance field with undocumented and unknown purpose.
 
     Present on every summary in the corpus; never observed non-null.
+
+    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
+    MUTUALFUND, OPTION summaries.
     """
 
     all_time_high: float | None = None
@@ -855,6 +957,9 @@ class SummaryDetail(YahooModel):
     currency: str
     """
     Currency in which the security is traded.
+
+    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
+    MUTUALFUND, OPTION summaries.
     """
 
     day_high: float | None = None
@@ -920,11 +1025,17 @@ class SummaryDetail(YahooModel):
     fifty_two_week_high: float
     """
     Highest price the security has traded at in the past 52 weeks.
+
+    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
+    MUTUALFUND, OPTION summaries.
     """
 
     fifty_two_week_low: float
     """
     Lowest price the security has traded at in the past 52 weeks.
+
+    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
+    MUTUALFUND, OPTION summaries.
     """
 
     five_year_avg_dividend_yield: float | None = None
@@ -978,6 +1089,9 @@ class SummaryDetail(YahooModel):
     max_age: int
     """
     Maximum age, in seconds, that Yahoo considers this module fresh.
+
+    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
+    MUTUALFUND, OPTION summaries.
     """
 
     max_supply: int | None = None
@@ -1026,11 +1140,17 @@ class SummaryDetail(YahooModel):
     previous_close: float
     """
     Closing price of the security in the previous session.
+
+    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
+    MUTUALFUND, OPTION summaries.
     """
 
     price_hint: int
     """
     Decimal precision indicator for price values.
+
+    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
+    MUTUALFUND, OPTION summaries.
     """
 
     price_to_sales_trailing_12_months: float | None = None
@@ -1067,6 +1187,9 @@ class SummaryDetail(YahooModel):
     regular_market_previous_close: float
     """
     Closing price of the security in the previous regular trading session.
+
+    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
+    MUTUALFUND, OPTION summaries.
     """
 
     regular_market_volume: int | None = None
@@ -1120,6 +1243,9 @@ class SummaryDetail(YahooModel):
     tradeable: bool
     """
     Whether the security is currently tradeable.
+
+    Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
+    MUTUALFUND, OPTION summaries.
     """
 
     trailing_annual_dividend_rate: float | None = None
@@ -1231,27 +1357,37 @@ class CompanyOfficer(YahooModel):
     Wire value is a ``{raw, fmt, longFmt}`` wrapper on every corpus
     officer entry (universal — present on all 87); see
     :mod:`yoghurt.models._base`.
+
+    Observed on: CRYPTOCURRENCY, EQUITY, ETF, MUTUALFUND summaries.
     """
 
     fiscal_year: int
     """
     Fiscal year this officer's compensation figures apply to.
+
+    Observed on: CRYPTOCURRENCY, EQUITY, ETF, MUTUALFUND summaries.
     """
 
     max_age: int
     """
     Maximum age, in seconds, that Yahoo considers this entry fresh.
+
+    Observed on: CRYPTOCURRENCY, EQUITY, ETF, MUTUALFUND summaries.
     """
 
     name: str
     """
     Officer's full name, often with an honorific prefix (for example
     ``"Mr. Timothy D. Cook"``).
+
+    Observed on: CRYPTOCURRENCY, EQUITY, ETF, MUTUALFUND summaries.
     """
 
     title: str
     """
     Officer's title (for example ``"CEO & Director"``).
+
+    Observed on: CRYPTOCURRENCY, EQUITY, ETF, MUTUALFUND summaries.
     """
 
     total_pay: RawInt | None = None
@@ -1261,6 +1397,8 @@ class CompanyOfficer(YahooModel):
     Wire value is a ``{raw, fmt, longFmt}`` wrapper on every corpus
     officer entry that carries this key; see :mod:`yoghurt.models._base`.
     Absent (not merely zero) on roughly 60% of corpus officer entries.
+
+    Observed on: CRYPTOCURRENCY, EQUITY, ETF, MUTUALFUND summaries.
     """
 
     unexercised_value: RawInt
@@ -1270,6 +1408,8 @@ class CompanyOfficer(YahooModel):
     Wire value is a ``{raw, fmt, longFmt}`` wrapper on every corpus
     officer entry (universal — present on all 87); see
     :mod:`yoghurt.models._base`.
+
+    Observed on: CRYPTOCURRENCY, EQUITY, ETF, MUTUALFUND summaries.
     """
 
     year_born: int | None = None
@@ -1445,6 +1585,8 @@ class SummaryProfile(YahooModel):
     max_age: int
     """
     Maximum age, in seconds, that Yahoo considers this module fresh.
+
+    Observed on: CRYPTOCURRENCY, EQUITY, ETF, MUTUALFUND summaries.
     """
 
     name: str | None = None
@@ -1611,6 +1753,8 @@ class AssetProfile(YahooModel):
     officers across 9 of 14 captures, all EQUITY; empty elsewhere,
     including CRYPTOCURRENCY, ETF, and MUTUALFUND); see
     :class:`CompanyOfficer`.
+
+    Observed on: CRYPTOCURRENCY, EQUITY, ETF, MUTUALFUND summaries.
     """
 
     compensation_as_of_epoch_date: datetime.date | None = None
@@ -1715,6 +1859,8 @@ class AssetProfile(YahooModel):
     max_age: int
     """
     Maximum age, in seconds, that Yahoo considers this module fresh.
+
+    Observed on: CRYPTOCURRENCY, EQUITY, ETF, MUTUALFUND summaries.
     """
 
     name: str | None = None
