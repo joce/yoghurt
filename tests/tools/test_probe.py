@@ -27,6 +27,7 @@ from yoghurt.commands import COMMANDS_BY_NAME
 from yoghurt.exceptions import YahooRequestError, YahooUnavailableError
 from yoghurt.types import ParamValue
 
+_HTTP_OK = 200
 _HTTP_NOT_FOUND = 404
 
 
@@ -178,9 +179,12 @@ def test_case_files_are_unique() -> None:
 class _FakeClient:
     """Minimal stand-in for YahooClient that returns or raises canned results."""
 
-    def __init__(self, *, error: Exception | None = None) -> None:
-        """Store the error to raise, if any, instead of returning a body."""
+    def __init__(
+        self, *, error: Exception | None = None, body: str = '{"ok": true}'
+    ) -> None:
+        """Store the body to return, or the error to raise instead."""
         self._error = error
+        self._body = body
         self.closed = False
 
     async def get(
@@ -199,7 +203,7 @@ class _FakeClient:
         del path, params, use_crumb, base_url
         if self._error is not None:
             raise self._error
-        return '{"ok": true}'
+        return self._body
 
     async def post(
         self,
@@ -218,7 +222,7 @@ class _FakeClient:
         del path, params, json_body, use_crumb, base_url
         if self._error is not None:
             raise self._error
-        return '{"ok": true}'
+        return self._body
 
     async def aclose(self) -> None:
         """Record the close; there is no real connection."""
@@ -246,6 +250,25 @@ async def test_run_case_records_http_error_body(tmp_path: Path) -> None:
     assert entry["http_status"] == _HTTP_NOT_FOUND
     written = (tmp_path / "quote-summary" / "ZZZZXYZQ.json").read_text(encoding="utf-8")
     assert written == '{"finance": null}'
+
+
+async def test_run_case_records_corrupt_ok_body_as_error(tmp_path: Path) -> None:
+    r"""An HTTP-200 body that is not valid JSON records an error and no file.
+
+    Yahoo's spEarningsReleaseEvents corruption arrives as an HTTP 200 whose
+    body carries an invalid ``\'`` escape; the manifest must not call such
+    a capture "ok" (a 2026-07-05 retest session mistook exactly that for a
+    fixed feed).
+    """
+    parser = build_parser()
+    case = ProbeCase("quote", "AAPL", ("quote", "AAPL"))
+    corrupt = r"""{"note": "it\'s corrupt"}"""
+    entry = await _run_case(parser, _FakeClient(body=corrupt), case, tmp_path)
+    assert entry["status"] == "error"
+    assert entry["http_status"] == _HTTP_OK  # the transport really returned 200
+    assert "not valid JSON" in str(entry["detail"])
+    assert "file" not in entry
+    assert not (tmp_path / "quote" / "AAPL.json").exists()
 
 
 async def test_run_case_records_transport_error_without_file(

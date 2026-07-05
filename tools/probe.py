@@ -649,6 +649,19 @@ async def _run_case(
         entry["status"] = "error"
         entry["http_status"] = None
         entry["detail"] = str(exc)
+    if body and entry["status"] == "ok":
+        try:
+            json.loads(body)
+        except ValueError as exc:
+            # An HTTP-200 body that does not parse as JSON is Yahoo-side
+            # corruption (see _QUARANTINED_EVENT_TYPES): record it as an
+            # error with no corpus file, so a manifest "ok" always means
+            # the capture parses. Judging feed health by HTTP status or
+            # manifest "ok" alone has already produced one false
+            # "Yahoo fixed the feed" alarm (2026-07-05).
+            entry["status"] = "error"
+            entry["detail"] = f"Yahoo response is not valid JSON: {exc}"
+            return entry
     if body:
         relative = f"{case.command}/{sanitize(case.case)}.json"
         target = corpus_dir / relative

@@ -29,8 +29,15 @@ currently serves malformed JSON for `spEarningsReleaseEvents` on every
 symbol, so that case is expected to record a manifest `status: "error"`
 (no corpus file) on full probe runs, not a probe bug. Retested live
 2026-07-05 (P4-1): still corrupt, same invalid-JSON-escape failure as the
-original 2026-07-04 capture; next retest should be opportunistic (no fixed
-date), on the next corpus refresh.
+original 2026-07-04 capture. Retested again later on 2026-07-05 after a
+session reported the feed fixed: two independent pulls returned byte-identical
+bodies (34,621 bytes), both still carrying the same invalid `\'` escape — the
+"fixed" report was a false positive caused by the probe formerly recording
+`status: "ok"` and writing a file for an HTTP-200 body that does not parse as
+JSON. `tools/probe.py` now records such bodies as `status: "error"` with no
+file, so a manifest `"ok"` always means the capture parses; judge feed health
+only by `json.loads` on the raw bytes. Next retest should be opportunistic
+(no fixed date), on the next corpus refresh.
 
 **2026-07-05 surgical addition (P4-1, corpus reinforcement):** invalid-symbol
 (`ZZZZXYZQ`) cases added for the seven endpoints that previously lacked one
