@@ -59,6 +59,14 @@ Streams:
   instrumentType of their own).
 - ``sector``: the whole ``data`` payload per capture (a container gate,
   mirroring ``quote-summary`` with no module argument); kind is fixed.
+- ``screener-instrument-fields``: finance.result[0].fields values (one per
+  field id) per capture; kind = the instrument, read from the capture's
+  own filename (this endpoint's payload carries no instrument marker of
+  its own).
+- ``timeseries-fields``: timeseriesfields.result[0].timeSeriesDataClass
+  rows; kind is fixed (single capture, no per-row classification).
+- ``screener-discover``: finance.result.quotes values (a symbol-keyed
+  mapping, not a list) per capture; kind = the row's own quoteType.
 """
 
 from __future__ import annotations
@@ -731,6 +739,82 @@ def sector_records(corpus_dir: Path = CORPUS_SECTOR_DIR) -> Iterator[dict[str, A
             yield data
 
 
+CORPUS_SCREENER_INSTRUMENT_FIELDS_DIR: Final[Path] = (
+    CORPUS_ROOT / "screener-instrument-fields"
+)
+CORPUS_TIMESERIES_FIELDS_DIR: Final[Path] = CORPUS_ROOT / "timeseries-fields"
+CORPUS_SCREENER_DISCOVER_DIR: Final[Path] = CORPUS_ROOT / "screener-discover"
+
+
+def screener_instrument_fields_records(
+    corpus_dir: Path = CORPUS_SCREENER_INSTRUMENT_FIELDS_DIR,
+) -> Iterator[_KindTagged]:
+    """Yield each capture's ``finance.result[0].fields`` values.
+
+    Each field spec is tagged with its instrument, read from the capture's
+    own filename (for example ``equity.json`` -> ``"equity"``): this
+    endpoint's payload carries no instrument marker of its own.
+    """
+
+    for path in sorted(corpus_dir.glob("*.json")):
+        payload = _load_json(path)
+        results: list[dict[str, Any]] = payload.get("finance", {}).get("result") or []
+        if not results:
+            continue
+        fields: dict[str, Any] = results[0].get("fields") or {}
+        for spec in fields.values():
+            if isinstance(spec, dict):
+                yield _KindTagged(cast("dict[str, Any]", spec), path.stem)
+
+
+def screener_instrument_fields_kind(record: Mapping[str, Any]) -> str:
+    """Read the instrument kind tagged by ``screener_instrument_fields_records``.
+
+    Returns:
+        str: The instrument name (for example ``"equity"``), or ``"?"``
+        for an untagged record.
+    """
+
+    return record.kind if isinstance(record, _KindTagged) else "?"
+
+
+def timeseries_fields_records(
+    corpus_dir: Path = CORPUS_TIMESERIES_FIELDS_DIR,
+) -> Iterator[dict[str, Any]]:
+    """Yield each capture's ``timeseriesfields.result[0].timeSeriesDataClass`` rows.
+
+    Kind is fixed (``"timeseries-fields"``): a single, thin capture with no
+    per-row classification.
+    """
+
+    for path in sorted(corpus_dir.glob("*.json")):
+        payload = _load_json(path)
+        results: list[dict[str, Any]] = (
+            payload.get("timeseriesfields", {}).get("result") or []
+        )
+        for result in results:
+            rows: list[dict[str, Any]] = result.get("timeSeriesDataClass") or []
+            yield from rows
+
+
+def screener_discover_records(
+    corpus_dir: Path = CORPUS_SCREENER_DISCOVER_DIR,
+) -> Iterator[dict[str, Any]]:
+    """Yield each capture's ``finance.result.quotes`` values.
+
+    ``quotes`` is a symbol-keyed mapping, not a list. Kind is each row's
+    own ``quoteType`` field.
+    """
+
+    for path in sorted(corpus_dir.glob("*.json")):
+        payload = _load_json(path)
+        result: dict[str, Any] = payload.get("finance", {}).get("result") or {}
+        quotes: dict[str, Any] = result.get("quotes") or {}
+        for quote in quotes.values():
+            if isinstance(quote, dict):
+                yield cast("dict[str, Any]", quote)
+
+
 _STREAMS: Final[dict[str, Callable[[], Iterator[Mapping[str, Any]]]]] = {
     "quote": quote_records,
     "chart-meta": chart_meta_records,
@@ -751,6 +835,9 @@ _STREAMS: Final[dict[str, Callable[[], Iterator[Mapping[str, Any]]]]] = {
     "market-info": market_info_records,
     "market-time": market_time_records,
     "sector": sector_records,
+    "screener-instrument-fields": screener_instrument_fields_records,
+    "timeseries-fields": timeseries_fields_records,
+    "screener-discover": screener_discover_records,
 }
 
 _KIND_OF: Final[dict[str, Callable[[Mapping[str, Any]], str]]] = {
@@ -773,6 +860,9 @@ _KIND_OF: Final[dict[str, Callable[[Mapping[str, Any]], str]]] = {
     "market-info": market_info_kind,
     "market-time": lambda _record: "market-time",
     "sector": lambda _record: "sector",
+    "screener-instrument-fields": screener_instrument_fields_kind,
+    "timeseries-fields": lambda _record: "timeseries-fields",
+    "screener-discover": _quote_kind,
 }
 
 _QUOTE_SUMMARY_PREFIX: Final[str] = "quote-summary:"
