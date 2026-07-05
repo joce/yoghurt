@@ -70,11 +70,28 @@ from yoghurt.models.summary_identity import (
     SummaryProfile,
     SummaryQuoteType,
 )
+from yoghurt.models.summary_statements import (
+    BalanceSheetHistory,
+    BalanceSheetHistoryQuarterly,
+    BalanceSheetStatement,
+    CashflowStatement,
+    CashflowStatementHistory,
+    CashflowStatementHistoryQuarterly,
+    IncomeStatement,
+    IncomeStatementHistory,
+    IncomeStatementHistoryQuarterly,
+)
 
 __all__ = [
     "AssetProfile",
+    "BalanceSheetHistory",
+    "BalanceSheetHistoryQuarterly",
+    "BalanceSheetStatement",
     "Benchmark",
     "CalendarEvents",
+    "CashflowStatement",
+    "CashflowStatementHistory",
+    "CashflowStatementHistoryQuarterly",
     "ChartDividend",
     "ChartEvents",
     "ChartMeta",
@@ -105,6 +122,9 @@ __all__ = [
     "FinancialsChartQuarter",
     "FinancialsChartYear",
     "FinancialsTemplate",
+    "IncomeStatement",
+    "IncomeStatementHistory",
+    "IncomeStatementHistoryQuarterly",
     "MarketState",
     "OptionChain",
     "OptionContract",
