@@ -246,7 +246,7 @@ packages = ["src/yoghurt"]
 
 [tool.hatch.build.targets.sdist]
 include = ["src", "tests", "AGENTS.md", "CHANGELOG.md", "LICENSE", "README.md", "RELEASING.md", "pyproject.toml"]
-exclude = ["tests/fixtures/corpus", "tests/tools"]
+exclude = ["tests/fixtures/corpus", "tests/tools", "**/node_modules"]
 
 [build-system]
 requires = ["hatchling>=1.29,<2.0", "hatch-vcs>=0.4,<1.0"]

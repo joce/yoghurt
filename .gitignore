@@ -15,6 +15,9 @@ htmlcov/
 .venv/
 .uv-cache/
 
+# Build artifacts
+dist/
+
 # Tool caches
 .ruff_cache/
 .tox/
