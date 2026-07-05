@@ -17,7 +17,7 @@ Parquet is written with **polars** (a core dependency); chart/screener/visualiza
 - Lint: `uv run ruff check .`
 - Format: `uv run ruff format .`
 - Type check: `uv run pyright`
-- Spell check: `npm run spell` or `make spell` (inside a `.claude/worktrees/` checkout, cspell's gitignore walk hits the parent repo's `.claude/` ignore and checks 0 files — use `npx cspell . --no-gitignore` there; normal checkouts and CI are unaffected)
+- Spell check: `npm run spell` or `make spell` (inside a git worktree nested under a gitignored directory — as agent-tooling worktrees often are — cspell's gitignore walk hits the parent repo's ignore rules and checks 0 files; use `npx cspell . --no-gitignore` there. Normal checkouts and CI are unaffected)
 - Spell changed files: `npm run spell:changed` or `make spell-changed`
 - Full check: `uv run tox`
 
@@ -35,7 +35,19 @@ Parquet is written with **polars** (a core dependency); chart/screener/visualiza
 - `src/yoghurt/parquet_writer.py` -> Parquet output for chart/screener/visualization.
 - `src/yoghurt/query.py` -> screener/visualization DSL parsing.
 - `src/yoghurt/exceptions.py` -> public exception hierarchy.
-- `src/yoghurt/models/` -> typed pydantic response models (Part 3+): `_base.py` (YahooModel base, Raw* wrapper-tolerant types), `enums.py` (closed vocabularies), `quote.py` (Quote), `chart.py` (ChartMeta/Spark meta/chart events), `options.py` (OptionChain/OptionContract/OptionExpiration), `summary_*.py` (the 41 quote-summary modules, one file per batch family), `summary.py` (QuoteSummary, the quote-summary container), `analysis_events.py` (quote-type/calendar-events/recommendations-by-symbol/stock-recommender), `analysis_insights.py` (price-insights/insights), `analysis_ratings.py` (analyst/ratings-top), `markets.py` (trending/market-summary/market-info/market-time/sector), `screener_meta.py` (screener-instrument-fields/timeseries-fields/screener-discover/screener-predefined).
+- `src/yoghurt/models/` -> typed pydantic response models:
+  - `_base.py` -> YahooModel base + Raw* wrapper-tolerant value types.
+  - `enums.py` -> closed vocabularies shared across endpoint families.
+  - `quote.py` -> Quote.
+  - `chart.py` -> ChartMeta, Spark meta, chart events.
+  - `options.py` -> OptionChain/OptionContract/OptionExpiration.
+  - `summary_*.py` -> the 41 quote-summary modules, one file per family.
+  - `summary.py` -> QuoteSummary, the quote-summary container.
+  - `analysis_events.py` -> quote-type/calendar-events/recommendations-by-symbol/stock-recommender.
+  - `analysis_insights.py` -> price-insights/insights.
+  - `analysis_ratings.py` -> analyst/ratings-top.
+  - `markets.py` -> trending/market-summary/market-info/market-time/sector.
+  - `screener_meta.py` -> screener-instrument-fields/timeseries-fields/screener-discover/screener-predefined.
 - `src/yoghurt/__init__.py` -> lazy public surface, py.typed.
 - `tests/` -> pytest tests mirroring `src/yoghurt/`.
 
@@ -61,12 +73,12 @@ When adding or editing a CLI command:
 - One conversion vocabulary on every tabular result: to_polars, to_pandas, to_arrow, to_dicts, save_parquet. Conversions take no shaping arguments.
 - One name per concept; no aliases; no value-dependent return types.
 - Kwargs mirror CLI command metadata 1:1 (wire-name keys); booleans whose CLI flag inverts the wire value are named after the wire param. lang/region ride their defaults; per-call overrides remain deliberately unexposed.
-- Response models (Part 3+) are frozen pydantic models with extra="allow"; internal metadata records are frozen dataclasses; orchestrators are plain classes.
+- Response models are frozen pydantic models with extra="allow"; internal metadata records are frozen dataclasses; orchestrators are plain classes.
 - The corpus at tests/fixtures/corpus/ is the evidence for response shapes; parser code and tests reference corpus files, not hand-invented JSON, wherever a real capture exists.
 
 ## Response model conventions
 - All response models subclass yoghurt.models.YahooModel (frozen, to_camel aliases with explicit Field(alias=...) for irregular wire spellings, populate_by_name, extra="allow", str_strip_whitespace — the last is a quote-informed default; confirm per endpoint family).
-- The corpus is authoritative for wire spellings, presence, and types; prior art (Doubloon) second; researched docs (src/yoghurt/docs/*.md) third.
+- The corpus is authoritative for wire spellings, presence, and types; researched docs (src/yoghurt/docs/*.md) second.
 - Optionality is evidence-driven: required exactly for keys present in 100% of that endpoint's corpus records (tools/fields_report.py-style report), else Optional. A field whose wire key is present in 100% of records but whose value is sometimes/always null is still required (`T | None` with no default); its docstring must state the null-rate or non-null-only condition so the distinction is never silent.
 - Live cross-asset-class verification (per the Yahoo API state probes baseline) may LOOSEN a corpus-derived required field to Optional when it demonstrates the field is inapplicable to instrument types outside the corpus's coverage — evidence outranking a thin corpus. It must never TIGHTEN a field into required from live observation alone. Every such loosening: (a) field docstring states the live-observed condition and symbols/date, (b) class or module docstring summarizes the divergence from the corpus universal-key set, (c) a dedicated test pins `required_aliases < universal_keys` so a future corpus refresh cannot silently reintroduce it.
 - Wrapped `{raw, fmt, longFmt}` values unwrap to raw via the Raw* types; `{}` unwraps to None on Raw*OrNone fields; unknown wrapper keys fail validation.

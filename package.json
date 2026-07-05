@@ -2,7 +2,7 @@
   "name": "yoghurt",
   "version": "0.1.0",
   "private": true,
-  "description": "Typed Python library and LLM-friendly CLI for raw Yahoo Finance endpoint JSON.",
+  "description": "Python library and LLM-friendly CLI for raw Yahoo Finance endpoint JSON.",
   "scripts": {
     "spell": "cspell .",
     "spell:changed": "node tools/spell-changed.mjs"

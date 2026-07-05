@@ -166,6 +166,7 @@
     "unenveloped",
     "unrequested",
     "wasxfail",
+    "worktree",
     "worktrees",
   ],
   "patterns": [
