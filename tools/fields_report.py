@@ -47,6 +47,18 @@ Streams:
 - ``ratings-top``: the bare payload per valid (non-error) capture; kind is
   looked up from the quote-type corpus's symbol -> quoteType map via the
   capture's ``dir.ticker`` field.
+- ``trending``: finance.result[0].quotes[] per capture; kind = the row's
+  own quoteType.
+- ``market-summary``: marketSummaryResponse.result[] per capture; kind =
+  the row's own quoteType.
+- ``market-info``: each populated module value of finance.result (a
+  mapping, not a list) per capture; kind = the module's own key name
+  (``"currencies"``/``"commodities"``).
+- ``market-time``: finance.marketTimes[].marketTime[] per capture; kind is
+  fixed (this symbol-independent endpoint's rows carry no quoteType/
+  instrumentType of their own).
+- ``sector``: the whole ``data`` payload per capture (a container gate,
+  mirroring ``quote-summary`` with no module argument); kind is fixed.
 """
 
 from __future__ import annotations
@@ -56,7 +68,7 @@ import sys
 from collections.abc import Callable, Iterable, Iterator, Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Final
+from typing import Any, Final, cast
 
 REPO_ROOT: Final[Path] = Path(__file__).resolve().parents[1]
 CORPUS_ROOT: Final[Path] = REPO_ROOT / "tests" / "fixtures" / "corpus"
@@ -613,6 +625,112 @@ def quote_type_lookup_kind(record: Mapping[str, Any]) -> str:
     return record.kind if isinstance(record, _KindTagged) else "?"
 
 
+CORPUS_TRENDING_DIR: Final[Path] = CORPUS_ROOT / "trending"
+CORPUS_MARKET_SUMMARY_DIR: Final[Path] = CORPUS_ROOT / "market-summary"
+CORPUS_MARKET_INFO_DIR: Final[Path] = CORPUS_ROOT / "market-info"
+CORPUS_MARKET_TIME_DIR: Final[Path] = CORPUS_ROOT / "market-time"
+CORPUS_SECTOR_DIR: Final[Path] = CORPUS_ROOT / "sector"
+
+
+def trending_records(
+    corpus_dir: Path = CORPUS_TRENDING_DIR,
+) -> Iterator[dict[str, Any]]:
+    """Yield each trending capture's ``finance.result[0].quotes`` rows.
+
+    Kind is each row's own ``quoteType`` field.
+    """
+
+    for path in sorted(corpus_dir.glob("*.json")):
+        payload = _load_json(path)
+        results: list[dict[str, Any]] = payload.get("finance", {}).get("result") or []
+        for result in results:
+            quotes: list[dict[str, Any]] = result.get("quotes") or []
+            yield from quotes
+
+
+def market_summary_records(
+    corpus_dir: Path = CORPUS_MARKET_SUMMARY_DIR,
+) -> Iterator[dict[str, Any]]:
+    """Yield each market-summary capture's ``marketSummaryResponse.result`` rows.
+
+    Kind is each row's own ``quoteType`` field.
+    """
+
+    for path in sorted(corpus_dir.glob("*.json")):
+        payload = _load_json(path)
+        results: list[dict[str, Any]] = (
+            payload.get("marketSummaryResponse", {}).get("result") or []
+        )
+        yield from results
+
+
+def market_info_records(
+    corpus_dir: Path = CORPUS_MARKET_INFO_DIR,
+) -> Iterator[_KindTagged]:
+    """Yield each market-info capture's populated module tiles.
+
+    ``finance.result`` is a mapping (``currencies``/``commodities`` keys),
+    not a list; each populated module value is tagged with its own key name
+    (``"currencies"``/``"commodities"``) as its kind, since that is the
+    natural applicability grouping for this endpoint's fixed, small module
+    set.
+    """
+
+    for path in sorted(corpus_dir.glob("*.json")):
+        payload = _load_json(path)
+        result: dict[str, Any] = payload.get("finance", {}).get("result") or {}
+        for module_name, module_payload in result.items():
+            if isinstance(module_payload, dict):
+                tagged = cast("dict[str, Any]", module_payload)
+                yield _KindTagged(tagged, module_name)
+
+
+def market_info_kind(record: Mapping[str, Any]) -> str:
+    """Read the module-name kind off a record from ``market_info_records``.
+
+    Returns:
+        str: ``"currencies"``/``"commodities"``, or ``"?"`` for an
+        untagged record.
+    """
+
+    return record.kind if isinstance(record, _KindTagged) else "?"
+
+
+def market_time_records(
+    corpus_dir: Path = CORPUS_MARKET_TIME_DIR,
+) -> Iterator[dict[str, Any]]:
+    """Yield each market-time capture's ``finance.marketTimes[].marketTime[]`` rows.
+
+    Kind is fixed (``"market-time"``): this endpoint is symbol-independent
+    and its rows carry no quoteType/instrumentType of their own.
+    """
+
+    for path in sorted(corpus_dir.glob("*.json")):
+        payload = _load_json(path)
+        groups: list[dict[str, Any]] = (
+            payload.get("finance", {}).get("marketTimes") or []
+        )
+        for group in groups:
+            entries: list[dict[str, Any]] = group.get("marketTime") or []
+            yield from entries
+
+
+def sector_records(corpus_dir: Path = CORPUS_SECTOR_DIR) -> Iterator[dict[str, Any]]:
+    """Yield each sector capture's ``data`` payload whole.
+
+    Kind is fixed (``"sector"``): the whole-endpoint container gate mirrors
+    :func:`quote_summary_records`, not a per-row applicability stream (this
+    endpoint's sub-blocks are evidenced individually via direct corpus
+    reads in ``tests/models/test_markets_corpus.py`` instead).
+    """
+
+    for path in sorted(corpus_dir.glob("*.json")):
+        payload = _load_json(path)
+        data: dict[str, Any] | None = payload.get("data")
+        if data:
+            yield data
+
+
 _STREAMS: Final[dict[str, Callable[[], Iterator[Mapping[str, Any]]]]] = {
     "quote": quote_records,
     "chart-meta": chart_meta_records,
@@ -628,6 +746,11 @@ _STREAMS: Final[dict[str, Callable[[], Iterator[Mapping[str, Any]]]]] = {
     "insights": insights_records,
     "analyst": analyst_records,
     "ratings-top": ratings_top_records,
+    "trending": trending_records,
+    "market-summary": market_summary_records,
+    "market-info": market_info_records,
+    "market-time": market_time_records,
+    "sector": sector_records,
 }
 
 _KIND_OF: Final[dict[str, Callable[[Mapping[str, Any]], str]]] = {
@@ -645,6 +768,11 @@ _KIND_OF: Final[dict[str, Callable[[Mapping[str, Any]], str]]] = {
     "insights": quote_type_lookup_kind,
     "analyst": quote_type_lookup_kind,
     "ratings-top": quote_type_lookup_kind,
+    "trending": _quote_kind,
+    "market-summary": _quote_kind,
+    "market-info": market_info_kind,
+    "market-time": lambda _record: "market-time",
+    "sector": lambda _record: "sector",
 }
 
 _QUOTE_SUMMARY_PREFIX: Final[str] = "quote-summary:"

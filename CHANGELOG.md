@@ -62,6 +62,22 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   models from `yoghurt.models.analysis_insights` rather than duplicating
   them, after confirming both endpoints' AI-service payloads are
   shape-identical.
+- Typed `TrendingResult`/`TrendingQuote`, `MarketSummaryQuote`,
+  `MarketInfoResult`/`MarketInfoModule`, `MarketTimeResult` (plus
+  `MarketTimeGroup`/`MarketTimeEntry`/`MarketTimeZone`/`MarketTimeMeta`),
+  and `SectorResult` (plus `SectorOverview`/`SectorPerformance`/
+  `SectorBenchmarkPerformance`/`SectorCompany`/`SectorFund`/
+  `SectorIndustry`/`SectorResearchReport`) response models for the
+  `trending`, `market-summary`, `market-info`, `market-time`, and `sector`
+  endpoints, in the new `yoghurt.models.markets`. `market-summary` rows
+  were script-validated against the existing `Quote` model first, per the
+  reuse-decision procedure: every row's wire keys are already known to
+  `Quote` (zero extras), but 8 of `Quote`'s 35 required fields
+  (`currency`, `priceHint`, and all six `fiftyTwoWeek*` fields) are not
+  universally present on market-summary rows, so `MarketSummaryQuote` is a
+  distinct model rather than a `Quote` reuse. `market-info`'s
+  `finance.result` turned out to be a `currencies`/`commodities` mapping,
+  not a list. `market-time` is thin, single-capture evidence throughout.
 
 ### Changed
 
