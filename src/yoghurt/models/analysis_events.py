@@ -1,7 +1,9 @@
 """Typed models for the small symbol-bound analysis endpoints (batch 3d-1).
 
 Reconciled against the probe corpus at ``tests/fixtures/corpus/``, captured
-2026-07-04. Regenerate applicability evidence with
+2026-07-04 and extended 2026-07-05 with 18 windowed calendar-events
+captures (15 populated + 3 split-hypothesis negative evidence; see below).
+Regenerate applicability evidence with
 ``uv run python -m tools.fields_report <stream>`` after a corpus refresh
 (see ``tools/fields_report.py`` for the per-endpoint record streams this
 evidence is built from). This module covers four of the six batch 3d-1
@@ -12,32 +14,56 @@ see that module's docstring for the file-split rationale (both are deep,
 prose-heavy AI/research payloads with their own large sub-model trees,
 unlike this module's small, flat shapes).
 
-**calendar-events** (endpoint noun: "calendar events"). The corpus is
-thin and structurally lopsided: every default-module capture (24 symbols,
-no ``--modules`` filter) is simply ``{"earnings": []}`` — Yahoo has no
-earnings-calendar rows to report for any probed symbol right now — and
-three additional AAPL captures each requested one non-default module in
-isolation (``--modules economicEvents``, ``--modules ipoEvents``,
-``--modules secReports``). ``ipoEvents``/``secReports`` are also empty in
-their captures, so :class:`CalendarEventsResult`'s ``earnings``/
-``ipo_events``/``sec_reports`` fields can only be typed as empty-observed
-lists of an unmodeled row (:class:`UnmodeledCalendarRow`, the
-``CorporateAction``-style empty-model precedent from
-:class:`yoghurt.models.quote.CorporateAction`: no fields of its own, so the
-corpus gate's nested-extras walker fails loudly the moment Yahoo finally
-sends a populated row). ``economicEvents`` alone has a real, richly
-populated capture (9 event rows across 2 day-buckets) and is fully typed via
-:class:`EconomicEventDay`/:class:`EconomicEvent`. All four fields are
-optional at the :class:`CalendarEventsResult` level: a request never shows
-more than one module key populated at a time in this corpus (the default
-request returns only ``earnings``; each ``--modules`` probe returns only
-that one module's key), so there is no evidence either way for
-multi-module requests, but nothing rules them out. The deliberate
-invalid-symbol probe (``ZZZZXYZQ``) is likewise ``{"earnings": []}`` —
-byte-for-byte the same valid-empty shape as an unremarkable symbol with no
-scheduled events, not an error; ``Ticker.calendar_events()`` returns a
-normally-typed (all-optional) result rather than raising, confirmed live
-2026-07-05.
+**calendar-events** (endpoint noun: "calendar events"). The original
+2026-07-04 corpus was thin and structurally lopsided: every default-module
+capture (24 symbols, no ``--modules`` filter, no ``--start-date``/
+``--end-date``) was simply ``{"earnings": []}``, and three additional AAPL
+captures each requested one non-default module in isolation — all also
+empty except ``economicEvents``. That thinness turned out to be a probing
+gap, not an endpoint limitation: the endpoint needs an explicit
+``--start-date``/``--end-date`` window covering a day with real events;
+the default (window-less, ``now-3d``..``now``) request has simply never
+landed on such a day. Live UI cross-checking (2026-07-05) found real
+windows for all three, since surgically captured (18 new files, per the
+978eead precedent):
+
+- ``earnings``: 4 small/mid-cap same-day reporters (``IVF``, ``HAWK``,
+  ``EBF``, ``POWW``, all 2026-06-22) plus ``MSFT`` (2026-04-29, a
+  materially larger ``rank``) populate one record each. Fully typed via
+  :class:`EarningsEventDay`/:class:`EarningsEvent`; all 13 row fields are
+  present on all 5 records.
+- ``ipoEvents``: 6 same-day (2026-07-02) pricings spanning common stock
+  (``COPR``, ``SECZ``), rights (``GSRVR``), warrants (``IQMXW``), units
+  (``MIACU``), and ADSs (``VCRE``) populate one record each. Fully typed
+  via :class:`IpoEventDay`/:class:`IpoEvent`; ``currency_name`` is a
+  required key that is sometimes an empty string (``COPR``, ``SECZ``)
+  rather than absent.
+- ``secReports``: resolves a competing live hypothesis. The CLI help text
+  ("SEC filing events (10-K, 10-Q, 8-K, etc.)") predates any real capture;
+  a live UI check separately suggested this module might instead carry
+  stock-split events. Both were tested and both are now corpus evidence:
+  three split-day symbols (``BEOB``, ``CATTF``, ``6669.TW``) committed as
+  ``*_secReports_split.json``, each a byte-for-byte empty ``{"secReports":
+  []}`` over their known split window (2026-06-21/27) — ruling out the
+  split hypothesis — while filing-heavy symbols over their known filing
+  windows populated real 10-Q/8-K/DEFA14A rows (``BOXL``, ``HAWK``:
+  2026-06-20/27; ``AAPL``: 2026-04-20/05-05, 3 day-buckets; ``MSFT``:
+  2026-04-26/05-05, a same-day 10-Q+8-K bucket) — confirming the help
+  text's description. Fully typed via
+  :class:`SecReportDay`/:class:`SecReport`/:class:`SecReportExhibit`; all
+  10 row fields (including the nested ``exhibits`` list) are present on
+  all 9 filing records across the 4 populated captures.
+
+All three newly-typed fields, plus ``economicEvents``, remain optional at
+the :class:`CalendarEventsResult` level: no single capture (old or new)
+ever populates more than one module key at once (the default request
+returns only ``earnings``; each ``--modules`` probe returns only that one
+module's key), so there is no evidence either way for multi-module
+requests, but nothing rules them out. The deliberate invalid-symbol probe
+(``ZZZZXYZQ``, window-less) is likewise ``{"earnings": []}`` — byte-for-byte
+the same valid-empty shape as an unremarkable symbol with no scheduled
+events, not an error; ``Ticker.calendar_events()`` returns a normally-typed
+(all-optional) result rather than raising, confirmed live 2026-07-05.
 
 **quote-type** (endpoint noun: "quote-type records"). Rich, clean corpus:
 23 valid captures spanning every ``QuoteType`` member captured elsewhere in
@@ -90,17 +116,477 @@ from yoghurt.models._base import YahooModel
 from yoghurt.models.enums import QuoteType  # noqa: TC001
 
 
-class UnmodeledCalendarRow(YahooModel):
-    """One row of ``earnings``/``ipoEvents``/``secReports``, shape unknown.
+class EarningsEvent(YahooModel):
+    """One earnings-release row in an :class:`EarningsEventDay`."""
 
-    No corpus capture has ever populated any of these three lists; this
-    carries no fields of its own beyond what :class:`YahooModel` preserves
-    via ``model_extra`` until a populated example is captured, mirroring
-    the :class:`~yoghurt.models.quote.CorporateAction` precedent — the
-    corpus coverage gate's nested-extras walker fails loudly the moment
-    Yahoo sends a populated row.
+    company_short_name: str
+    """
+    Short display name of the reporting company.
 
-    Observed only as empty lists in the corpus.
+    Observed on: calendar events.
+    """
+
+    date_is_estimate: bool
+    """
+    Whether ``start_date_time`` is an estimate rather than a confirmed date.
+
+    Always ``false`` on every corpus row (all captured rows are already-
+    reported, confirmed dates).
+
+    Observed on: calendar events.
+    """
+
+    earnings: bool
+    """
+    Always ``true`` on every corpus row; a type-discriminator flag rather
+    than a meaningful per-row value.
+
+    Observed on: calendar events.
+    """
+
+    eps_actual: float
+    """
+    Reported actual earnings per share.
+
+    Observed on: calendar events.
+    """
+
+    eps_estimate: float
+    """
+    Consensus analyst earnings-per-share estimate ahead of the release.
+
+    Observed on: calendar events.
+    """
+
+    fiscal_year: str
+    """
+    Fiscal year this release covers, as Yahoo's wire string (for example
+    ``"2026"``).
+
+    Observed on: calendar events.
+    """
+
+    gmt_offset_milliseconds: int = Field(alias="gmtOffsetMilliSeconds")
+    """
+    Offset from GMT of the reporting exchange, in milliseconds.
+
+    Irregular wire spelling: ``gmtOffsetMilliSeconds`` (lowercase "offset",
+    capital "S" in "MilliSeconds") — a different capitalization from
+    ``QuoteTypeResult.gmt_off_set_milliseconds``'s ``gmtOffSetMilliseconds``
+    (and that field is a wire string, not this numeric type); genuine
+    per-endpoint wire divergence, not a modeling inconsistency.
+
+    Observed on: calendar events.
+    """
+
+    quarter: str
+    """
+    Fiscal quarter this release covers (for example ``"Q1"``, ``"Q4"``).
+
+    Observed on: calendar events.
+    """
+
+    rank: int
+    """
+    Yahoo's internal ranking/priority value for this release.
+
+    Observed on: calendar events.
+    """
+
+    start_date_time: datetime.datetime
+    """
+    Point-in-time timestamp of the earnings release.
+
+    Wire value is epoch seconds; pydantic converts it to an aware UTC
+    datetime. The parent :class:`EarningsEventDay` carries an IANA
+    ``timezone`` name, but it is not threaded onto this row (same
+    convention as :class:`EconomicEvent`'s ``event_time``).
+
+    Observed on: calendar events.
+    """
+
+    start_date_time_type: str
+    """
+    Yahoo's classification of ``start_date_time``'s precision or session
+    (always ``"TAS"`` — time-as-supplied — on every corpus row).
+
+    Observed on: calendar events.
+    """
+
+    surprise_percent: float
+    """
+    Percentage difference between ``eps_actual`` and ``eps_estimate``.
+
+    Observed on: calendar events.
+    """
+
+    ticker: str
+    """
+    Yahoo ticker symbol this release belongs to.
+
+    Observed on: calendar events.
+    """
+
+
+class EarningsEventDay(YahooModel):
+    """One calendar day's bucket of :class:`EarningsEvent` releases.
+
+    Same wrapper shape as :class:`EconomicEventDay`; see that class for the
+    per-field applicability notes shared by every calendar-events day
+    bucket.
+    """
+
+    count: int
+    """
+    Number of releases in ``records`` for this day.
+
+    Observed on: calendar events.
+    """
+
+    records: list[EarningsEvent]
+    """
+    Earnings releases scheduled or reported for this day.
+
+    Observed on: calendar events.
+    """
+
+    timestamp: datetime.datetime
+    """
+    Point-in-time timestamp for this day bucket.
+
+    Wire value is epoch milliseconds; pydantic converts it to an aware UTC
+    datetime.
+
+    Observed on: calendar events.
+    """
+
+    timestamp_string: str
+    """
+    Calendar date for this bucket, as a bare ``"YYYY-MM-DD"`` string in the
+    ``timezone`` local zone.
+
+    Observed on: calendar events.
+    """
+
+    timezone: str
+    """
+    IANA timezone name ``timestamp``/``timestamp_string`` are local to (for
+    example ``"America/New_York"``).
+
+    Observed on: calendar events.
+    """
+
+    total_count: int
+    """
+    Total number of releases for this day, matching ``count`` on every
+    corpus row (verified).
+
+    Observed on: calendar events.
+    """
+
+
+class IpoEvent(YahooModel):
+    """One IPO-pricing row in an :class:`IpoEventDay`."""
+
+    company_short_name: str
+    """
+    Short display name of the company going public.
+
+    Observed on: calendar events.
+    """
+
+    currency_name: str
+    """
+    Currency code of the deal (for example ``"USD"``).
+
+    Present as an empty string on some corpus rows (for example a NYSE
+    American common-stock pricing) rather than absent; still a required
+    key on every row.
+
+    Observed on: calendar events.
+    """
+
+    deal_id: str
+    """
+    Yahoo's internal identifier for this IPO deal.
+
+    Observed on: calendar events.
+    """
+
+    deal_type: str
+    """
+    Status of the deal (``"Expected"`` on every corpus row).
+
+    Observed on: calendar events.
+    """
+
+    exchange_short_name: str
+    """
+    Short name of the listing exchange (for example ``"Nasdaq"``, ``"NYSE
+    American"``).
+
+    Observed on: calendar events.
+    """
+
+    ipo_events: bool
+    """
+    Always ``true`` on every corpus row; a type-discriminator flag rather
+    than a meaningful per-row value.
+
+    Observed on: calendar events.
+    """
+
+    start_date_time: datetime.datetime
+    """
+    Point-in-time timestamp of the IPO pricing.
+
+    Wire value is epoch seconds; pydantic converts it to an aware UTC
+    datetime. Matches the parent :class:`IpoEventDay`'s own ``timestamp``
+    on every corpus row (verified), but kept as its own field since nothing
+    in the corpus rules out the two ever diverging. The parent's IANA
+    ``timezone`` is not threaded onto this row (same convention as
+    :class:`EconomicEvent`'s ``event_time``).
+
+    Observed on: calendar events.
+    """
+
+    ticker: str
+    """
+    Yahoo ticker symbol of the security being priced (for example a rights,
+    warrants, or units symbol distinct from the parent company's common
+    stock).
+
+    Observed on: calendar events.
+    """
+
+
+class IpoEventDay(YahooModel):
+    """One calendar day's bucket of :class:`IpoEvent` pricings.
+
+    Same wrapper shape as :class:`EconomicEventDay`; see that class for the
+    per-field applicability notes shared by every calendar-events day
+    bucket.
+    """
+
+    count: int
+    """
+    Number of pricings in ``records`` for this day.
+
+    Observed on: calendar events.
+    """
+
+    records: list[IpoEvent]
+    """
+    IPO pricings scheduled or completed for this day.
+
+    Observed on: calendar events.
+    """
+
+    timestamp: datetime.datetime
+    """
+    Point-in-time timestamp for this day bucket.
+
+    Wire value is epoch seconds; pydantic converts it to an aware UTC
+    datetime.
+
+    Observed on: calendar events.
+    """
+
+    timestamp_string: str
+    """
+    Calendar date for this bucket, as a bare ``"YYYY-MM-DD"`` string in the
+    ``timezone`` local zone.
+
+    Observed on: calendar events.
+    """
+
+    timezone: str
+    """
+    IANA timezone name ``timestamp``/``timestamp_string`` are local to (for
+    example ``"America/New_York"``).
+
+    Observed on: calendar events.
+    """
+
+    total_count: int
+    """
+    Total number of pricings for this day, matching ``count`` on every
+    corpus row (verified).
+
+    Observed on: calendar events.
+    """
+
+
+class SecReportExhibit(YahooModel):
+    """One entry in a :class:`SecReport`'s ``exhibits`` list.
+
+    Distinct from
+    :class:`~yoghurt.models.analysis_insights.InsightsSecReportExhibit`
+    (the ``insights`` endpoint's differently-shaped exhibit rows, which
+    additionally carry an optional ``downloadUrl``) — no corpus evidence
+    ties the two shapes together.
+    """
+
+    type: str
+    """
+    Exhibit type or form code (for example ``"8-K"``, ``"EX-99.1"``).
+
+    Observed on: calendar events.
+    """
+
+    url: str
+    """
+    URL of the exhibit document.
+
+    Observed on: calendar events.
+    """
+
+
+class SecReport(YahooModel):
+    """One SEC-filing row in a :class:`SecReportDay`.
+
+    Distinct from
+    :class:`~yoghurt.models.analysis_insights.InsightsSecReport` (the
+    ``insights`` endpoint's differently-shaped SEC filing rows: ``edgarUrl``/
+    ``formType``/no ``category`` or ``thumbnailUrl``) — no corpus evidence
+    ties the two shapes together.
+    """
+
+    category: str
+    """
+    Yahoo's category label for this filing (for example ``"Periodic
+    Financial Reports"``, ``"Corporate Changes & Voting Matters"``,
+    ``"Proxy Statements"``).
+
+    Observed on: calendar events.
+    """
+
+    company_name: str
+    """
+    Full name of the filing company.
+
+    Observed on: calendar events.
+    """
+
+    description: str
+    """
+    Prose description of this filing (for example ``"Quarterly report
+    pursuant to Section 13 or 15(d)"``).
+
+    Observed on: calendar events.
+    """
+
+    exhibits: list[SecReportExhibit]
+    """
+    Individual documents attached to this filing.
+
+    Observed on: calendar events.
+    """
+
+    filing_date: datetime.date
+    """
+    Calendar date the filing was made.
+
+    Wire value is a midnight-UTC-aligned epoch timestamp in milliseconds
+    (verified against every corpus value); pydantic converts it to a UTC
+    calendar date.
+
+    Observed on: calendar events.
+    """
+
+    id: str
+    """
+    Yahoo's internal identifier for this filing (for example
+    ``"0001213900-26-070452_1624512"``).
+
+    Observed on: calendar events.
+    """
+
+    sec_reports: bool = Field(alias="secReports")
+    """
+    Always ``true`` on every corpus row; a type-discriminator flag rather
+    than a meaningful per-row value.
+
+    Observed on: calendar events.
+    """
+
+    thumbnail_url: str
+    """
+    URL of a thumbnail image representing this filing.
+
+    Observed on: calendar events.
+    """
+
+    ticker: str
+    """
+    Yahoo ticker symbol this filing belongs to.
+
+    Observed on: calendar events.
+    """
+
+    type: str
+    """
+    SEC form type of this filing (for example ``"10-Q"``, ``"8-K"``,
+    ``"DEFA14A"``).
+
+    Observed on: calendar events.
+    """
+
+
+class SecReportDay(YahooModel):
+    """One calendar day's bucket of :class:`SecReport` filings.
+
+    Same wrapper shape as :class:`EconomicEventDay`; see that class for the
+    per-field applicability notes shared by every calendar-events day
+    bucket.
+    """
+
+    count: int
+    """
+    Number of filings in ``records`` for this day.
+
+    Observed on: calendar events.
+    """
+
+    records: list[SecReport]
+    """
+    SEC filings made on this day.
+
+    Observed on: calendar events.
+    """
+
+    timestamp: datetime.datetime
+    """
+    Point-in-time timestamp for this day bucket.
+
+    Wire value is epoch milliseconds; pydantic converts it to an aware UTC
+    datetime.
+
+    Observed on: calendar events.
+    """
+
+    timestamp_string: str
+    """
+    Calendar date for this bucket, as a bare ``"YYYY-MM-DD"`` string in the
+    ``timezone`` local zone.
+
+    Observed on: calendar events.
+    """
+
+    timezone: str
+    """
+    IANA timezone name ``timestamp``/``timestamp_string`` are local to (for
+    example ``"America/New_York"``).
+
+    Observed on: calendar events.
+    """
+
+    total_count: int
+    """
+    Total number of filings for this day, matching ``count`` on every
+    corpus row (verified).
+
+    Observed on: calendar events.
     """
 
 
@@ -248,16 +734,19 @@ class CalendarEventsResult(YahooModel):
     Every field is optional: no corpus capture ever populates more than one
     module key at once (the default request returns only ``earnings``; each
     ``--modules`` probe returns only that one requested module's key). See
-    the module docstring for the thin-evidence caveat on
-    ``earnings``/``ipo_events``/``sec_reports``.
+    the module docstring for how ``earnings``/``ipo_events``/``sec_reports``
+    were finally populated — they need an explicit ``--start-date``/
+    ``--end-date`` window over a day with real events; the default
+    (window-less) request is always empty for all three.
     """
 
-    earnings: list[UnmodeledCalendarRow] | None = None
+    earnings: list[EarningsEventDay] | None = None
     """
-    Earnings-calendar events for this symbol.
+    Earnings-calendar events for this symbol, bucketed by day.
 
-    Always an empty list in the corpus (the default, no-``--modules``
-    request); see :class:`UnmodeledCalendarRow`.
+    Empty list on the default request (no window covers a real earnings
+    day); populated when ``--start-date``/``--end-date`` cover a day the
+    symbol actually reported on. See :class:`EarningsEventDay`.
 
     Observed on: calendar events.
     """
@@ -274,29 +763,30 @@ class CalendarEventsResult(YahooModel):
     Observed on: calendar events.
     """
 
-    ipo_events: list[UnmodeledCalendarRow] | None = Field(
-        default=None, alias="ipoEvents"
-    )
+    ipo_events: list[IpoEventDay] | None = Field(default=None, alias="ipoEvents")
     """
-    IPO-calendar events for this symbol.
+    IPO-calendar events for this symbol, bucketed by day.
 
-    Always an empty list in the corpus (only requested via ``--modules
-    ipoEvents``); see :class:`UnmodeledCalendarRow`.
+    Empty list on the default request; populated when ``--start-date``/
+    ``--end-date`` cover a day the symbol actually priced on. See
+    :class:`IpoEventDay`.
 
     Observed on: calendar events.
     """
 
-    sec_reports: list[UnmodeledCalendarRow] | None = Field(
-        default=None, alias="secReports"
-    )
+    sec_reports: list[SecReportDay] | None = Field(default=None, alias="secReports")
     """
-    SEC filing events for this symbol.
+    SEC filing events for this symbol, bucketed by day.
 
-    Always an empty list in the corpus (only requested via ``--modules
-    secReports``); see :class:`UnmodeledCalendarRow`. Distinct from
-    :class:`~yoghurt.models.analysis_insights.InsightsSecReport` (the
-    ``insights`` endpoint's differently-shaped SEC filing rows) — no
-    corpus evidence ties the two shapes together.
+    Empty list on the default request; populated when ``--start-date``/
+    ``--end-date`` cover a day the symbol actually filed on. Confirms the
+    CLI help text's "SEC filing events (10-K, 10-Q, 8-K, etc.)" description
+    against real 10-Q/8-K/DEFA14A rows — a live hypothesis that this module
+    instead carried stock-split events did not hold up (split-day symbols
+    BEOB/CATTF/6669.TW captured empty ``secReports`` on retest, 2026-07-05).
+    Distinct from :class:`~yoghurt.models.analysis_insights.InsightsSecReport`
+    (the ``insights`` endpoint's differently-shaped SEC filing rows) — no
+    corpus evidence ties the two shapes together. See :class:`SecReportDay`.
 
     Observed on: calendar events.
     """

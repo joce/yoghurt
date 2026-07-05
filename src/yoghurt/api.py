@@ -451,7 +451,12 @@ class Ticker:
 
         ``economic_events_high_importance_only=True`` limits economic events
         to high-importance ones. ``modules`` selects which event family the
-        result populates; unrequested families are ``None``. An unrecognized
+        result populates; unrequested families are ``None``. ``earnings``/
+        ``ipoEvents``/``secReports`` are empty unless ``start_date``/
+        ``end_date`` cover a day the symbol actually had that kind of event
+        on; the default (window-less) request is always empty for all three
+        — live-confirmed 2026-07-05 (corpus:
+        ``calendar-events/IVF_earnings.json`` and siblings). An unrecognized
         symbol is not an error: Yahoo returns the same valid-empty
         ``{"earnings": []}`` shape as a recognized symbol with no scheduled
         events, so this returns a normally-typed (all-``None``-but-

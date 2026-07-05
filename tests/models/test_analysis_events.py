@@ -2,16 +2,20 @@
 
 The corpus coverage gate (``tests/models/test_analysis_events_corpus.py``)
 proves every capture validates with no extras; these tests instead check
-representative typed attributes: calendar-events' module-keyed optionality,
-quote-type's FUTURE/OPTION-only fields, and recommendation/stock-recommender
-row shapes.
+representative typed attributes: calendar-events' module-keyed optionality
+(including the windowed earnings/ipoEvents/secReports captures added
+2026-07-05), quote-type's FUTURE/OPTION-only fields, and recommendation/
+stock-recommender row shapes.
 """
 
 from __future__ import annotations
 
+import datetime
 import json
 from pathlib import Path
 from typing import Any
+
+import pytest
 
 from yoghurt.models.analysis_events import (
     CalendarEventsResult,
@@ -20,6 +24,11 @@ from yoghurt.models.analysis_events import (
     StockRecommenderResult,
 )
 from yoghurt.models.enums import QuoteType
+
+_IVF_EPS_ACTUAL = -3.36
+_IVF_EPS_ESTIMATE = -10.0
+_MSFT_SEC_REPORTS_DAY_COUNT = 2
+_AAPL_SEC_REPORTS_DAY_COUNT = 3
 
 _CORPUS_ROOT = Path(__file__).resolve().parent.parent / "fixtures" / "corpus"
 
@@ -87,6 +96,92 @@ def test_calendar_events_economic_event_actual_is_optional() -> None:
     result = CalendarEventsResult.model_validate(payload["finance"]["result"])
     assert result.economic_events is not None
     assert result.economic_events[0].records[0].actual is None
+
+
+def test_calendar_events_earnings_populates_with_explicit_date_window() -> None:
+    """A --start-date/--end-date window covering a real report day populates.
+
+    Live-found 2026-07-05: the default (window-less) request is always
+    empty; IVF/HAWK/EBF/POWW all reported 2026-06-22.
+    """
+
+    payload = _load("calendar-events/IVF_earnings.json")
+    result = CalendarEventsResult.model_validate(payload["finance"]["result"])
+
+    assert result.earnings is not None
+    day = result.earnings[0]
+    assert day.timestamp_string == "2026-06-22"
+    assert day.count == len(day.records)
+    row = day.records[0]
+    assert row.ticker == "IVF"
+    assert row.earnings is True
+    assert row.eps_actual == pytest.approx(_IVF_EPS_ACTUAL)
+    assert row.eps_estimate == pytest.approx(_IVF_EPS_ESTIMATE)
+
+
+def test_calendar_events_ipo_events_populates_with_explicit_date_window() -> None:
+    """A --start-date/--end-date window covering a real pricing day populates.
+
+    Live-found 2026-07-05: COPR/GSRVR/IQMXW/MIACU/VCRE/SECZ all priced
+    2026-07-02, spanning common stock, rights, warrants, units, and ADSs.
+    """
+
+    payload = _load("calendar-events/GSRVR_ipoEvents.json")
+    result = CalendarEventsResult.model_validate(payload["finance"]["result"])
+
+    assert result.ipo_events is not None
+    row = result.ipo_events[0].records[0]
+    assert row.ticker == "GSRVR"
+    assert row.ipo_events is True
+    assert row.currency_name == "USD"
+    assert row.deal_type == "Expected"
+
+
+def test_calendar_events_ipo_events_currency_name_can_be_empty_string() -> None:
+    """currency_name is a required key but sometimes an empty string.
+
+    COPR (NYSE American common-stock pricing) carries currencyName: "".
+    """
+
+    payload = _load("calendar-events/COPR_ipoEvents.json")
+    result = CalendarEventsResult.model_validate(payload["finance"]["result"])
+
+    assert result.ipo_events is not None
+    assert not result.ipo_events[0].records[0].currency_name
+
+
+def test_calendar_events_sec_reports_populates_with_explicit_date_window() -> None:
+    """A --start-date/--end-date window covering a real filing day populates.
+
+    Live-found 2026-07-05: resolves the competing split-vs-filings
+    hypothesis in favor of filings — MSFT's 10-Q/8-K same-day bucket.
+    """
+
+    payload = _load("calendar-events/MSFT_secReports_filed.json")
+    result = CalendarEventsResult.model_validate(payload["finance"]["result"])
+
+    assert result.sec_reports is not None
+    day = result.sec_reports[0]
+    assert day.count == len(day.records) == _MSFT_SEC_REPORTS_DAY_COUNT
+    types = {row.type for row in day.records}
+    assert types == {"10-Q", "8-K"}
+
+
+def test_calendar_events_sec_reports_multi_day_bucket_and_exhibits() -> None:
+    """AAPL's window spans 3 day-buckets; each filing carries exhibits."""
+
+    payload = _load("calendar-events/AAPL_secReports_filed.json")
+    result = CalendarEventsResult.model_validate(payload["finance"]["result"])
+
+    assert result.sec_reports is not None
+    assert len(result.sec_reports) == _AAPL_SEC_REPORTS_DAY_COUNT
+    quarterly_day = next(
+        day for day in result.sec_reports if day.records[0].type == "10-Q"
+    )
+    quarterly_filing = quarterly_day.records[0]
+    assert quarterly_filing.category == "Periodic Financial Reports"
+    assert quarterly_filing.filing_date == datetime.date(2026, 5, 1)
+    assert any(exhibit.type == "EX-31.1" for exhibit in quarterly_filing.exhibits)
 
 
 def test_quote_type_future_has_underlying_and_head_symbol() -> None:

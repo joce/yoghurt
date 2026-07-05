@@ -30,6 +30,10 @@ Streams:
 - ``calendar-events``: finance.result per calendar-events capture; kind is
   fixed (the module-keyed result shape has no quoteType/instrumentType of
   its own).
+- ``calendar-events:earnings``/``calendar-events:ipoEvents``/
+  ``calendar-events:secReports``: the inner ``records[]`` rows of that
+  module's day buckets (``finance.result.<module>[].records[]``), flattened
+  across every calendar-events capture; kind is fixed per module.
 - ``quote-type``: quoteType.result[0] per valid quote-type capture (skips
   the invalid-symbol probe); kind = the record's own quoteType.
 - ``recommendations-by-symbol``: finance.result[0] per capture; kind is
@@ -457,6 +461,50 @@ def calendar_events_records(
             yield result
 
 
+def _calendar_events_module_rows(
+    module: str, corpus_dir: Path = CORPUS_CALENDAR_EVENTS_DIR
+) -> Iterator[dict[str, Any]]:
+    """Yield every inner ``records[]`` row for one calendar-events module.
+
+    Walks ``finance.result.<module>[].records[]`` across every capture:
+    the module key is a list of day buckets, each carrying its own
+    ``records`` list of the actual event rows. Kind is fixed, same as
+    :func:`calendar_events_records`.
+    """
+
+    for path in sorted(corpus_dir.glob("*.json")):
+        payload = _load_json(path)
+        result: dict[str, Any] = payload.get("finance", {}).get("result") or {}
+        days: list[dict[str, Any]] = result.get(module) or []
+        for day in days:
+            rows: list[dict[str, Any]] = day.get("records") or []
+            yield from rows
+
+
+def earnings_records(
+    corpus_dir: Path = CORPUS_CALENDAR_EVENTS_DIR,
+) -> Iterator[dict[str, Any]]:
+    """Yield every ``earnings[].records[]`` row across the calendar-events corpus."""
+
+    yield from _calendar_events_module_rows("earnings", corpus_dir)
+
+
+def ipo_events_records(
+    corpus_dir: Path = CORPUS_CALENDAR_EVENTS_DIR,
+) -> Iterator[dict[str, Any]]:
+    """Yield every ``ipoEvents[].records[]`` row across the calendar-events corpus."""
+
+    yield from _calendar_events_module_rows("ipoEvents", corpus_dir)
+
+
+def sec_reports_records(
+    corpus_dir: Path = CORPUS_CALENDAR_EVENTS_DIR,
+) -> Iterator[dict[str, Any]]:
+    """Yield every ``secReports[].records[]`` row across the calendar-events corpus."""
+
+    yield from _calendar_events_module_rows("secReports", corpus_dir)
+
+
 def _quote_type_symbol_map(
     corpus_dir: Path = CORPUS_QUOTE_TYPE_DIR,
 ) -> dict[str, str]:
@@ -832,6 +880,9 @@ _STREAMS: Final[dict[str, Callable[[], Iterator[Mapping[str, Any]]]]] = {
     "option-contracts": option_contract_records,
     "option-chains": option_chain_records,
     "calendar-events": calendar_events_records,
+    "calendar-events:earnings": earnings_records,
+    "calendar-events:ipoEvents": ipo_events_records,
+    "calendar-events:secReports": sec_reports_records,
     "quote-type": quote_type_records,
     "recommendations-by-symbol": recommendations_records,
     "stock-recommender": stock_recommender_records,
@@ -857,6 +908,9 @@ _KIND_OF: Final[dict[str, Callable[[Mapping[str, Any]], str]]] = {
     "option-contracts": contract_kind,
     "option-chains": lambda _record: "chain",
     "calendar-events": lambda _record: "calendar-events",
+    "calendar-events:earnings": lambda _record: "earnings",
+    "calendar-events:ipoEvents": lambda _record: "ipoEvents",
+    "calendar-events:secReports": lambda _record: "secReports",
     "quote-type": _quote_kind,
     "recommendations-by-symbol": quote_type_lookup_kind,
     "stock-recommender": quote_type_lookup_kind,

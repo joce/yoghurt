@@ -45,10 +45,16 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   family; see their module docstrings for the fields typed from a single
   observation.
 - Typed `QuoteTypeResult`, `CalendarEventsResult` (plus `EconomicEvent`/
-  `EconomicEventDay`), `RecommendationsResult`/`RecommendedSymbol`, and
+  `EconomicEventDay`, `EarningsEvent`/`EarningsEventDay`, `IpoEvent`/
+  `IpoEventDay`, and `SecReport`/`SecReportDay`/`SecReportExhibit`),
+  `RecommendationsResult`/`RecommendedSymbol`, and
   `StockRecommenderResult`/`StockRecommenderFields` response models for the
   `quote-type`, `calendar-events`, `recommendations-by-symbol`, and
   `stock-recommender` endpoints, in the new `yoghurt.models.analysis_events`.
+  `calendar-events`' `earnings`/`ipoEvents`/`secReports` modules need an
+  explicit `--start-date`/`--end-date` window covering a day with real
+  events to populate (the default window is always empty); `secReports`
+  carries SEC filing rows (10-Q/8-K/DEFA14A), not stock splits.
 - Typed `PriceInsights` and `Insights` response models for the
   `price-insights` and `insights` endpoints, in the new
   `yoghurt.models.analysis_insights`. `PriceInsights` validates all three
