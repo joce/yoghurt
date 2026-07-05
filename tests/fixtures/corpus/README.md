@@ -53,3 +53,33 @@ live-only observation during Part 3d are now backed by real corpus
 captures). `recommendations-by-symbol/^GSPC.json` was refetched (same shape,
 fresh live recommendation scores) since it now rides the cross-asset case
 instead of a standalone one.
+
+**2026-07-05 surgical addition (calendar-events populated windows):** every
+prior `calendar-events` capture used the default (no `--start-date`/
+`--end-date`) window, which is always empty for `earnings`/`ipoEvents`/
+`secReports`. 18 new cases add an explicit date window, found via Yahoo's
+calendar UI: 15 populated-window cases plus 3 negative-evidence cases for a
+competing hypothesis.
+
+Populated: `IVF_earnings`/`HAWK_earnings`/`EBF_earnings`/`POWW_earnings`
+(2026-06-20 to 2026-06-27, all reported 2026-06-22) and `MSFT_earnings`
+(2026-04-26 to 2026-05-05, reported 2026-04-29); `COPR_ipoEvents`/
+`GSRVR_ipoEvents`/`IQMXW_ipoEvents`/`MIACU_ipoEvents`/`VCRE_ipoEvents`/
+`SECZ_ipoEvents` (2026-06-29 to 2026-07-03, all priced 2026-07-02 — common
+stock, rights, warrants, units, and ADSs); `BOXL_secReports`/
+`HAWK_secReports` (2026-06-20 to 2026-06-27) and
+`AAPL_secReports_filed`/`MSFT_secReports_filed` (2026-04-20/2026-04-26 to
+2026-05-05).
+
+The `secReports` captures resolve a competing hypothesis from a live UI
+check (stock splits vs. SEC filings) in favor of the CLI help text's
+existing "SEC filing events" description: the populated captures above show
+real 10-Q/8-K/DEFA14A rows, not split events, and three additional negative-
+evidence cases confirm the split hypothesis does not hold —
+`BEOB_secReports_split`/`CATTF_secReports_split`/`6669.TW_secReports_split`
+each capture a byte-for-byte empty `{"secReports": []}` over the symbols'
+known 2026-06-22 split date (window 2026-06-21 to 2026-06-27). See
+`src/yoghurt/models/analysis_events.py`'s module docstring for the full
+per-module evidence writeup and the new `EarningsEvent`/`EarningsEventDay`,
+`IpoEvent`/`IpoEventDay`, and `SecReport`/`SecReportDay`/`SecReportExhibit`
+models these captures back.

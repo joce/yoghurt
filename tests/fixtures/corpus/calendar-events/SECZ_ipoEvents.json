@@ -1,0 +1,1 @@
+{"finance":{"result":{"ipoEvents":[{"timestamp":1782964800000,"timestampString":"2026-07-02","timezone":"America/New_York","count":1,"totalCount":1,"records":[{"ipoEvents":true,"ticker":"SECZ","companyShortName":"Securitize Corp.","exchangeShortName":"NYSE","startDateTime":1782964800000,"currencyName":"","dealType":"Expected","dealId":"81517B101"}]}]},"error":null}}

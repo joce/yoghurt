@@ -369,6 +369,115 @@ def _equity_subset_cases() -> list[ProbeCase]:
     return cases
 
 
+# Live windows (found via Yahoo's calendar UI, 2026-07-05) where earnings/
+# ipoEvents/secReports actually populate rows: every prior calendar-events
+# capture used the default (no --start-date/--end-date) window, which is
+# always empty for these three modules. secReports resolves the CLI help's
+# "SEC filing events" text as accurate (10-Q/8-K rows observed), not the
+# stock-split hypothesis the UI otherwise suggested (split-day symbols like
+# BEOB/CATTF/6669.TW captured empty secReports on retest).
+_EARNINGS_WINDOW: Final[tuple[str, str]] = ("2026-06-20", "2026-06-27")
+_EARNINGS_SYMBOLS: Final[tuple[str, ...]] = ("IVF", "HAWK", "EBF", "POWW")
+_EARNINGS_LARGE_CAP_WINDOW: Final[tuple[str, str]] = ("2026-04-26", "2026-05-05")
+
+_IPO_EVENTS_WINDOW: Final[tuple[str, str]] = ("2026-06-29", "2026-07-03")
+_IPO_EVENTS_SYMBOLS: Final[tuple[str, ...]] = (
+    "COPR",  # NYSE American common-stock pricing
+    "GSRVR",  # rights
+    "IQMXW",  # warrants
+    "MIACU",  # units
+    "VCRE",  # ADS
+    "SECZ",  # NYSE common-stock pricing, empty currencyName variant
+)
+
+_SEC_REPORTS_WINDOW: Final[tuple[str, str]] = ("2026-06-20", "2026-06-27")
+_SEC_REPORTS_SYMBOLS: Final[tuple[str, ...]] = ("BOXL", "HAWK")
+_SEC_REPORTS_AAPL_WINDOW: Final[tuple[str, str]] = ("2026-04-20", "2026-05-05")
+_SEC_REPORTS_MSFT_WINDOW: Final[tuple[str, str]] = ("2026-04-26", "2026-05-05")
+
+# Negative evidence for the split-vs-filings hypothesis: these symbols split
+# on 2026-06-22 per Yahoo's UI, so if secReports carried stock splits (the
+# competing hypothesis) this window would populate. It does not.
+_SEC_REPORTS_SPLIT_WINDOW: Final[tuple[str, str]] = ("2026-06-21", "2026-06-27")
+_SEC_REPORTS_SPLIT_SYMBOLS: Final[tuple[str, ...]] = ("BEOB", "CATTF", "6669.TW")
+
+
+def _calendar_events_case(
+    symbol: str, case_suffix: str, module: str, window: tuple[str, str]
+) -> ProbeCase:
+    """Build one windowed calendar-events probe case for a single module.
+
+    Returns:
+        ProbeCase: A ``calendar-events`` case for ``symbol`` requesting
+        ``module`` over ``window`` (start, end).
+    """
+
+    start, end = window
+    return ProbeCase(
+        "calendar-events",
+        f"{symbol}_{case_suffix}",
+        (
+            "calendar-events",
+            symbol,
+            "--modules",
+            module,
+            "--start-date",
+            start,
+            "--end-date",
+            end,
+        ),
+    )
+
+
+def _calendar_events_populated_cases() -> list[ProbeCase]:
+    """Live-found windows where earnings/ipoEvents/secReports populate rows.
+
+    Also includes the split-hypothesis negative-evidence cases: three
+    split-day symbols probed over the same window, expected to stay empty.
+
+    Returns:
+        list[ProbeCase]: 4 earnings cases + 1 large-cap earnings case, 6
+        ipoEvents cases, 4 populated secReports cases (2 small/mid-cap +
+        AAPL + MSFT), and 3 split-hypothesis secReports cases, each with an
+        explicit --start-date/--end-date window.
+    """
+
+    cases = [
+        _calendar_events_case(sym, "earnings", "earnings", _EARNINGS_WINDOW)
+        for sym in _EARNINGS_SYMBOLS
+    ]
+    cases.append(
+        _calendar_events_case(
+            "MSFT", "earnings", "earnings", _EARNINGS_LARGE_CAP_WINDOW
+        )
+    )
+    cases.extend(
+        _calendar_events_case(sym, "ipoEvents", "ipoEvents", _IPO_EVENTS_WINDOW)
+        for sym in _IPO_EVENTS_SYMBOLS
+    )
+    cases.extend(
+        _calendar_events_case(sym, "secReports", "secReports", _SEC_REPORTS_WINDOW)
+        for sym in _SEC_REPORTS_SYMBOLS
+    )
+    cases.extend(
+        [
+            _calendar_events_case(
+                "AAPL", "secReports_filed", "secReports", _SEC_REPORTS_AAPL_WINDOW
+            ),
+            _calendar_events_case(
+                "MSFT", "secReports_filed", "secReports", _SEC_REPORTS_MSFT_WINDOW
+            ),
+        ]
+    )
+    cases.extend(
+        _calendar_events_case(
+            sym, "secReports_split", "secReports", _SEC_REPORTS_SPLIT_WINDOW
+        )
+        for sym in _SEC_REPORTS_SPLIT_SYMBOLS
+    )
+    return cases
+
+
 def _market_cases() -> list[ProbeCase]:
     """Symbol-free and market-wide endpoints.
 
@@ -607,6 +716,7 @@ def build_cases() -> list[ProbeCase]:
         + _timeseries_all_type_cases()
         + _equity_subset_cases()
         + _cross_asset_cases()
+        + _calendar_events_populated_cases()
         + _market_cases()
         + _dsl_cases()
         + _invalid_cases()

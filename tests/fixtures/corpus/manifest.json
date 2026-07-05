@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "case_count": 266,
+    "case_count": 284,
     "fetched_at": "2026-07-04T04:35:12.640976+00:00"
   },
   "analyst/AAPL": {
@@ -47,6 +47,21 @@
       "0700.HK"
     ],
     "file": "calendar-events/0700.HK.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "calendar-events/6669.TW_secReports_split": {
+    "argv": [
+      "calendar-events",
+      "6669.TW",
+      "--modules",
+      "secReports",
+      "--start-date",
+      "2026-06-21",
+      "--end-date",
+      "2026-06-27"
+    ],
+    "file": "calendar-events/6669.TW_secReports_split.json",
     "http_status": 200,
     "status": "ok"
   },
@@ -101,6 +116,21 @@
     "http_status": 200,
     "status": "ok"
   },
+  "calendar-events/AAPL_secReports_filed": {
+    "argv": [
+      "calendar-events",
+      "AAPL",
+      "--modules",
+      "secReports",
+      "--start-date",
+      "2026-04-20",
+      "--end-date",
+      "2026-05-05"
+    ],
+    "file": "calendar-events/AAPL_secReports_filed.json",
+    "http_status": 200,
+    "status": "ok"
+  },
   "calendar-events/BABA": {
     "argv": [
       "calendar-events",
@@ -119,6 +149,36 @@
     "http_status": 200,
     "status": "ok"
   },
+  "calendar-events/BEOB_secReports_split": {
+    "argv": [
+      "calendar-events",
+      "BEOB",
+      "--modules",
+      "secReports",
+      "--start-date",
+      "2026-06-21",
+      "--end-date",
+      "2026-06-27"
+    ],
+    "file": "calendar-events/BEOB_secReports_split.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "calendar-events/BOXL_secReports": {
+    "argv": [
+      "calendar-events",
+      "BOXL",
+      "--modules",
+      "secReports",
+      "--start-date",
+      "2026-06-20",
+      "--end-date",
+      "2026-06-27"
+    ],
+    "file": "calendar-events/BOXL_secReports.json",
+    "http_status": 200,
+    "status": "ok"
+  },
   "calendar-events/BTC-USD": {
     "argv": [
       "calendar-events",
@@ -128,12 +188,57 @@
     "http_status": 200,
     "status": "ok"
   },
+  "calendar-events/CATTF_secReports_split": {
+    "argv": [
+      "calendar-events",
+      "CATTF",
+      "--modules",
+      "secReports",
+      "--start-date",
+      "2026-06-21",
+      "--end-date",
+      "2026-06-27"
+    ],
+    "file": "calendar-events/CATTF_secReports_split.json",
+    "http_status": 200,
+    "status": "ok"
+  },
   "calendar-events/CL=F": {
     "argv": [
       "calendar-events",
       "CL=F"
     ],
     "file": "calendar-events/CL_F.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "calendar-events/COPR_ipoEvents": {
+    "argv": [
+      "calendar-events",
+      "COPR",
+      "--modules",
+      "ipoEvents",
+      "--start-date",
+      "2026-06-29",
+      "--end-date",
+      "2026-07-03"
+    ],
+    "file": "calendar-events/COPR_ipoEvents.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "calendar-events/EBF_earnings": {
+    "argv": [
+      "calendar-events",
+      "EBF",
+      "--modules",
+      "earnings",
+      "--start-date",
+      "2026-06-20",
+      "--end-date",
+      "2026-06-27"
+    ],
+    "file": "calendar-events/EBF_earnings.json",
     "http_status": 200,
     "status": "ok"
   },
@@ -155,6 +260,96 @@
     "http_status": 200,
     "status": "ok"
   },
+  "calendar-events/GSRVR_ipoEvents": {
+    "argv": [
+      "calendar-events",
+      "GSRVR",
+      "--modules",
+      "ipoEvents",
+      "--start-date",
+      "2026-06-29",
+      "--end-date",
+      "2026-07-03"
+    ],
+    "file": "calendar-events/GSRVR_ipoEvents.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "calendar-events/HAWK_earnings": {
+    "argv": [
+      "calendar-events",
+      "HAWK",
+      "--modules",
+      "earnings",
+      "--start-date",
+      "2026-06-20",
+      "--end-date",
+      "2026-06-27"
+    ],
+    "file": "calendar-events/HAWK_earnings.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "calendar-events/HAWK_secReports": {
+    "argv": [
+      "calendar-events",
+      "HAWK",
+      "--modules",
+      "secReports",
+      "--start-date",
+      "2026-06-20",
+      "--end-date",
+      "2026-06-27"
+    ],
+    "file": "calendar-events/HAWK_secReports.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "calendar-events/IQMXW_ipoEvents": {
+    "argv": [
+      "calendar-events",
+      "IQMXW",
+      "--modules",
+      "ipoEvents",
+      "--start-date",
+      "2026-06-29",
+      "--end-date",
+      "2026-07-03"
+    ],
+    "file": "calendar-events/IQMXW_ipoEvents.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "calendar-events/IVF_earnings": {
+    "argv": [
+      "calendar-events",
+      "IVF",
+      "--modules",
+      "earnings",
+      "--start-date",
+      "2026-06-20",
+      "--end-date",
+      "2026-06-27"
+    ],
+    "file": "calendar-events/IVF_earnings.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "calendar-events/MIACU_ipoEvents": {
+    "argv": [
+      "calendar-events",
+      "MIACU",
+      "--modules",
+      "ipoEvents",
+      "--start-date",
+      "2026-06-29",
+      "--end-date",
+      "2026-07-03"
+    ],
+    "file": "calendar-events/MIACU_ipoEvents.json",
+    "http_status": 200,
+    "status": "ok"
+  },
   "calendar-events/MSFT": {
     "argv": [
       "calendar-events",
@@ -164,12 +359,57 @@
     "http_status": 200,
     "status": "ok"
   },
+  "calendar-events/MSFT_earnings": {
+    "argv": [
+      "calendar-events",
+      "MSFT",
+      "--modules",
+      "earnings",
+      "--start-date",
+      "2026-04-26",
+      "--end-date",
+      "2026-05-05"
+    ],
+    "file": "calendar-events/MSFT_earnings.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "calendar-events/MSFT_secReports_filed": {
+    "argv": [
+      "calendar-events",
+      "MSFT",
+      "--modules",
+      "secReports",
+      "--start-date",
+      "2026-04-26",
+      "--end-date",
+      "2026-05-05"
+    ],
+    "file": "calendar-events/MSFT_secReports_filed.json",
+    "http_status": 200,
+    "status": "ok"
+  },
   "calendar-events/OKLO": {
     "argv": [
       "calendar-events",
       "OKLO"
     ],
     "file": "calendar-events/OKLO.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "calendar-events/POWW_earnings": {
+    "argv": [
+      "calendar-events",
+      "POWW",
+      "--modules",
+      "earnings",
+      "--start-date",
+      "2026-06-20",
+      "--end-date",
+      "2026-06-27"
+    ],
+    "file": "calendar-events/POWW_earnings.json",
     "http_status": 200,
     "status": "ok"
   },
@@ -191,6 +431,21 @@
     "http_status": 200,
     "status": "ok"
   },
+  "calendar-events/SECZ_ipoEvents": {
+    "argv": [
+      "calendar-events",
+      "SECZ",
+      "--modules",
+      "ipoEvents",
+      "--start-date",
+      "2026-06-29",
+      "--end-date",
+      "2026-07-03"
+    ],
+    "file": "calendar-events/SECZ_ipoEvents.json",
+    "http_status": 200,
+    "status": "ok"
+  },
   "calendar-events/SHEL.L": {
     "argv": [
       "calendar-events",
@@ -206,6 +461,21 @@
       "SPY"
     ],
     "file": "calendar-events/SPY.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "calendar-events/VCRE_ipoEvents": {
+    "argv": [
+      "calendar-events",
+      "VCRE",
+      "--modules",
+      "ipoEvents",
+      "--start-date",
+      "2026-06-29",
+      "--end-date",
+      "2026-07-03"
+    ],
+    "file": "calendar-events/VCRE_ipoEvents.json",
     "http_status": 200,
     "status": "ok"
   },
