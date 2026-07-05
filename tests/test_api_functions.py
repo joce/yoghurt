@@ -13,7 +13,14 @@ from yoghurt import api
 from yoghurt.commands import COMMANDS_BY_NAME
 from yoghurt.exceptions import YahooApiError
 from yoghurt.frames import Frame
-from yoghurt.models import Quote
+from yoghurt.models import (
+    MarketInfoResult,
+    MarketSummaryQuote,
+    MarketTimeResult,
+    Quote,
+    SectorResult,
+    TrendingResult,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -206,28 +213,95 @@ def test_screener_nested_cell_raises_unsupported_response_shape(
     assert exc_info.value.code == "unsupported-response-shape"
 
 
+def test_trending_returns_typed_result(monkeypatch: pytest.MonkeyPatch) -> None:
+    """trending() returns a typed TrendingResult built from finance.result[0]."""
+    body = _corpus_text("trending/default.json")
+    fake = _install_fake(monkeypatch, body)
+    result = api.trending()
+    expected = json.loads(body)["finance"]["result"][0]
+    assert isinstance(result, TrendingResult)
+    assert result.count == expected["count"]
+    assert len(result.quotes) == len(expected["quotes"])
+    path, _ = fake.calls[0]
+    assert path == f"/v1/finance/trending/{_TRENDING_SPEC_REGION}"
+
+
+def test_sector_returns_typed_result(monkeypatch: pytest.MonkeyPatch) -> None:
+    """sector() returns a typed SectorResult built from the data envelope."""
+    body = _corpus_text("sector/technology.json")
+    fake = _install_fake(monkeypatch, body)
+    result = api.sector("technology")
+    expected = json.loads(body)["data"]
+    assert isinstance(result, SectorResult)
+    assert result.key == expected["key"]
+    path, _ = fake.calls[0]
+    assert path == "/v1/finance/sectors/technology"
+
+
+def test_sector_slug_maps_to_wire_sector_param(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """sector()'s slug parameter still populates the wire 'sector' path value."""
+    fake = _install_fake(monkeypatch, _corpus_text("sector/technology.json"))
+    api.sector("technology")
+    path, _ = fake.calls[0]
+    assert path == "/v1/finance/sectors/technology"
+
+
+def test_market_summary_returns_typed_list(monkeypatch: pytest.MonkeyPatch) -> None:
+    """market_summary() returns a typed MarketSummaryQuote per result record."""
+    body = _corpus_text("market-summary/default.json")
+    fake = _install_fake(monkeypatch, body)
+    results = api.market_summary()
+    expected = json.loads(body)["marketSummaryResponse"]["result"]
+    assert len(results) == len(expected)
+    assert all(isinstance(result, MarketSummaryQuote) for result in results)
+    assert [result.symbol for result in results] == [
+        record["symbol"] for record in expected
+    ]
+    path, _ = fake.calls[0]
+    assert path == "/v6/finance/quote/marketSummary"
+
+
+def test_market_summary_empty_results_returns_empty_list(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """An empty market-summary result list is valid data, not an error."""
+    payload = json.loads(_corpus_text("market-summary/default.json"))
+    payload["marketSummaryResponse"]["result"] = []
+    _install_fake(monkeypatch, json.dumps(payload))
+    assert api.market_summary() == []
+
+
+def test_market_info_returns_typed_result(monkeypatch: pytest.MonkeyPatch) -> None:
+    """market_info() returns a typed MarketInfoResult built from finance.result."""
+    body = _corpus_text("market-info/default.json")
+    fake = _install_fake(monkeypatch, body)
+    result = api.market_info()
+    expected = json.loads(body)["finance"]["result"]
+    assert isinstance(result, MarketInfoResult)
+    assert result.currencies is not None
+    assert result.currencies.tickers == expected["currencies"]["tickers"]
+    assert result.commodities is not None
+    assert result.commodities.tickers == expected["commodities"]["tickers"]
+    path, _ = fake.calls[0]
+    assert path == "/ws/market-info/v1/finance/markets/ids"
+
+
+def test_market_time_returns_typed_result(monkeypatch: pytest.MonkeyPatch) -> None:
+    """market_time() returns a typed MarketTimeResult from the finance envelope."""
+    body = _corpus_text("market-time/default.json")
+    fake = _install_fake(monkeypatch, body)
+    result = api.market_time()
+    expected = json.loads(body)["finance"]
+    assert isinstance(result, MarketTimeResult)
+    assert result.version == expected["version"]
+    path, _ = fake.calls[0]
+    assert path == "/v6/finance/markettime"
+
+
 def _invoke_screener_predefined() -> object:
     return api.screener_predefined(["MOST_ACTIVES"])
-
-
-def _invoke_trending() -> object:
-    return api.trending()
-
-
-def _invoke_sector() -> object:
-    return api.sector("technology")
-
-
-def _invoke_market_summary() -> object:
-    return api.market_summary()
-
-
-def _invoke_market_info() -> object:
-    return api.market_info()
-
-
-def _invoke_market_time() -> object:
-    return api.market_time()
 
 
 def _invoke_screener_instrument_fields() -> object:
@@ -248,36 +322,6 @@ _METHOD_CASES = (
         "screener-predefined/MOST_ACTIVES.json",
         "/v1/finance/screener/predefined/saved",
         id="screener_predefined",
-    ),
-    pytest.param(
-        _invoke_trending,
-        "trending/default.json",
-        f"/v1/finance/trending/{_TRENDING_SPEC_REGION}",
-        id="trending",
-    ),
-    pytest.param(
-        _invoke_sector,
-        "sector/technology.json",
-        "/v1/finance/sectors/technology",
-        id="sector",
-    ),
-    pytest.param(
-        _invoke_market_summary,
-        "market-summary/default.json",
-        "/v6/finance/quote/marketSummary",
-        id="market_summary",
-    ),
-    pytest.param(
-        _invoke_market_info,
-        "market-info/default.json",
-        "/ws/market-info/v1/finance/markets/ids",
-        id="market_info",
-    ),
-    pytest.param(
-        _invoke_market_time,
-        "market-time/default.json",
-        "/v6/finance/markettime",
-        id="market_time",
     ),
     pytest.param(
         _invoke_screener_instrument_fields,

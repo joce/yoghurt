@@ -25,14 +25,19 @@ from yoghurt.models import (
     ChartEvents,
     ChartMeta,
     Insights,
+    MarketInfoResult,
+    MarketSummaryQuote,
+    MarketTimeResult,
     OptionChain,
     PriceInsights,
     Quote,
     QuoteSummary,
     QuoteTypeResult,
     RecommendationsResult,
+    SectorResult,
     StockRecommenderResult,
     TopRatingsResult,
+    TrendingResult,
     validate_model,
 )
 from yoghurt.tabular import (
@@ -810,19 +815,21 @@ def trending(  # noqa: PLR0913 - one keyword-only arg per wire param.
     fields: list[str] | None = None,
     quote_type: str | None = None,
     formatted: bool | None = None,
-) -> dict[str, Any]:
+) -> TrendingResult:
     """List trending tickers for a region.
 
     ``region`` is substituted into the URL path, not sent as a query
     parameter; when omitted it falls back to the CommandSpec's region
     default. ``use_quotes=False`` omits inline quote data from trending
-    results.
+    results. This endpoint is market-wide, not symbol-bound: an empty
+    ``quotes`` list is valid data for a region with no trending picks, not
+    an error.
 
     Returns:
-        dict[str, Any]: The full parsed response payload.
+        TrendingResult: The validated ``finance.result[0]`` record.
     """
 
-    return run(
+    payload = run(
         _core.call_endpoint(
             "trending",
             values=_values(
@@ -835,79 +842,95 @@ def trending(  # noqa: PLR0913 - one keyword-only arg per wire param.
             ),
         )
     )
+    return validate_model(TrendingResult, payload["finance"]["result"][0])
 
 
 def sector(
-    sector: str,
+    slug: str,
     *,
     with_returns: bool | None = None,
     formatted: bool | None = None,
-) -> dict[str, Any]:
+) -> SectorResult:
     """Fetch sector overview, performance, top holdings, and industries.
 
+    ``slug`` is the wire/path value (Yahoo calls it ``sector``, for example
+    ``"technology"``); renamed on the Python side to avoid shadowing this
+    module's own ``sector`` function.
+
     Returns:
-        dict[str, Any]: The full parsed response payload.
+        SectorResult: The validated ``data`` record.
     """
 
-    return run(
+    payload = run(
         _core.call_endpoint(
             "sector",
             values=_values(
-                sector=sector,
+                sector=slug,
                 withReturns=with_returns,
                 formatted=formatted,
             ),
         )
     )
+    return validate_model(SectorResult, payload["data"])
 
 
-def market_summary(*, formatted: bool | None = None) -> dict[str, Any]:
+def market_summary(*, formatted: bool | None = None) -> list[MarketSummaryQuote]:
     """Fetch a global market summary: indices, futures, forex, crypto.
 
     Returns:
-        dict[str, Any]: The full parsed response payload.
+        list[MarketSummaryQuote]: The validated
+        ``marketSummaryResponse.result`` records.
     """
 
-    return run(
+    payload = run(
         _core.call_endpoint(
             "market-summary",
             values=_values(formatted=formatted),
         )
     )
+    return [
+        validate_model(MarketSummaryQuote, record)
+        for record in payload["marketSummaryResponse"]["result"]
+    ]
 
 
-def market_info(*, modules: list[str] | None = None) -> dict[str, Any]:
+def market_info(*, modules: list[str] | None = None) -> MarketInfoResult:
     """Fetch commodity and currency market data.
 
+    ``modules`` selects which module Yahoo populates; an unrequested
+    module is ``None`` on the returned record.
+
     Returns:
-        dict[str, Any]: The full parsed response payload.
+        MarketInfoResult: The validated ``finance.result`` record.
     """
 
-    return run(
+    payload = run(
         _core.call_endpoint(
             "market-info",
             values=_values(modules=modules),
         )
     )
+    return validate_model(MarketInfoResult, payload["finance"]["result"])
 
 
 def market_time(
     *,
     formatted: bool | None = None,
     key: str | None = None,
-) -> dict[str, Any]:
+) -> MarketTimeResult:
     """Show current market hours and session status.
 
     Returns:
-        dict[str, Any]: The full parsed response payload.
+        MarketTimeResult: The validated ``finance`` record.
     """
 
-    return run(
+    payload = run(
         _core.call_endpoint(
             "market-time",
             values=_values(formatted=formatted, key=key),
         )
     )
+    return validate_model(MarketTimeResult, payload["finance"])
 
 
 def screener_instrument_fields(instrument: str) -> dict[str, Any]:

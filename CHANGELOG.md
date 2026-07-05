@@ -125,6 +125,15 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   to `SymbolNotFoundError` by status and shape rather than by wording, so
   `analyst()` and `ratings_top()` raise it consistently for symbols the
   AI-service endpoints have no data for.
+- `trending()`, `market_summary()`, `market_info()`, `market_time()`, and
+  `sector()` now return typed models (`TrendingResult`,
+  `list[MarketSummaryQuote]`, `MarketInfoResult`, `MarketTimeResult`,
+  `SectorResult`) instead of raw parsed payloads. These five endpoints are
+  market-wide rather than symbol-bound: an empty result is valid data (for
+  example, no trending picks for a region), never `SymbolNotFoundError`.
+  `sector()`'s first parameter is renamed from `sector` to `slug` (it was
+  shadowing the function's own name); the wire/path value it maps to is
+  still Yahoo's `sector` parameter.
 
 ### Internal
 
