@@ -12,11 +12,13 @@ thin-but-valid capture at all — the plan's expected ``RY.TO`` "thin"
 capture turned out, on inspection, to be a genuine 404 error body
 (``{"detail": "Symbol not found for RY.TO"}``), same as the deliberate
 ``ZZZZXYZQ`` probe. ``ratings-top``'s ``RY.TO`` capture is also a genuine
-404 (``{"detail": "No top ratings found for symbol: RY.TO"}``). This
-module's required-field gates are therefore pinned to a 2-record universal
-set for both endpoints; a future corpus refresh with a genuinely thin or
-wider-instrument-type capture is the real test of these requiredness
-assumptions.
+404 (``{"detail": "No top ratings found for symbol: RY.TO"}``); the P4-1
+``ZZZZXYZQ`` invalid-symbol probe (added 2026-07-05) confirms the same
+404 shape and wording pattern for ratings-top, live-verified to map to
+``SymbolNotFoundError``. This module's required-field gates are therefore
+pinned to a 2-record universal set for both endpoints; a future corpus
+refresh with a genuinely thin or wider-instrument-type capture is the real
+test of these requiredness assumptions.
 """
 
 from __future__ import annotations
@@ -45,7 +47,7 @@ _CORPUS_RATINGS_TOP_DIR = CORPUS_ROOT / "ratings-top"
 
 _EXPECTED_ANALYST_FILE_COUNT = 4  # AAPL, MSFT, RY.TO (404), ZZZZXYZQ (404)
 _EXPECTED_ANALYST_RECORD_COUNT = 2  # AAPL, MSFT only; both error bodies skipped
-_EXPECTED_RATINGS_TOP_FILE_COUNT = 3  # AAPL, MSFT, RY.TO (404)
+_EXPECTED_RATINGS_TOP_FILE_COUNT = 4  # AAPL, MSFT, RY.TO (404), ZZZZXYZQ (404, P4-1)
 _EXPECTED_RATINGS_TOP_RECORD_COUNT = 2  # AAPL, MSFT only; error body skipped
 
 _EXPECTED_ANALYST_REQUIRED_FIELD_COUNT = 9
@@ -172,7 +174,7 @@ def test_analyst_news_summary_reuses_analysis_insights_model() -> None:
 
 
 def test_ratings_top_corpus_has_expected_file_count() -> None:
-    """Sanity check: 3 captures (2 valid + RY.TO 404 body)."""
+    """Sanity check: 4 captures (2 valid + RY.TO/ZZZZXYZQ 404 bodies)."""
 
     files = sorted(_CORPUS_RATINGS_TOP_DIR.glob("*.json"))
     assert len(files) == _EXPECTED_RATINGS_TOP_FILE_COUNT
@@ -199,6 +201,19 @@ def test_ratings_top_ry_to_capture_is_a_404_error_body() -> None:
     payload = _load_json(_CORPUS_RATINGS_TOP_DIR / "RY.TO.json")
     assert set(payload.keys()) == {"detail"}
     assert "not found" not in payload["detail"].lower()
+    assert "no top ratings found" in payload["detail"].lower()
+
+
+def test_ratings_top_zzzzxyzq_capture_is_a_404_error_body() -> None:
+    """The deliberate invalid-symbol probe is the same not-found shape as RY.TO.
+
+    Corpus-confirmed live 2026-07-05 (P4-1): this 404 detail body maps to
+    ``SymbolNotFoundError`` via ``yoghurt._core.map_http_error``, same as
+    RY.TO. See ``yoghurt.api.Ticker.ratings_top``'s docstring.
+    """
+
+    payload = _load_json(_CORPUS_RATINGS_TOP_DIR / "ZZZZXYZQ.json")
+    assert set(payload.keys()) == {"detail"}
     assert "no top ratings found" in payload["detail"].lower()
 
 

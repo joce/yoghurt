@@ -35,13 +35,15 @@ if TYPE_CHECKING:
 _CORPUS_PRICE_INSIGHTS_DIR = CORPUS_ROOT / "price-insights"
 _CORPUS_INSIGHTS_DIR = CORPUS_ROOT / "insights"
 
-_EXPECTED_PRICE_INSIGHTS_FILE_COUNT = 5
-_EXPECTED_PRICE_INSIGHTS_RECORD_COUNT = 5
-_EXPECTED_INSIGHTS_FILE_COUNT = 3
-_EXPECTED_INSIGHTS_RECORD_COUNT = 3
+_EXPECTED_PRICE_INSIGHTS_FILE_COUNT = 11  # +6: cross-asset (P4-1)
+_EXPECTED_PRICE_INSIGHTS_RECORD_COUNT = 11
+_EXPECTED_INSIGHTS_FILE_COUNT = 9  # +6: cross-asset (P4-1)
+_EXPECTED_INSIGHTS_RECORD_COUNT = 9
 
 _EXPECTED_PRICE_INSIGHTS_REQUIRED_FIELD_COUNT = 1
-_EXPECTED_INSIGHTS_REQUIRED_FIELD_COUNT = 4
+_EXPECTED_INSIGHTS_REQUIRED_FIELD_COUNT = (
+    2  # was 4; widened corpus thins to sigDevs/symbol
+)
 
 
 def _load_json(path: Any) -> dict[str, Any]:  # noqa: ANN401 - corpus JSON is untyped.
@@ -65,14 +67,14 @@ def _flatten_extras(nested: dict[str, dict[str, object]]) -> list[str]:
 
 
 def test_price_insights_corpus_has_expected_file_count() -> None:
-    """Sanity check: 5 captures (default x3, AI-only, anomaly-only)."""
+    """Sanity check: 11 captures (default x3, AI-only, anomaly-only, +6 cross-asset)."""
 
     files = sorted(_CORPUS_PRICE_INSIGHTS_DIR.glob("*.json"))
     assert len(files) == _EXPECTED_PRICE_INSIGHTS_FILE_COUNT
 
 
 def test_price_insights_stream_has_expected_record_count() -> None:
-    """5 per-symbol records (one per capture; each capture is single-symbol)."""
+    """11 per-symbol records (one per capture; each capture is single-symbol)."""
 
     records = list(price_insights_records())
     assert len(records) == _EXPECTED_PRICE_INSIGHTS_RECORD_COUNT
@@ -150,14 +152,14 @@ def test_price_insights_ai_only_variant_omits_news_and_analyst_rating() -> None:
 
 
 def test_insights_corpus_has_expected_file_count() -> None:
-    """Sanity check: 3 captures (AAPL, MSFT, RY.TO)."""
+    """Sanity check: 9 captures (AAPL, MSFT, RY.TO, +6 cross-asset/invalid-symbol)."""
 
     files = sorted(_CORPUS_INSIGHTS_DIR.glob("*.json"))
     assert len(files) == _EXPECTED_INSIGHTS_FILE_COUNT
 
 
 def test_insights_stream_has_expected_record_count() -> None:
-    """3 result records, one per capture."""
+    """9 result records, one per capture."""
 
     records = list(insights_records())
     assert len(records) == _EXPECTED_INSIGHTS_RECORD_COUNT
@@ -180,8 +182,11 @@ def test_insights_validates_with_no_extra_fields(
 ) -> None:
     """Every insights capture validates with no extras anywhere.
 
-    Covers the two rich captures (AAPL/MSFT) and the thin RY.TO capture
-    (only recommendation/sigDevs/symbol/upsell populated).
+    Covers the two rich EQUITY captures (AAPL/MSFT), the non-EQUITY rich
+    ``SPY`` capture (events/instrumentInfo/secReports/sigDevs/symbol), and
+    the thin captures: RY.TO (recommendation/sigDevs/symbol/upsell) plus
+    the 2026-07-05 cross-asset/invalid-symbol widening
+    (^GSPC/BTC-USD/EURUSD=X/ES=F/ZZZZXYZQ, all sigDevs/symbol only).
     """
 
     del case_id
@@ -193,17 +198,19 @@ def test_insights_validates_with_no_extra_fields(
     assert not nested, message
 
 
-def test_insights_required_field_set_is_a_subset_of_corpus_universal_keys() -> None:
-    """Only sig_devs/symbol are required; the corpus's own universal set is wider.
+def test_insights_required_field_set_matches_corpus_universal_keys() -> None:
+    """Only sig_devs/symbol are required, now matching the corpus's own universal set.
 
-    This endpoint's 3-capture corpus is EQUITY-only (AAPL/MSFT/RY.TO), so
-    its universal-key set also includes ``recommendation``/``upsell`` —
-    but live cross-asset-class checks during development (ETF and
-    index/crypto/forex symbols; see the model module's docstring) showed
-    both are EQUITY-only in practice, not applicable to the endpoint as a
-    whole. The model's required set is therefore a strict subset of this
-    thin corpus's universal set rather than an exact match, unlike every
-    other model in this batch.
+    Originally (3-capture, EQUITY-only corpus: AAPL/MSFT/RY.TO) the
+    corpus's universal-key set also included ``recommendation``/``upsell``,
+    making the model's required set a strict subset rather than an exact
+    match — those two fields were known EQUITY-only only from live
+    cross-asset-class checks during development, not yet backed by a
+    corpus capture. The 2026-07-05 cross-asset widening
+    (``^GSPC``/``BTC-USD``/``EURUSD=X``/``ES=F``/``ZZZZXYZQ``, all thinner
+    than RY.TO) now corpus-confirms that finding: the corpus's own
+    universal set collapses to exactly ``sigDevs``/``symbol``, matching
+    the model exactly like every other model in this batch.
     """
 
     report = collect_presence(insights_records(), kind_of=quote_type_lookup_kind)
@@ -216,7 +223,7 @@ def test_insights_required_field_set_is_a_subset_of_corpus_universal_keys() -> N
     }
 
     assert len(universal_keys) == _EXPECTED_INSIGHTS_REQUIRED_FIELD_COUNT
-    assert required_aliases < universal_keys
+    assert required_aliases == universal_keys
     assert required_aliases == {"sigDevs", "symbol"}
 
 

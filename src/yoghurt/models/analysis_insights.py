@@ -1,21 +1,32 @@
 """Typed models for the deep AI/research analysis endpoints (batch 3d-1).
 
 Reconciled against the probe corpus at ``tests/fixtures/corpus/``, captured
-2026-07-04. Regenerate applicability evidence with
-``uv run python -m tools.fields_report <stream>`` after a corpus refresh.
-This module covers the two deepest, prose-heavy endpoints of batch 3d-1:
-``price-insights`` and ``insights``. The remaining four (smaller, flatter)
-batch 3d-1 endpoints live in the sibling
+2026-07-04, widened with 6 cross-asset-class captures per endpoint
+(``SPY``/``^GSPC``/``BTC-USD``/``EURUSD=X``/``ES=F`` plus the deliberate
+``ZZZZXYZQ`` invalid-symbol probe) on 2026-07-05 — see the P4-1 corpus
+reinforcement note in ``tests/fixtures/corpus/README.md``. Regenerate
+applicability evidence with ``uv run python -m tools.fields_report <stream>``
+after a corpus refresh. This module covers the two deepest, prose-heavy
+endpoints of batch 3d-1: ``price-insights`` and ``insights``. The remaining
+four (smaller, flatter) batch 3d-1 endpoints live in the sibling
 :mod:`yoghurt.models.analysis_events`; see that module's docstring for the
 file-split rationale.
 
-**price-insights** (endpoint noun: "price-insights records"). Five
-captures reveal three distinct shape *variants* of the same per-symbol
-record, all of which :class:`PriceInsights` must validate:
+**price-insights** (endpoint noun: "price-insights records"). 11 captures
+(5 from 2026-07-04, 6 from 2026-07-05) reveal three distinct shape
+*variants* of the same per-symbol record, all of which :class:`PriceInsights`
+must validate:
 
-- **default** (``AAPL``/``MSFT``/``RY.TO``, no ``--modules``/``--ai-modules``
-  filter): every field populated, though ``RY.TO`` still shows empty
-  ``news``/``aiAnalysis.data`` (a thin-coverage symbol, not a distinct
+- **default** (``AAPL``/``MSFT``/``RY.TO``/``SPY``/``^GSPC``/``BTC-USD``/
+  ``EURUSD=X``/``ES=F``/``ZZZZXYZQ``, no ``--modules``/``--ai-modules``
+  filter): every field populated on every symbol tried, including every
+  non-EQUITY asset class and the deliberate invalid-symbol probe (which
+  returns ``has_price_anomaly=True`` with otherwise-empty content rather
+  than an error or a thinner shape) — this endpoint's shape does not
+  narrow by instrument type or symbol validity, only by the
+  ``--modules``/``--ai-modules``/``--check-anomaly`` variants below.
+  ``RY.TO``/non-EQUITY/``ZZZZXYZQ`` all still show empty
+  ``news``/``aiAnalysis.data`` (thin-coverage symbols, not a distinct
   shape).
 - **AI-only** (``AAPL_ai``, ``--ai-modules aiAnalysis``): only
   ``aiAnalysis``/``hasPriceAnomaly`` present; ``newsFirstParty``/
@@ -45,16 +56,35 @@ already snake_case (or irregularly cased, for example
 sub-trees carries an explicit ``Field(alias=...)`` rather than relying on
 ``to_camel``.
 
-**insights** (endpoint noun: "insights reports"). Only 3 captures
-(``AAPL``, ``MSFT``, ``RY.TO``); ``RY.TO`` is a thin capture carrying only
-``recommendation``/``upsell``/``sigDevs`` — every other
-:class:`Insights` field is therefore optional, evidenced directly by that
-capture rather than assumed. ``instrumentInfo.technicalEvents``'s
+**insights** (endpoint noun: "insights reports"). 9 captures (3 from
+2026-07-04, 6 from 2026-07-05): ``AAPL``/``MSFT`` are rich EQUITY captures;
+``RY.TO``/``^GSPC``/``BTC-USD``/``EURUSD=X``/``ES=F``/``ZZZZXYZQ`` are all
+thin, carrying only ``sigDevs``/``symbol`` (``RY.TO`` additionally carries
+``recommendation``/``upsell`` — see below); ``SPY`` is the corpus's first
+non-EQUITY *rich* capture, carrying ``events``/``instrumentInfo``/
+``secReports``/``sigDevs``/``symbol``. Every field but ``sig_devs``/
+``symbol`` is therefore optional, evidenced directly by the thin captures.
+The 2026-07-05 widening replaces what was previously live-only evidence
+(gathered during development against ETF/index/crypto/forex symbols, never
+backed by a corpus capture) with real corpus captures: ``SPY`` confirms
+``events``/``instrument_info``/``sec_reports`` extend to ETF but
+``recommendation``/``upsell``/``company_snapshot``/``reports``/
+``upsell_search_d_d`` do not (EQUITY-only, absent even on ``SPY``), and the
+index/crypto/forex/futures captures confirm the endpoint thins all the way
+down to ``sigDevs``/``symbol`` for those asset classes. Within ``SPY``'s
+``instrumentInfo.technicalEvents``, ``sector``/``sectorDirection``/
+``sectorScore``/``sectorScoreDescription`` are absent and
+``indexDirection``/``indexScore``/``indexScoreDescription`` are present on
+two of three outlook terms but absent on the third
+(``shortTermOutlook``) — corpus-confirmed instances of the same
+per-outlook-row inconsistency the field docstrings already documented from
+live observation; ``instrumentInfo.valuation`` thins to ``provider`` alone
+on ``SPY``, also corpus-confirmed. ``instrumentInfo.technicalEvents``'s
 ``direction``/``sectorDirection``/``indexDirection`` fields are typed
 ``str`` rather than a closed-vocabulary enum: only ``"Bullish"``/
-``"Bearish"`` are observed across the 2 populated captures, too thin a
-base to rule out a ``"Neutral"`` (or similar) member Yahoo may send.
-``InsightsSecReport`` is distinct from
+``"Bearish"`` are observed across the 3 populated captures (AAPL/MSFT/SPY),
+too thin a base to rule out a ``"Neutral"`` (or similar) member Yahoo may
+send. ``InsightsSecReport`` is distinct from
 :class:`~yoghurt.models.analysis_events.CalendarEventsResult`'s
 ``sec_reports`` (the ``calendar-events`` endpoint's differently-shaped,
 always-empty SEC filing rows) — no corpus evidence ties the two shapes
@@ -1034,14 +1064,14 @@ class TechnicalOutlook(YahooModel):
 
     ``direction``/``sector_direction``/``index_direction`` are typed
     ``str``, not a closed-vocabulary enum; see the module docstring.
-    Live cross-asset-class checks during development (not yet backed by a
-    corpus capture; see the module docstring's caveat) found
-    ``sector_direction``/``sector_score``/``sector_score_description``
-    EQUITY-only and ``index_direction``/``index_score``/
-    ``index_score_description`` present on EQUITY and most ETF captures
-    but absent even on some ETF outlooks (SPY's ``shortTermOutlook``
-    lacked them while its ``intermediateTermOutlook``/``longTermOutlook``
-    had them), so all six are optional.
+    Corpus-confirmed (2026-07-05 ``SPY`` capture; see the module docstring):
+    ``sector_direction``/``sector_score``/``sector_score_description`` are
+    EQUITY-only (absent on ``SPY``'s outlook rows) and
+    ``index_direction``/``index_score``/``index_score_description`` are
+    present on EQUITY and most ETF captures but absent even on some ETF
+    outlooks (``SPY``'s ``shortTermOutlook`` lacked them while its
+    ``intermediateTermOutlook``/``longTermOutlook`` had them), so all six
+    are optional.
     """
 
     direction: str
@@ -1057,9 +1087,9 @@ class TechnicalOutlook(YahooModel):
     Directional outlook for the broader index over this term (observed
     values: ``"Bullish"``, ``"Bearish"``).
 
-    Live-observed as absent on at least one ETF outlook row even when
-    sibling outlook rows on the same capture carry it; see the class
-    docstring.
+    Corpus-confirmed as absent on at least one ETF outlook row (``SPY``'s
+    ``shortTermOutlook``) even when sibling outlook rows on the same
+    capture carry it; see the class docstring.
 
     Observed on: insights reports.
     """
@@ -1101,7 +1131,7 @@ class TechnicalOutlook(YahooModel):
     Directional outlook for the sector over this term (observed values:
     ``"Bullish"``, ``"Bearish"``).
 
-    Live-observed as EQUITY-only (absent on every ETF outlook row checked);
+    Corpus-confirmed as EQUITY-only (absent on every ``SPY`` outlook row);
     see the class docstring.
 
     Observed on: insights reports.
@@ -1160,8 +1190,8 @@ class TechnicalEvents(YahooModel):
     """
     Sector classification (for example ``"Technology"``).
 
-    Live-observed as EQUITY-only (absent on ETF symbols checked; not yet
-    backed by a corpus capture, see the module docstring).
+    Corpus-confirmed as EQUITY-only (absent on the ``SPY`` capture; see the
+    module docstring).
 
     Observed on: insights reports.
     """
@@ -1210,16 +1240,16 @@ class KeyTechnicals(YahooModel):
 class Valuation(YahooModel):
     """The ``instrumentInfo.valuation`` block of an :class:`Insights`.
 
-    Live-observed as far thinner on ETF symbols (SPY/QQQ/VT carry only
-    ``provider``) than on the corpus's EQUITY captures; not yet backed by
-    a corpus capture, see the module docstring.
+    Corpus-confirmed as far thinner on ETF symbols (``SPY`` carries only
+    ``provider``) than on the corpus's EQUITY captures; see the module
+    docstring.
     """
 
     color: float | None = None
     """
     Numeric valuation-gauge position (observed range: ``0.0``-``0.5``).
 
-    Live-observed as EQUITY-only.
+    Corpus-confirmed as EQUITY-only (absent on ``SPY``).
 
     Observed on: insights reports.
     """
@@ -1229,7 +1259,7 @@ class Valuation(YahooModel):
     Prose valuation assessment (for example ``"Overvalued"``, ``"Near Fair
     Value"``).
 
-    Live-observed as EQUITY-only.
+    Corpus-confirmed as EQUITY-only (absent on ``SPY``).
 
     Observed on: insights reports.
     """
@@ -1239,7 +1269,7 @@ class Valuation(YahooModel):
     Discount or premium to fair value, as a signed wire percentage string
     (for example ``"-6%"``, ``"14%"``).
 
-    Live-observed as EQUITY-only.
+    Corpus-confirmed as EQUITY-only (absent on ``SPY``).
 
     Observed on: insights reports.
     """
@@ -1763,20 +1793,17 @@ class InsightsSecReport(YahooModel):
 class Insights(YahooModel):
     """The ``insights`` endpoint's single per-symbol record.
 
-    Only ``sig_devs``/``symbol`` are required. The corpus itself is
-    EQUITY-only (AAPL/MSFT rich, RY.TO thin — see the module docstring),
-    but live cross-asset-class checks against ETF (SPY/QQQ/VT) and
-    no-analysis-coverage symbols (BTC-USD/EURUSD=X/^GSPC/ES=F) during
-    development surfaced applicability this endpoint's 3-capture corpus
-    could not: ``recommendation``/``upsell``/``company_snapshot``/
-    ``reports``/``upsell_search_d_d`` are EQUITY-only in practice (never
-    observed on ETF or index/crypto/forex symbols, live), ``instrument_info``/
-    ``events`` extend to ETF but not further, and ``sec_reports`` can appear
-    on some ETFs (observed live on SPY) though never on the non-EQUITY
-    corpus capture. These live findings are not yet backed by a corpus
-    capture for this endpoint beyond the original 3 EQUITY symbols; flag for
-    a corpus refresh that widens this endpoint's probe scope beyond
-    EQUITY_SUBSET.
+    Only ``sig_devs``/``symbol`` are required — corpus-confirmed exactly
+    (see the module docstring): the original 3-capture corpus was
+    EQUITY-only (AAPL/MSFT rich, RY.TO thin), but the 2026-07-05 cross-asset
+    widening (``SPY`` rich-ETF; ``^GSPC``/``BTC-USD``/``EURUSD=X``/``ES=F``/
+    ``ZZZZXYZQ`` thin) now backs what was previously live-only evidence:
+    ``recommendation``/``upsell``/``company_snapshot``/``reports``/
+    ``upsell_search_d_d`` are EQUITY-only in practice (absent even on
+    ``SPY``), ``instrument_info``/``events`` extend to ETF but not further
+    (absent on index/crypto/forex), and ``sec_reports`` can appear on some
+    ETFs (present on ``SPY``) though absent on every non-EQUITY,
+    non-``SPY`` capture.
     """
 
     company_snapshot: CompanySnapshot | None = Field(
@@ -1785,9 +1812,9 @@ class Insights(YahooModel):
     """
     Company-vs-sector scoring snapshot for this symbol.
 
-    Absent on the corpus's thin ``RY.TO`` capture; live-observed as
-    EQUITY-only (absent on ETF and index/crypto/forex symbols). See the
-    module docstring.
+    Absent on the corpus's thin ``RY.TO`` capture; corpus-confirmed
+    EQUITY-only (absent on ``SPY`` and every index/crypto/forex/futures
+    capture). See the module docstring.
 
     Observed on: insights reports.
     """
@@ -1796,9 +1823,9 @@ class Insights(YahooModel):
     """
     Detected technical events for this symbol.
 
-    Absent on the corpus's thin ``RY.TO`` capture; live-observed on EQUITY
-    and ETF symbols, absent on index/crypto/forex symbols. See the module
-    docstring.
+    Absent on the corpus's thin ``RY.TO`` capture; corpus-confirmed present
+    on EQUITY and ETF (``SPY``), absent on index/crypto/forex/futures. See
+    the module docstring.
 
     Observed on: insights reports.
     """
@@ -1807,9 +1834,9 @@ class Insights(YahooModel):
     """
     Technical outlook, key levels, and valuation for this symbol.
 
-    Absent on the corpus's thin ``RY.TO`` capture; live-observed on EQUITY
-    and ETF symbols, absent on index/crypto/forex symbols. See the module
-    docstring.
+    Absent on the corpus's thin ``RY.TO`` capture; corpus-confirmed present
+    on EQUITY and ETF (``SPY``), absent on index/crypto/forex/futures. See
+    the module docstring.
 
     Observed on: insights reports.
     """
@@ -1818,8 +1845,8 @@ class Insights(YahooModel):
     """
     Headline analyst recommendation for this symbol.
 
-    Live-observed as EQUITY-only (absent on ETF and index/crypto/forex
-    symbols). See the module docstring.
+    Corpus-confirmed EQUITY-only (absent on ``SPY`` and every
+    index/crypto/forex/futures capture). See the module docstring.
 
     Observed on: insights reports.
     """
@@ -1828,7 +1855,7 @@ class Insights(YahooModel):
     """
     Research report summaries mentioning this symbol.
 
-    Absent on the corpus's thin ``RY.TO`` capture; live-observed as
+    Absent on the corpus's thin ``RY.TO`` capture; corpus-confirmed
     EQUITY-only. See the module docstring.
 
     Observed on: insights reports.
@@ -1840,8 +1867,9 @@ class Insights(YahooModel):
     """
     Recent SEC filings for this symbol.
 
-    Absent on the corpus's thin ``RY.TO`` capture; live-observed on EQUITY
-    symbols and at least one ETF (SPY). See the module docstring.
+    Absent on the corpus's thin ``RY.TO`` capture; corpus-confirmed present
+    on EQUITY symbols and at least one ETF (``SPY``). See the module
+    docstring.
 
     Observed on: insights reports.
     """
@@ -1851,8 +1879,8 @@ class Insights(YahooModel):
     Significant recent developments for this symbol.
 
     The only field, besides ``symbol``, ever observed universal — present
-    (though often empty) on every corpus record and every live cross-asset
-    check performed during development.
+    (though often empty) on every corpus record, EQUITY through
+    index/crypto/forex/futures.
 
     Observed on: insights reports.
     """
@@ -1868,8 +1896,8 @@ class Insights(YahooModel):
     """
     Basic company identity used for upsell display.
 
-    Live-observed as EQUITY-only (absent on ETF and index/crypto/forex
-    symbols). See the module docstring.
+    Corpus-confirmed EQUITY-only (absent on ``SPY`` and every
+    index/crypto/forex/futures capture). See the module docstring.
 
     Observed on: insights reports.
     """

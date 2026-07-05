@@ -1,8 +1,13 @@
 """Typed ``OptionChain`` response models for the ``options`` endpoint.
 
 Reconciled against the probe corpus at ``tests/fixtures/corpus/options/``
-(3 captures: AAPL, MSFT, SPY; 365 call+put contracts total), captured
-2026-07-04. Regenerate the applicability evidence with
+(3 chain captures: AAPL, MSFT, SPY; 365 call+put contracts total), captured
+2026-07-04, plus the deliberate ``ZZZZXYZQ`` invalid-symbol probe added
+2026-07-05 (P4-1): a valid HTTP 200 with an empty ``optionChain.result``
+(``{"optionChain": {"result": [], "error": None}}``), not an error payload —
+this is exactly the empty-result shape ``yoghurt.api.Ticker.options`` was
+already written to catch and raise ``SymbolNotFoundError`` for, now
+confirmed by a real capture. Regenerate the applicability evidence with
 ``uv run python -m tools.fields_report option-contracts`` and
 ``uv run python -m tools.fields_report option-chains`` after a corpus
 refresh. Reconciliation notes:

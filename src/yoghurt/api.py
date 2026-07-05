@@ -451,7 +451,12 @@ class Ticker:
 
         ``economic_events_high_importance_only=True`` limits economic events
         to high-importance ones. ``modules`` selects which event family the
-        result populates; unrequested families are ``None``.
+        result populates; unrequested families are ``None``. An unrecognized
+        symbol is not an error: Yahoo returns the same valid-empty
+        ``{"earnings": []}`` shape as a recognized symbol with no scheduled
+        events, so this returns a normally-typed (all-``None``-but-
+        ``earnings``) result rather than raising (corpus:
+        ``calendar-events/ZZZZXYZQ.json``).
 
         Returns:
             CalendarEventsResult: The validated calendar-events record.
@@ -503,7 +508,11 @@ class Ticker:
         """Fetch top analyst rating buckets for this symbol.
 
         ``exclude_noncurrent=True`` drops non-current analyst records from
-        the top scored buckets.
+        the top scored buckets. An unrecognized symbol raises
+        ``SymbolNotFoundError``: Yahoo's 404 body (``{"detail": "No top
+        ratings found for symbol: ..."}``) is mapped by
+        ``yoghurt._core.map_http_error`` — confirmed live 2026-07-05,
+        corpus: ``ratings-top/ZZZZXYZQ.json``.
 
         Returns:
             TopRatingsResult: The validated top-ratings record.
@@ -531,10 +540,12 @@ class Ticker:
 
         ``modules``/``ai_modules`` narrow which blocks Yahoo populates;
         unrequested blocks are ``None``. ``check_anomaly=True`` requests
-        Yahoo's price-anomaly detection. The corpus has no captured
-        invalid-symbol shape for this endpoint, so an unrecognized symbol
-        surfaces as a model-validation failure rather than
-        ``SymbolNotFoundError``.
+        Yahoo's price-anomaly detection. An unrecognized symbol is not an
+        error: Yahoo returns HTTP 200 with a fully-shaped record (every
+        top-level block present, ``has_price_anomaly=True``, empty
+        news/analyst-rating/AI-analysis content) rather than a 404 or an
+        empty result, so this never raises for a bad symbol — confirmed
+        live 2026-07-05, corpus: ``price-insights/ZZZZXYZQ.json``.
 
         Returns:
             PriceInsights: The validated price-insights record.
@@ -569,9 +580,12 @@ class Ticker:
         ``disable_related_reports=True`` omits related research reports;
         ``get_all_research_reports=True`` requests all available research
         reports; ``ssl=True`` requests SSL URLs in Yahoo response fields.
-        The corpus has no captured invalid-symbol shape for this endpoint,
-        so an unrecognized symbol surfaces as a model-validation failure
-        rather than ``SymbolNotFoundError``.
+        An unrecognized symbol is not an error: Yahoo returns the same thin
+        ``{"sigDevs": [], "symbol": ...}`` shape it sends for any symbol
+        outside its analysis coverage (index/crypto/forex/futures symbols
+        get this same thin shape live), so this never raises for a bad
+        symbol — confirmed live 2026-07-05, corpus:
+        ``insights/ZZZZXYZQ.json``.
 
         Returns:
             Insights: The validated insights record.
@@ -600,12 +614,16 @@ class Ticker:
     ) -> RecommendationsResult:
         """Fetch related-symbol recommendations for this symbol.
 
-        The corpus has no captured invalid-symbol shape for this endpoint,
-        so an unrecognized symbol surfaces as a model-validation failure
-        rather than ``SymbolNotFoundError``. Yahoo also sends an empty
-        result (not an error) for some instrument types with no
-        recommendations to report (live-observed on FUTURE symbols such as
-        ``ES=F``), which surfaces the same way.
+        An unrecognized symbol surfaces as a model-validation failure
+        (``YahooApiError``, code ``"model-validation"``) rather than
+        ``SymbolNotFoundError``: Yahoo returns HTTP 200 with a valid-but-
+        empty ``{"result": []}`` shape, and ``RecommendationsResult``
+        requires both ``recommended_symbols``/``symbol`` on every record, so
+        validating the resulting ``{}`` fails — confirmed live 2026-07-05,
+        corpus: ``recommendations-by-symbol/ZZZZXYZQ.json``. Yahoo sends the
+        identical valid-empty shape (not an error) for some instrument types
+        with no recommendations to report (corpus-confirmed on the FUTURE
+        symbol ``ES=F``), which surfaces the same way.
 
         Returns:
             RecommendationsResult: The validated recommendations record.
@@ -624,6 +642,13 @@ class Ticker:
 
     def stock_recommender(self) -> StockRecommenderResult:
         """Fetch related-tickers peers for this equity symbol.
+
+        An unrecognized symbol's 404 is truly unmappable and propagates as
+        a bare ``YahooRequestError``: unlike every other endpoint in this
+        batch, the 404 body is ``{"message": "Not Found"}`` (no ``detail``
+        key), which ``yoghurt._core.map_http_error`` cannot map to
+        ``SymbolNotFoundError`` or any other typed error — confirmed live
+        2026-07-05, corpus: ``stock-recommender/ZZZZXYZQ.json``.
 
         Returns:
             StockRecommenderResult: The validated stock-recommender record.

@@ -32,7 +32,7 @@ from yoghurt.models.options import OptionChain, OptionContract, OptionExpiration
 
 _CORPUS_OPTIONS_DIR = CORPUS_ROOT / "options"
 
-_EXPECTED_CORPUS_FILE_COUNT = 3
+_EXPECTED_CORPUS_FILE_COUNT = 4  # +1: ZZZZXYZQ invalid-symbol probe (P4-1)
 _EXPECTED_CONTRACT_COUNT = 365
 _EXPECTED_CHAIN_COUNT = 3
 _EXPECTED_CONTRACT_REQUIRED_FIELD_COUNT = 14
@@ -72,11 +72,27 @@ def _flatten_extras(nested: dict[str, dict[str, object]]) -> list[str]:
 
 
 def test_options_corpus_has_expected_file_count() -> None:
-    """Sanity check on the fixture set: 3 options captures (AAPL, MSFT, SPY)."""
+    """Sanity check on the fixture set: 3 chains (AAPL/MSFT/SPY) + ZZZZXYZQ (empty)."""
 
     files = sorted(_CORPUS_OPTIONS_DIR.glob("*.json"))
     assert len(files) == _EXPECTED_CORPUS_FILE_COUNT
-    assert len(_CHAIN_CASES) == _EXPECTED_CORPUS_FILE_COUNT
+    # ZZZZXYZQ's optionChain.result is [] (valid-empty, not a chain to
+    # validate) so it is excluded from _CHAIN_CASES; see
+    # test_options_invalid_symbol_capture_is_a_valid_empty_result below.
+    assert len(_CHAIN_CASES) == _EXPECTED_CHAIN_COUNT
+
+
+def test_options_invalid_symbol_capture_is_a_valid_empty_result() -> None:
+    """The ZZZZXYZQ probe (P4-1) is HTTP 200 with an empty optionChain.result.
+
+    Corpus-confirmed live 2026-07-05: not an error payload. This is exactly
+    the empty-``result``-list shape ``yoghurt.api.Ticker.options`` already
+    raises ``SymbolNotFoundError`` for (pre-existing behavior, now backed
+    by a real capture instead of only the shape being assumed).
+    """
+
+    payload = _load_json(_CORPUS_OPTIONS_DIR / "ZZZZXYZQ.json")
+    assert payload == {"optionChain": {"result": [], "error": None}}
 
 
 def test_contract_stream_has_expected_record_count() -> None:

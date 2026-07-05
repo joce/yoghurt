@@ -389,6 +389,22 @@ def test_ticker_options_empty_result_raises_symbol_not_found_error(
         Ticker("AAPL").options()
 
 
+def test_ticker_options_invalid_symbol_raises_symbol_not_found_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The deliberate ZZZZXYZQ probe hits the same empty-result path, live-confirmed.
+
+    Corpus-confirmed live 2026-07-05 (P4-1): HTTP 200 with
+    ``{"optionChain": {"result": [], "error": None}}`` — the exact
+    synthetic shape the sibling test above already exercised, now backed
+    by a real capture instead of a hand-edited payload.
+    """
+    _install_fake(monkeypatch, _corpus_text("options/ZZZZXYZQ.json"))
+    with pytest.raises(SymbolNotFoundError) as exc_info:
+        Ticker("ZZZZXYZQ").options()
+    assert exc_info.value.symbol == "ZZZZXYZQ"
+
+
 def test_ticker_options_model_violation_raises_yahoo_api_error(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -641,6 +657,20 @@ def test_ticker_ratings_top_not_found_raises_symbol_not_found(
     assert "No top ratings found" in (exc_info.value.description or "")
 
 
+def test_ticker_ratings_top_invalid_symbol_raises_symbol_not_found(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The deliberate ZZZZXYZQ probe gets the identical 404 shape as RY.TO.
+
+    Corpus-confirmed live 2026-07-05 (P4-1). See
+    ``yoghurt.api.Ticker.ratings_top``'s docstring.
+    """
+    _install_fake_error(monkeypatch, _corpus_text("ratings-top/ZZZZXYZQ.json"))
+    with pytest.raises(SymbolNotFoundError) as exc_info:
+        Ticker("ZZZZXYZQ").ratings_top()
+    assert exc_info.value.symbol == "ZZZZXYZQ"
+
+
 def test_ticker_calendar_events_returns_typed_result(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -665,6 +695,22 @@ def test_ticker_calendar_events_model_violation_raises_yahoo_api_error(
     assert exc_info.value.code == "model-validation"
 
 
+def test_ticker_calendar_events_invalid_symbol_returns_valid_empty_result(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """An unrecognized symbol is not an error: Yahoo sends a valid-empty result.
+
+    Corpus-confirmed live 2026-07-05 (P4-1): ``{"earnings": []}``,
+    byte-for-byte the same shape as a recognized symbol with no scheduled
+    events. See ``yoghurt.api.Ticker.calendar_events``'s docstring.
+    """
+    _install_fake(monkeypatch, _corpus_text("calendar-events/ZZZZXYZQ.json"))
+    result = Ticker("ZZZZXYZQ").calendar_events()
+    assert isinstance(result, CalendarEventsResult)
+    assert result.earnings == []
+    assert result.economic_events is None
+
+
 def test_ticker_price_insights_returns_typed_result(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -687,6 +733,21 @@ def test_ticker_price_insights_model_violation_raises_yahoo_api_error(
     assert exc_info.value.code == "model-validation"
 
 
+def test_ticker_price_insights_invalid_symbol_returns_valid_result(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """An unrecognized symbol is not an error: Yahoo sends a fully-shaped record.
+
+    Corpus-confirmed live 2026-07-05 (P4-1): HTTP 200 with every top-level
+    block present and ``has_price_anomaly=True``, not a 404 or an empty
+    result. See ``yoghurt.api.Ticker.price_insights``'s docstring.
+    """
+    _install_fake(monkeypatch, _corpus_text("price-insights/ZZZZXYZQ.json"))
+    result = Ticker("ZZZZXYZQ").price_insights()
+    assert isinstance(result, PriceInsights)
+    assert result.has_price_anomaly is True
+
+
 def test_ticker_insights_returns_typed_result(monkeypatch: pytest.MonkeyPatch) -> None:
     """insights() unwraps the one-record result list into a typed Insights."""
     fake = _install_fake(monkeypatch, _corpus_text("insights/AAPL.json"))
@@ -707,6 +768,22 @@ def test_ticker_insights_model_violation_raises_yahoo_api_error(
     with pytest.raises(YahooApiError) as exc_info:
         Ticker("AAPL").insights()
     assert exc_info.value.code == "model-validation"
+
+
+def test_ticker_insights_invalid_symbol_returns_thin_valid_result(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """An unrecognized symbol gets the same thin shape as no-coverage symbols.
+
+    Corpus-confirmed live 2026-07-05 (P4-1): ``{"sigDevs": [], "symbol":
+    "ZZZZXYZQ"}``. See ``yoghurt.api.Ticker.insights``'s docstring.
+    """
+    _install_fake(monkeypatch, _corpus_text("insights/ZZZZXYZQ.json"))
+    result = Ticker("ZZZZXYZQ").insights()
+    assert isinstance(result, Insights)
+    assert result.symbol == "ZZZZXYZQ"
+    assert result.sig_devs == []
+    assert result.recommendation is None
 
 
 def test_ticker_recommendations_returns_typed_result(
@@ -735,6 +812,37 @@ def test_ticker_recommendations_model_violation_raises_yahoo_api_error(
     assert exc_info.value.code == "model-validation"
 
 
+def test_ticker_recommendations_invalid_symbol_raises_yahoo_api_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """An unrecognized symbol surfaces as a model-validation failure, not a 404.
+
+    Corpus-confirmed live 2026-07-05 (P4-1): Yahoo returns HTTP 200 with
+    ``{"result": []}``, the same valid-but-empty shape it uses for
+    instrument types with nothing to recommend (see the FUTURE-symbol test
+    below). See ``yoghurt.api.Ticker.recommendations``'s docstring.
+    """
+    _install_fake(monkeypatch, _corpus_text("recommendations-by-symbol/ZZZZXYZQ.json"))
+    with pytest.raises(YahooApiError) as exc_info:
+        Ticker("ZZZZXYZQ").recommendations()
+    assert exc_info.value.code == "model-validation"
+
+
+def test_ticker_recommendations_future_symbol_raises_yahoo_api_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A FUTURE symbol with no recommendations gets the identical empty shape.
+
+    Corpus-confirmed live 2026-07-05 (P4-1, ``ES=F``): not an error from
+    Yahoo's side, but surfaces the same as an invalid symbol because
+    ``RecommendationsResult`` requires ``recommended_symbols``/``symbol``.
+    """
+    _install_fake(monkeypatch, _corpus_text("recommendations-by-symbol/ES_F.json"))
+    with pytest.raises(YahooApiError) as exc_info:
+        Ticker("ES=F").recommendations()
+    assert exc_info.value.code == "model-validation"
+
+
 def test_ticker_stock_recommender_returns_typed_result(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -757,3 +865,19 @@ def test_ticker_stock_recommender_model_violation_raises_yahoo_api_error(
     with pytest.raises(YahooApiError) as exc_info:
         Ticker("AAPL").stock_recommender()
     assert exc_info.value.code == "model-validation"
+
+
+def test_ticker_stock_recommender_not_found_raises_bare_yahoo_request_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """An unrecognized symbol's 404 is truly unmappable: a bare YahooRequestError.
+
+    Corpus-confirmed live 2026-07-05 (P4-1): the 404 body is
+    ``{"message": "Not Found"}`` — no ``detail`` key, unlike every other
+    endpoint in this batch — so ``yoghurt._core.map_http_error`` cannot map
+    it to ``SymbolNotFoundError`` or ``YahooApiError``. See
+    ``yoghurt.api.Ticker.stock_recommender``'s docstring.
+    """
+    _install_fake_error(monkeypatch, _corpus_text("stock-recommender/ZZZZXYZQ.json"))
+    with pytest.raises(YahooRequestError):
+        Ticker("ZZZZXYZQ").stock_recommender()

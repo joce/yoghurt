@@ -138,13 +138,17 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `Ticker.calendar_events()`, `.recommendations()`, `.stock_recommender()`,
   `.price_insights()`, and `.insights()` now return typed models
   (`CalendarEventsResult`, `RecommendationsResult`, `StockRecommenderResult`,
-  `PriceInsights`, `Insights`) instead of raw parsed payloads. For
-  `recommendations()`, `price_insights()`, and `insights()`, an unrecognized
-  symbol surfaces as `YahooApiError` (code `"model-validation"`) rather than
-  `SymbolNotFoundError` (no invalid-symbol response shape is captured for
-  them); `calendar_events()` returns a valid empty result for unknown
-  symbols, and `stock_recommender()`'s 404 body carries no mappable payload
-  so it surfaces as `YahooRequestError`.
+  `PriceInsights`, `Insights`) instead of raw parsed payloads. An
+  unrecognized symbol behaves differently per endpoint, each pinned by a
+  real captured invalid-symbol response: `calendar_events()`,
+  `price_insights()`, and `insights()` never raise for it — Yahoo returns a
+  normally-typed, valid (if thin or empty) result, identical in shape to a
+  recognized symbol with nothing to report; `recommendations()` surfaces
+  `YahooApiError` (code `"model-validation"`), the same failure Yahoo
+  produces for any instrument type it has nothing to recommend for (for
+  example FUTURE symbols); `stock_recommender()`'s 404 body carries no
+  mappable payload (no `detail` key, unlike every sibling endpoint) so it
+  surfaces as a bare `YahooRequestError`.
 - `Ticker.analyst()` and `.ratings_top()` now return typed models
   (`AnalystResult`, `TopRatingsResult`) instead of raw parsed payloads.
 - A 404 with a bare `{"detail": ...}` body on a symbol-bound call now maps

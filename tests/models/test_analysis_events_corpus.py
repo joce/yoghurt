@@ -40,11 +40,13 @@ _CORPUS_QUOTE_TYPE_DIR = CORPUS_ROOT / "quote-type"
 _CORPUS_RECOMMENDATIONS_DIR = CORPUS_ROOT / "recommendations-by-symbol"
 _CORPUS_STOCK_RECOMMENDER_DIR = CORPUS_ROOT / "stock-recommender"
 
-_EXPECTED_CALENDAR_EVENTS_FILE_COUNT = 25
+_EXPECTED_CALENDAR_EVENTS_FILE_COUNT = 26  # +1: ZZZZXYZQ (P4-1)
 _EXPECTED_QUOTE_TYPE_FILE_COUNT = 24  # 23 valid + ZZZZXYZQ
 _EXPECTED_QUOTE_TYPE_RECORD_COUNT = 23
-_EXPECTED_RECOMMENDATIONS_FILE_COUNT = 4
-_EXPECTED_STOCK_RECOMMENDER_FILE_COUNT = 3
+_EXPECTED_RECOMMENDATIONS_FILE_COUNT = (
+    9  # +5: SPY/BTC-USD/EURUSD=X/ES=F/ZZZZXYZQ (P4-1)
+)
+_EXPECTED_STOCK_RECOMMENDER_FILE_COUNT = 4  # +1: ZZZZXYZQ (P4-1, unmappable 404 body)
 
 _EXPECTED_QUOTE_TYPE_REQUIRED_FIELD_COUNT = 11
 _EXPECTED_RECOMMENDATIONS_REQUIRED_FIELD_COUNT = 2
@@ -72,7 +74,7 @@ def _flatten_extras(nested: dict[str, dict[str, object]]) -> list[str]:
 
 
 def test_calendar_events_corpus_has_expected_file_count() -> None:
-    """Sanity check: 25 captures (24 default/module-filtered + one thin)."""
+    """Sanity check: 26 captures (24 default/module-filtered + one thin + ZZZZXYZQ)."""
 
     files = sorted(_CORPUS_CALENDAR_EVENTS_DIR.glob("*.json"))
     assert len(files) == _EXPECTED_CALENDAR_EVENTS_FILE_COUNT
@@ -196,7 +198,7 @@ def test_quote_type_required_field_set_matches_corpus_universal_keys() -> None:
 
 
 def test_recommendations_corpus_has_expected_file_count() -> None:
-    """Sanity check: 4 captures (AAPL, MSFT, RY.TO, ^GSPC)."""
+    """Sanity check: 9 captures (AAPL/MSFT/RY.TO/^GSPC + 5 P4-1 additions)."""
 
     files = sorted(_CORPUS_RECOMMENDATIONS_DIR.glob("*.json"))
     assert len(files) == _EXPECTED_RECOMMENDATIONS_FILE_COUNT
@@ -251,7 +253,7 @@ def test_recommendations_required_field_set_matches_corpus_universal_keys() -> N
 
 
 def test_stock_recommender_corpus_has_expected_file_count() -> None:
-    """Sanity check: 3 captures (AAPL, MSFT, RY.TO)."""
+    """Sanity check: 4 captures (AAPL, MSFT, RY.TO, ZZZZXYZQ 404 body)."""
 
     files = sorted(_CORPUS_STOCK_RECOMMENDER_DIR.glob("*.json"))
     assert len(files) == _EXPECTED_STOCK_RECOMMENDER_FILE_COUNT

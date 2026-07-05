@@ -32,7 +32,12 @@ optional at the :class:`CalendarEventsResult` level: a request never shows
 more than one module key populated at a time in this corpus (the default
 request returns only ``earnings``; each ``--modules`` probe returns only
 that one module's key), so there is no evidence either way for
-multi-module requests, but nothing rules them out.
+multi-module requests, but nothing rules them out. The deliberate
+invalid-symbol probe (``ZZZZXYZQ``) is likewise ``{"earnings": []}`` —
+byte-for-byte the same valid-empty shape as an unremarkable symbol with no
+scheduled events, not an error; ``Ticker.calendar_events()`` returns a
+normally-typed (all-optional) result rather than raising, confirmed live
+2026-07-05.
 
 **quote-type** (endpoint noun: "quote-type records"). Rich, clean corpus:
 23 valid captures spanning every ``QuoteType`` member captured elsewhere in
@@ -50,14 +55,29 @@ wire **string** here (``"28800000"``), not the numeric type
 difference between endpoints, not a modeling inconsistency.
 
 **recommendations-by-symbol** (endpoint noun: "recommendation records").
-Small, clean, uniform corpus (4 captures, 20 total recommended-symbol rows,
-every row carrying the same two fields).
+Small, clean, uniform corpus: 9 captures (EQUITY_SUBSET + ``^GSPC`` +
+cross-asset ``SPY``/``BTC-USD``/``EURUSD=X``/``ES=F`` + the deliberate
+``ZZZZXYZQ`` invalid-symbol probe), 7 populated records, 35 total
+recommended-symbol rows, every row carrying the same two fields. Two of the
+9 captures (``ES=F``, ``ZZZZXYZQ``) are a valid-but-empty ``{"result":
+[]}`` shape rather than an error — corpus-confirmed 2026-07-05 for the
+live-observed "some instrument types have no recommendations to report"
+behavior documented on :meth:`~yoghurt.api.Ticker.recommendations`; both
+surface identically as a ``RecommendationsResult`` model-validation
+failure (``recommendedSymbols``/``symbol`` missing from ``{}``), mapped to
+``YahooApiError(code="model-validation")``.
 
 **stock-recommender** (endpoint noun: "stock-recommender records"). A bare
 (non-enveloped) payload, distinct in shape from every other endpoint in this
 batch: ``pathId``/``id`` sit at the top level alongside a single ``fields``
-object carrying the actual related-tickers payload. 3 captures, uniform
-shape.
+object carrying the actual related-tickers payload. 3 populated captures,
+uniform shape, plus the deliberate ``ZZZZXYZQ`` invalid-symbol probe (a
+4th file, excluded from :func:`~tools.fields_report.stock_recommender_records`):
+unlike every other endpoint in this batch, its 404 body is
+``{"message": "Not Found"}`` — no ``detail`` key — so
+``yoghurt._core.map_http_error`` cannot map it to ``SymbolNotFoundError``
+or any other typed error; it is truly unmappable and propagates as a bare
+``YahooRequestError``, confirmed live 2026-07-05.
 """
 
 from __future__ import annotations
