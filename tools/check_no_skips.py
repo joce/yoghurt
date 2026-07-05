@@ -1,0 +1,53 @@
+"""Run a pytest file and fail if any test in it was skipped.
+
+Run from the repo root:  uv run python -m tools.check_no_skips <pytest arg>...
+
+Used by the ``pandas`` tox env to guarantee that tests/test_frames.py's
+positive to_pandas/to_arrow paths (guarded by ``pytest.importorskip``)
+actually execute rather than silently skipping because pandas/pyarrow are
+missing from the environment. A green run with those tests skipped would be
+worse than no env at all, so the check is mechanical rather than eyeballed.
+"""
+
+from __future__ import annotations
+
+import sys
+
+import pytest
+
+
+class _SkipCollector:
+    """Pytest plugin recording the node ID of every skipped test."""
+
+    def __init__(self) -> None:
+        self.skipped: list[str] = []
+
+    def pytest_runtest_logreport(self, report: pytest.TestReport) -> None:
+        """Record the test's node ID when its report shows a skip."""
+
+        if report.skipped:
+            self.skipped.append(report.nodeid)
+
+
+def main() -> int:
+    """Run pytest over argv[1:] and fail if any test was skipped.
+
+    Returns:
+        int: The pytest exit code, or 1 if any test skipped.
+    """
+
+    collector = _SkipCollector()
+    exit_code = pytest.main(sys.argv[1:], plugins=[collector])
+    if collector.skipped:
+        skipped_list = "\n".join(f"  - {node_id}" for node_id in collector.skipped)
+        print(
+            f"ERROR: {len(collector.skipped)} test(s) skipped "
+            f"(expected all to run):\n{skipped_list}",
+            file=sys.stderr,
+        )
+        return 1
+    return exit_code
+
+
+if __name__ == "__main__":
+    sys.exit(main())
