@@ -4,16 +4,17 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import TYPE_CHECKING, TypeAlias
+from typing import TYPE_CHECKING
 
 import pydantic
 import pytest
 
 import yoghurt._core as core
 from yoghurt.api import Ticker
-from yoghurt.exceptions import SymbolNotFoundError, YahooApiError
+from yoghurt.exceptions import SymbolNotFoundError, YahooApiError, YahooRequestError
 from yoghurt.frames import Spark, Timeseries
 from yoghurt.models import (
+    AnalystResult,
     CalendarEventsResult,
     ChartEvents,
     ChartMeta,
@@ -26,16 +27,14 @@ from yoghurt.models import (
     QuoteTypeResult,
     RecommendationsResult,
     StockRecommenderResult,
+    TopRatingsResult,
 )
 from yoghurt.tabular import TabularShapeError
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
     from typing import Any
 
     from yoghurt.types import ParamValue
-
-_Invoke: TypeAlias = "Callable[[Ticker], object]"
 
 _CORPUS_ROOT = Path(__file__).parent / "fixtures" / "corpus"
 _IMG_SIZE = 50
@@ -106,6 +105,37 @@ def _install_fake(monkeypatch: pytest.MonkeyPatch, body: str) -> _FakeClient:
     """
 
     fake = _FakeClient(body)
+    monkeypatch.setattr(core, "_get_client", lambda: fake)
+    return fake
+
+
+_HTTP_NOT_FOUND = 404
+
+
+class _ErrClient(_FakeClient):
+    """A fake client whose ``get``/``post`` raise a 404 with ``body``."""
+
+    async def get(
+        self,
+        path: str,
+        params: dict[str, ParamValue],
+        *,
+        use_crumb: bool = True,
+        base_url: str | None = None,
+    ) -> str:
+        """Raise a 404 YahooRequestError carrying the canned body."""
+        del path, params, use_crumb, base_url
+        raise YahooRequestError(_HTTP_NOT_FOUND, "https://x", body=self.body)
+
+
+def _install_fake_error(monkeypatch: pytest.MonkeyPatch, body: str) -> _ErrClient:
+    """Patch the core client seam with a fake whose calls raise a 404.
+
+    Returns:
+        _ErrClient: The installed fake, for call-inspection assertions.
+    """
+
+    fake = _ErrClient(body)
     monkeypatch.setattr(core, "_get_client", lambda: fake)
     return fake
 
@@ -537,44 +567,78 @@ def test_ticker_strips_symbol_whitespace() -> None:
     assert Ticker(" AAPL ").symbol == "AAPL"
 
 
-def _invoke_analyst(ticker: Ticker) -> object:
-    return ticker.analyst()
-
-
-def _invoke_ratings_top(ticker: Ticker) -> object:
-    return ticker.ratings_top()
-
-
-_METHOD_CASES = (
-    pytest.param(
-        _invoke_analyst,
-        "analyst/AAPL.json",
-        "/ws/mad/v2/analyst/symbol/AAPL",
-        id="analyst",
-    ),
-    pytest.param(
-        _invoke_ratings_top,
-        "ratings-top/AAPL.json",
-        "/v2/ratings/top/AAPL",
-        id="ratings_top",
-    ),
-)
-
-
-@pytest.mark.parametrize(("invoke", "corpus_file", "expected_path"), _METHOD_CASES)
-def test_ticker_method_calls_expected_path_and_returns_payload(
-    monkeypatch: pytest.MonkeyPatch,
-    invoke: _Invoke,
-    corpus_file: str,
-    expected_path: str,
-) -> None:
-    """Each Ticker method hits its command's path and passes the payload through."""
-    body = _corpus_text(corpus_file)
-    fake = _install_fake(monkeypatch, body)
-    result = invoke(Ticker("AAPL"))
+def test_ticker_analyst_returns_typed_result(monkeypatch: pytest.MonkeyPatch) -> None:
+    """analyst() returns a typed AnalystResult and hits the expected path."""
+    fake = _install_fake(monkeypatch, _corpus_text("analyst/AAPL.json"))
+    result = Ticker("AAPL").analyst()
+    assert isinstance(result, AnalystResult)
+    assert result.price_movement.ticker == "AAPL"
     path, _ = fake.calls[0]
-    assert path == expected_path
-    assert result == json.loads(body)
+    assert path == "/ws/mad/v2/analyst/symbol/AAPL"
+
+
+def test_ticker_analyst_model_violation_raises_yahoo_api_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A malformed analyst payload surfaces as YahooApiError."""
+    payload = json.loads(_corpus_text("analyst/AAPL.json"))
+    del payload["symbol_id"]
+    _install_fake(monkeypatch, json.dumps(payload))
+    with pytest.raises(YahooApiError) as exc_info:
+        Ticker("AAPL").analyst()
+    assert exc_info.value.code == "model-validation"
+
+
+def test_ticker_analyst_not_found_raises_symbol_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Yahoo's 404 not-found body for analyst becomes SymbolNotFoundError."""
+    _install_fake_error(monkeypatch, _corpus_text("analyst/ZZZZXYZQ.json"))
+    with pytest.raises(SymbolNotFoundError):
+        Ticker("ZZZZXYZQ").analyst()
+
+
+def test_ticker_ratings_top_returns_typed_result(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """ratings_top() returns a typed TopRatingsResult and hits the expected path."""
+    fake = _install_fake(monkeypatch, _corpus_text("ratings-top/AAPL.json"))
+    result = Ticker("AAPL").ratings_top()
+    assert isinstance(result, TopRatingsResult)
+    assert result.dir.ticker == "AAPL"
+    path, _ = fake.calls[0]
+    assert path == "/v2/ratings/top/AAPL"
+
+
+def test_ticker_ratings_top_model_violation_raises_yahoo_api_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A malformed ratings-top payload surfaces as YahooApiError."""
+    payload = json.loads(_corpus_text("ratings-top/AAPL.json"))
+    del payload["dir"]
+    _install_fake(monkeypatch, json.dumps(payload))
+    with pytest.raises(YahooApiError) as exc_info:
+        Ticker("AAPL").ratings_top()
+    assert exc_info.value.code == "model-validation"
+
+
+def test_ticker_ratings_top_not_found_raises_yahoo_api_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Yahoo's ratings-top 404 body surfaces as YahooApiError, not SymbolNotFoundError.
+
+    ``"No top ratings found for symbol: RY.TO"`` does not contain the
+    literal substring ``"not found"`` that
+    ``yoghurt._core.map_http_error`` matches (it contains "ratings
+    found"), so this symbol-lookup miss is not currently recognized as
+    one; see ``tests/models/test_analysis_ratings_corpus.py``'s
+    corresponding corpus-evidence test.
+    """
+    _install_fake_error(monkeypatch, _corpus_text("ratings-top/RY.TO.json"))
+    with pytest.raises(YahooApiError) as exc_info:
+        Ticker("RY.TO").ratings_top()
+    assert exc_info.value.code == "404"
+    assert not isinstance(exc_info.value, SymbolNotFoundError)
 
 
 def test_ticker_calendar_events_returns_typed_result(

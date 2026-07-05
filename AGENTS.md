@@ -35,7 +35,7 @@ Parquet is written with **polars** (a core dependency); chart/screener/visualiza
 - `src/yoghurt/parquet_writer.py` -> Parquet output for chart/screener/visualization.
 - `src/yoghurt/query.py` -> screener/visualization DSL parsing.
 - `src/yoghurt/exceptions.py` -> public exception hierarchy.
-- `src/yoghurt/models/` -> typed pydantic response models (Part 3+): `_base.py` (YahooModel base, Raw* wrapper-tolerant types), `enums.py` (closed vocabularies), `quote.py` (Quote), `chart.py` (ChartMeta/Spark meta/chart events), `options.py` (OptionChain/OptionContract/OptionExpiration), `summary_*.py` (the 41 quote-summary modules, one file per batch family), `summary.py` (QuoteSummary, the quote-summary container), `analysis_events.py` (quote-type/calendar-events/recommendations-by-symbol/stock-recommender), `analysis_insights.py` (price-insights/insights).
+- `src/yoghurt/models/` -> typed pydantic response models (Part 3+): `_base.py` (YahooModel base, Raw* wrapper-tolerant types), `enums.py` (closed vocabularies), `quote.py` (Quote), `chart.py` (ChartMeta/Spark meta/chart events), `options.py` (OptionChain/OptionContract/OptionExpiration), `summary_*.py` (the 41 quote-summary modules, one file per batch family), `summary.py` (QuoteSummary, the quote-summary container), `analysis_events.py` (quote-type/calendar-events/recommendations-by-symbol/stock-recommender), `analysis_insights.py` (price-insights/insights), `analysis_ratings.py` (analyst/ratings-top).
 - `src/yoghurt/__init__.py` -> lazy public surface, py.typed.
 - `tests/` -> pytest tests mirroring `src/yoghurt/`.
 

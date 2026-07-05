@@ -20,6 +20,7 @@ from yoghurt.commands import COMMANDS_BY_NAME
 from yoghurt.exceptions import SymbolNotFoundError, YahooApiError
 from yoghurt.frames import Chart, Frame, Spark, Timeseries
 from yoghurt.models import (
+    AnalystResult,
     CalendarEventsResult,
     ChartEvents,
     ChartMeta,
@@ -31,6 +32,7 @@ from yoghurt.models import (
     QuoteTypeResult,
     RecommendationsResult,
     StockRecommenderResult,
+    TopRatingsResult,
     validate_model,
 )
 from yoghurt.tabular import (
@@ -461,32 +463,40 @@ class Ticker:
         )
         return validate_model(CalendarEventsResult, payload["finance"]["result"])
 
-    def analyst(self, *, debug_flag: bool | None = None) -> dict[str, Any]:
+    def analyst(self, *, debug_flag: bool | None = None) -> AnalystResult:
         """Fetch analyst intelligence for this symbol.
 
+        The corpus has no captured thin-but-valid shape for this endpoint,
+        so an unrecognized symbol surfaces as a model-validation failure
+        rather than ``SymbolNotFoundError`` (Yahoo's own not-found body is
+        already mapped by ``_core.map_http_error``).
+
         Returns:
-            dict[str, Any]: The full parsed response payload.
+            AnalystResult: The validated analyst record.
         """
 
-        return run(
+        payload = run(
             _core.call_endpoint(
                 "analyst",
                 symbol=self.symbol,
                 values=_values(symbol=self.symbol, debug_flag=debug_flag),
             )
         )
+        return validate_model(AnalystResult, payload)
 
-    def ratings_top(self, *, exclude_noncurrent: bool | None = None) -> dict[str, Any]:
+    def ratings_top(
+        self, *, exclude_noncurrent: bool | None = None
+    ) -> TopRatingsResult:
         """Fetch top analyst rating buckets for this symbol.
 
         ``exclude_noncurrent=True`` drops non-current analyst records from
         the top scored buckets.
 
         Returns:
-            dict[str, Any]: The full parsed response payload.
+            TopRatingsResult: The validated top-ratings record.
         """
 
-        return run(
+        payload = run(
             _core.call_endpoint(
                 "ratings-top",
                 symbol=self.symbol,
@@ -495,6 +505,7 @@ class Ticker:
                 ),
             )
         )
+        return validate_model(TopRatingsResult, payload)
 
     def price_insights(
         self,

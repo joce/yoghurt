@@ -103,6 +103,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   five endpoints has a captured invalid-symbol response shape, so an
   unrecognized symbol surfaces as `YahooApiError` (code `"model-validation"`)
   rather than `SymbolNotFoundError`.
+- `Ticker.analyst()` and `.ratings_top()` now return typed models
+  (`AnalystResult`, `TopRatingsResult`) instead of raw parsed payloads.
+  `analyst()`'s not-found body already maps to `SymbolNotFoundError`;
+  `ratings_top()`'s not-found body ("No top ratings found for symbol: ...")
+  does not contain the literal substring the error mapper matches, so it
+  currently surfaces as `YahooApiError` instead.
 
 ### Internal
 
