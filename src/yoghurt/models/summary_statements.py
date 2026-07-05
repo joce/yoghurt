@@ -403,7 +403,12 @@ class IncomeStatement(YahooModel):
 
 
 class BalanceSheetHistory(YahooModel):
-    """The ``balanceSheetHistory`` module: annual balance-sheet rows."""
+    """The ``balanceSheetHistory`` module: annual balance-sheet rows.
+
+    Rows carry only ``end_date``/``max_age`` in this corpus — Yahoo does
+    not populate balance-sheet line items here; see
+    :class:`BalanceSheetStatement` and the module docstring.
+    """
 
     balance_sheet_statements: list[BalanceSheetStatement]
     """
@@ -421,7 +426,12 @@ class BalanceSheetHistory(YahooModel):
 
 
 class BalanceSheetHistoryQuarterly(YahooModel):
-    """The ``balanceSheetHistoryQuarterly`` module: quarterly balance-sheet rows."""
+    """The ``balanceSheetHistoryQuarterly`` module: quarterly balance-sheet rows.
+
+    Rows carry only ``end_date``/``max_age`` in this corpus — Yahoo does
+    not populate balance-sheet line items here; see
+    :class:`BalanceSheetStatement` and the module docstring.
+    """
 
     balance_sheet_statements: list[BalanceSheetStatement]
     """
@@ -439,7 +449,12 @@ class BalanceSheetHistoryQuarterly(YahooModel):
 
 
 class CashflowStatementHistory(YahooModel):
-    """The ``cashflowStatementHistory`` module: annual cashflow-statement rows."""
+    """The ``cashflowStatementHistory`` module: annual cashflow-statement rows.
+
+    Rows carry only ``end_date``/``max_age``/``net_income`` in this
+    corpus — Yahoo does not populate other cashflow line items here; see
+    :class:`CashflowStatement` and the module docstring.
+    """
 
     cashflow_statements: list[CashflowStatement]
     """
@@ -457,7 +472,12 @@ class CashflowStatementHistory(YahooModel):
 
 
 class CashflowStatementHistoryQuarterly(YahooModel):
-    """The ``cashflowStatementHistoryQuarterly`` module: quarterly cashflow rows."""
+    """The ``cashflowStatementHistoryQuarterly`` module: quarterly cashflow rows.
+
+    Rows carry only ``end_date``/``max_age``/``net_income`` in this
+    corpus — Yahoo does not populate other cashflow line items here; see
+    :class:`CashflowStatement` and the module docstring.
+    """
 
     cashflow_statements: list[CashflowStatement]
     """
