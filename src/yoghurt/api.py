@@ -1,10 +1,10 @@
 """Public synchronous yoghurt API.
 
 Yahoo's shared ``lang``/``region`` wire params ride their CommandSpec
-defaults; per-call overrides remain deliberately unexposed (revisit at
-release prep if a real need appears). Parameter names mirror the CLI's command
-metadata, except booleans whose CLI flag inverts the wire value — those
-use the wire name so the kwarg's meaning matches its effect.
+defaults; per-call overrides are deliberately unexposed (YAGNI — no caller
+has needed one; revisit if a real need appears). Parameter names mirror the
+CLI's command metadata, except booleans whose CLI flag inverts the wire
+value — those use the wire name so the kwarg's meaning matches its effect.
 """
 
 from __future__ import annotations
