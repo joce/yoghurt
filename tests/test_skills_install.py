@@ -415,3 +415,55 @@ def test_status_covers_user_and_project_scopes_for_project_install(
     assert len(installed) == 1
     assert installed[0].root == codex_project_root
     assert installed[0].action == "current"
+
+
+def test_uninstall_refused_target_does_not_block_other_targets(
+    tmp_path: Path,
+) -> None:
+    """uninstall() keeps processing targets after refusing a foreign dir."""
+
+    foreign_root = tmp_path / "foreign"
+    owned_root = tmp_path / "owned"
+    _write_foreign_skill(foreign_root / "yoghurt", name="other")
+    install([owned_root])
+
+    reports = uninstall([foreign_root, owned_root])
+
+    assert [report.action for report in reports] == ["refused", "removed"]
+    assert (foreign_root / "yoghurt" / "SKILL.md").exists()
+    assert not (owned_root / "yoghurt").exists()
+
+
+def test_status_does_not_track_to_locations(
+    home_and_cwd: tuple[Path, Path],
+) -> None:
+    """Installs at --to roots stay invisible to status() (spec: not tracked)."""
+
+    home, _cwd = home_and_cwd
+    to_root = home / "custom-skills"
+    install(resolve_roots([], project=False, to=to_root))
+    assert (to_root / "yoghurt" / "SKILL.md").exists()
+
+    reports = status()
+
+    assert all(report.action == "absent" for report in reports)
+    assert to_root not in {report.root for report in reports}
+
+
+def test_status_reports_foreign_dir_as_absent_by_design(
+    home_and_cwd: tuple[Path, Path],
+) -> None:
+    """A foreign dir at a named target reads as absent in status().
+
+    Deliberate: status answers "is the yoghurt skill installed here?" —
+    for a foreign directory the honest answer is no. The naming collision
+    surfaces as a refusal at install/uninstall time, when it is actionable
+    (pinned by the refusal tests above).
+    """
+
+    home, _cwd = home_and_cwd
+    _write_foreign_skill(home / ".gemini" / "skills" / "yoghurt", name="other")
+
+    reports = status()
+
+    assert all(report.action == "absent" for report in reports)
