@@ -49,6 +49,20 @@ def test_every_modeled_command_has_cases() -> None:
     assert {"screener", "visualization"} <= covered
 
 
+def test_dsl_cases_include_the_splits_entity() -> None:
+    """The splits visualization case (agent-skill snippet evidence) stays planned.
+
+    Added 2026-07-05 to back the queries skill domain's ``FROM splits``
+    snippet with a real capture; pinned here so a probe-plan refactor
+    cannot silently drop it (same traceability the quarantined event
+    types get).
+    """
+    visualization_cases = {
+        case.case for case in build_cases() if case.command == "visualization"
+    }
+    assert "splits" in visualization_cases
+
+
 def test_symbol_matrix_is_probed_for_quote() -> None:
     """Every baseline symbol and the invalid symbol get a quote case."""
     quote_cases = {c.case for c in build_cases() if c.command == "quote"}

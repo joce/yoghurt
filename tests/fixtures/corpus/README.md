@@ -14,6 +14,11 @@ Regenerate with `uv run python -m tools.probe` from the repo root (live Yahoo
 access required, ~5 minutes, politely rate-limited). Review the diff before
 committing a refresh; the manifest records argv and fetch timestamps.
 
+Line endings: the single-line capture JSON files are committed with a
+trailing CRLF (a repo-wide convention dating to the original Part 1 capture
+run); `README.md`, `manifest.json`, and all tooling files are LF. Match the
+existing convention when adding captures — do not "fix" either side.
+
 Files under `<command>/ZZZZXYZQ.json` are deliberate invalid-symbol probes:
 they capture Yahoo's error-payload shapes. `timeseries/AAPL_types_00.json` is
 kept byte-for-byte as evidence of Yahoo-side corruption (HTTP 200 with an
