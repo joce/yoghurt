@@ -1062,8 +1062,24 @@ def _emit_tabular_parquet(
 
 
 def _skills_agents_from_namespace(namespace: argparse.Namespace) -> list[str]:
-    raw = getattr(namespace, "agent", "") or ""
-    return [item.strip() for item in raw.split(",") if item.strip()]
+    """Parse the --agent comma-list, mirroring the --modules CSV contract.
+
+    Returns:
+        list[str]: The agent names, or an empty list when --agent was not
+        given.
+
+    Raises:
+        ValueError: If the list contains empty comma-separated values.
+    """
+
+    raw = (getattr(namespace, "agent", "") or "").strip()
+    if not raw:
+        return []
+    items = [item.strip() for item in raw.split(",")]
+    if any(not item for item in items):
+        message = "--agent cannot contain empty comma-separated values"
+        raise ValueError(message)
+    return items
 
 
 def _skills_roots_or_usage_error(
@@ -1078,11 +1094,13 @@ def _skills_roots_or_usage_error(
     """
 
     action_parser = namespace.skills_action_parser
-    agents = _skills_agents_from_namespace(namespace)
     to = getattr(namespace, "to", None)
-    if not agents and to is None:
-        _parquet_arg_error(action_parser, stderr, "one of --agent or --to is required")
     try:
+        agents = _skills_agents_from_namespace(namespace)
+        if not agents and to is None:
+            _parquet_arg_error(
+                action_parser, stderr, "one of --agent or --to is required"
+            )
         return skills_resolve_roots(agents, project=namespace.project, to=to)
     except ValueError as exc:
         _parquet_arg_error(action_parser, stderr, str(exc))

@@ -111,6 +111,41 @@ def test_skills_install_bogus_agent_names_offender_and_known_agents(
         assert agent in message
 
 
+def test_skills_install_empty_comma_item_is_a_usage_error(
+    home_and_cwd: tuple[Path, Path],
+) -> None:
+    """--agent "claude,,codex" exits 2 like --modules would, not silently.
+
+    Mirrors ``params._coerce_csv_param``'s CSV contract: empty
+    comma-separated values are rejected, never dropped.
+    """
+
+    home, _cwd = home_and_cwd
+    stderr = StringIO()
+
+    with pytest.raises(SystemExit) as exc_info:
+        main(["skills", "install", "--agent", "claude,,codex"], stderr=stderr)
+
+    assert exc_info.value.code == ARGPARSE_ERROR
+    assert "empty comma-separated" in stderr.getvalue()
+    assert not (home / ".claude" / "skills" / "yoghurt").exists()
+
+
+def test_skills_install_only_commas_is_a_usage_error(
+    home_and_cwd: tuple[Path, Path],
+) -> None:
+    """--agent "," exits 2 as empty items, not as a missing flag."""
+
+    del home_and_cwd
+    stderr = StringIO()
+
+    with pytest.raises(SystemExit) as exc_info:
+        main(["skills", "install", "--agent", ","], stderr=stderr)
+
+    assert exc_info.value.code == ARGPARSE_ERROR
+    assert "empty comma-separated" in stderr.getvalue()
+
+
 def test_skills_install_project_switches_to_project_roots(
     home_and_cwd: tuple[Path, Path],
 ) -> None:
