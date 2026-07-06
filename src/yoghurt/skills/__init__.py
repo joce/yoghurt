@@ -7,3 +7,21 @@ in a later change.
 """
 
 from __future__ import annotations
+
+from yoghurt.skills._install import (
+    AGENT_TARGETS,
+    TargetReport,
+    install,
+    resolve_roots,
+    status,
+    uninstall,
+)
+
+__all__ = [
+    "AGENT_TARGETS",
+    "TargetReport",
+    "install",
+    "resolve_roots",
+    "status",
+    "uninstall",
+]
