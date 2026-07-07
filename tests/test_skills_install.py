@@ -77,7 +77,7 @@ def test_resolve_roots_user_level_maps_every_named_agent(
     home, _cwd = home_and_cwd
     expected = {
         "claude": home / ".claude" / "skills",
-        "codex": home / ".codex" / "skills",
+        "codex": home / ".agents" / "skills",
         "copilot": home / ".copilot" / "skills",
         "cursor": home / ".cursor" / "skills",
         "gemini": home / ".gemini" / "skills",
@@ -95,8 +95,8 @@ def test_resolve_roots_project_level_maps_every_named_agent(
     _home, cwd = home_and_cwd
     expected = {
         "claude": cwd / ".claude" / "skills",
-        "codex": cwd / ".codex" / "skills",
-        "copilot": cwd / ".copilot" / "skills",
+        "codex": cwd / ".agents" / "skills",
+        "copilot": cwd / ".github" / "skills",
         "cursor": cwd / ".cursor" / "skills",
         "gemini": cwd / ".gemini" / "skills",
         "pi": cwd / ".pi" / "skills",
@@ -115,6 +115,34 @@ def test_resolve_roots_pi_asymmetry_is_pinned_explicitly(
         home / ".pi" / "agent" / "skills"
     ]
     assert resolve_roots(["pi"], project=True, to=None) == [cwd / ".pi" / "skills"]
+
+
+def test_resolve_roots_codex_and_copilot_documented_paths_are_pinned(
+    home_and_cwd: tuple[Path, Path],
+) -> None:
+    """Codex and Copilot map to their DOCUMENTED discovery roots.
+
+    Codex discovers only ``.agents/skills`` roots (user and project); a
+    ``.codex/skills`` install would never be found. Copilot's user root is
+    ``~/.copilot/skills`` but its project-level discovery is
+    ``.github/skills`` — a project ``.copilot/skills`` is not scanned.
+    Verified against both agents' documentation 2026-07-06 (PR #25 review
+    finding).
+    """
+
+    home, cwd = home_and_cwd
+    assert resolve_roots(["codex"], project=False, to=None) == [
+        home / ".agents" / "skills"
+    ]
+    assert resolve_roots(["codex"], project=True, to=None) == [
+        cwd / ".agents" / "skills"
+    ]
+    assert resolve_roots(["copilot"], project=False, to=None) == [
+        home / ".copilot" / "skills"
+    ]
+    assert resolve_roots(["copilot"], project=True, to=None) == [
+        cwd / ".github" / "skills"
+    ]
 
 
 def test_resolve_roots_unknown_agent_raises_value_error_naming_offender_and_known(
@@ -157,7 +185,7 @@ def test_resolve_roots_multiple_agents_in_order(
 
     home, _cwd = home_and_cwd
     roots = resolve_roots(["claude", "codex"], project=False, to=None)
-    assert roots == [home / ".claude" / "skills", home / ".codex" / "skills"]
+    assert roots == [home / ".claude" / "skills", home / ".agents" / "skills"]
 
 
 # ---------------------------------------------------------------------------
@@ -406,7 +434,7 @@ def test_status_covers_user_and_project_scopes_for_project_install(
     """status() finds a project-scope install as well as user-scope ones."""
 
     _home, cwd = home_and_cwd
-    codex_project_root = cwd / ".codex" / "skills"
+    codex_project_root = cwd / ".agents" / "skills"
     install([codex_project_root])
 
     reports = status()

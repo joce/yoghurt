@@ -66,7 +66,7 @@ def test_skills_install_agent_comma_list_prints_one_line_per_target(
     assert exit_code == 0
     assert not stderr.getvalue()
     claude_root = home / ".claude" / "skills"
-    codex_root = home / ".codex" / "skills"
+    codex_root = home / ".agents" / "skills"
     lines = stdout.getvalue().splitlines()
     assert lines == [
         f"installed: {claude_root / 'yoghurt'} (yoghurt {yoghurt.__version__})",
@@ -233,7 +233,7 @@ def test_skills_uninstall_removed_and_absent_lines(
 
     assert exit_code == 0
     claude_root = home / ".claude" / "skills"
-    codex_root = home / ".codex" / "skills"
+    codex_root = home / ".agents" / "skills"
     assert stdout.getvalue().splitlines() == [
         f"removed: {claude_root / 'yoghurt'}",
         f"absent: {codex_root / 'yoghurt'}",

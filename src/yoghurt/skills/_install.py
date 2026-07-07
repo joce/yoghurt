@@ -13,10 +13,16 @@ SKILL_DIR_NAME = "yoghurt"
 CONTENT_DIR = Path(__file__).parent / "content"
 
 AGENT_TARGETS: dict[str, tuple[str, str]] = {
-    # name -> (user-level root relative to home, project-level root relative to cwd)
+    # name -> (user-level root relative to home, project-level root relative
+    # to cwd). Each pair is the agent's DOCUMENTED skill-discovery location,
+    # not a name-derived guess: Codex discovers only `.agents/skills` roots
+    # (developers.openai.com/codex/skills), and Copilot's project-level
+    # discovery is `.github/skills` (its user level is `~/.copilot/skills`;
+    # a project `.copilot/skills` is not scanned — docs.github.com Copilot
+    # CLI "add skills"). Verified 2026-07-06.
     "claude": (".claude/skills", ".claude/skills"),
-    "codex": (".codex/skills", ".codex/skills"),
-    "copilot": (".copilot/skills", ".copilot/skills"),
+    "codex": (".agents/skills", ".agents/skills"),
+    "copilot": (".copilot/skills", ".github/skills"),
     "cursor": (".cursor/skills", ".cursor/skills"),
     "gemini": (".gemini/skills", ".gemini/skills"),
     "pi": (".pi/agent/skills", ".pi/skills"),
