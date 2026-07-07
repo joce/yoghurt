@@ -49,6 +49,9 @@ Parquet is written with **polars** (a core dependency); chart/screener/visualiza
   - `markets.py` -> trending/market-summary/market-info/market-time/sector.
   - `screener_meta.py` -> screener-instrument-fields/timeseries-fields/screener-discover/screener-predefined.
 - `src/yoghurt/__init__.py` -> lazy public surface, py.typed.
+- `src/yoghurt/skills/` -> the installable yoghurt agent skill:
+  - `content/` -> SKILL.md router + five markdown domains (market-data, fundamentals, analysis, queries, dataframes), shipped as package data.
+  - `_install.py` -> copy-only installer: resolve_roots/install/uninstall/status, AGENT_TARGETS, TargetReport.
 - `tests/` -> pytest tests mirroring `src/yoghurt/`.
 
 ## Rules
@@ -58,6 +61,7 @@ Parquet is written with **polars** (a core dependency); chart/screener/visualiza
 - Use `uv run python` for Python scripts; never use bare `python` or `python3`.
 - Never log or print Yahoo cookies, crumbs, or full session-cache contents.
 - Keep runtime dependencies narrow; do not add TUI, ORM, web framework, or rich formatting libraries.
+- The `skills` command group is packaging/installer surface: human-readable output, outside both the raw-JSON contract and the no-discovery-commands rule.
 
 ## Help text
 When adding or editing a CLI command:

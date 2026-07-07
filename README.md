@@ -124,6 +124,27 @@ uv tool install .
 yoghurt --help
 ```
 
+## Agent skill
+
+Yoghurt ships an Agent Skills–standard skill (a `SKILL.md` package readable
+by Claude Code, Codex CLI, Cursor, Gemini CLI, Copilot, Pi, and other
+agents) that teaches coding agents both the library and the CLI: idiomatic
+patterns, endpoint routing, and corpus-proven pitfalls. Install it into an
+agent's skill directory by name:
+
+```powershell
+yoghurt skills install --agent claude
+```
+
+Named targets: `claude`, `codex`, `copilot`, `cursor`, `gemini`, `pi`
+(comma-separable). Add `--project` to install into the current repository's
+agent directories instead of your user-level ones, or `--to PATH` for any
+other skills root. Installs are plain copies — re-run `yoghurt skills
+install` after upgrading yoghurt. `yoghurt skills list` shows every named
+location with its installed version, and `yoghurt skills uninstall` removes
+installs (it never touches a directory it does not own). See
+`yoghurt skills --help`.
+
 ## Quick Start
 
 Fetch quotes for a few symbols:

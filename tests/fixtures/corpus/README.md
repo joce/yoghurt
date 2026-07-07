@@ -14,6 +14,11 @@ Regenerate with `uv run python -m tools.probe` from the repo root (live Yahoo
 access required, ~5 minutes, politely rate-limited). Review the diff before
 committing a refresh; the manifest records argv and fetch timestamps.
 
+Line endings: the single-line capture JSON files are committed with a
+trailing CRLF (a repo-wide convention dating to the original Part 1 capture
+run); `README.md`, `manifest.json`, and all tooling files are LF. Match the
+existing convention when adding captures — do not "fix" either side.
+
 Files under `<command>/ZZZZXYZQ.json` are deliberate invalid-symbol probes:
 they capture Yahoo's error-payload shapes. `timeseries/AAPL_types_00.json` is
 kept byte-for-byte as evidence of Yahoo-side corruption (HTTP 200 with an
@@ -83,3 +88,18 @@ known 2026-06-22 split date (window 2026-06-21 to 2026-06-27). See
 per-module evidence writeup and the new `EarningsEvent`/`EarningsEventDay`,
 `IpoEvent`/`IpoEventDay`, and `SecReport`/`SecReportDay`/`SecReportExhibit`
 models these captures back.
+
+**2026-07-05 surgical addition (agent-skills, visualization/splits):** the
+`queries` skill domain documents market-wide stock splits via
+`visualization()`'s `splits` entity, but no corpus fixture backed that
+snippet before this addition (only `insider_transaction` and `sp_earnings`
+existed under `visualization/`). Added one `tools/probe.py` case
+(`visualization/splits`, `_dsl_cases()`) and captured it live with the same
+query the skill content shows: `SELECT ticker, startdatetime FROM splits
+WHERE startdatetime BETWEEN '2026-05-09' AND '2026-05-16' LIMIT 25`. The
+capture returned a populated, real result (135 total matches, 25 rows
+across mixed foreign listings), confirming `splits` is a live, working
+data-platform entity distinct from `sp_earnings`/`INSIDER_TRANSACTION`.
+One live call, politeness delay respected, merged into `manifest.json` with
+no changes to any pre-existing entry (`case_count` 284 -> 285,
+`fetched_at` unchanged, per the surgical-addition precedent above).

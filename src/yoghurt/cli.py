@@ -33,6 +33,11 @@ from yoghurt.params import (
 )
 from yoghurt.query import QueryError
 from yoghurt.query import parse as parse_query
+from yoghurt.skills import AGENT_TARGETS, TargetReport
+from yoghurt.skills import install as skills_install
+from yoghurt.skills import resolve_roots as skills_resolve_roots
+from yoghurt.skills import status as skills_status
+from yoghurt.skills import uninstall as skills_uninstall
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -466,7 +471,106 @@ def build_parser() -> argparse.ArgumentParser:
         help="Do not add Yahoo's crumb parameter to the request.",
     )
     raw_parser.set_defaults(command_kind="raw")
+
+    skills_parser = subparsers.add_parser(
+        "skills",
+        help="Install, remove, or list the yoghurt agent skill.",
+        description=(
+            "Manage the yoghurt agent skill in agent skill directories. See "
+            "`yoghurt skills <subcommand> --help` for each operation."
+        ),
+        formatter_class=_HelpFormatter,
+        add_help=False,
+    )
+    _add_skills_command_group(skills_parser)
     return parser
+
+
+def _add_skills_targeting_options(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--agent",
+        dest="agent",
+        default=None,
+        metavar="NAME[,NAME...]",
+        help=(
+            f"Comma-separated named agent targets ({', '.join(sorted(AGENT_TARGETS))})."
+        ),
+    )
+    parser.add_argument(
+        "--to",
+        dest="to",
+        type=Path,
+        default=None,
+        metavar="PATH",
+        help="Additional skills root to install into or remove from.",
+    )
+    parser.add_argument(
+        "--project",
+        action="store_true",
+        help="Use project-level roots (relative to the current directory).",
+    )
+
+
+def _add_skills_command_group(skills_parser: argparse.ArgumentParser) -> None:
+    _add_help_option(skills_parser)
+    skills_parser.set_defaults(
+        command_kind="skills", skills_action=None, skills_parser=skills_parser
+    )
+    skills_subparsers = skills_parser.add_subparsers(
+        title="skills commands",
+        metavar="SUBCOMMAND",
+        dest="skills_subcommand",
+    )
+
+    install_parser = skills_subparsers.add_parser(
+        "install",
+        help="Install the yoghurt agent skill into agent skill directories.",
+        description=(
+            "Copy the yoghurt agent skill into the named agent skill "
+            "directories, stamping the installed package version. Refuses "
+            "to overwrite a directory it does not own."
+        ),
+        formatter_class=_HelpFormatter,
+        add_help=False,
+    )
+    _add_help_option(install_parser)
+    _add_skills_targeting_options(install_parser)
+    install_parser.set_defaults(
+        command_kind="skills",
+        skills_action="install",
+        skills_action_parser=install_parser,
+    )
+
+    uninstall_parser = skills_subparsers.add_parser(
+        "uninstall",
+        help="Remove the yoghurt agent skill from agent skill directories.",
+        description=(
+            "Remove the yoghurt agent skill from the named agent skill "
+            "directories. Refuses to remove a directory it does not own."
+        ),
+        formatter_class=_HelpFormatter,
+        add_help=False,
+    )
+    _add_help_option(uninstall_parser)
+    _add_skills_targeting_options(uninstall_parser)
+    uninstall_parser.set_defaults(
+        command_kind="skills",
+        skills_action="uninstall",
+        skills_action_parser=uninstall_parser,
+    )
+
+    list_parser = skills_subparsers.add_parser(
+        "list",
+        help="Show where the yoghurt agent skill is installed.",
+        description=(
+            "Show the yoghurt agent skill's install state across every "
+            "named agent, at both user and project scope."
+        ),
+        formatter_class=_HelpFormatter,
+        add_help=False,
+    )
+    _add_help_option(list_parser)
+    list_parser.set_defaults(command_kind="skills", skills_action="list")
 
 
 _VISUALIZATION_EPILOG: Final[str] = """\
@@ -957,6 +1061,117 @@ def _emit_tabular_parquet(
     stdout.write("\n")
 
 
+def _skills_agents_from_namespace(namespace: argparse.Namespace) -> list[str]:
+    """Parse the --agent comma-list, mirroring the --modules CSV contract.
+
+    Returns:
+        list[str]: The agent names, or an empty list when --agent was not
+        given.
+
+    Raises:
+        ValueError: If the list contains empty comma-separated values.
+    """
+
+    raw = (getattr(namespace, "agent", "") or "").strip()
+    if not raw:
+        return []
+    items = [item.strip() for item in raw.split(",")]
+    if any(not item for item in items):
+        message = "--agent cannot contain empty comma-separated values"
+        raise ValueError(message)
+    return items
+
+
+def _skills_roots_or_usage_error(
+    namespace: argparse.Namespace,
+    stderr: TextIO,
+) -> list[Path] | None:
+    """Resolve --agent/--to into roots, or emit a usage error and return None.
+
+    Returns:
+        list[Path] | None: The resolved roots, or ``None`` if a usage error
+        was already written to ``stderr`` (caller should return exit code 2).
+    """
+
+    action_parser = namespace.skills_action_parser
+    to = getattr(namespace, "to", None)
+    try:
+        agents = _skills_agents_from_namespace(namespace)
+        if not agents and to is None:
+            _parquet_arg_error(
+                action_parser, stderr, "one of --agent or --to is required"
+            )
+        return skills_resolve_roots(agents, project=namespace.project, to=to)
+    except ValueError as exc:
+        _parquet_arg_error(action_parser, stderr, str(exc))
+    return None  # pragma: no cover - _parquet_arg_error always raises
+
+
+def _install_report_line(report: TargetReport) -> str:
+    skill_dir = report.root / "yoghurt"
+    if report.action == "refused":
+        return f"skipped (not the yoghurt skill): {skill_dir}"
+    return f"installed: {skill_dir} (yoghurt {report.detail})"
+
+
+def _uninstall_report_line(report: TargetReport) -> str:
+    skill_dir = report.root / "yoghurt"
+    if report.action == "refused":
+        return f"skipped (not the yoghurt skill): {skill_dir}"
+    if report.action == "removed":
+        return f"removed: {skill_dir}"
+    return f"absent: {skill_dir}"
+
+
+def _list_report_line(report: TargetReport) -> str:
+    """Format one status() report as an agent/scope/root/state line.
+
+    report.detail carries "agent scope" for an absent target, or
+    "agent scope version" for a current/stale one (see yoghurt.skills.status).
+
+    Returns:
+        str: The formatted status line for one named target.
+    """
+
+    if report.action == "absent":
+        return f"{report.detail} {report.root} absent"
+    label, _, version = report.detail.rpartition(" ")
+    if report.action == "current":
+        return f"{label} {report.root} installed {version} (current)"
+    return (
+        f"{label} {report.root} installed {version} (stale; current is {__version__})"
+    )
+
+
+def _dispatch_skills(
+    namespace: argparse.Namespace,
+    stdout: TextIO,
+    stderr: TextIO,
+) -> int:
+    action = getattr(namespace, "skills_action", None)
+    if action is None:
+        namespace.skills_parser.print_help(stderr)
+        return 2
+    if action == "list":
+        for report in skills_status():
+            stdout.write(_list_report_line(report))
+            stdout.write("\n")
+        return 0
+    roots = _skills_roots_or_usage_error(namespace, stderr)
+    if roots is None:
+        return 2
+    if action == "install":
+        reports = skills_install(roots)
+        line_for = _install_report_line
+    else:
+        reports = skills_uninstall(roots)
+        line_for = _uninstall_report_line
+    for report in reports:
+        stdout.write(line_for(report))
+        stdout.write("\n")
+    return 1 if any(report.action == "refused" for report in reports) else 0
+
+
 def main(
     argv: Sequence[str] | None = None,
     *,
@@ -981,6 +1196,8 @@ def main(
     if not hasattr(namespace, "command_kind"):
         parser.print_help(error_output)
         return 2
+    if namespace.command_kind == "skills":
+        return _dispatch_skills(namespace, output, error_output)
     _enforce_parquet_arg_pairing(parser, namespace, error_output)
 
     _configure_logging(verbose=namespace.verbose)

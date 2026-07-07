@@ -8,6 +8,16 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- An installable agent skill (Agent Skills standard: `SKILL.md` plus five
+  markdown domains — market-data, fundamentals, analysis, queries,
+  dataframes — with corpus-dated sharp edges), shipped inside the wheel
+  under `yoghurt.skills`.
+- A `yoghurt skills` CLI group: `install`/`uninstall`/`list` with explicit
+  `--agent` targeting (`claude`/`codex`/`copilot`/`cursor`/`gemini`/`pi`,
+  comma-separable), `--project` for repository-level directories, and a
+  `--to PATH` escape hatch. Installs are copy-only, stamped with the
+  installing version (surfaced by `list` as current/stale), and ownership-
+  checked: a directory not created by yoghurt is never replaced or removed.
 - Yoghurt is now also an importable Python library: `yoghurt.Ticker` plus
   module-level functions (`quotes`, `screener`, `visualization`, `trending`,
   etc.), typed `Frame`/`Chart` results with `to_polars`/`to_pandas`/

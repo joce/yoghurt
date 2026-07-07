@@ -568,6 +568,10 @@ def _dsl_cases() -> list[ProbeCase]:
             f"WHERE region = 'us' AND startdatetime BETWEEN '{week_ago}' "
             f"AND '{yesterday}' LIMIT 5"
         ),
+        "splits": (
+            "SELECT ticker, startdatetime FROM splits "
+            "WHERE startdatetime BETWEEN '2026-05-09' AND '2026-05-16' LIMIT 25"
+        ),
     }
     return [
         ProbeCase("screener", name, ("screener", "--query", query))

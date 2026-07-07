@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "case_count": 284,
+    "case_count": 285,
     "fetched_at": "2026-07-04T04:35:12.640976+00:00"
   },
   "analyst/AAPL": {
@@ -2967,6 +2967,16 @@
       "SELECT ticker, startdatetime FROM sp_earnings WHERE region = 'us' AND startdatetime BETWEEN '2026-06-26' AND '2026-07-03' LIMIT 5"
     ],
     "file": "visualization/sp_earnings.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "visualization/splits": {
+    "argv": [
+      "visualization",
+      "--query",
+      "SELECT ticker, startdatetime FROM splits WHERE startdatetime BETWEEN '2026-05-09' AND '2026-05-16' LIMIT 25"
+    ],
+    "file": "visualization/splits.json",
     "http_status": 200,
     "status": "ok"
   }
