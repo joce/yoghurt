@@ -41,7 +41,9 @@ bodies (34,621 bytes), both still carrying the same invalid `\'` escape — the
 `status: "ok"` and writing a file for an HTTP-200 body that does not parse as
 JSON. `tools/probe.py` now records such bodies as `status: "error"` with no
 file, so a manifest `"ok"` always means the capture parses; judge feed health
-only by `json.loads` on the raw bytes. Next retest should be opportunistic
+only by `json.loads` on the raw bytes. Retested 2026-07-06 through the
+probe's own `_run_case` (one live call): still corrupt — HTTP 200 with the
+same invalid `\` escape at char 8893. Next retest should be opportunistic
 (no fixed date), on the next corpus refresh.
 
 **2026-07-05 surgical addition (P4-1, corpus reinforcement):** invalid-symbol
