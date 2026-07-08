@@ -78,6 +78,18 @@ Reconciliation notes:
   listed EQUITY whose ``earningsDate`` is an empty list (SPCX). All three
   fields are Optional with the divergence pinned in
   ``tests/models/test_summary_financials_corpus.py``.
+- Second live divergence (2026-07-07 pulls across a mining/materials
+  universe, same rule): ``calendarEvents.earnings.revenueAverage``/
+  ``.revenueLow``/``.revenueHigh`` are absent (always together) on
+  low-analyst-coverage EQUITY summaries (WDO.TO, OR, NGEX.TO, NXE, DNN)
+  and on a physical-commodity trust (U-UN.TO);
+  ``financialData.operatingCashflow`` is absent on TECK and U-UN.TO;
+  ``financialData.totalCash``/``.totalCashPerShare``/``.totalDebt`` are
+  absent on U-UN.TO. All seven are Optional with the divergence pinned in
+  ``tests/models/test_summary_financials_corpus.py``. On the same U-UN.TO
+  capture ``financialData.financialCurrency`` was present but null — the
+  key itself stayed universal, so it is required-but-nullable
+  (``str | None`` with no default), not loosened.
 """
 
 from __future__ import annotations
@@ -153,19 +165,31 @@ class Earnings(YahooModel):
     capture.
     """
 
-    revenue_average: float
+    revenue_average: float | None = None
     """
     Mean analyst revenue estimate for the upcoming earnings report.
+
+    Live-observed as absent (not merely null) on low-analyst-coverage
+    EQUITY summaries (WDO.TO, OR, NGEX.TO, NXE, DNN) and a
+    physical-commodity trust (U-UN.TO), 2026-07-07 — always missing
+    together with ``revenue_low``/``revenue_high``; not yet backed by a
+    corpus capture. Present on every corpus capture.
     """
 
-    revenue_high: float
+    revenue_high: float | None = None
     """
     Highest analyst revenue estimate for the upcoming earnings report.
+
+    Absent together with ``revenue_average``/``revenue_low`` on
+    low-coverage live pulls (2026-07-07); see ``revenue_average``.
     """
 
-    revenue_low: float
+    revenue_low: float | None = None
     """
     Lowest analyst revenue estimate for the upcoming earnings report.
+
+    Absent together with ``revenue_average``/``revenue_high`` on
+    low-coverage live pulls (2026-07-07); see ``revenue_average``.
     """
 
 
@@ -252,9 +276,14 @@ class FinancialData(YahooModel):
     EBITDA as a percentage of total revenue.
     """
 
-    financial_currency: str
+    financial_currency: str | None
     """
     Currency in which these financial figures are reported.
+
+    Live-observed as null (key present, value ``None``) on a
+    physical-commodity trust (U-UN.TO, 2026-07-07), so required-but-
+    nullable: the key is on every corpus capture and every live
+    observation, only the value can be null.
     """
 
     free_cashflow: float | None = None
@@ -282,9 +311,13 @@ class FinancialData(YahooModel):
     Number of analysts contributing to the price-target consensus.
     """
 
-    operating_cashflow: float
+    operating_cashflow: float | None = None
     """
     Cash generated from normal business operations.
+
+    Live-observed as absent (not merely null) on an EQUITY summary (TECK)
+    and a physical-commodity trust (U-UN.TO), 2026-07-07; not yet backed
+    by a corpus capture. Present on every corpus capture.
     """
 
     operating_margins: float
@@ -366,19 +399,30 @@ class FinancialData(YahooModel):
     Median analyst price target.
     """
 
-    total_cash: float
+    total_cash: float | None = None
     """
     Total cash and cash equivalents held by the company.
+
+    Live-observed as absent (not merely null) on a physical-commodity
+    trust (U-UN.TO, 2026-07-07 — missing together with
+    ``total_cash_per_share``/``total_debt``); not yet backed by a corpus
+    capture. Present on every corpus capture.
     """
 
-    total_cash_per_share: float
+    total_cash_per_share: float | None = None
     """
     Total cash divided by shares outstanding.
+
+    Absent together with ``total_cash``/``total_debt`` on a fund-like
+    live pull (U-UN.TO, 2026-07-07); see ``total_cash``.
     """
 
-    total_debt: float
+    total_debt: float | None = None
     """
     Total interest-bearing debt held by the company.
+
+    Absent together with ``total_cash``/``total_cash_per_share`` on a
+    fund-like live pull (U-UN.TO, 2026-07-07); see ``total_cash``.
     """
 
     total_revenue: float | None = None

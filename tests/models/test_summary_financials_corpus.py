@@ -18,7 +18,13 @@ Live divergence (2026-07-07, see the module docstring in
 ``calendarEvents.earnings.isEarningsDateEstimate`` (absent on SPCX) are
 corpus-universal but loosened to Optional on live evidence; the exact
 difference is pinned here so a future corpus refresh cannot silently
-reintroduce the required-ness.
+reintroduce the required-ness. A second 2026-07-07 sweep (mining/materials
+universe) added ``financialData.operatingCashflow`` (TECK, U-UN.TO),
+``.totalCash``/``.totalCashPerShare``/``.totalDebt`` (U-UN.TO), and the
+nested ``calendarEvents.earnings.revenueAverage``/``.revenueLow``/
+``.revenueHigh`` (WDO.TO, OR, NGEX.TO, NXE, DNN, U-UN.TO) to the loosened
+set; ``financialData.financialCurrency`` stays required but became
+nullable (present-but-null on U-UN.TO).
 """
 
 from __future__ import annotations
@@ -72,7 +78,14 @@ _EXPECTED_UNIVERSAL_KEY_COUNTS: dict[str, int] = {
 # see the field docstrings). Pinned exactly: a corpus refresh that starts
 # backing the loosening shrinks the universal set and must prune this map.
 _LIVE_LOOSENED_UNIVERSAL_KEYS: dict[str, set[str]] = {
-    "financialData": {"returnOnAssets", "returnOnEquity"},
+    "financialData": {
+        "operatingCashflow",
+        "returnOnAssets",
+        "returnOnEquity",
+        "totalCash",
+        "totalCashPerShare",
+        "totalDebt",
+    },
     "defaultKeyStatistics": set(),
     "calendarEvents": set(),
     "financialsTemplate": set(),
@@ -181,14 +194,17 @@ def test_required_field_set_matches_corpus_universal_keys(module: str) -> None:
 
 
 def test_earnings_required_field_set_is_a_subset_of_nested_universal_keys() -> None:
-    """The nested Earnings block's required fields: universal keys minus one.
+    """The nested Earnings block's required fields: universal keys minus four.
 
     ``calendarEvents.earnings`` is nested, so the module-level gate above
     never sees its keys; this pins the same invariant one level down.
     ``isEarningsDateEstimate`` is present on every corpus capture's
     ``earnings`` block, but a 2026-07-07 live pull observed it absent on a
-    newly listed EQUITY whose ``earningsDate`` is an empty list (SPCX) —
-    loosened to Optional, with the difference pinned here exactly.
+    newly listed EQUITY whose ``earningsDate`` is an empty list (SPCX);
+    ``revenueAverage``/``revenueLow``/``revenueHigh`` are likewise
+    corpus-universal but absent (always together) on low-analyst-coverage
+    2026-07-07 live pulls (WDO.TO, OR, NGEX.TO, NXE, DNN, U-UN.TO). All
+    four loosened to Optional, with the difference pinned here exactly.
     """
 
     earnings_records = [
@@ -206,7 +222,12 @@ def test_earnings_required_field_set_is_a_subset_of_nested_universal_keys() -> N
     }
 
     assert required_aliases < universal_keys
-    assert universal_keys - required_aliases == {"isEarningsDateEstimate"}
+    assert universal_keys - required_aliases == {
+        "isEarningsDateEstimate",
+        "revenueAverage",
+        "revenueHigh",
+        "revenueLow",
+    }
 
 
 def test_financial_data_validates_without_return_metrics() -> None:
@@ -244,6 +265,70 @@ def test_calendar_events_validates_without_is_earnings_date_estimate() -> None:
     calendar_events = CalendarEvents.model_validate(record)
 
     assert calendar_events.earnings.is_earnings_date_estimate is None
+
+
+def test_financial_data_validates_without_operating_cashflow() -> None:
+    """Live-shape regression (TECK, 2026-07-07).
+
+    Replays the observed divergence on a corpus capture: Yahoo omitting
+    ``operatingCashflow`` alone must validate, with the field None.
+    """
+
+    record = dict(next(iter(quote_summary_module_records("financialData"))))
+    del record["operatingCashflow"]
+
+    financial_data = FinancialData.model_validate(record)
+
+    assert financial_data.operating_cashflow is None
+
+
+def test_financial_data_validates_fund_like_sparse_payload() -> None:
+    """Live-shape regression (U-UN.TO, 2026-07-07).
+
+    Replays the sparsest observed ``financialData`` shape — a physical
+    commodity trust: ``operatingCashflow``/``totalCash``/
+    ``totalCashPerShare``/``totalDebt`` all absent and
+    ``financialCurrency`` present but null — which must validate with the
+    absent fields None and the nullable field None.
+    """
+
+    record = dict(next(iter(quote_summary_module_records("financialData"))))
+    del record["operatingCashflow"]
+    del record["totalCash"]
+    del record["totalCashPerShare"]
+    del record["totalDebt"]
+    record["financialCurrency"] = None
+
+    financial_data = FinancialData.model_validate(record)
+
+    assert financial_data.operating_cashflow is None
+    assert financial_data.total_cash is None
+    assert financial_data.total_cash_per_share is None
+    assert financial_data.total_debt is None
+    assert financial_data.financial_currency is None
+
+
+def test_earnings_validates_without_revenue_estimates() -> None:
+    """Live-shape regression (WDO.TO/OR/NGEX.TO/NXE/DNN/U-UN.TO, 2026-07-07).
+
+    Replays the observed divergence on a corpus capture: a nested
+    ``earnings`` block missing ``revenueAverage``/``revenueLow``/
+    ``revenueHigh`` (as Yahoo sends for low-analyst-coverage symbols) must
+    validate, with all three fields None.
+    """
+
+    record = dict(next(iter(quote_summary_module_records("calendarEvents"))))
+    earnings = dict(record["earnings"])
+    del earnings["revenueAverage"]
+    del earnings["revenueHigh"]
+    del earnings["revenueLow"]
+    record["earnings"] = earnings
+
+    calendar_events = CalendarEvents.model_validate(record)
+
+    assert calendar_events.earnings.revenue_average is None
+    assert calendar_events.earnings.revenue_high is None
+    assert calendar_events.earnings.revenue_low is None
 
 
 @pytest.mark.parametrize(
