@@ -190,3 +190,20 @@ def test_enum_fields_round_trip_to_enum_members() -> None:
 
     assert isinstance(quote.quote_type, QuoteType)
     assert isinstance(quote.market_state, MarketState)
+
+
+def test_quote_validates_with_overnight_market_state() -> None:
+    """Live-shape regression (SPCX/RKLB, 2026-07-07).
+
+    No corpus record carries ``marketState: "OVERNIGHT"`` (the corpus was
+    captured outside the overnight session), so this replays the live
+    observation on a corpus capture, mirroring the synthetic-delta pattern
+    of the walker tests above.
+    """
+
+    record = dict(_records_in(_CORPUS_QUOTE_DIR / "AAPL_default.json")[0])
+    record["marketState"] = "OVERNIGHT"
+
+    quote = Quote.model_validate(record)
+
+    assert quote.market_state is MarketState.OVERNIGHT
