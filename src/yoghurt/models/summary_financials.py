@@ -70,6 +70,14 @@ Reconciliation notes:
   ``earningsDate``/``.earningsCallDate`` are lists (Yahoo's shape allows
   more than one upcoming date, though every corpus example has 0 or 1
   entries — ``BAC-PL``'s ``earningsDate`` is the sole empty-list example).
+- Live divergence from the corpus universal-key set (2026-07-07 pulls,
+  not yet backed by corpus captures — the loosening-over-live-evidence
+  rule): ``financialData.returnOnAssets``/``.returnOnEquity`` are absent
+  (not merely null) on some EQUITY summaries (LHX, SPCX, YSS), and
+  ``calendarEvents.earnings.isEarningsDateEstimate`` is absent on a newly
+  listed EQUITY whose ``earningsDate`` is an empty list (SPCX). All three
+  fields are Optional with the divergence pinned in
+  ``tests/models/test_summary_financials_corpus.py``.
 """
 
 from __future__ import annotations
@@ -135,9 +143,14 @@ class Earnings(YahooModel):
     ``BAC-PL``); always accompanied by ``earnings_average``/``earnings_high``.
     """
 
-    is_earnings_date_estimate: bool
+    is_earnings_date_estimate: bool | None = None
     """
     Whether the earnings announcement date is an estimate rather than confirmed.
+
+    Live-observed as absent on a newly listed EQUITY whose ``earningsDate``
+    is an empty list (SPCX, 2026-07-07 — no post-IPO earnings date scheduled
+    yet); not yet backed by a corpus capture. Present on every corpus
+    capture.
     """
 
     revenue_average: float
@@ -303,14 +316,24 @@ class FinancialData(YahooModel):
     Mean analyst recommendation score (lower is more bullish).
     """
 
-    return_on_assets: float
+    return_on_assets: float | None = None
     """
     Net income as a percentage of total assets.
+
+    Live-observed as absent (not merely null) on some EQUITY summaries
+    (LHX, SPCX, YSS, 2026-07-07 — always missing together with
+    ``returnOnEquity``); not yet backed by a corpus capture. Present on
+    every corpus capture.
     """
 
-    return_on_equity: float
+    return_on_equity: float | None = None
     """
     Net income as a percentage of shareholder equity.
+
+    Live-observed as absent (not merely null) on some EQUITY summaries
+    (LHX, SPCX, YSS, 2026-07-07 — always missing together with
+    ``returnOnAssets``); not yet backed by a corpus capture. Present on
+    every corpus capture.
     """
 
     revenue_growth: float | None = None

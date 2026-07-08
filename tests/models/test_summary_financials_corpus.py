@@ -11,6 +11,14 @@ alphabetical field declaration order for every model added in
 ``yoghurt.models.summary_financials``. See
 ``tests/models/test_summary_earnings_corpus.py`` for the remaining six
 batch c2 (earnings-family) modules.
+
+Live divergence (2026-07-07, see the module docstring in
+``yoghurt.models.summary_financials``): ``financialData.returnOnAssets``/
+``.returnOnEquity`` (absent on LHX/SPCX/YSS) and
+``calendarEvents.earnings.isEarningsDateEstimate`` (absent on SPCX) are
+corpus-universal but loosened to Optional on live evidence; the exact
+difference is pinned here so a future corpus refresh cannot silently
+reintroduce the required-ness.
 """
 
 from __future__ import annotations
@@ -53,11 +61,21 @@ _EXPECTED_RECORD_COUNTS: dict[str, int] = {
     "financialsTemplate": 9,
 }
 
-_EXPECTED_REQUIRED_FIELD_COUNTS: dict[str, int] = {
+_EXPECTED_UNIVERSAL_KEY_COUNTS: dict[str, int] = {
     "financialData": 14,
     "defaultKeyStatistics": 8,
     "calendarEvents": 2,
     "financialsTemplate": 2,
+}
+
+# Corpus-universal keys loosened to Optional on live evidence (2026-07-07;
+# see the field docstrings). Pinned exactly: a corpus refresh that starts
+# backing the loosening shrinks the universal set and must prune this map.
+_LIVE_LOOSENED_UNIVERSAL_KEYS: dict[str, set[str]] = {
+    "financialData": {"returnOnAssets", "returnOnEquity"},
+    "defaultKeyStatistics": set(),
+    "calendarEvents": set(),
+    "financialsTemplate": set(),
 }
 
 
@@ -131,14 +149,15 @@ def test_module_payload_validates_with_no_extra_fields(
 
 @pytest.mark.parametrize("module", sorted(_MODULE_MODELS))
 def test_required_field_set_matches_corpus_universal_keys(module: str) -> None:
-    """Each module's required fields are exactly its corpus-measured universal keys.
+    """Each module's required fields are its corpus-measured universal keys.
 
     A required field is one whose ``FieldInfo.is_required()`` is True; its
     wire key is its alias (or its name, for the handful with no override).
     This must equal the set of wire keys present on every capture of that
-    module - not a superset, not a subset - including keys that are always
-    present but sometimes null (required-but-nullable fields typed ``T |
-    None`` with no default).
+    module — including keys that are always present but sometimes null
+    (required-but-nullable fields typed ``T | None`` with no default) —
+    minus exactly the live-evidence loosened keys pinned in
+    ``_LIVE_LOOSENED_UNIVERSAL_KEYS``: not a superset, not any other subset.
     """
 
     model_cls = _MODULE_MODELS[module]
@@ -153,8 +172,78 @@ def test_required_field_set_matches_corpus_universal_keys(module: str) -> None:
         if field_info.is_required()
     }
 
-    assert len(universal_keys) == _EXPECTED_REQUIRED_FIELD_COUNTS[module]
-    assert required_aliases == universal_keys
+    loosened = _LIVE_LOOSENED_UNIVERSAL_KEYS[module]
+    assert len(universal_keys) == _EXPECTED_UNIVERSAL_KEY_COUNTS[module]
+    assert loosened <= universal_keys
+    assert required_aliases == universal_keys - loosened
+    if loosened:
+        assert required_aliases < universal_keys
+
+
+def test_earnings_required_field_set_is_a_subset_of_nested_universal_keys() -> None:
+    """The nested Earnings block's required fields: universal keys minus one.
+
+    ``calendarEvents.earnings`` is nested, so the module-level gate above
+    never sees its keys; this pins the same invariant one level down.
+    ``isEarningsDateEstimate`` is present on every corpus capture's
+    ``earnings`` block, but a 2026-07-07 live pull observed it absent on a
+    newly listed EQUITY whose ``earningsDate`` is an empty list (SPCX) —
+    loosened to Optional, with the difference pinned here exactly.
+    """
+
+    earnings_records = [
+        dict(record["earnings"])
+        for record in quote_summary_module_records("calendarEvents")
+    ]
+    assert earnings_records, "expected calendarEvents captures with earnings blocks"
+    report = collect_presence(earnings_records, kind_of=lambda _record: "EQUITY")
+    universal_keys = {key for key, field in report.fields.items() if field.universal}
+
+    required_aliases = {
+        (field_info.alias or name)
+        for name, field_info in Earnings.model_fields.items()
+        if field_info.is_required()
+    }
+
+    assert required_aliases < universal_keys
+    assert universal_keys - required_aliases == {"isEarningsDateEstimate"}
+
+
+def test_financial_data_validates_without_return_metrics() -> None:
+    """Live-shape regression (LHX/SPCX/YSS, 2026-07-07).
+
+    Replays the observed divergence on a corpus capture: Yahoo omitting
+    ``returnOnAssets``/``returnOnEquity`` (always together) must validate,
+    with both fields None.
+    """
+
+    record = dict(next(iter(quote_summary_module_records("financialData"))))
+    del record["returnOnAssets"]
+    del record["returnOnEquity"]
+
+    financial_data = FinancialData.model_validate(record)
+
+    assert financial_data.return_on_assets is None
+    assert financial_data.return_on_equity is None
+
+
+def test_calendar_events_validates_without_is_earnings_date_estimate() -> None:
+    """Live-shape regression (SPCX, 2026-07-07).
+
+    Replays the observed divergence on a corpus capture: a nested
+    ``earnings`` block missing ``isEarningsDateEstimate`` (as Yahoo sends
+    for a newly listed symbol with no scheduled earnings date) must
+    validate, with the field None.
+    """
+
+    record = dict(next(iter(quote_summary_module_records("calendarEvents"))))
+    earnings = dict(record["earnings"])
+    del earnings["isEarningsDateEstimate"]
+    record["earnings"] = earnings
+
+    calendar_events = CalendarEvents.model_validate(record)
+
+    assert calendar_events.earnings.is_earnings_date_estimate is None
 
 
 @pytest.mark.parametrize(

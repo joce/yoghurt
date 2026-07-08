@@ -44,6 +44,17 @@ def test_corpus_market_state_values_all_construct(
         MarketState(record["marketState"])
 
 
+def test_market_state_overnight_constructs() -> None:
+    """OVERNIGHT is a member despite having no corpus capture.
+
+    Not observed in the corpus; observed live on Nasdaq EQUITY quotes
+    during the overnight session (SPCX/RKLB, 2026-07-07) — see the enum
+    docstring.
+    """
+
+    assert MarketState("OVERNIGHT") is MarketState.OVERNIGHT
+
+
 def test_corpus_price_alert_confidence_values_all_construct(
     quote_corpus_records: list[dict[str, object]],
 ) -> None:

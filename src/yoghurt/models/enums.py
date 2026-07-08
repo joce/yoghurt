@@ -38,8 +38,13 @@ class MarketState(str, Enum):
 
     PREPRE and POSTPOST bracket the wider extended-hours window; PRE runs
     weekdays roughly 4:00am-9:30am Eastern, REGULAR 9:30am-4:00pm Eastern,
-    and POST 4:00pm-8:00pm Eastern, all excluding holidays. CLOSED covers
-    everything else.
+    and POST 4:00pm-8:00pm Eastern, all excluding holidays. OVERNIGHT
+    covers the overnight trading session (roughly 8:00pm-4:00am Eastern)
+    between POSTPOST and the next day's PREPRE. CLOSED covers everything
+    else.
+
+    OVERNIGHT is not observed in the corpus; observed live on Nasdaq
+    EQUITY quotes during the overnight session (SPCX/RKLB, 2026-07-07).
     """
 
     PREPRE = "PREPRE"
@@ -47,6 +52,7 @@ class MarketState(str, Enum):
     REGULAR = "REGULAR"
     POST = "POST"
     POSTPOST = "POSTPOST"
+    OVERNIGHT = "OVERNIGHT"
     CLOSED = "CLOSED"
 
 
