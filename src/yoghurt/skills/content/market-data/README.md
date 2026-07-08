@@ -38,6 +38,8 @@ bars = yoghurt.Ticker("AAPL").chart(interval="1d").to_polars()
 `chart()` returns a `Chart` (a `Frame` subclass): OHLCV bars via
 `to_polars()`/`to_pandas()`/etc., typed `.meta` (`ChartMeta`), and typed
 `.events` when the response carries one (dividends/splits/earnings).
+The bar columns are `ts, open, high, low, close, volume, adj_close`
+(the time column is `ts`, not `timestamp` or `date`).
 Omitted `period1`/`period2` default to a recent quote-page-shaped window.
 
 CLI equivalent:
