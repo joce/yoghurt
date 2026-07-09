@@ -6,6 +6,43 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-07-08
+
+Patch release — hardens the typed models against live payload variance Yahoo
+serves for instruments outside the capture corpus. No API surface changes;
+the CLI is untouched.
+
+### Fixed
+
+- `Quote.market_state` accepts the `OVERNIGHT` market state Yahoo returns
+  during the overnight session (~8pm–4am ET), instead of raising
+  `YahooApiError` (code `"model-validation"`). (#27)
+- Typed `quote_summary()` no longer rejects real payloads over fields the
+  capture corpus had measured as universal — one over-strict field in one
+  module used to fail the whole call. Loosened to Optional on live evidence
+  (each field docstring records the observed condition, and the corpus
+  coverage gates pin the loosened set so a refresh cannot silently
+  re-tighten it):
+  - `financialData.returnOnAssets`/`.returnOnEquity` — absent on some
+    EQUITY summaries. (#27)
+  - `calendarEvents.earnings.isEarningsDateEstimate` — absent on a newly
+    listed symbol with no scheduled earnings date. (#27)
+  - `calendarEvents.earnings.revenueAverage`/`.revenueLow`/`.revenueHigh` —
+    absent (always together) on low-analyst-coverage symbols with no
+    revenue estimates. (#28)
+  - `financialData.operatingCashflow` and `.totalCash`/`.totalCashPerShare`/
+    `.totalDebt` — absent on fund-like instruments such as a
+    physical-commodity trust. (#28)
+  - `financialData.financialCurrency` is now nullable (`str | None`,
+    still required): observed present-but-null on the same fund-like
+    payloads. (#28)
+
+### Internal
+
+- The market-data skill README now names the chart frame columns
+  (`ts, open, high, low, close, volume, adj_close` — the time column is
+  `ts`, not `timestamp` or `date`). (#28)
+
 ## [0.4.0] - 2026-07-07
 
 ### Added
@@ -314,7 +351,8 @@ First PyPI release.
 - Reusable Yahoo session cache for faster one-shot calls.
 - `raw` escape hatch for query paths yoghurt doesn't model yet.
 
-[Unreleased]: https://github.com/joce/yoghurt/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/joce/yoghurt/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/joce/yoghurt/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/joce/yoghurt/compare/v0.3.3...v0.4.0
 [0.3.3]: https://github.com/joce/yoghurt/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/joce/yoghurt/compare/v0.3.1...v0.3.2
