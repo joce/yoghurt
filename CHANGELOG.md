@@ -6,6 +6,24 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-07-12
+
+Patch release — packaging and agent-skill documentation only. No code
+changes; the library API and CLI are untouched.
+
+### Changed
+
+- The `pandas` extra now accepts pyarrow up to 25.x (`pyarrow>=17,<26`,
+  previously `<23`). (#31)
+
+### Internal
+
+- The queries skill SHARP-EDGES now documents that screener `industry`
+  strings use Yahoo's em-dash taxonomy (`Software—Application`) while
+  `assetProfile` spells the same industry with a spaced hyphen
+  (`Software - Application`) — feeding the assetProfile string into a
+  screener `WHERE` clause silently returns an empty frame. (#32)
+
 ## [0.4.1] - 2026-07-08
 
 Patch release — hardens the typed models against live payload variance Yahoo
@@ -351,7 +369,8 @@ First PyPI release.
 - Reusable Yahoo session cache for faster one-shot calls.
 - `raw` escape hatch for query paths yoghurt doesn't model yet.
 
-[Unreleased]: https://github.com/joce/yoghurt/compare/v0.4.1...HEAD
+[Unreleased]: https://github.com/joce/yoghurt/compare/v0.4.2...HEAD
+[0.4.2]: https://github.com/joce/yoghurt/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/joce/yoghurt/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/joce/yoghurt/compare/v0.3.3...v0.4.0
 [0.3.3]: https://github.com/joce/yoghurt/compare/v0.3.2...v0.3.3
