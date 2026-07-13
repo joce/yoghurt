@@ -24,6 +24,47 @@ splits = yoghurt.visualization(
 Evidence: 2026-07-05, network-inspected and verified through
 `visualization()`.
 
+## Screener industry strings don't match assetProfile spelling
+
+**Severity:** medium
+
+The screener's `industry` field uses Yahoo's em-dash taxonomy
+(`Software—Application`, `Software—Infrastructure`), while the
+quoteSummary `assetProfile` module spells the same industry with a spaced
+hyphen (`Software - Application`). Feeding the assetProfile string into a
+screener `WHERE` clause silently returns an empty frame — zero matches is
+the normal empty-frame contract, so nothing errors.
+
+Wrong way: piping `asset_profile.industry` straight into a screener query:
+
+```python
+ind = Ticker("ADBE").quote_summary(modules=["assetProfile"]).asset_profile.industry
+# 'Software - Application' — spaced hyphen; the screener will never match it
+yoghurt.screener(f"SELECT ticker FROM EQUITY WHERE industry = '{ind}'")  # empty frame
+```
+
+Right way: read the screener's own spelling first — `SELECT` the
+`industry` column on a broad query (or see `screener-instrument-fields
+equity`; `industry` is dropdown-supported) — then filter with that string:
+
+```python
+tech = yoghurt.screener(
+    "SELECT ticker, industry FROM EQUITY "
+    "WHERE region = 'us' AND sector = 'Technology' "
+    "ORDER BY intradaymarketcap DESC LIMIT 25"
+).to_polars()
+# industry column reads 'Software—Application' (em dash) — use that exact string
+peers = yoghurt.screener(
+    "SELECT ticker, companyshortname, intradaymarketcap FROM EQUITY "
+    "WHERE region = 'us' AND industry = 'Software—Application' "
+    "ORDER BY intradaymarketcap DESC LIMIT 12"
+).to_polars()
+```
+
+Evidence: 2026-07-12, verified live. `assetProfile` for ADBE returns
+`'Software - Application'`; a screener `WHERE` with that string returns an
+empty frame, while `'Software—Application'` returns SAP/SHOP/CRM/ADBE/INTU.
+
 ## Screener and visualization use different key casings
 
 **Severity:** low
