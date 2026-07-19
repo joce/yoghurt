@@ -58,6 +58,25 @@ def test_history_request_defaults_to_one_month_daily() -> None:
     }
 
 
+def test_history_request_resolves_omitted_end_once(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """An explicit start gets one fixed end shared by every symbol batch."""
+
+    expected_end = 1_800_000_000
+    monkeypatch.setattr("yoghurt.history.time", lambda: expected_end)
+
+    values = request_values(
+        period=None,
+        start="2025-01-01",
+        end=None,
+        interval="1d",
+        include_pre_post=False,
+    )
+
+    assert values["period2"] == expected_end
+
+
 def test_history_request_rejects_period_with_dates() -> None:
     """Relative and explicit windows are separate, unambiguous modes."""
 

@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime
+from time import time
 from typing import Any, Final
 
 import polars as pl
@@ -61,8 +62,7 @@ def request_values(
         values["range"] = selected_period
     else:
         values["period1"] = start
-        if end is not None:
-            values["period2"] = end
+        values["period2"] = end if end is not None else int(time())
     return values
 
 
