@@ -958,6 +958,7 @@ async def _dispatch_history(
     """
 
     from yoghurt.history import (  # noqa: PLC0415
+        HISTORY_REQUEST_BATCH_SIZE,
         concat_frames,
         frame_from_chart_result,
         request_values,
@@ -986,17 +987,22 @@ async def _dispatch_history(
         params = build_params(command, values)
         validate_params(command, params)
         requests.append((build_path(command, values), params, symbol))
-    bodies = await asyncio.gather(
-        *(
-            client.get(
-                path,
-                params,
-                use_crumb=command.use_crumb,
-                base_url=command.base_url,
+    bodies: list[str] = []
+    for offset in range(0, len(requests), HISTORY_REQUEST_BATCH_SIZE):
+        batch = requests[offset : offset + HISTORY_REQUEST_BATCH_SIZE]
+        bodies.extend(
+            await asyncio.gather(
+                *(
+                    client.get(
+                        path,
+                        params,
+                        use_crumb=command.use_crumb,
+                        base_url=command.base_url,
+                    )
+                    for path, params, _symbol in batch
+                )
             )
-            for path, params, _symbol in requests
         )
-    )
     frame = concat_frames(
         [
             frame_from_chart_result(parse_chart_result(body), symbol)

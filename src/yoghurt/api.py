@@ -20,6 +20,7 @@ from yoghurt._bridge import run
 from yoghurt.commands import COMMANDS_BY_NAME
 from yoghurt.exceptions import SymbolNotFoundError, YahooApiError
 from yoghurt.frames import Chart, Frame, History, Spark, Timeseries
+from yoghurt.history import HISTORY_REQUEST_BATCH_SIZE
 from yoghurt.history import concat_frames as concat_history_frames
 from yoghurt.history import frame_from_chart_result as history_frame_from_result
 from yoghurt.history import request_values as history_request_values
@@ -751,16 +752,22 @@ async def _history_payloads(
         list[dict[str, Any]]: Decoded chart payloads in symbol order.
     """
 
-    return await asyncio.gather(
-        *(
-            _core.call_endpoint(
-                "chart",
-                symbol=symbol,
-                values={**values, "symbol": symbol},
+    payloads: list[dict[str, Any]] = []
+    for offset in range(0, len(symbols), HISTORY_REQUEST_BATCH_SIZE):
+        batch = symbols[offset : offset + HISTORY_REQUEST_BATCH_SIZE]
+        payloads.extend(
+            await asyncio.gather(
+                *(
+                    _core.call_endpoint(
+                        "chart",
+                        symbol=symbol,
+                        values={**values, "symbol": symbol},
+                    )
+                    for symbol in batch
+                )
             )
-            for symbol in symbols
         )
-    )
+    return payloads
 
 
 def history(  # noqa: PLR0913 - history's five orthogonal controls are public.

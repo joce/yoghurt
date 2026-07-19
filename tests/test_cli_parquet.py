@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 from io import StringIO
 from typing import TYPE_CHECKING, Any
@@ -10,14 +11,51 @@ import polars as pl
 import pytest
 
 from yoghurt.cli import main
+from yoghurt.history import HISTORY_REQUEST_BATCH_SIZE
 
 from .test_cli import StubClient, assert_formatted_default_false
 
 if TYPE_CHECKING:
     from pathlib import Path
 
+    from yoghurt.types import ParamValue
+
 ARGPARSE_ERROR = 2
 EXPECTED_ROW_COUNT = 3
+
+
+class _ConcurrencyTrackingStubClient(StubClient):
+    """Track peak simultaneous CLI GET calls."""
+
+    def __init__(self, body: str) -> None:
+        """Initialize concurrency counters."""
+
+        super().__init__(body)
+        self.active = 0
+        self.peak_active = 0
+
+    async def get(
+        self,
+        path: str,
+        params: dict[str, ParamValue],
+        *,
+        use_crumb: bool = True,
+        base_url: str | None = None,
+    ) -> str:
+        """Yield while active so overlapping calls can be counted."""
+
+        self.active += 1
+        self.peak_active = max(self.peak_active, self.active)
+        try:
+            await asyncio.sleep(0)
+            return await super().get(
+                path,
+                params,
+                use_crumb=use_crumb,
+                base_url=base_url,
+            )
+        finally:
+            self.active -= 1
 
 
 def _chart_body_json() -> str:
@@ -235,6 +273,19 @@ def test_history_json_adjusts_and_combines_symbols() -> None:
     ]
     assert all(call[1]["range"] == "1y" for call in client.calls)
     assert all(call[1]["interval"] == "1d" for call in client.calls)
+
+
+def test_history_cli_bounds_concurrent_requests() -> None:
+    """The history CLI never has more than one request batch in flight."""
+
+    client = _ConcurrencyTrackingStubClient(_chart_body_json())
+    symbols = [f"SYM{index}" for index in range(HISTORY_REQUEST_BATCH_SIZE + 1)]
+
+    exit_code = main(["history", ",".join(symbols)], client=client)
+
+    assert exit_code == 0
+    assert client.peak_active == HISTORY_REQUEST_BATCH_SIZE
+    assert [call[0].rsplit("/", 1)[-1] for call in client.calls] == symbols
 
 
 def test_history_parquet_writes_adjustment_contract(tmp_path: Path) -> None:

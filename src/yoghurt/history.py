@@ -7,7 +7,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime
-from typing import Any
+from typing import Any, Final
 
 import polars as pl
 
@@ -15,6 +15,7 @@ from yoghurt.params import CHART_INTERVALS, CHART_RANGES
 from yoghurt.tabular import build_chart_frame, extract_chart_columns
 
 DateLike = int | str | date | datetime
+HISTORY_REQUEST_BATCH_SIZE: Final[int] = 8
 
 
 def request_values(
