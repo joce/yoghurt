@@ -499,6 +499,8 @@ raw OHLC and adjusted close plus typed metadata/events in the library, or the
 unchanged Yahoo response in the CLI. `history` is analysis-ready: it computes
 `adj_close / close` per row, applies that factor to open/high/low/close, leaves
 volume unchanged, and combines requested symbols into one long-form table.
+Supported intervals are `1d`, `5d`, `1wk`, `1mo`, and `3mo`; use `chart` for
+intraday data because Yahoo omits adjusted close from intraday responses.
 
 ```powershell
 uv run yoghurt history AAPL,MSFT --period 1y --interval 1d

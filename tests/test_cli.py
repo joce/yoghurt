@@ -1996,7 +1996,7 @@ def test_history_help_explains_adjusted_multi_symbol_semantics(
     assert "--start" in captured.out
     assert "--end" in captured.out
     assert "--interval" in captured.out
-    assert "2m" in captured.out
+    assert "2m" not in captured.out
     assert "3mo" in captured.out
     assert "corporate-action-adjusted" in captured.out
     assert "No heuristic price repair" in captured.out

@@ -64,6 +64,8 @@ multi = yoghurt.history(["AAPL", "MSFT"], period="1y").to_polars()
 
 With no period or dates the window is `1mo`; the default interval is `1d`.
 Use `start=` and optional `end=` instead of `period=` for explicit dates.
+Supported intervals are `1d`, `5d`, `1wk`, `1mo`, and `3mo`; use `chart()` for
+intraday data because Yahoo omits adjusted close from intraday responses.
 The multi-symbol result is long-form in caller-supplied symbol order, ready
 to group by `symbol` before feeding each OHLCV block to TA-Lib.
 

@@ -12,7 +12,7 @@ from typing import Any, Final
 
 import polars as pl
 
-from yoghurt.params import CHART_INTERVALS, CHART_RANGES
+from yoghurt.params import CHART_RANGES, HISTORY_INTERVALS
 from yoghurt.tabular import TabularShapeError, build_chart_frame, extract_chart_columns
 
 DateLike = int | str | date | datetime
@@ -49,8 +49,8 @@ def request_values(
         expected = ", ".join(CHART_RANGES)
         message = f"unsupported period {selected_period!r}; expected one of: {expected}"
         raise ValueError(message)
-    if interval not in CHART_INTERVALS:
-        expected = ", ".join(CHART_INTERVALS)
+    if interval not in HISTORY_INTERVALS:
+        expected = ", ".join(HISTORY_INTERVALS)
         message = f"unsupported interval {interval!r}; expected one of: {expected}"
         raise ValueError(message)
 

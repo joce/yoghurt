@@ -76,6 +76,7 @@ CHART_INTERVALS: Final[tuple[str, ...]] = (
     "1mo",
     "3mo",
 )
+HISTORY_INTERVALS: Final[tuple[str, ...]] = ("1d", "5d", "1wk", "1mo", "3mo")
 CHART_RANGES: Final[tuple[str, ...]] = (
     "1d",
     "5d",

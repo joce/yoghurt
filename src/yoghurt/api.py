@@ -217,7 +217,9 @@ class Ticker:
 
         With no date arguments, the window defaults to one month. ``period``
         accepts Yahoo's relative ranges; use ``start`` and optional ``end``
-        for an explicit window. No heuristic price repair is applied.
+        for an explicit window. Supported intervals are daily or coarser because
+        Yahoo omits adjusted close from intraday responses. No heuristic price
+        repair is applied.
 
         Returns:
             History: A long-form adjusted table with this ticker's symbol.
@@ -784,7 +786,9 @@ def history(  # noqa: PLR0913 - history's five orthogonal controls are public.
     The result is long-form and preserves the caller's symbol order, so it
     can be partitioned by ``symbol`` before passing OHLCV arrays to TA-Lib.
     With no date arguments, the window defaults to one month. Adjustment is
-    derived from Yahoo's adjusted close; no heuristic price repair is applied.
+    derived from Yahoo's adjusted close. Supported intervals are daily or
+    coarser because Yahoo omits adjusted close from intraday responses; no
+    heuristic price repair is applied.
 
     Returns:
         History: Adjusted rows with the stable ``symbol, ts, open, high, low,

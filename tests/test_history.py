@@ -122,3 +122,16 @@ def test_history_request_rejects_period_with_dates() -> None:
             interval="1d",
             include_pre_post=False,
         )
+
+
+def test_history_request_rejects_intraday_interval() -> None:
+    """Adjusted history rejects intervals where Yahoo omits adjusted close."""
+
+    with pytest.raises(ValueError, match="expected one of: 1d, 5d, 1wk, 1mo, 3mo"):
+        request_values(
+            period="1d",
+            start=None,
+            end=None,
+            interval="1m",
+            include_pre_post=False,
+        )

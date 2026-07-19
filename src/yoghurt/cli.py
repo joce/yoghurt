@@ -24,8 +24,8 @@ from yoghurt.client import YahooClient
 from yoghurt.commands import COMMANDS, COMMANDS_BY_NAME, CommandSpec, FieldReference
 from yoghurt.exceptions import YoghurtError
 from yoghurt.params import (
-    CHART_INTERVALS,
     CHART_RANGES,
+    HISTORY_INTERVALS,
     ParamKind,
     ParamSpec,
     build_params,
@@ -372,7 +372,7 @@ Notes:
   Prices are corporate-action-adjusted from Yahoo's adjusted close. Volume is
   unchanged. A price row without usable adjusted close is rejected rather than
   returned raw. No heuristic price repair is applied. Use chart for Yahoo's raw
-  OHLC, adjusted close, metadata, and events.
+  or intraday OHLC, adjusted close, metadata, and events.
 """
 
 
@@ -421,10 +421,10 @@ def _add_history_parser(subparsers: Any) -> None:  # noqa: ANN401
     )
     parser.add_argument(
         "--interval",
-        choices=CHART_INTERVALS,
+        choices=HISTORY_INTERVALS,
         default="1d",
         metavar="INTERVAL",
-        help=f"Bar interval. Supported values: {', '.join(CHART_INTERVALS)}.",
+        help=f"Bar interval. Supported values: {', '.join(HISTORY_INTERVALS)}.",
     )
     parser.add_argument(
         "--include-pre-post",
