@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from yoghurt.params import ParamKind, ParamSpec
+from yoghurt.params import CHART_INTERVALS, CHART_RANGES, ParamKind, ParamSpec
 
 
 @dataclass(frozen=True, slots=True)
@@ -1932,12 +1932,23 @@ CHART_COMMAND = CommandSpec(
             ),
         ),
         ParamSpec(
+            name="range",
+            cli_name="range",
+            kind=ParamKind.STRING,
+            metavar="RANGE",
+            help=(
+                "Relative chart window. Supported values: "
+                f"{', '.join(CHART_RANGES)}. Cannot be combined with period1 "
+                "or period2."
+            ),
+        ),
+        ParamSpec(
             name="interval",
             cli_name="interval",
             kind=ParamKind.STRING,
             default="1m",
             metavar="INTERVAL",
-            help=("Chart interval. Supported values: 1m, 5m, 15m, 1d, 1wk, 1mo."),
+            help=(f"Chart interval. Supported values: {', '.join(CHART_INTERVALS)}."),
         ),
         ParamSpec(
             name="includePrePost",
@@ -1978,12 +1989,14 @@ CHART_COMMAND = CommandSpec(
     ),
     examples=(
         "yoghurt chart AAPL",
+        "yoghurt chart AAPL --range 1mo --interval 1d",
         "yoghurt chart AAPL --period1 2026-04-30",
         "yoghurt chart AAPL --period1 1777507200 --period2 1777593600 --interval 1m",
         "yoghurt chart SPY --period1 2026-01-01 --interval 1d --events div,split",
     ),
     notes=(
         "period2 must be greater than period1.",
+        "range cannot be combined with period1 or period2.",
         (
             "When period2 is omitted, yoghurt sends the current Unix timestamp; "
             "now is not accepted as a user-provided value."

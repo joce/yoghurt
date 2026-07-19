@@ -111,6 +111,17 @@ class Chart(Frame):
 
 
 @dataclass(frozen=True, slots=True)
+class History(Frame):
+    """Corporate-action-adjusted OHLCV history for one or more symbols.
+
+    Rows always use the long-form ``symbol, ts, open, high, low, close,
+    volume`` schema. Open, high, low, and close are scaled from Yahoo's
+    adjusted close; volume is unchanged. Rows without a usable adjustment
+    factor retain Yahoo's raw prices. No heuristic price repair is applied.
+    """
+
+
+@dataclass(frozen=True, slots=True)
 class Spark(Frame):
     """A single-column close-price series plus the spark response's meta block.
 

@@ -1,7 +1,7 @@
 # Market data
 
-Quotes, charts, sparklines, and option chains — the per-symbol, price-level
-endpoints.
+Quotes, adjusted history, charts, sparklines, and option chains — the
+price-level surfaces.
 
 ## Quotes
 
@@ -48,6 +48,31 @@ CLI equivalent:
 uv run yoghurt chart AAPL
 ```
 
+Use a relative raw chart window with `range=`/`--range`, or explicit
+`period1`/`period2` dates. These modes cannot be combined.
+
+## Adjusted history
+
+`history` is a separate analysis-ready surface. It scales the complete OHLC
+bar by Yahoo's `adj_close / close` factor, leaves volume unchanged, and always
+returns `symbol, ts, open, high, low, close, volume`:
+
+```python
+single = yoghurt.Ticker("AAPL").history(period="1y").to_polars()
+multi = yoghurt.history(["AAPL", "MSFT"], period="1y").to_polars()
+```
+
+With no period or dates the window is `1mo`; the default interval is `1d`.
+Use `start=` and optional `end=` instead of `period=` for explicit dates.
+The multi-symbol result is long-form in caller-supplied symbol order, ready
+to group by `symbol` before feeding each OHLCV block to TA-Lib.
+
+CLI equivalent (derived JSON rows, not Yahoo's raw response envelope):
+
+```bash
+uv run yoghurt history AAPL,MSFT --period 1y --interval 1d
+```
+
 ## Sparklines
 
 ```python
@@ -86,6 +111,7 @@ Full parameter lists, defaults, and examples live in `--help`, not here:
 ```bash
 uv run yoghurt quote --help
 uv run yoghurt chart --help
+uv run yoghurt history --help
 uv run yoghurt options --help
 ```
 

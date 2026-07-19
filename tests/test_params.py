@@ -197,6 +197,25 @@ def test_build_params_applies_static_defaults_for_absent_keys() -> None:
     assert params["interval"] == "1m"
 
 
+def test_build_params_chart_range_suppresses_date_defaults() -> None:
+    """A relative chart range is sent without period1/period2 defaults."""
+
+    command = COMMANDS_BY_NAME["chart"]
+    params = build_params(command, {"symbol": "AAPL", "range": "1mo"})
+
+    assert params["range"] == "1mo"
+    assert "period1" not in params
+    assert "period2" not in params
+
+
+def test_build_params_chart_range_rejects_explicit_dates() -> None:
+    """Chart range and absolute window modes cannot be combined."""
+
+    command = COMMANDS_BY_NAME["chart"]
+    with pytest.raises(ValueError, match="--range cannot be combined"):
+        build_params(command, {"range": "1mo", "period1": "2026-01-01"})
+
+
 def test_build_path_formats_and_quotes_path_params() -> None:
     """Path templating URL-quotes the symbol."""
     command = COMMANDS_BY_NAME["chart"]

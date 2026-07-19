@@ -12,7 +12,7 @@ import yoghurt._core as core
 from yoghurt import api
 from yoghurt.commands import COMMANDS_BY_NAME
 from yoghurt.exceptions import YahooApiError
-from yoghurt.frames import Frame
+from yoghurt.frames import Frame, History
 from yoghurt.models import (
     MarketInfoResult,
     MarketSummaryQuote,
@@ -139,6 +139,25 @@ def test_quotes_empty_list_raises_before_io(monkeypatch: pytest.MonkeyPatch) -> 
     monkeypatch.setattr(core, "_get_client", _fail_get_client)
     with pytest.raises(ValueError, match="symbols must not be empty"):
         api.quotes([])
+
+
+def test_history_fetches_symbols_concurrently_into_one_long_frame(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """history() preserves input symbol order in one adjusted History table."""
+
+    fake = _install_fake(monkeypatch, _corpus_text("chart/AAPL.json"))
+    result = api.history(["AAPL", "MSFT"], period="1y")
+
+    assert isinstance(result, History)
+    symbols = result.to_polars()["symbol"].to_list()
+    rows_per_symbol = len(symbols) // 2
+    assert symbols == ["AAPL"] * rows_per_symbol + ["MSFT"] * rows_per_symbol
+    assert [path for path, _params in fake.calls] == [
+        "/v8/finance/chart/AAPL",
+        "/v8/finance/chart/MSFT",
+    ]
+    assert all(params["range"] == "1y" for _path, params in fake.calls)
 
 
 _SCREENER_QUERY = (

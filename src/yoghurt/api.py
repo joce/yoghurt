@@ -9,6 +9,7 @@ value — those use the wire name so the kwarg's meaning matches its effect.
 
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any, Final, TypeAlias
 
@@ -18,7 +19,10 @@ from yoghurt import _core
 from yoghurt._bridge import run
 from yoghurt.commands import COMMANDS_BY_NAME
 from yoghurt.exceptions import SymbolNotFoundError, YahooApiError
-from yoghurt.frames import Chart, Frame, Spark, Timeseries
+from yoghurt.frames import Chart, Frame, History, Spark, Timeseries
+from yoghurt.history import concat_frames as concat_history_frames
+from yoghurt.history import frame_from_chart_result as history_frame_from_result
+from yoghurt.history import request_values as history_request_values
 from yoghurt.models import (
     AnalystResult,
     CalendarEventsResult,
@@ -79,6 +83,28 @@ def _now_utc() -> datetime:
     return datetime.now(timezone.utc)
 
 
+def _chart_from_payload(payload: dict[str, Any], fetched_at: datetime) -> Chart:
+    """Build one typed Chart from a decoded endpoint payload.
+
+    Returns:
+        Chart: The typed bars, meta, and events.
+
+    Raises:
+        YahooApiError: If bars cannot be flattened or models cannot validate.
+    """
+
+    result = payload["chart"]["result"][0]
+    try:
+        timestamps, columns = extract_chart_columns(result)
+        df = build_chart_frame(timestamps, columns)
+    except TabularShapeError as exc:
+        raise YahooApiError(code="malformed-response", description=str(exc)) from exc
+    meta = validate_model(ChartMeta, result.get("meta", {}))
+    raw_events = result.get("events")
+    chart_events = validate_model(ChartEvents, raw_events) if raw_events else None
+    return Chart(df=df, fetched_at=fetched_at, meta=meta, events=chart_events)
+
+
 class Ticker:
     """Symbol-bound entry point; every method performs one HTTP call."""
 
@@ -136,11 +162,12 @@ class Ticker:
             raise SymbolNotFoundError(self.symbol)
         return validate_model(Quote, results[0])
 
-    def chart(
+    def chart(  # noqa: PLR0913 - one keyword-only arg per chart wire param.
         self,
         *,
         period1: DateLike | None = None,
         period2: DateLike | None = None,
+        range: str | None = None,  # noqa: A002 - mirrors Yahoo's wire/CLI name
         interval: str | None = None,
         events: list[str] | None = None,
         include_pre_post: bool | None = None,
@@ -155,11 +182,8 @@ class Ticker:
             Chart: Typed bars frame plus the typed chart meta and (when
             requested) events blocks.
 
-        Raises:
-            YahooApiError: If the response cannot be flattened into the
-                fixed bars schema (code ``"malformed-response"``), or if
-                the meta/events blocks fail model validation (code
-                ``"model-validation"``).
+        Malformed bars surface as ``YahooApiError(code="malformed-response")``;
+        invalid meta/events models use ``code="model-validation"``.
         """
 
         payload = run(
@@ -170,28 +194,41 @@ class Ticker:
                     symbol=self.symbol,
                     period1=period1,
                     period2=period2,
+                    range=range,
                     interval=interval,
                     events=events,
                     includePrePost=include_pre_post,
                 ),
             )
         )
-        result = payload["chart"]["result"][0]
-        try:
-            timestamps, columns = extract_chart_columns(result)
-            df = build_chart_frame(timestamps, columns)
-        except TabularShapeError as exc:
-            raise YahooApiError(
-                code="malformed-response", description=str(exc)
-            ) from exc
-        meta = validate_model(ChartMeta, result.get("meta", {}))
-        raw_events = result.get("events")
-        chart_events = validate_model(ChartEvents, raw_events) if raw_events else None
-        return Chart(
-            df=df,
-            fetched_at=_now_utc(),
-            meta=meta,
-            events=chart_events,
+        return _chart_from_payload(payload, _now_utc())
+
+    def history(
+        self,
+        *,
+        period: str | None = None,
+        start: DateLike | None = None,
+        end: DateLike | None = None,
+        interval: str = "1d",
+        include_pre_post: bool = False,
+    ) -> History:
+        """Fetch analysis-ready, corporate-action-adjusted OHLCV history.
+
+        With no date arguments, the window defaults to one month. ``period``
+        accepts Yahoo's relative ranges; use ``start`` and optional ``end``
+        for an explicit window. No heuristic price repair is applied.
+
+        Returns:
+            History: A long-form adjusted table with this ticker's symbol.
+        """
+
+        return history(
+            [self.symbol],
+            period=period,
+            start=start,
+            end=end,
+            interval=interval,
+            include_pre_post=include_pre_post,
         )
 
     def spark(  # noqa: PLR0913 - one keyword-only arg per spark wire param.
@@ -703,6 +740,78 @@ def _tabular_frame(payload: dict[str, Any], route: str) -> Frame:
         ) from exc
     df = build_tabular_frame(column_data, columns) if columns else pl.DataFrame()
     return Frame(df=df, fetched_at=_now_utc())
+
+
+async def _history_payloads(
+    symbols: list[str], values: dict[str, object]
+) -> list[dict[str, Any]]:
+    """Fetch chart payloads concurrently for a multi-symbol history request.
+
+    Returns:
+        list[dict[str, Any]]: Decoded chart payloads in symbol order.
+    """
+
+    return await asyncio.gather(
+        *(
+            _core.call_endpoint(
+                "chart",
+                symbol=symbol,
+                values={**values, "symbol": symbol},
+            )
+            for symbol in symbols
+        )
+    )
+
+
+def history(  # noqa: PLR0913 - history's five orthogonal controls are public.
+    symbols: list[str],
+    *,
+    period: str | None = None,
+    start: DateLike | None = None,
+    end: DateLike | None = None,
+    interval: str = "1d",
+    include_pre_post: bool = False,
+) -> History:
+    """Fetch adjusted OHLCV history for one or more symbols.
+
+    The result is long-form and preserves the caller's symbol order, so it
+    can be partitioned by ``symbol`` before passing OHLCV arrays to TA-Lib.
+    With no date arguments, the window defaults to one month. Adjustment is
+    derived from Yahoo's adjusted close; no heuristic price repair is applied.
+
+    Returns:
+        History: Adjusted rows with the stable ``symbol, ts, open, high, low,
+        close, volume`` schema.
+
+    Raises:
+        ValueError: If symbols is empty, contains an empty symbol, or the
+            period/date arguments conflict.
+        YahooApiError: If a chart response cannot form the history schema.
+    """
+
+    if not symbols:
+        message = "symbols must not be empty"
+        raise ValueError(message)
+    normalized = [symbol.strip() for symbol in symbols]
+    if any(not symbol for symbol in normalized):
+        message = "symbols must not contain empty values"
+        raise ValueError(message)
+    values = history_request_values(
+        period=period,
+        start=start,
+        end=end,
+        interval=interval,
+        include_pre_post=include_pre_post,
+    )
+    payloads = run(_history_payloads(normalized, values))
+    try:
+        frames = [
+            history_frame_from_result(payload["chart"]["result"][0], symbol)
+            for symbol, payload in zip(normalized, payloads, strict=True)
+        ]
+    except (KeyError, IndexError, TypeError, TabularShapeError) as exc:
+        raise YahooApiError(code="malformed-response", description=str(exc)) from exc
+    return History(df=concat_history_frames(frames), fetched_at=_now_utc())
 
 
 def quotes(  # noqa: PLR0913 - one keyword-only arg per quote wire param.

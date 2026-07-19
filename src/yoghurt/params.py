@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 import time
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from enum import Enum
 from string import Formatter
 from typing import TYPE_CHECKING, Final
@@ -61,6 +61,34 @@ _TRUE_VALUES: Final[frozenset[str]] = frozenset({"1", "true", "t", "yes", "y", "
 _FALSE_VALUES: Final[frozenset[str]] = frozenset({"0", "false", "f", "no", "n", "off"})
 _MILLISECONDS_TIMESTAMP_DIGITS: Final[int] = 13
 _THREE_DAYS_SECONDS: Final[int] = 3 * 24 * 60 * 60
+CHART_INTERVALS: Final[tuple[str, ...]] = (
+    "1m",
+    "2m",
+    "5m",
+    "15m",
+    "30m",
+    "60m",
+    "90m",
+    "1h",
+    "1d",
+    "5d",
+    "1wk",
+    "1mo",
+    "3mo",
+)
+CHART_RANGES: Final[tuple[str, ...]] = (
+    "1d",
+    "5d",
+    "1mo",
+    "3mo",
+    "6mo",
+    "1y",
+    "2y",
+    "5y",
+    "10y",
+    "ytd",
+    "max",
+)
 _DATE_PAIR_NAMES: Final[dict[str, tuple[str, str]]] = {
     "chart": ("period1", "period2"),
     "timeseries": ("period1", "period2"),
@@ -279,6 +307,12 @@ def _check_date_pair_present(
         raise ValueError(message)
 
 
+def _chart_uses_range(command: CommandSpec, values: Mapping[str, object]) -> bool:
+    """Return whether a chart request uses Yahoo's relative range parameter."""
+
+    return command.name == "chart" and values.get("range") is not None
+
+
 def _param_from_default(spec: ParamSpec, current_timestamp: int) -> ParamValue | None:
     """Return the static or dynamic default for an absent param, if any.
 
@@ -323,6 +357,11 @@ def _param_from_value(spec: ParamSpec, value: object) -> ParamValue | None:
         return None
     if isinstance(value, bool | int | float):
         return value
+    if isinstance(value, date):
+        if spec.kind is ParamKind.DATETIME:
+            return parse_datetime(value.isoformat())
+        if spec.kind is ParamKind.DATETIME_MILLISECONDS:
+            return parse_datetime_milliseconds(value.isoformat())
     if not isinstance(value, str):
         message = f"{spec.option} expects a string value, got {type(value).__name__}"
         raise TypeError(message)
@@ -341,14 +380,28 @@ def build_params(
     Returns:
         dict[str, ParamValue]: Coerced query parameters ready to send to
         Yahoo.
+
+    Raises:
+        ValueError: If chart range and explicit date-window values conflict.
     """
 
     params: dict[str, ParamValue] = {}
+    uses_range = _chart_uses_range(command, values)
     date_pair = _date_pair_for_command(command)
     if date_pair is not None:
-        _check_date_pair_present(date_pair, values)
+        start_spec, end_spec = date_pair
+        if uses_range and (start_spec.name in values or end_spec.name in values):
+            message = (
+                f"--range cannot be combined with {start_spec.option} or "
+                f"{end_spec.option}"
+            )
+            raise ValueError(message)
+        if not uses_range:
+            _check_date_pair_present(date_pair, values)
     current_timestamp = int(time.time())
     for spec in command.params:
+        if uses_range and spec.name in {"period1", "period2"}:
+            continue
         if spec.name not in values:
             default_value = _param_from_default(spec, current_timestamp)
             if default_value is not None:
@@ -385,11 +438,19 @@ def validate_params(command: CommandSpec, params: dict[str, ParamValue]) -> None
 
     if command.name == "chart":
         interval = params.get("interval")
-        allowed_intervals = {"1m", "5m", "15m", "1d", "1wk", "1mo"}
+        allowed_intervals = set(CHART_INTERVALS)
         if interval not in allowed_intervals:
             allowed_text = ", ".join(sorted(allowed_intervals))
             message = (
                 f"--interval unsupported value {interval!r}; "
+                f"expected one of: {allowed_text}"
+            )
+            raise ValueError(message)
+        range_value = params.get("range")
+        if range_value is not None and range_value not in CHART_RANGES:
+            allowed_text = ", ".join(CHART_RANGES)
+            message = (
+                f"--range unsupported value {range_value!r}; "
                 f"expected one of: {allowed_text}"
             )
             raise ValueError(message)
