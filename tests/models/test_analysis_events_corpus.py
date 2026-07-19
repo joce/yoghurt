@@ -73,7 +73,9 @@ _EXPECTED_SEC_REPORTS_RECORD_COUNT = 9
 _EXPECTED_SEC_REPORTS_REQUIRED_FIELD_COUNT = 10
 
 
-def _load_json(path: Any) -> dict[str, Any]:  # noqa: ANN401 - corpus JSON is untyped.
+def _load_json(
+    path: Any,  # ruff:ignore[any-type] - corpus JSON is untyped.
+) -> dict[str, Any]:
     payload: dict[str, Any] = json.loads(path.read_text(encoding="utf-8"))
     return payload
 

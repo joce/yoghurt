@@ -32,7 +32,7 @@ _SCREENER_HAPPY_PATH_ROWS = 3
 _VISUALIZATION_HAPPY_PATH_ROWS = 2
 
 
-def _chart_body(  # noqa: PLR0913 - keyword-only helper for test fixtures.
+def _chart_body(  # ruff:ignore[too-many-arguments] - keyword-only helper for test fixtures.
     *,
     timestamps: list[int] | None = None,
     opens: list[float | None] | None = None,

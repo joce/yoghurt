@@ -49,7 +49,7 @@ class _ChartContext:
     period2: int
 
 
-def write_chart_parquet(  # noqa: PLR0913 - keyword-only context fields.
+def write_chart_parquet(  # ruff:ignore[too-many-arguments] - keyword-only context fields.
     chart_json_text: str,
     out_path: Path,
     *,
@@ -126,7 +126,7 @@ def _write_frame(
         raise ParquetWriterError(message) from exc
 
 
-def write_tabular_parquet(  # noqa: PLR0913 - keyword-only metadata.
+def write_tabular_parquet(  # ruff:ignore[too-many-arguments] - keyword-only metadata.
     response_json_text: str,
     out_path: Path,
     *,

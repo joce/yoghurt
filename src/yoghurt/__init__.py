@@ -55,7 +55,7 @@ if TYPE_CHECKING:
     from yoghurt.models import Quote, QuoteType
 
 
-def __getattr__(name: str) -> Any:  # noqa: ANN401 - PEP 562 module __getattr__
+def __getattr__(name: str) -> Any:  # ruff:ignore[any-type] - PEP 562 module __getattr__
     """Lazily import heavy public names on first access (PEP 562).
 
     ``Frame``/``Chart`` and the ``Ticker``/function surface live in

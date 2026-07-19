@@ -48,7 +48,7 @@ from pydantic import Field
 from yoghurt.models._base import YahooModel
 
 # These types are required in full for serialization purposes
-from yoghurt.models.enums import (  # noqa: TC001
+from yoghurt.models.enums import (  # ruff:ignore[typing-only-first-party-import]
     MarketState,
     OptionsType,
     PriceAlertConfidence,

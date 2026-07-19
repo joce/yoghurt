@@ -76,12 +76,12 @@ wire string that pydantic parses directly into :class:`datetime.date` (no
 
 from __future__ import annotations
 
-import datetime  # noqa: TC003 - pydantic needs this at runtime to resolve annotations
+import datetime  # ruff:ignore[typing-only-standard-library-import] - pydantic needs this at runtime to resolve annotations
 
 from pydantic import Field
 
 from yoghurt.models._base import RawFloat, YahooModel
-from yoghurt.models.analysis_insights import (  # noqa: TC001 - pydantic needs these at runtime
+from yoghurt.models.analysis_insights import (  # ruff:ignore[typing-only-first-party-import] - pydantic needs these at runtime
     NewsSummaryBlock,
     PriceMovement,
 )

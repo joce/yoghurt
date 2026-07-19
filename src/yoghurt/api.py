@@ -90,7 +90,7 @@ class Ticker:
     def __repr__(self) -> str:
         return f"Ticker({self.symbol!r})"
 
-    def quote(  # noqa: PLR0913 - one keyword-only arg per quote wire param.
+    def quote(  # ruff:ignore[too-many-arguments] - one keyword-only arg per quote wire param.
         self,
         *,
         fields: list[str] | None = None,
@@ -194,10 +194,12 @@ class Ticker:
             events=chart_events,
         )
 
-    def spark(  # noqa: PLR0913 - one keyword-only arg per spark wire param.
+    def spark(  # ruff:ignore[too-many-arguments] - one keyword-only arg per spark wire param.
         self,
         *,
-        range: str | None = None,  # noqa: A002 - mirrors Yahoo's wire/CLI name
+        range: (  # ruff:ignore[builtin-argument-shadowing] - mirrors Yahoo's wire/CLI name
+            str | None
+        ) = None,
         interval: str | None = None,
         indicators: list[str] | None = None,
         include_timestamps: bool | None = None,
@@ -377,7 +379,9 @@ class Ticker:
     def timeseries(
         self,
         *,
-        type: list[str] | None = None,  # noqa: A002 - mirrors Yahoo's wire/CLI name
+        type: (  # ruff:ignore[builtin-argument-shadowing] - mirrors Yahoo's wire/CLI name
+            list[str] | None
+        ) = None,
         period1: DateLike | None = None,
         period2: DateLike | None = None,
         merge: bool | None = None,
@@ -437,7 +441,7 @@ class Ticker:
             fetched_at=fetched_at,
         )
 
-    def calendar_events(  # noqa: PLR0913 - one keyword-only arg per event filter.
+    def calendar_events(  # ruff:ignore[too-many-arguments] - one keyword-only arg per event filter.
         self,
         *,
         modules: list[str] | None = None,
@@ -705,7 +709,7 @@ def _tabular_frame(payload: dict[str, Any], route: str) -> Frame:
     return Frame(df=df, fetched_at=_now_utc())
 
 
-def quotes(  # noqa: PLR0913 - one keyword-only arg per quote wire param.
+def quotes(  # ruff:ignore[too-many-arguments] - one keyword-only arg per quote wire param.
     symbols: list[str],
     *,
     fields: list[str] | None = None,
@@ -787,7 +791,7 @@ def visualization(query: str) -> Frame:
     return _tabular_frame(payload, "visualization")
 
 
-def screener_predefined(  # noqa: PLR0913 - one keyword-only arg per wire param.
+def screener_predefined(  # ruff:ignore[too-many-arguments] - one keyword-only arg per wire param.
     scr_ids: list[str],
     *,
     count: int | None = None,
@@ -856,7 +860,7 @@ def _spec_default_str(command_name: str, param_name: str) -> str:
 _TRENDING_DEFAULT_REGION: Final[str] = _spec_default_str("trending", "region")
 
 
-def trending(  # noqa: PLR0913 - one keyword-only arg per wire param.
+def trending(  # ruff:ignore[too-many-arguments] - one keyword-only arg per wire param.
     region: str | None = None,
     *,
     count: int | None = None,
@@ -1007,7 +1011,9 @@ def screener_instrument_fields(instrument: str) -> ScreenerInstrumentFieldsResul
 
 def timeseries_fields(
     *,
-    type: str | None = None,  # noqa: A002 - mirrors Yahoo's wire/CLI name
+    type: (  # ruff:ignore[builtin-argument-shadowing] - mirrors Yahoo's wire/CLI name
+        str | None
+    ) = None,
 ) -> TimeseriesFieldsResult:
     """List available fundamentals timeseries field names for a type.
 

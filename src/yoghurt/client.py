@@ -117,7 +117,7 @@ class YahooClient:
         url: str,
         *,
         context: str,
-        **kwargs: Any,  # noqa: ANN401
+        **kwargs: Any,  # ruff:ignore[any-type]
     ) -> httpx.Response:
         request = self._client.get if method == "GET" else self._client.post
         attempt = 1
@@ -126,7 +126,7 @@ class YahooClient:
                 response = await request(url, **kwargs)
                 if response.is_error:
                     response.raise_for_status()
-            except httpx.HTTPStatusError as exc:  # noqa: PERF203
+            except httpx.HTTPStatusError as exc:  # ruff:ignore[try-except-in-loop]
                 status_code = exc.response.status_code if exc.response else -1
                 if (
                     method == "GET"

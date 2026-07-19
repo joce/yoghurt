@@ -129,7 +129,7 @@ from enum import Enum
 from pydantic import Field
 
 from yoghurt.models._base import YahooModel
-from yoghurt.models.enums import (  # noqa: TC001 - pydantic needs these at runtime
+from yoghurt.models.enums import (  # ruff:ignore[typing-only-first-party-import] - pydantic needs these at runtime
     MarketState,
     PriceAlertConfidence,
     QuoteType,

@@ -103,7 +103,8 @@ def test_financials_chart_yearly_date_is_bare_year_int() -> None:
 
     first_year = earnings.financials_chart.yearly[0]
     assert isinstance(first_year.date, int)
-    assert first_year.date == 2022  # noqa: PLR2004 - the corpus's first observed year
+    # The corpus's first observed year.
+    assert first_year.date == 2022  # ruff:ignore[magic-value-comparison]
 
 
 def test_earnings_history_unwraps_raw_fmt_wrapper_from_real_capture() -> None:

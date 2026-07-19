@@ -119,7 +119,7 @@ class _VerboseHelpAction(argparse.Action):
         dest: str = argparse.SUPPRESS,
         default: object = argparse.SUPPRESS,
         doc_filename: str = "",
-        help: str | None = None,  # noqa: A002
+        help: str | None = None,  # ruff:ignore[builtin-argument-shadowing]
     ) -> None:
         """Store the doc filename and register the flag as a nargs=0 switch."""
 
@@ -789,7 +789,9 @@ def _resolve_query_body(namespace: argparse.Namespace) -> dict[str, Any]:
         raise ValueError(message) from exc
     if not isinstance(loaded, dict):
         message = "--body-json must be a JSON object"
-        raise ValueError(message)  # noqa: TRY004 - surfaced as a user error
+        raise ValueError(  # ruff:ignore[type-check-without-type-error] - surfaced as a user error
+            message
+        )
     return cast("dict[str, Any]", loaded)
 
 
@@ -1004,7 +1006,9 @@ def _emit_chart_parquet(
     passed an int, a ``YYYY-MM-DD`` date, or an ISO datetime.
     """
 
-    from yoghurt.parquet_writer import write_chart_parquet  # noqa: PLC0415
+    from yoghurt.parquet_writer import (  # ruff:ignore[import-outside-top-level]
+        write_chart_parquet,
+    )
 
     out_path = namespace.out_path
     period1 = _epoch_seconds_param(params, "period1")
@@ -1046,7 +1050,9 @@ def _emit_tabular_parquet(
 ) -> None:
     """Write a screener/visualization response to Parquet and emit the descriptor."""
 
-    from yoghurt.parquet_writer import write_tabular_parquet  # noqa: PLC0415
+    from yoghurt.parquet_writer import (  # ruff:ignore[import-outside-top-level]
+        write_tabular_parquet,
+    )
 
     query = getattr(namespace, "query", None)
     descriptor = write_tabular_parquet(

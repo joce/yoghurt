@@ -67,7 +67,11 @@ def test_to_pandas_without_pandas_raises_helpful_import_error(
 
     real_import = builtins.__import__
 
-    def _no_pandas(name: str, *args: Any, **kwargs: Any) -> Any:  # noqa: ANN401
+    def _no_pandas(
+        name: str,
+        *args: Any,  # ruff:ignore[any-type]
+        **kwargs: Any,  # ruff:ignore[any-type]
+    ) -> Any:  # ruff:ignore[any-type]
         if name == "pandas":
             raise ImportError(name)
         return real_import(name, *args, **kwargs)
@@ -84,7 +88,11 @@ def test_to_arrow_without_pyarrow_raises_helpful_import_error(
 
     real_import = builtins.__import__
 
-    def _no_pyarrow(name: str, *args: Any, **kwargs: Any) -> Any:  # noqa: ANN401
+    def _no_pyarrow(
+        name: str,
+        *args: Any,  # ruff:ignore[any-type]
+        **kwargs: Any,  # ruff:ignore[any-type]
+    ) -> Any:  # ruff:ignore[any-type]
         if name == "pyarrow":
             raise ImportError(name)
         return real_import(name, *args, **kwargs)

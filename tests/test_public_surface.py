@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import subprocess  # noqa: S404 - building the wheel is a fixed, trusted argv
+import subprocess  # ruff:ignore[suspicious-subprocess-import] - building the wheel is a fixed, trusted argv
 import sys
 import zipfile
 from pathlib import Path
@@ -76,7 +76,7 @@ def test_dir_hides_internal_imports() -> None:
 def test_py_typed_ships_in_wheel(tmp_path: Path) -> None:
     """PEP 561 marker must reach the wheel."""
 
-    subprocess.run(  # noqa: S603 - fixed argv, no untrusted input
+    subprocess.run(  # ruff:ignore[subprocess-without-shell-equals-true] - fixed argv, no untrusted input
         [sys.executable, "-m", "uv", "build", "--wheel", "--out-dir", str(tmp_path)],
         check=True,
         cwd=Path(__file__).resolve().parent.parent,

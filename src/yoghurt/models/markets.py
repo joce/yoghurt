@@ -94,12 +94,12 @@ every other row carries them. ``SectorResearchReport.investment_rating``/
 
 from __future__ import annotations
 
-import datetime  # noqa: TC003 - pydantic needs this at runtime to resolve annotations
+import datetime  # ruff:ignore[typing-only-standard-library-import] - pydantic needs this at runtime to resolve annotations
 
 from pydantic import Field
 
 from yoghurt.models._base import RawFloat, YahooModel
-from yoghurt.models.enums import (  # noqa: TC001 - pydantic needs these at runtime
+from yoghurt.models.enums import (  # ruff:ignore[typing-only-first-party-import] - pydantic needs these at runtime
     MarketState,
     PriceAlertConfidence,
     QuoteType,

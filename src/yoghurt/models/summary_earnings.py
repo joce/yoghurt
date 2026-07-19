@@ -116,7 +116,7 @@ Reconciliation notes:
 
 from __future__ import annotations
 
-import datetime  # noqa: TC003 - pydantic needs this at runtime to resolve annotations
+import datetime  # ruff:ignore[typing-only-standard-library-import] - pydantic needs this at runtime to resolve annotations
 
 from pydantic import Field
 

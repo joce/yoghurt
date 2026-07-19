@@ -172,7 +172,7 @@ def test_all_case_argv_parse() -> None:
     for case in build_cases():
         try:
             parser.parse_args(list(case.argv))
-        except SystemExit:  # noqa: PERF203
+        except SystemExit:  # ruff:ignore[try-except-in-loop]
             pytest.fail(
                 f"argv does not parse for {case.command}/{case.case}: {case.argv}"
             )

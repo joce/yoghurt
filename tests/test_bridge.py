@@ -24,7 +24,9 @@ def test_run_executes_coroutine_from_sync_context() -> None:
     assert run(_double(21)) == _DOUBLED
 
 
-async def test_run_works_inside_a_running_event_loop() -> None:  # noqa: RUF029
+async def test_run_works_inside_a_running_event_loop() -> (  # ruff:ignore[unused-async]
+    None
+):
     """The Jupyter case: a loop is already running; asyncio.run would raise."""
     assert run(_double(21)) == _DOUBLED
 
@@ -32,7 +34,7 @@ async def test_run_works_inside_a_running_event_loop() -> None:  # noqa: RUF029
 def test_run_propagates_exceptions() -> None:
     """Exceptions cross the thread boundary intact."""
 
-    async def _boom() -> None:  # noqa: RUF029
+    async def _boom() -> None:  # ruff:ignore[unused-async]
         msg = "boom"
         raise ValueError(msg)
 
