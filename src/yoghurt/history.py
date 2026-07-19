@@ -13,7 +13,7 @@ from typing import Any, Final
 import polars as pl
 
 from yoghurt.params import CHART_INTERVALS, CHART_RANGES
-from yoghurt.tabular import build_chart_frame, extract_chart_columns
+from yoghurt.tabular import TabularShapeError, build_chart_frame, extract_chart_columns
 
 DateLike = int | str | date | datetime
 HISTORY_REQUEST_BATCH_SIZE: Final[int] = 8
@@ -70,11 +70,15 @@ def frame_from_chart_result(result: dict[str, Any], symbol: str) -> pl.DataFrame
     """Return corporate-action-adjusted OHLCV rows for one symbol.
 
     Yahoo's adjusted close supplies the scale factor applied to open, high,
-    low, and close. Volume is unchanged. If a row has no usable adjustment
-    factor, its raw prices pass through unchanged.
+    low, and close. Volume is unchanged. A price-bearing row without a usable
+    adjustment factor makes the response invalid; empty responses stay empty.
 
     Returns:
         pl.DataFrame: Long-form adjusted history with a leading symbol column.
+
+    Raises:
+        TabularShapeError: If a price-bearing row has no usable adjustment
+            factor.
     """
 
     timestamps, columns = extract_chart_columns(result)
@@ -84,14 +88,19 @@ def frame_from_chart_result(result: dict[str, Any], symbol: str) -> pl.DataFrame
         & (pl.col("close") != 0)
         & pl.col("adj_close").is_not_null()
     )
-    factor = (
-        pl.when(usable_factor)
-        .then(pl.col("adj_close") / pl.col("close"))
-        .otherwise(1.0)
+    price_bearing = pl.any_horizontal(
+        pl.col("open").is_not_null(),
+        pl.col("high").is_not_null(),
+        pl.col("low").is_not_null(),
+        pl.col("close").is_not_null(),
+        pl.col("adj_close").is_not_null(),
     )
-    adjusted_close = (
-        pl.when(usable_factor).then(pl.col("adj_close")).otherwise(pl.col("close"))
-    )
+    if chart.filter(price_bearing & ~usable_factor).height:
+        message = (
+            f"{symbol}: history response has price rows without usable adjusted close"
+        )
+        raise TabularShapeError(message)
+    factor = pl.col("adj_close") / pl.col("close")
     # ponytail: no heuristic price repair. Add it only after corpus-backed
     # Yahoo defects demonstrate which anomalies are safe to change.
     return chart.select(
@@ -100,7 +109,7 @@ def frame_from_chart_result(result: dict[str, Any], symbol: str) -> pl.DataFrame
         (pl.col("open") * factor).alias("open"),
         (pl.col("high") * factor).alias("high"),
         (pl.col("low") * factor).alias("low"),
-        adjusted_close.alias("close"),
+        pl.col("adj_close").alias("close"),
         "volume",
     )
 

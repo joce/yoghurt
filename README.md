@@ -505,10 +505,10 @@ uv run yoghurt history AAPL,MSFT --period 1y --interval 1d
 uv run yoghurt history SPY --start 2025-01-01 --end 2026-01-01
 ```
 
-No heuristic price repair is applied. Rows without a usable adjustment factor
-retain Yahoo's raw prices. This keeps retrieval and transformation semantics
-auditable; repair can be revisited if corpus-backed Yahoo defects establish a
-safe rule.
+No heuristic price repair is applied. If any price-bearing row lacks a usable
+adjustment factor, `history` rejects the response instead of mixing raw and
+adjusted prices. Empty responses remain empty tables. Repair can be revisited
+if corpus-backed Yahoo defects establish a safe rule.
 
 ### Timeseries
 

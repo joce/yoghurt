@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import pytest
 
 from yoghurt.history import frame_from_chart_result, request_values
+from yoghurt.tabular import TabularShapeError
 
 EXPECTED_FIRST_VOLUME = 1000
 
@@ -24,7 +27,7 @@ def test_history_adjusts_entire_ohlc_bar_from_adjusted_close() -> None:
                     "volume": [1000, 2000],
                 }
             ],
-            "adjclose": [{"adjclose": [50.0, None]}],
+            "adjclose": [{"adjclose": [50.0, 100.0]}],
         },
     }
 
@@ -36,8 +39,39 @@ def test_history_adjusts_entire_ohlc_bar_from_adjusted_close() -> None:
     assert rows[0]["low"] == pytest.approx(40.0)
     assert rows[0]["close"] == pytest.approx(50.0)
     assert rows[0]["volume"] == EXPECTED_FIRST_VOLUME
-    assert rows[1]["open"] == pytest.approx(190.0)
-    assert rows[1]["close"] == pytest.approx(200.0)
+    assert rows[1]["open"] == pytest.approx(95.0)
+    assert rows[1]["close"] == pytest.approx(100.0)
+
+
+def test_history_rejects_any_price_row_without_adjusted_close() -> None:
+    """Adjusted history never mixes adjusted and raw price rows."""
+
+    result = {
+        "timestamp": [1, 2],
+        "indicators": {
+            "quote": [
+                {
+                    "open": [90.0, 190.0],
+                    "high": [110.0, 210.0],
+                    "low": [80.0, 180.0],
+                    "close": [100.0, 200.0],
+                    "volume": [1000, 2000],
+                }
+            ],
+            "adjclose": [{"adjclose": [50.0, None]}],
+        },
+    }
+
+    with pytest.raises(TabularShapeError, match="without usable adjusted close"):
+        frame_from_chart_result(result, "TEST")
+
+
+def test_history_allows_empty_response_without_adjusted_close() -> None:
+    """An empty Yahoo history remains an empty adjusted History frame."""
+
+    result: dict[str, Any] = {"timestamp": [], "indicators": {"quote": [{}]}}
+
+    assert frame_from_chart_result(result, "TEST").is_empty()
 
 
 def test_history_request_defaults_to_one_month_daily() -> None:

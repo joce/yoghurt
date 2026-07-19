@@ -370,7 +370,8 @@ _HISTORY_EPILOG: Final[str] = """Examples:
 
 Notes:
   Prices are corporate-action-adjusted from Yahoo's adjusted close. Volume is
-  unchanged. No heuristic price repair is applied. Use chart for Yahoo's raw
+  unchanged. A price row without usable adjusted close is rejected rather than
+  returned raw. No heuristic price repair is applied. Use chart for Yahoo's raw
   OHLC, adjusted close, metadata, and events.
 """
 

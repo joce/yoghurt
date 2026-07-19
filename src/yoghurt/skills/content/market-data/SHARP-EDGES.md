@@ -5,8 +5,9 @@
 **Severity:** medium
 
 `history()` adjusts OHLC for corporate actions using Yahoo's adjusted close,
-but it does not guess whether a suspicious Yahoo price is wrong. A row without
-a usable adjustment factor retains its raw prices.
+but it does not guess whether a suspicious Yahoo price is wrong. It rejects a
+response if any price-bearing row lacks a usable adjustment factor rather than
+substituting raw prices. Empty responses remain empty.
 
 Wrong way: assuming `history()` silently fixes currency-unit mixups, bad
 splits, or isolated Yahoo anomalies.

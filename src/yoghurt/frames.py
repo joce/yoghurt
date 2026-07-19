@@ -116,8 +116,9 @@ class History(Frame):
 
     Rows always use the long-form ``symbol, ts, open, high, low, close,
     volume`` schema. Open, high, low, and close are scaled from Yahoo's
-    adjusted close; volume is unchanged. Rows without a usable adjustment
-    factor retain Yahoo's raw prices. No heuristic price repair is applied.
+    adjusted close; volume is unchanged. A price row without a usable
+    adjustment factor is rejected rather than returned raw. Empty responses
+    remain empty, and no heuristic price repair is applied.
     """
 
 
