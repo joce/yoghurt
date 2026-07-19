@@ -7,7 +7,7 @@ Yoghurt exposes Yahoo Finance HTTP endpoints as a typed Python library and an LL
 Python 3.10+, uv, httpx2, argparse, pytest, ruff, pyright, tox, hatchling.
 
 ## Parquet
-Parquet is written with **polars** (a core dependency); chart/screener/visualization only.
+Parquet is written with **polars** (a core dependency); chart/history/screener/visualization only.
 
 ## Commands
 - Install/sync: `uv sync --all-groups`
@@ -57,7 +57,7 @@ Parquet is written with **polars** (a core dependency); chart/screener/visualiza
 ## Rules
 - IMPORTANT: `--help` is the primary product surface; keep it complete, adaptive, and generated from command metadata where practical.
 - Do not add `describe`, `endpoints`, `params`, or other discovery commands; discovery belongs under `yoghurt --help` and `yoghurt <endpoint> --help`.
-- CLI: Print Yahoo response bodies to stdout exactly as returned; do not model, reshape, pretty-print, or interpret endpoint JSON.
+- CLI: Endpoint JSON commands print Yahoo response bodies to stdout exactly as returned; do not model, reshape, pretty-print, or interpret endpoint JSON. `history` is an explicit derived command, not an endpoint command: it emits corporate-action-adjusted long-form rows in JSON or Parquet.
 - Use `uv run python` for Python scripts; never use bare `python` or `python3`.
 - Never log or print Yahoo cookies, crumbs, or full session-cache contents.
 - Keep runtime dependencies narrow; do not add TUI, ORM, web framework, or rich formatting libraries.
