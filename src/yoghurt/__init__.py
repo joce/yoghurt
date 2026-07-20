@@ -1,4 +1,4 @@
-"""Fully-typed Yahoo Finance data, one call at a time.
+"""Fully typed Yahoo Finance retrieval and analysis.
 
 Yoghurt is a synchronous library over Yahoo Finance's undocumented endpoints:
 call a method, get back a corpus-verified pydantic model (see
@@ -6,6 +6,9 @@ call a method, get back a corpus-verified pydantic model (see
 convert to polars, pandas, or Arrow — for example, ``import yoghurt`` then
 ``bars = yoghurt.Ticker("AAPL").chart(interval="1d").to_polars()`` or
 ``price = yoghurt.Ticker("AAPL").quote().regular_market_price``.
+
+Endpoint methods perform one call; ``Ticker.financial_analysis()`` is the
+explicit two-call convenience bundle.
 """
 
 from __future__ import annotations
@@ -52,6 +55,7 @@ if TYPE_CHECKING:
         trending,
         visualization,
     )
+    from yoghurt.financial_analysis import FinancialAnalysis
     from yoghurt.frames import Chart, Frame, History, Spark, Timeseries
     from yoghurt.models import Quote, QuoteType
 
@@ -74,10 +78,13 @@ def __getattr__(name: str) -> Any:  # ruff:ignore[any-type] - PEP 562 module __g
     """
 
     frames_names = {"Chart", "Frame", "History", "Spark", "Timeseries"}
+    financial_analysis_names = {"FinancialAnalysis"}
     models_names = {"Quote", "QuoteType"}
     lazy_names = set(__all__) - {"__version__"} - set(globals())
     if name in frames_names:
         module_name = "yoghurt.frames"
+    elif name in financial_analysis_names:
+        module_name = "yoghurt.financial_analysis"
     elif name in models_names:
         module_name = "yoghurt.models"
     elif name in lazy_names:
@@ -108,6 +115,7 @@ def __dir__() -> list[str]:
 
 __all__ = [
     "Chart",
+    "FinancialAnalysis",
     "Frame",
     "History",
     "Quote",

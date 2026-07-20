@@ -38,8 +38,9 @@ typed errors, polars-backed frames.
 (`uvx yoghurt …`). Same command names as the library; flags mirror kwargs
 mechanically: `--start-date` ↔ `start_date=`, `--modules a,b` ↔
 `modules=["a", "b"]`. Endpoint commands print Yahoo's raw wire JSON to
-stdout; the derived `history` command instead emits adjusted long-form rows.
-The library returns typed models/frames and raises typed errors.
+stdout; the derived `history` and `financial-analysis` commands instead emit
+analysis-ready rows. The library returns typed models/frames and raises typed
+errors.
 
 Shell-quote symbols with special characters: `^GSPC`, `EURUSD=X`, `ES=F`.
 
@@ -57,6 +58,7 @@ yoghurt.Ticker("^GSPC").chart(interval="1d")
 | --- | --- |
 | Typed, per-symbol data (quote, chart, options, fundamentals, analysis) | `Ticker` methods |
 | Adjusted single- or multi-symbol OHLCV for analysis | `Ticker.history()` / `history()` |
+| Financial statements, valuation, analyst, and ownership tables | `Ticker.financial_analysis()` |
 | Typed, market-wide lists (trending, sectors, market summary) | module-level functions |
 | Asset-class filtering (equities, ETFs, crypto, …) | `screener()` |
 | Data-platform entities — cross-entity queries, splits/IPO/earnings calendars | `visualization()` |
