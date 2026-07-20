@@ -68,7 +68,9 @@ _EXPECTED_SCREENER_DISCOVER_QUOTE_REQUIRED_FIELD_COUNT = 29
 _QUOTE_REQUIRED_FIELD_COUNT = 34
 
 
-def _load_json(path: Any) -> dict[str, Any]:  # noqa: ANN401 - corpus JSON is untyped.
+def _load_json(
+    path: Any,  # ruff:ignore[any-type] - corpus JSON is untyped.
+) -> dict[str, Any]:
     payload: dict[str, Any] = json.loads(path.read_text(encoding="utf-8"))
     return payload
 

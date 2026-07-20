@@ -57,24 +57,24 @@ from yoghurt.models._base import YahooModel
 # Every model below is required in full (not just for type checking): each
 # backs a QuoteSummary field's runtime annotation, which pydantic resolves
 # and validates against at class-creation time.
-from yoghurt.models.summary_earnings import (  # noqa: TC001
+from yoghurt.models.summary_earnings import (  # ruff:ignore[typing-only-first-party-import]
     EarningsCallTranscripts,
     EarningsHistory,
     EarningsModule,
     EarningsTrend,
 )
-from yoghurt.models.summary_financials import (  # noqa: TC001
+from yoghurt.models.summary_financials import (  # ruff:ignore[typing-only-first-party-import]
     CalendarEvents,
     DefaultKeyStatistics,
     FinancialData,
     FinancialsTemplate,
 )
-from yoghurt.models.summary_funds import (  # noqa: TC001
+from yoghurt.models.summary_funds import (  # ruff:ignore[typing-only-first-party-import]
     FundPerformance,
     FundProfile,
     TopHoldings,
 )
-from yoghurt.models.summary_holders import (  # noqa: TC001
+from yoghurt.models.summary_holders import (  # ruff:ignore[typing-only-first-party-import]
     FundOwnership,
     InsiderHolders,
     InsiderTransactions,
@@ -83,7 +83,7 @@ from yoghurt.models.summary_holders import (  # noqa: TC001
     MajorHoldersBreakdown,
     NetSharePurchaseActivity,
 )
-from yoghurt.models.summary_identity import (  # noqa: TC001
+from yoghurt.models.summary_identity import (  # ruff:ignore[typing-only-first-party-import]
     AssetProfile,
     CorporateActions,
     EquityPerformance,
@@ -94,7 +94,7 @@ from yoghurt.models.summary_identity import (  # noqa: TC001
     SummaryProfile,
     SummaryQuoteType,
 )
-from yoghurt.models.summary_statements import (  # noqa: TC001
+from yoghurt.models.summary_statements import (  # ruff:ignore[typing-only-first-party-import]
     BalanceSheetHistory,
     BalanceSheetHistoryQuarterly,
     CashflowStatementHistory,
@@ -102,7 +102,7 @@ from yoghurt.models.summary_statements import (  # noqa: TC001
     IncomeStatementHistory,
     IncomeStatementHistoryQuarterly,
 )
-from yoghurt.models.summary_trends import (  # noqa: TC001
+from yoghurt.models.summary_trends import (  # ruff:ignore[typing-only-first-party-import]
     RecommendationTrend,
     SecFilings,
     TrendEstimateGroup,

@@ -265,7 +265,7 @@ def configure(
 
 
 def _get_client() -> YahooClient:
-    global _client  # noqa: PLW0603 - module singleton by design
+    global _client  # ruff:ignore[global-statement] - module singleton by design
     with _client_lock:
         if _client is None:
             _client = YahooClient(**_client_options)
@@ -274,7 +274,7 @@ def _get_client() -> YahooClient:
 
 def _reset_for_tests() -> None:  # pyright: ignore[reportUnusedFunction]
     """Drop the shared client so tests can reconfigure. Test-only."""
-    global _client  # noqa: PLW0603 - module singleton by design
+    global _client  # ruff:ignore[global-statement] - module singleton by design
     with _client_lock:
         if _client is not None:
             with contextlib.suppress(Exception):

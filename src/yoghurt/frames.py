@@ -53,7 +53,7 @@ class Frame:
         """
 
         try:
-            import pandas as pd  # noqa: F401, PLC0415 - optional dependency probe  # pyright: ignore[reportMissingImports, reportMissingTypeStubs, reportUnusedImport]
+            import pandas as pd  # ruff:ignore[unused-import, import-outside-top-level] - optional dependency probe  # pyright: ignore[reportMissingImports, reportMissingTypeStubs, reportUnusedImport]
         except ImportError as exc:
             message = (
                 "to_pandas() requires the optional extra: pip install yoghurt[pandas]"
@@ -72,7 +72,7 @@ class Frame:
         """
 
         try:
-            import pyarrow as pa  # noqa: F401, PLC0415 - optional dependency probe  # pyright: ignore[reportMissingImports, reportMissingTypeStubs, reportUnusedImport]
+            import pyarrow as pa  # ruff:ignore[unused-import, import-outside-top-level] - optional dependency probe  # pyright: ignore[reportMissingImports, reportMissingTypeStubs, reportUnusedImport]
         except ImportError as exc:
             message = "to_arrow() requires pyarrow: pip install yoghurt[pandas]"
             raise ImportError(message) from exc

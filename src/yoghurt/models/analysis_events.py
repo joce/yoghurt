@@ -112,12 +112,14 @@ or any other typed error; it is truly unmappable and propagates as a bare
 
 from __future__ import annotations
 
-import datetime  # noqa: TC003 - pydantic needs this at runtime to resolve annotations
+import datetime  # ruff:ignore[typing-only-standard-library-import] - pydantic needs this at runtime to resolve annotations
 
 from pydantic import Field
 
 from yoghurt.models._base import YahooModel
-from yoghurt.models.enums import QuoteType  # noqa: TC001
+from yoghurt.models.enums import (
+    QuoteType,  # ruff:ignore[typing-only-first-party-import]
+)
 
 
 class EarningsEvent(YahooModel):

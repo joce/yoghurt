@@ -363,7 +363,7 @@ def _timeseries_entry_rows(
 
 
 def _timeseries_as_of_date(
-    value: Any,  # noqa: ANN401 - shape comes from json.loads.
+    value: Any,  # ruff:ignore[any-type] - shape comes from json.loads.
     type_name: str,
 ) -> date | None:
     """Parse an ``asOfDate`` string into a date.
@@ -385,7 +385,7 @@ def _timeseries_as_of_date(
 
 
 def _timeseries_epoch_ms(
-    value: Any,  # noqa: ANN401 - shape comes from json.loads.
+    value: Any,  # ruff:ignore[any-type] - shape comes from json.loads.
     type_name: str,
     field: str,
 ) -> int | None:
@@ -412,7 +412,7 @@ def _timeseries_epoch_ms(
 def _geographic_segment_records(
     type_name: str,
     as_of_date: date | None,
-    segments_raw: Any,  # noqa: ANN401 - shape comes from json.loads.
+    segments_raw: Any,  # ruff:ignore[any-type] - shape comes from json.loads.
 ) -> list[dict[str, Any]]:
     """Flatten one fundamentals row's ``geographicSegmentData`` list.
 
@@ -655,7 +655,7 @@ TABULAR_ROUTE_RECORD_KEY: Final[dict[str, str]] = {
 
 
 def _records_from_visualization_documents(
-    documents_raw: Any,  # noqa: ANN401 - shape comes from json.loads.
+    documents_raw: Any,  # ruff:ignore[any-type] - shape comes from json.loads.
     command: str,
 ) -> tuple[list[dict[str, Any]], list[str] | None]:
     """Flatten the visualization SELECT response into per-row dicts.
@@ -833,7 +833,7 @@ def reject_nested_cells(column_data: dict[str, list[Any]]) -> None:
                 raise TabularShapeError(message)
 
 
-def _infer_polars_dtype(values: list[Any]) -> Any:  # noqa: ANN401
+def _infer_polars_dtype(values: list[Any]) -> Any:  # ruff:ignore[any-type]
     """Pick the most specific common polars dtype for ``values``.
 
     Returns:
@@ -853,7 +853,7 @@ def _infer_polars_dtype(values: list[Any]) -> Any:  # noqa: ANN401
     return pl.Utf8
 
 
-def _build_column(values: list[Any], dtype: Any) -> list[Any]:  # noqa: ANN401
+def _build_column(values: list[Any], dtype: Any) -> list[Any]:  # ruff:ignore[any-type]
     """Coerce ``values`` to match ``dtype`` for safe Series construction.
 
     Returns:
@@ -920,7 +920,7 @@ def resolve_column_order(
 
 
 def _coerce_to_string(
-    value: Any,  # noqa: ANN401 - cell values are untyped JSON scalars.
+    value: Any,  # ruff:ignore[any-type] - cell values are untyped JSON scalars.
 ) -> str:
     """Render a scalar cell to a Parquet string value.
 

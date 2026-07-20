@@ -54,10 +54,12 @@ refresh. Reconciliation notes:
 
 from __future__ import annotations
 
-import datetime  # noqa: TC003 - required at runtime for pydantic field resolution
+import datetime  # ruff:ignore[typing-only-standard-library-import] - required at runtime for pydantic field resolution
 
 from yoghurt.models._base import YahooModel
-from yoghurt.models.quote import Quote  # noqa: TC001 - required for serialization
+from yoghurt.models.quote import (
+    Quote,  # ruff:ignore[typing-only-first-party-import] - required for serialization
+)
 
 
 class OptionContract(YahooModel):

@@ -209,27 +209,27 @@ select = [
 fixable = ["ALL"]
 unfixable = []
 ignore = [
-    "COM812",
-    "D105",
-    "D202",
-    "D203",
-    "D213",
-    "D413",
+    "missing-trailing-comma",
+    "undocumented-magic-method",
+    "blank-line-after-function",
+    "incorrect-blank-line-before-class",
+    "multi-line-summary-second-line",
+    "missing-blank-line-after-last-section",
 ]
 preview = true
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = [
-    "DOC201",
-    "DOC402",
-    "DOC501",
-    "PLC2701",
-    "S101",
-    "SLF001",
+    "docstring-missing-returns",
+    "docstring-missing-yields",
+    "docstring-missing-exception",
+    "import-private-name",
+    "assert",
+    "private-member-access",
 ]
 "tools/*" = [
-    "T201",     # print: probe is a console tool
-    "PLC2701",  # private import: deliberately reuses yoghurt.cli internals
+    "print",                # print: probe is a console tool
+    "import-private-name",  # private import: deliberately reuses yoghurt.cli internals
 ]
 
 [tool.ruff.lint.pydocstyle]

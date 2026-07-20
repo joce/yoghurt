@@ -136,7 +136,8 @@ class _KindTagged(Mapping[str, Any]):
         self._record = record
         self.kind = kind
 
-    def __getitem__(self, key: str) -> Any:  # noqa: ANN401 - Mapping value type
+    # Mapping value type.
+    def __getitem__(self, key: str) -> Any:  # ruff:ignore[any-type]
         return self._record[key]
 
     def __iter__(self) -> Iterator[str]:
@@ -170,7 +171,7 @@ def collect_presence(
         total += 1
         try:
             kind = kind_of(record) or "?"
-        except Exception:  # noqa: BLE001 - any failure to classify is "?"
+        except Exception:  # ruff:ignore[blind-except] - any failure to classify is "?"
             kind = "?"
         records_per_kind[kind] = records_per_kind.get(kind, 0) + 1
         for key in record:
@@ -356,7 +357,8 @@ class _KindTaggedModule(Mapping[str, Any]):
         self._record = record
         self.kind = kind
 
-    def __getitem__(self, key: str) -> Any:  # noqa: ANN401 - Mapping value type
+    # Mapping value type.
+    def __getitem__(self, key: str) -> Any:  # ruff:ignore[any-type]
         return self._record[key]
 
     def __iter__(self) -> Iterator[str]:

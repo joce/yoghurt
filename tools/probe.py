@@ -564,7 +564,7 @@ def _dsl_cases() -> list[ProbeCase]:
             "WHERE ticker = 'AAPL' ORDER BY transactiondate DESC LIMIT 5"
         ),
         "sp_earnings": (
-            "SELECT ticker, startdatetime FROM sp_earnings "  # noqa: S608
+            "SELECT ticker, startdatetime FROM sp_earnings "  # ruff:ignore[hardcoded-sql-expression]
             f"WHERE region = 'us' AND startdatetime BETWEEN '{week_ago}' "
             f"AND '{yesterday}' LIMIT 5"
         ),

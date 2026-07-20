@@ -2456,7 +2456,9 @@ def test_visualization_body_json_inline_is_passed_through() -> None:
 def test_visualization_body_json_from_file_is_loaded(tmp_path: object) -> None:
     """--body-json with @path reads the file body."""
 
-    body_path = getattr(tmp_path, "joinpath")("body.json")  # noqa: B009
+    body_path = getattr(tmp_path, "joinpath")(  # ruff:ignore[get-attr-with-constant]
+        "body.json"
+    )
     body_path.write_text(
         '{"entityIdType": "sp_earnings", "size": 2, "query": {}}',
         encoding="utf-8",

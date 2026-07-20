@@ -11,7 +11,7 @@ from yoghurt.models import YahooModel
 
 # Raw* types are pydantic field annotations resolved at class-creation time,
 # so (unlike a plain type-hint import) they must be available at runtime.
-from yoghurt.models._base import (  # noqa: TC001
+from yoghurt.models._base import (  # ruff:ignore[typing-only-first-party-import]
     RawDate,
     RawDateOrNone,
     RawFloat,

@@ -144,7 +144,8 @@ def test_index_trend_and_sector_trend_share_one_model_with_divergent_data() -> N
 
     assert type(index_trend) is type(sector_trend)
     assert index_trend.symbol == "SP5"
-    assert len(index_trend.estimates) == 5  # noqa: PLR2004 - corpus-observed count
+    # Corpus-observed count.
+    assert len(index_trend.estimates) == 5  # ruff:ignore[magic-value-comparison]
     assert sector_trend.symbol is None
     assert sector_trend.estimates == []
 

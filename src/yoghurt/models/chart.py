@@ -62,7 +62,9 @@ from pydantic import Field
 from yoghurt.models._base import YahooModel
 
 # QuoteType is required in full for serialization purposes
-from yoghurt.models.enums import QuoteType  # noqa: TC001
+from yoghurt.models.enums import (
+    QuoteType,  # ruff:ignore[typing-only-first-party-import]
+)
 
 
 class TradingPeriod(YahooModel):

@@ -50,7 +50,7 @@ class _ChartContext:
     range: str | None
 
 
-def write_chart_parquet(  # noqa: PLR0913 - keyword-only context fields.
+def write_chart_parquet(  # ruff:ignore[too-many-arguments] - keyword-only context fields.
     chart_json_text: str,
     out_path: Path,
     *,
@@ -58,7 +58,9 @@ def write_chart_parquet(  # noqa: PLR0913 - keyword-only context fields.
     interval: str,
     period1: int | None,
     period2: int | None,
-    range: str | None = None,  # noqa: A002 - mirrors Yahoo's wire name
+    range: (  # ruff:ignore[builtin-argument-shadowing] - mirrors Yahoo's wire name
+        str | None
+    ) = None,
 ) -> dict[str, Any]:
     """Parse a Yahoo chart response and write the OHLCV table as Parquet.
 
@@ -119,7 +121,7 @@ def write_chart_parquet(  # noqa: PLR0913 - keyword-only context fields.
     return descriptor
 
 
-def write_history_parquet(  # noqa: PLR0913 - keyword-only metadata.
+def write_history_parquet(  # ruff:ignore[too-many-arguments] - keyword-only metadata.
     frame: pl.DataFrame,
     out_path: Path,
     *,
@@ -181,7 +183,7 @@ def _write_frame(
         raise ParquetWriterError(message) from exc
 
 
-def write_tabular_parquet(  # noqa: PLR0913 - keyword-only metadata.
+def write_tabular_parquet(  # ruff:ignore[too-many-arguments] - keyword-only metadata.
     response_json_text: str,
     out_path: Path,
     *,
