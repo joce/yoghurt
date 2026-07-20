@@ -1,9 +1,9 @@
-"""Parquet writers for the ``chart``, ``screener``, and ``visualization`` commands.
+"""Parquet writers for the CLI's tabular commands.
 
 This module is a documented, scoped exception to the ``AGENTS.md`` rule that
 yoghurt prints Yahoo bodies to stdout exactly as returned. The exception
-applies only when the user opts in to Parquet output on one of the three
-tabular commands.
+applies only when the user opts in to Parquet output on a supported tabular
+command. ``history`` is already a derived table in both output formats.
 
 Polars is the Parquet engine; the CLI imports this module lazily so the JSON
 path never loads it.
@@ -45,8 +45,9 @@ class _ChartContext:
 
     ticker: str
     interval: str
-    period1: int
-    period2: int
+    period1: int | None
+    period2: int | None
+    range: str | None
 
 
 def write_chart_parquet(  # noqa: PLR0913 - keyword-only context fields.
@@ -55,8 +56,9 @@ def write_chart_parquet(  # noqa: PLR0913 - keyword-only context fields.
     *,
     ticker: str,
     interval: str,
-    period1: int,
-    period2: int,
+    period1: int | None,
+    period2: int | None,
+    range: str | None = None,  # noqa: A002 - mirrors Yahoo's wire name
 ) -> dict[str, Any]:
     """Parse a Yahoo chart response and write the OHLCV table as Parquet.
 
@@ -65,8 +67,9 @@ def write_chart_parquet(  # noqa: PLR0913 - keyword-only context fields.
         out_path: Destination Parquet file path.
         ticker: Symbol requested (recorded in key-value metadata).
         interval: Chart interval requested (recorded in metadata).
-        period1: Epoch-second start period (recorded in metadata).
-        period2: Epoch-second end period (recorded in metadata).
+        period1: Epoch-second start period, if used.
+        period2: Epoch-second end period, if used.
+        range: Relative Yahoo range, if used.
 
     Returns:
         dict[str, Any]: The single-line stdout descriptor for the write.
@@ -83,23 +86,75 @@ def write_chart_parquet(  # noqa: PLR0913 - keyword-only context fields.
     except TabularShapeError as exc:
         raise ParquetWriterError(str(exc)) from exc
     context = _ChartContext(
-        ticker=ticker, interval=interval, period1=period1, period2=period2
+        ticker=ticker,
+        interval=interval,
+        period1=period1,
+        period2=period2,
+        range=range,
     )
     metadata = {
         "yoghurt_command": "chart",
         "yoghurt_version": __version__,
         "ticker": context.ticker,
         "interval": context.interval,
-        "period1": str(context.period1),
-        "period2": str(context.period2),
         "yahoo_response_meta_json": json.dumps(result.get("meta", {})),
     }
+    if context.range is not None:
+        metadata["range"] = context.range
+    else:
+        metadata["period1"] = str(context.period1)
+        metadata["period2"] = str(context.period2)
     _write_frame(frame, out_path, metadata)
-    return {
+    descriptor = {
         "format": "parquet",
         "out": str(out_path),
         "command": "chart",
         "ticker": ticker,
+        "interval": interval,
+        "rows": frame.height,
+        "bytes": out_path.stat().st_size,
+    }
+    if range is not None:
+        descriptor["range"] = range
+    return descriptor
+
+
+def write_history_parquet(  # noqa: PLR0913 - keyword-only metadata.
+    frame: pl.DataFrame,
+    out_path: Path,
+    *,
+    symbols: list[str],
+    period: str | None,
+    start: str | None,
+    end: str | None,
+    interval: str,
+) -> dict[str, Any]:
+    """Write an adjusted history frame and return its CLI descriptor.
+
+    Returns:
+        dict[str, Any]: The single-line stdout descriptor for the write.
+    """
+
+    metadata = {
+        "yoghurt_command": "history",
+        "yoghurt_version": __version__,
+        "symbols": ",".join(symbols),
+        "interval": interval,
+        "adjustment": "adj_close_ratio",
+        "repair": "none",
+    }
+    if period is not None:
+        metadata["period"] = period
+    if start is not None:
+        metadata["start"] = start
+    if end is not None:
+        metadata["end"] = end
+    _write_frame(frame, out_path, metadata)
+    return {
+        "format": "parquet",
+        "out": str(out_path),
+        "command": "history",
+        "symbols": symbols,
         "interval": interval,
         "rows": frame.height,
         "bytes": out_path.stat().st_size,

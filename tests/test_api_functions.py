@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -12,7 +13,8 @@ import yoghurt._core as core
 from yoghurt import api
 from yoghurt.commands import COMMANDS_BY_NAME
 from yoghurt.exceptions import YahooApiError
-from yoghurt.frames import Frame
+from yoghurt.frames import Frame, History
+from yoghurt.history import HISTORY_REQUEST_BATCH_SIZE
 from yoghurt.models import (
     MarketInfoResult,
     MarketSummaryQuote,
@@ -96,6 +98,40 @@ class _FakeClient:
         """No-op close."""
 
 
+class _ConcurrencyTrackingClient(_FakeClient):
+    """Track peak simultaneous GET calls."""
+
+    def __init__(self, body: str) -> None:
+        """Initialize concurrency counters."""
+
+        super().__init__(body)
+        self.active = 0
+        self.peak_active = 0
+
+    async def get(
+        self,
+        path: str,
+        params: dict[str, ParamValue],
+        *,
+        use_crumb: bool = True,
+        base_url: str | None = None,
+    ) -> str:
+        """Yield while active so overlapping calls can be counted."""
+
+        self.active += 1
+        self.peak_active = max(self.peak_active, self.active)
+        try:
+            await asyncio.sleep(0)
+            return await super().get(
+                path,
+                params,
+                use_crumb=use_crumb,
+                base_url=base_url,
+            )
+        finally:
+            self.active -= 1
+
+
 def _install_fake(monkeypatch: pytest.MonkeyPatch, body: str) -> _FakeClient:
     """Patch the core client seam with a fake that returns ``body``.
 
@@ -139,6 +175,38 @@ def test_quotes_empty_list_raises_before_io(monkeypatch: pytest.MonkeyPatch) -> 
     monkeypatch.setattr(core, "_get_client", _fail_get_client)
     with pytest.raises(ValueError, match="symbols must not be empty"):
         api.quotes([])
+
+
+def test_history_fetches_symbols_concurrently_into_one_long_frame(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """history() preserves input symbol order in one adjusted History table."""
+
+    fake = _install_fake(monkeypatch, _corpus_text("chart/AAPL.json"))
+    result = api.history(["AAPL", "MSFT"], period="1y")
+
+    assert isinstance(result, History)
+    symbols = result.to_polars()["symbol"].to_list()
+    rows_per_symbol = len(symbols) // 2
+    assert symbols == ["AAPL"] * rows_per_symbol + ["MSFT"] * rows_per_symbol
+    assert [path for path, _params in fake.calls] == [
+        "/v8/finance/chart/AAPL",
+        "/v8/finance/chart/MSFT",
+    ]
+    assert all(params["range"] == "1y" for _path, params in fake.calls)
+
+
+def test_history_bounds_concurrent_requests(monkeypatch: pytest.MonkeyPatch) -> None:
+    """history() never has more than one request batch in flight."""
+
+    fake = _ConcurrencyTrackingClient(_corpus_text("chart/AAPL.json"))
+    monkeypatch.setattr(core, "_get_client", lambda: fake)
+    symbols = [f"SYM{index}" for index in range(HISTORY_REQUEST_BATCH_SIZE + 1)]
+
+    api.history(symbols)
+
+    assert fake.peak_active == HISTORY_REQUEST_BATCH_SIZE
+    assert [path.rsplit("/", 1)[-1] for path, _params in fake.calls] == symbols
 
 
 _SCREENER_QUERY = (

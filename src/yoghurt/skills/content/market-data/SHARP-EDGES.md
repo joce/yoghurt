@@ -1,5 +1,23 @@
 # Sharp edges: market data
 
+## Adjusted history is not repaired history
+
+**Severity:** medium
+
+`history()` adjusts OHLC for corporate actions using Yahoo's adjusted close,
+but it does not guess whether a suspicious Yahoo price is wrong. It rejects a
+response if any price-bearing row lacks a usable adjustment factor rather than
+substituting raw prices. Empty responses remain empty.
+
+Wrong way: assuming `history()` silently fixes currency-unit mixups, bad
+splits, or isolated Yahoo anomalies.
+
+Right way: use `history()` when adjusted OHLC is the required semantic; use
+`chart()` when auditing Yahoo's raw OHLC, adjusted close, metadata, or events.
+Add repair only when a corpus-backed defect establishes a safe rule.
+
+Evidence: library design constraint, ongoing.
+
 ## Zero-based-percent gap on treasury-yield indices
 
 **Severity:** medium
