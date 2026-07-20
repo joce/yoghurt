@@ -101,6 +101,7 @@ def test_top_level_help_lists_quote_endpoint(
     assert "screener-predefined" in captured.out
     assert "ratings-top" in captured.out
     assert "chart" in captured.out
+    assert "history" in captured.out
     assert "raw" in captured.out
     assert "visualization" in captured.out
     assert "screener" in captured.out
@@ -111,7 +112,10 @@ def test_top_level_help_lists_quote_endpoint(
     # primary entries in the listing.
     visualization_index = captured.out.index("\n    visualization ")
     screener_index = captured.out.index("\n    screener ")
+    chart_index = captured.out.index("\n    chart ")
+    history_index = captured.out.index("\n    history ")
     raw_index = captured.out.index("\n    raw ")
+    assert chart_index < history_index
     assert visualization_index < raw_index
     assert screener_index < raw_index
 
@@ -1973,7 +1977,30 @@ def test_chart_help_includes_params_and_examples(
     assert "Supported values: div, split" in captured.out
     assert "earn" in captured.out
     assert "source" not in captured.out
-    assert "--range" not in captured.out
+    assert "--range" in captured.out
+    assert "2m" in captured.out
+
+
+def test_history_help_explains_adjusted_multi_symbol_semantics(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """History help distinguishes derived analysis rows from raw chart JSON."""
+
+    with pytest.raises(SystemExit) as exc_info:
+        main(["history", "--help"])
+
+    assert exc_info.value.code == 0
+    captured = capsys.readouterr()
+    assert "SYMBOL[,SYMBOL...]" in captured.out
+    assert "--period" in captured.out
+    assert "--start" in captured.out
+    assert "--end" in captured.out
+    assert "--interval" in captured.out
+    assert "2m" not in captured.out
+    assert "3mo" in captured.out
+    assert "corporate-action-adjusted" in captured.out
+    assert "No heuristic price repair" in captured.out
+    assert "Use chart" in captured.out
 
 
 def test_chart_command_passes_params_and_packs_events() -> None:
@@ -2158,14 +2185,14 @@ def test_chart_command_rejects_unknown_interval() -> None:
             "--period1",
             "1777593600",
             "--interval",
-            "2m",
+            "45m",
         ],
         stderr=stderr,
         client=client,
     )
 
     assert exit_code == 1
-    assert "--interval unsupported value '2m'" in stderr.getvalue()
+    assert "--interval unsupported value '45m'" in stderr.getvalue()
     assert client.closed
     assert not client.calls
 

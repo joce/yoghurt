@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 from io import StringIO
 from typing import TYPE_CHECKING, Any
@@ -10,14 +11,51 @@ import polars as pl
 import pytest
 
 from yoghurt.cli import main
+from yoghurt.history import HISTORY_REQUEST_BATCH_SIZE
 
 from .test_cli import StubClient, assert_formatted_default_false
 
 if TYPE_CHECKING:
     from pathlib import Path
 
+    from yoghurt.types import ParamValue
+
 ARGPARSE_ERROR = 2
 EXPECTED_ROW_COUNT = 3
+
+
+class _ConcurrencyTrackingStubClient(StubClient):
+    """Track peak simultaneous CLI GET calls."""
+
+    def __init__(self, body: str) -> None:
+        """Initialize concurrency counters."""
+
+        super().__init__(body)
+        self.active = 0
+        self.peak_active = 0
+
+    async def get(
+        self,
+        path: str,
+        params: dict[str, ParamValue],
+        *,
+        use_crumb: bool = True,
+        base_url: str | None = None,
+    ) -> str:
+        """Yield while active so overlapping calls can be counted."""
+
+        self.active += 1
+        self.peak_active = max(self.peak_active, self.active)
+        try:
+            await asyncio.sleep(0)
+            return await super().get(
+                path,
+                params,
+                use_crumb=use_crumb,
+                base_url=base_url,
+            )
+        finally:
+            self.active -= 1
 
 
 def _chart_body_json() -> str:
@@ -170,6 +208,125 @@ def test_chart_parquet_without_out_is_argparse_error() -> None:
             client=client,
         )
     assert exc_info.value.code == ARGPARSE_ERROR
+
+
+def test_chart_range_parquet_records_relative_window(tmp_path: Path) -> None:
+    """Chart Parquet supports relative ranges without fake epoch metadata."""
+
+    out_path = tmp_path / "aapl-range.parquet"
+    client = StubClient(body=_chart_body_json())
+    stdout = StringIO()
+
+    exit_code = main(
+        [
+            "chart",
+            "AAPL",
+            "--range",
+            "1mo",
+            "--interval",
+            "1d",
+            "--format",
+            "parquet",
+            "--out",
+            str(out_path),
+        ],
+        stdout=stdout,
+        client=client,
+    )
+
+    assert exit_code == 0
+    descriptor = json.loads(stdout.getvalue())
+    assert descriptor["range"] == "1mo"
+    metadata = pl.read_parquet_metadata(out_path)
+    assert metadata["range"] == "1mo"
+    assert "period1" not in metadata
+    assert "period2" not in metadata
+
+
+# --- History -----------------------------------------------------------------
+
+
+def test_history_json_adjusts_and_combines_symbols() -> None:
+    """History JSON is one adjusted long-form table for all requested symbols."""
+
+    client = StubClient(body=_chart_body_json())
+    stdout = StringIO()
+    stderr = StringIO()
+
+    exit_code = main(
+        ["history", "AAPL,MSFT", "--period", "1y"],
+        stdout=stdout,
+        stderr=stderr,
+        client=client,
+    )
+
+    assert exit_code == 0
+    assert not stderr.getvalue()
+    rows = json.loads(stdout.getvalue())
+    assert len(rows) == 2 * EXPECTED_ROW_COUNT
+    assert [row["symbol"] for row in rows] == ["AAPL"] * 3 + ["MSFT"] * 3
+    assert rows[0]["open"] == pytest.approx(100.0 * 104.5 / 105.0)
+    assert rows[0]["close"] == pytest.approx(104.5)
+    assert [call[0] for call in client.calls] == [
+        "/v8/finance/chart/AAPL",
+        "/v8/finance/chart/MSFT",
+    ]
+    assert all(call[1]["range"] == "1y" for call in client.calls)
+    assert all(call[1]["interval"] == "1d" for call in client.calls)
+
+
+def test_history_cli_bounds_concurrent_requests() -> None:
+    """The history CLI never has more than one request batch in flight."""
+
+    client = _ConcurrencyTrackingStubClient(_chart_body_json())
+    symbols = [f"SYM{index}" for index in range(HISTORY_REQUEST_BATCH_SIZE + 1)]
+
+    exit_code = main(["history", ",".join(symbols)], client=client)
+
+    assert exit_code == 0
+    assert client.peak_active == HISTORY_REQUEST_BATCH_SIZE
+    assert [call[0].rsplit("/", 1)[-1] for call in client.calls] == symbols
+
+
+def test_history_parquet_writes_adjustment_contract(tmp_path: Path) -> None:
+    """History Parquet records adjusted/no-repair semantics in metadata."""
+
+    out_path = tmp_path / "history.parquet"
+    client = StubClient(body=_chart_body_json())
+    stdout = StringIO()
+
+    exit_code = main(
+        [
+            "history",
+            "AAPL,MSFT",
+            "--format",
+            "parquet",
+            "--out",
+            str(out_path),
+        ],
+        stdout=stdout,
+        client=client,
+    )
+
+    assert exit_code == 0
+    descriptor = json.loads(stdout.getvalue())
+    assert descriptor["command"] == "history"
+    assert descriptor["symbols"] == ["AAPL", "MSFT"]
+    assert descriptor["rows"] == 2 * EXPECTED_ROW_COUNT
+    frame = pl.read_parquet(out_path)
+    assert frame.columns == [
+        "symbol",
+        "ts",
+        "open",
+        "high",
+        "low",
+        "close",
+        "volume",
+    ]
+    metadata = pl.read_parquet_metadata(out_path)
+    assert metadata["adjustment"] == "adj_close_ratio"
+    assert metadata["repair"] == "none"
+    assert metadata["period"] == "1mo"
 
 
 def test_chart_out_without_parquet_is_argparse_error(tmp_path: Path) -> None:

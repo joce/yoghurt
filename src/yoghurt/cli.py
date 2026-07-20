@@ -24,6 +24,8 @@ from yoghurt.client import YahooClient
 from yoghurt.commands import COMMANDS, COMMANDS_BY_NAME, CommandSpec, FieldReference
 from yoghurt.exceptions import YoghurtError
 from yoghurt.params import (
+    CHART_RANGES,
+    HISTORY_INTERVALS,
     ParamKind,
     ParamSpec,
     build_params,
@@ -302,7 +304,7 @@ def _set_command_parser(parser: argparse.ArgumentParser, command: CommandSpec) -
 
 
 _PARQUET_COMMANDS: Final[frozenset[str]] = frozenset(
-    {"chart", "screener", "visualization"}
+    {"chart", "history", "screener", "visualization"}
 )
 _PARQUET_COMMANDS_HELP: Final[str] = ", ".join(sorted(_PARQUET_COMMANDS))
 
@@ -361,6 +363,94 @@ def _add_parquet_negative_guards(parser: argparse.ArgumentParser) -> None:
     parser.set_defaults(_parquet_unsupported=True)
 
 
+_HISTORY_EPILOG: Final[str] = """Examples:
+  yoghurt history AAPL
+  yoghurt history AAPL,MSFT --period 1y --interval 1d
+  yoghurt history SPY --period 1y --format parquet --out spy.parquet
+
+Notes:
+  Prices are corporate-action-adjusted from Yahoo's adjusted close. Volume is
+  unchanged. A price row without usable adjusted close is rejected rather than
+  returned raw. No heuristic price repair is applied. Use chart for Yahoo's raw
+  or intraday OHLC, adjusted close, metadata, and events.
+"""
+
+
+def _add_history_parser(subparsers: Any) -> None:  # ruff:ignore[any-type]
+    """Add the analysis-ready history command after the raw chart command."""
+
+    parser = subparsers.add_parser(
+        "history",
+        help="Fetch adjusted historical OHLC data for one or more symbols.",
+        description=(
+            "Corporate-action-adjusted OHLCV rows in a stable long-form table, "
+            "suitable for grouping by symbol before analysis."
+        ),
+        epilog=_HISTORY_EPILOG,
+        formatter_class=_HelpFormatter,
+        add_help=False,
+    )
+    _add_help_option(parser)
+    parser.add_argument(
+        "symbols",
+        metavar="SYMBOL[,SYMBOL...]",
+        help="One or more comma-separated Yahoo symbols.",
+    )
+    parser.add_argument(
+        "--period",
+        choices=CHART_RANGES,
+        default=None,
+        metavar="PERIOD",
+        help=(
+            "Relative history window. Supported values: "
+            f"{', '.join(CHART_RANGES)}. Defaults to 1mo when dates are omitted; "
+            "cannot be combined with --start or --end."
+        ),
+    )
+    parser.add_argument(
+        "--start",
+        default=None,
+        metavar="DATE",
+        help="Start as a Unix timestamp, YYYY-MM-DD date, or ISO datetime.",
+    )
+    parser.add_argument(
+        "--end",
+        default=None,
+        metavar="DATE",
+        help="Optional end in the same formats as --start; defaults to now.",
+    )
+    parser.add_argument(
+        "--interval",
+        choices=HISTORY_INTERVALS,
+        default="1d",
+        metavar="INTERVAL",
+        help=f"Bar interval. Supported values: {', '.join(HISTORY_INTERVALS)}.",
+    )
+    parser.add_argument(
+        "--include-pre-post",
+        action="store_true",
+        help="Include pre-market and post-market rows when supported.",
+    )
+    parser.add_argument(
+        "--format",
+        dest="output_format",
+        choices=("json", "parquet"),
+        default="json",
+        help=(
+            "Output adjusted rows as JSON on stdout or write a Parquet table to --out."
+        ),
+    )
+    parser.add_argument(
+        "--out",
+        dest="out_path",
+        type=Path,
+        default=None,
+        metavar="PATH",
+        help="Destination required with --format parquet.",
+    )
+    parser.set_defaults(command_kind="history", command_name="history")
+
+
 def build_parser() -> argparse.ArgumentParser:
     """Build yoghurt's adaptive argument parser.
 
@@ -372,7 +462,8 @@ def build_parser() -> argparse.ArgumentParser:
         prog="yoghurt",
         description=(
             "Expose Yahoo Finance endpoints to the command line and print raw "
-            "JSON response bodies."
+            "JSON response bodies. The history command instead emits an "
+            "analysis-ready adjusted table."
         ),
         epilog="Run `yoghurt <endpoint> --help` for endpoint-specific parameters.",
         formatter_class=_HelpFormatter,
@@ -401,6 +492,9 @@ def build_parser() -> argparse.ArgumentParser:
             _add_parquet_output_options(command_parser)
         else:
             _add_parquet_negative_guards(command_parser)
+
+        if command.name == "chart":
+            _add_history_parser(subparsers)
 
         # Slot the DSL screeners in between screener-predefined and
         # screener-discover so help output reads as a single discovery block.
@@ -826,6 +920,9 @@ async def _dispatch_command(
         if _wants_parquet(namespace):
             _emit_chart_parquet(namespace, params, body, stdout)
             return 0
+    elif namespace.command_kind == "history":
+        await _dispatch_history(namespace, stdout, client)
+        return 0
     elif namespace.command_kind == "raw":
         body = await client.get(
             namespace.path,
@@ -850,6 +947,94 @@ async def _dispatch_command(
     if body and not body.endswith("\n"):
         stdout.write("\n")
     return 0
+
+
+async def _dispatch_history(
+    namespace: argparse.Namespace,
+    stdout: TextIO,
+    client: _YahooClientProtocol,
+) -> None:
+    """Fetch, adjust, and emit one multi-symbol history table.
+
+    Raises:
+        ValueError: If the symbol list or period/date arguments are invalid.
+    """
+
+    from yoghurt.history import (  # ruff:ignore[import-outside-top-level]
+        HISTORY_REQUEST_BATCH_SIZE,
+        concat_frames,
+        frame_from_chart_result,
+        request_values,
+    )
+    from yoghurt.tabular import (  # ruff:ignore[import-outside-top-level]
+        parse_chart_result,
+    )
+
+    symbols = [part.strip() for part in namespace.symbols.split(",")]
+    if any(not symbol for symbol in symbols):
+        message = "symbols must be a comma-separated list without empty values"
+        raise ValueError(message)
+    common_values = request_values(
+        period=namespace.period,
+        start=namespace.start,
+        end=namespace.end,
+        interval=namespace.interval,
+        include_pre_post=namespace.include_pre_post,
+    )
+    effective_period = common_values.get("range")
+    if effective_period is not None and not isinstance(effective_period, str):
+        message = "history period must be a string"
+        raise ValueError(message)
+    command = COMMANDS_BY_NAME["chart"]
+    requests: list[tuple[str, dict[str, ParamValue], str]] = []
+    for symbol in symbols:
+        values = {**common_values, "symbol": symbol}
+        params = build_params(command, values)
+        validate_params(command, params)
+        requests.append((build_path(command, values), params, symbol))
+    bodies: list[str] = []
+    for offset in range(0, len(requests), HISTORY_REQUEST_BATCH_SIZE):
+        batch = requests[offset : offset + HISTORY_REQUEST_BATCH_SIZE]
+        bodies.extend(
+            await asyncio.gather(
+                *(
+                    client.get(
+                        path,
+                        params,
+                        use_crumb=command.use_crumb,
+                        base_url=command.base_url,
+                    )
+                    for path, params, _symbol in batch
+                )
+            )
+        )
+    frame = concat_frames(
+        [
+            frame_from_chart_result(parse_chart_result(body), symbol)
+            for body, (_path, _params, symbol) in zip(bodies, requests, strict=True)
+        ]
+    )
+    if _wants_parquet(namespace):
+        from yoghurt.parquet_writer import (  # ruff:ignore[import-outside-top-level]
+            write_history_parquet,
+        )
+
+        descriptor = write_history_parquet(
+            frame,
+            namespace.out_path,
+            symbols=symbols,
+            period=effective_period,
+            start=namespace.start,
+            end=namespace.end,
+            interval=namespace.interval,
+        )
+        stdout.write(json.dumps(descriptor))
+        stdout.write("\n")
+        return
+    body = frame.write_json()
+    stdout.write(body)
+    if not body.endswith("\n"):
+        stdout.write("\n")
 
 
 async def _run_async(
@@ -1004,6 +1189,9 @@ def _emit_chart_parquet(
     the raw ``namespace`` attributes) means Parquet metadata records the exact
     epoch-second values sent to Yahoo, regardless of whether the user
     passed an int, a ``YYYY-MM-DD`` date, or an ISO datetime.
+
+    Raises:
+        YoghurtError: If range or epoch metadata has an invalid type.
     """
 
     from yoghurt.parquet_writer import (  # ruff:ignore[import-outside-top-level]
@@ -1011,8 +1199,12 @@ def _emit_chart_parquet(
     )
 
     out_path = namespace.out_path
-    period1 = _epoch_seconds_param(params, "period1")
-    period2 = _epoch_seconds_param(params, "period2")
+    period1 = _optional_epoch_seconds_param(params, "period1")
+    period2 = _optional_epoch_seconds_param(params, "period2")
+    range_value = params.get("range")
+    if range_value is not None and not isinstance(range_value, str):
+        message = "chart range must be a string"
+        raise YoghurtError(message)
     descriptor = write_chart_parquet(
         body,
         out_path,
@@ -1020,22 +1212,27 @@ def _emit_chart_parquet(
         interval=namespace.interval,
         period1=period1,
         period2=period2,
+        range=range_value,
     )
     stdout.write(json.dumps(descriptor))
     stdout.write("\n")
 
 
-def _epoch_seconds_param(params: dict[str, ParamValue], name: str) -> int:
-    """Return ``params[name]`` as an int, raising if it is not numeric.
+def _optional_epoch_seconds_param(
+    params: dict[str, ParamValue], name: str
+) -> int | None:
+    """Return ``params[name]`` as an int when present.
 
     Returns:
-        int: The integer epoch-second wire value.
+        int | None: The integer epoch-second wire value, or ``None``.
 
     Raises:
-        YoghurtError: If the value is missing or not an integer.
+        YoghurtError: If a present value is not an integer.
     """
 
     value = params.get(name)
+    if value is None:
+        return None
     if isinstance(value, bool) or not isinstance(value, int):
         message = f"chart {name} must be an integer second"
         raise YoghurtError(message)

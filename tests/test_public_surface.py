@@ -25,6 +25,7 @@ def test_expected_surface() -> None:
     expected = {
         "Chart",
         "Frame",
+        "History",
         "Quote",
         "QuoteType",
         "Spark",
@@ -37,6 +38,7 @@ def test_expected_surface() -> None:
         "YahooUnavailableError",
         "YoghurtError",
         "configure",
+        "history",
         "quotes",
         "raw",
         "screener",

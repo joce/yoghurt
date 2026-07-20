@@ -1,6 +1,6 @@
 # Dataframes
 
-Every tabular result in yoghurt — `Chart`, `Spark`, `Timeseries`'s four
+Every tabular result in yoghurt — `Chart`, `History`, `Spark`, `Timeseries`'s four
 frames, and `screener()`/`visualization()` results — shares one conversion
 vocabulary. Conversions take no shaping arguments: the frame's columns and
 row order are already final.
@@ -25,7 +25,7 @@ Polars is a core dependency, so `to_polars()` always works. `to_pandas()`
 and `to_arrow()` need the optional `pandas` extra — see
 [SHARP-EDGES.md](SHARP-EDGES.md#topandas-and-toarrow-need-an-extra).
 
-## Chart and timeseries frames
+## Price and timeseries frames
 
 `Chart`/`Spark` are `Frame` subclasses with extra typed attributes
 (`.meta`, and `.events` on `Chart`):
@@ -36,6 +36,15 @@ bars = chart.to_polars()
 meta = chart.meta
 ```
 
+`History` is a plain `Frame` subclass with one stable long-form adjusted
+schema, including a leading `symbol` column for both single- and multi-symbol
+requests:
+
+```python
+history = yoghurt.history(["AAPL", "MSFT"], period="1y")
+bars = history.to_polars().partition_by("symbol", as_dict=True)
+```
+
 `Timeseries` bundles four separate frames rather than one:
 
 ```python
@@ -44,13 +53,34 @@ fundamentals_df = data.fundamentals.to_polars()
 ratings_df = data.analyst_ratings.to_polars()
 ```
 
+## Pandas-wide history
+
+Keep multi-symbol history long-form for grouping and TA-Lib. Pivot only when
+the analysis needs an aligned timestamp-by-symbol Pandas matrix:
+
+```python
+wide = (
+    yoghurt.history(["AAPL", "MSFT"], period="1y")
+    .to_pandas()
+    .pivot(
+        index="ts",
+        columns="symbol",
+        values=["open", "high", "low", "close", "volume"],
+    )
+)
+```
+
+The result has hierarchical `(field, symbol)` columns without changing
+yoghurt's history return shape.
+
 ## Parquet from the CLI
 
-`chart`, `screener`, and `visualization` can write Parquet directly instead
+`chart`, `history`, `screener`, and `visualization` can write Parquet directly instead
 of JSON:
 
 ```bash
 uv run yoghurt chart AAPL --interval 1d --format parquet --out aapl_1d.parquet
+uv run yoghurt history AAPL,MSFT --period 1y --format parquet --out history.parquet
 ```
 
 ## Empty results

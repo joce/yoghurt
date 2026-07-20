@@ -6,6 +6,21 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Analysis-ready `Ticker.history()` and module-level `history()` APIs with a
+  stable multi-symbol long-form schema. Yahoo's adjusted close scales the
+  complete OHLC bar; volume is unchanged and heuristic price repair is
+  deliberately not applied.
+- A matching `yoghurt history` CLI command with period or explicit-date
+  windows, the full chart interval set, JSON output, and Parquet export.
+
+### Changed
+
+- Raw `chart` retrieval now accepts Yahoo relative ranges and the broader
+  interval vocabulary used by yfinance, while retaining its existing default
+  three-day/minute window and typed metadata/events semantics.
+
 ## [0.4.2] - 2026-07-12
 
 Patch release — packaging and agent-skill documentation only. No code

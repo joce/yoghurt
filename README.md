@@ -12,11 +12,11 @@ Yoghurt brings Yahoo Finance's HTTP endpoints to the command line and to
 Python. It is built for scripts, agents, and quick terminal work that needs
 the JSON returned by Yahoo's finance endpoints.
 
-The CLI stays deliberately close to the source: it prints Yahoo's response
-bodies as-is and adds no discovery API beyond CLI help. The library layer
-(below) does model Yahoo's responses as typed pydantic structures, with two
-deliberate exceptions (`screener()`/`visualization()`, dynamic-column DSL
-results returned as `Frame`s).
+The endpoint CLI stays deliberately close to the source: it prints Yahoo's
+response bodies as-is and adds no discovery API beyond CLI help. The separate
+`history` command is analysis-oriented: it emits a corporate-action-adjusted
+long-form table instead of Yahoo's response envelope. The library layer
+(below) models responses as typed pydantic structures or typed frames.
 
 ## Library
 
@@ -26,6 +26,7 @@ Yoghurt is also an importable, typed Python library:
 import yoghurt
 
 bars = yoghurt.Ticker("AAPL").chart(interval="1d").to_polars()
+history = yoghurt.history(["AAPL", "MSFT"], period="1y").to_polars()
 quote = yoghurt.Ticker("AAPL").quote()
 tech = yoghurt.screener(
     "SELECT ticker, intradaymarketcap FROM EQUITY "
@@ -46,6 +47,8 @@ like the CLI):
    pydantic model, by design. `chart`/`spark` return `Chart`/`Spark` (also
    `Frame` subclasses) whose `.meta` is typed `ChartMeta` (pydantic) and
    whose `.events` is typed `ChartEvents` when the response carries one.
+   `Ticker.history()` and module-level `history()` return a `History` frame:
+   long-form corporate-action-adjusted OHLCV for one or more symbols.
    `Ticker.timeseries()` returns `Timeseries`: four typed frames
    (fundamentals, geographic segments, economic events, analyst ratings)
    plus `empty_types`/`unrecognized_types` bookkeeping. `Ticker.quote()`/
@@ -72,9 +75,33 @@ and transport failures raise `YahooRequestError` or `YahooUnavailableError`.
 The library never prints and never prompts; `yoghurt.configure(...)` adjusts
 session-cache behavior before first use.
 
+### Pandas-wide history
+
+Multi-symbol history is long-form by default. Pivot it after conversion when
+an analysis needs a timestamp-by-symbol Pandas matrix, such as portfolio
+returns or correlations:
+
+```python
+wide = (
+    yoghurt.history(["AAPL", "MSFT"], period="1y")
+    .to_pandas()
+    .pivot(
+        index="ts",
+        columns="symbol",
+        values=["open", "high", "low", "close", "volume"],
+    )
+)
+```
+
+This produces hierarchical `(field, symbol)` columns without adding a second
+history return shape. Keep the long-form table for per-symbol processing such
+as TA-Lib.
+
 ## Features
 
 - Raw Yahoo Finance JSON on stdout, with no pretty-printing or interpretation.
+- Analysis-ready adjusted history for one or more symbols in the library and
+  CLI, with JSON and Parquet output.
 - Endpoint-specific commands for common Yahoo Finance data.
 - A SQL-flavored DSL (`screener`, `visualization`) for ad-hoc filters and
   cross-entity queries against Yahoo's data-platform endpoints.
@@ -181,6 +208,21 @@ Fetch chart data for a recent window:
 
 ```powershell
 uv run yoghurt chart AAPL
+```
+
+Fetch one month of adjusted daily history (the default), or a multi-symbol
+year for analysis:
+
+```powershell
+uv run yoghurt history AAPL
+uv run yoghurt history AAPL,MSFT --period 1y --interval 1d
+```
+
+Library equivalents return the same stable long-form schema:
+
+```python
+aapl = yoghurt.Ticker("AAPL").history().to_polars()
+portfolio = yoghurt.history(["AAPL", "MSFT"], period="1y").to_polars()
 ```
 
 Fetch quote-page sparkline data:
@@ -335,13 +377,14 @@ uv run yoghurt raw /v7/finance/quote --param symbols=AAPL,MSFT --param formatted
 
 ## Parquet output
 
-`chart`, `screener`, and `visualization` can write a typed Parquet table
+`chart`, `history`, `screener`, and `visualization` can write a typed Parquet table
 instead of raw JSON. Parquet is built in — no extra install step needed.
 
 Pass `--format parquet --out PATH`:
 
 ```powershell
 uv run yoghurt chart AAPL --interval 1d --format parquet --out aapl_1d.parquet
+uv run yoghurt history AAPL,MSFT --period 1y --format parquet --out history.parquet
 uv run yoghurt screener --query "SELECT ticker, intradaymarketcap FROM EQUITY \
   WHERE region = 'us' AND sector = 'Technology' ORDER BY intradaymarketcap DESC LIMIT 50" \
   --format parquet --out tech.parquet
@@ -351,11 +394,12 @@ uv run yoghurt visualization --query "SELECT ticker, startdatetime FROM sp_earni
 ```
 
 On success a single JSON descriptor line goes to stdout (the file format,
-out path, row count, byte size). Parquet writes are scoped to these three
+out path, row count, byte size). Parquet writes are scoped to these four
 intrinsically tabular commands; every other command stays JSON-only. The
 chart schema is fixed (`ts`, `open`, `high`, `low`, `close`, `volume`,
-`adj_close`); screener and visualization tables are inferred from the
-response. AGGREGATE visualization queries cannot be flattened and are
+`adj_close`). History uses `symbol`, `ts`, adjusted `open`, `high`, `low`,
+`close`, and unadjusted `volume`; screener and visualization tables are
+inferred from the response. AGGREGATE visualization queries cannot be flattened and are
 rejected — use `--format json` for those. Parquet requires scalar cells,
 so `--format parquet --formatted` is rejected.
 
@@ -388,6 +432,7 @@ Current commands, grouped roughly by how often they're reached for:
 | --- | --- |
 | `quote` | Fetch quotes for one or more symbols. |
 | `chart` | Fetch historical OHLC chart data for a symbol. |
+| `history` | Fetch adjusted historical OHLC data for one or more symbols. |
 | `options` | Fetch the option chain for a symbol. |
 | `quote-summary` | Fetch quoteSummary modules for a symbol. |
 | `quote-type` | Fetch instrument classification metadata for a symbol. |
@@ -464,7 +509,30 @@ window: `period1` defaults to three days before execution time, `period2`
 defaults to execution time, `--interval` defaults to `1m`, and `--events`
 defaults to `div,split,earn`. User-provided events are comma-separated; yoghurt
 packs them for Yahoo internally. Extended-hours data is opt-in with
-`--include-pre-post`.
+`--include-pre-post`. Use `--range` for a relative window (`1d`, `5d`, `1mo`,
+`3mo`, `6mo`, `1y`, `2y`, `5y`, `10y`, `ytd`, or `max`) instead of
+`--period1`/`--period2`. Supported intervals are `1m`, `2m`, `5m`, `15m`,
+`30m`, `60m`, `90m`, `1h`, `1d`, `5d`, `1wk`, `1mo`, and `3mo`.
+
+### History
+
+`history` is intentionally separate from `chart`. `chart` is pure retrieval:
+raw OHLC and adjusted close plus typed metadata/events in the library, or the
+unchanged Yahoo response in the CLI. `history` is analysis-ready: it computes
+`adj_close / close` per row, applies that factor to open/high/low/close, leaves
+volume unchanged, and combines requested symbols into one long-form table.
+Supported intervals are `1d`, `5d`, `1wk`, `1mo`, and `3mo`; use `chart` for
+intraday data because Yahoo omits adjusted close from intraday responses.
+
+```powershell
+uv run yoghurt history AAPL,MSFT --period 1y --interval 1d
+uv run yoghurt history SPY --start 2025-01-01 --end 2026-01-01
+```
+
+No heuristic price repair is applied. If any price-bearing row lacks a usable
+adjustment factor, `history` rejects the response instead of mixing raw and
+adjusted prices. Empty responses remain empty tables. Repair can be revisited
+if corpus-backed Yahoo defects establish a safe rule.
 
 ### Timeseries
 

@@ -37,6 +37,7 @@ if TYPE_CHECKING:
     # (test_all_names_are_importable is the runtime drift gate).
     from yoghurt.api import (
         Ticker,
+        history,
         market_info,
         market_summary,
         market_time,
@@ -51,7 +52,7 @@ if TYPE_CHECKING:
         trending,
         visualization,
     )
-    from yoghurt.frames import Chart, Frame, Spark, Timeseries
+    from yoghurt.frames import Chart, Frame, History, Spark, Timeseries
     from yoghurt.models import Quote, QuoteType
 
 
@@ -72,7 +73,7 @@ def __getattr__(name: str) -> Any:  # ruff:ignore[any-type] - PEP 562 module __g
         AttributeError: If ``name`` is not a lazily-exported attribute.
     """
 
-    frames_names = {"Chart", "Frame", "Spark", "Timeseries"}
+    frames_names = {"Chart", "Frame", "History", "Spark", "Timeseries"}
     models_names = {"Quote", "QuoteType"}
     lazy_names = set(__all__) - {"__version__"} - set(globals())
     if name in frames_names:
@@ -108,6 +109,7 @@ def __dir__() -> list[str]:
 __all__ = [
     "Chart",
     "Frame",
+    "History",
     "Quote",
     "QuoteType",
     "Spark",
@@ -121,6 +123,7 @@ __all__ = [
     "YoghurtError",
     "__version__",
     "configure",
+    "history",
     "market_info",
     "market_summary",
     "market_time",

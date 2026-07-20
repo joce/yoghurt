@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from datetime import date
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -12,7 +13,7 @@ import pytest
 import yoghurt._core as core
 from yoghurt.api import Ticker
 from yoghurt.exceptions import SymbolNotFoundError, YahooApiError, YahooRequestError
-from yoghurt.frames import Spark, Timeseries
+from yoghurt.frames import History, Spark, Timeseries
 from yoghurt.models import (
     AnalystResult,
     CalendarEventsResult,
@@ -38,6 +39,8 @@ if TYPE_CHECKING:
 
 _CORPUS_ROOT = Path(__file__).parent / "fixtures" / "corpus"
 _IMG_SIZE = 50
+_JAN_1_2025_EPOCH = 1_735_689_600
+_JAN_1_2026_EPOCH = 1_767_225_600
 
 
 def _corpus_text(relative_path: str) -> str:
@@ -241,6 +244,55 @@ def test_ticker_chart_all_defaults_sends_interval(
     Ticker("AAPL").chart()
     _, params = fake.calls[0]
     assert params["interval"] == "1m"
+
+
+def test_ticker_chart_accepts_relative_range(monkeypatch: pytest.MonkeyPatch) -> None:
+    """chart(range=...) retains raw Chart semantics without date defaults."""
+
+    fake = _install_fake(monkeypatch, _corpus_text("chart/AAPL.json"))
+    Ticker("AAPL").chart(range="1mo", interval="1d")
+
+    _, params = fake.calls[0]
+    assert params["range"] == "1mo"
+    assert params["interval"] == "1d"
+    assert "period1" not in params
+    assert "period2" not in params
+
+
+def test_ticker_history_returns_adjusted_long_frame(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Ticker.history() uses the adjusted History schema and one-month default."""
+
+    fake = _install_fake(monkeypatch, _corpus_text("chart/AAPL.json"))
+    result = Ticker("AAPL").history()
+
+    assert isinstance(result, History)
+    assert result.to_polars().columns == [
+        "symbol",
+        "ts",
+        "open",
+        "high",
+        "low",
+        "close",
+        "volume",
+    ]
+    assert result.to_polars()["symbol"].unique().to_list() == ["AAPL"]
+    _, params = fake.calls[0]
+    assert params["range"] == "1mo"
+    assert params["interval"] == "1d"
+
+
+def test_ticker_history_accepts_date_objects(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Library history dates accept datetime.date as declared by DateLike."""
+
+    fake = _install_fake(monkeypatch, _corpus_text("chart/AAPL.json"))
+    Ticker("AAPL").history(start=date(2025, 1, 1), end=date(2026, 1, 1))
+
+    _, params = fake.calls[0]
+    assert params["period1"] == _JAN_1_2025_EPOCH
+    assert params["period2"] == _JAN_1_2026_EPOCH
+    assert "range" not in params
 
 
 def test_ticker_chart_shape_mismatch_raises_yahoo_api_error(

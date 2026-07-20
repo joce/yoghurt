@@ -174,6 +174,7 @@
     "wasxfail",
     "worktree",
     "worktrees",
+    "yfinance",
   ],
   "patterns": [
     {
