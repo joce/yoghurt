@@ -75,6 +75,28 @@ and transport failures raise `YahooRequestError` or `YahooUnavailableError`.
 The library never prints and never prompts; `yoghurt.configure(...)` adjusts
 session-cache behavior before first use.
 
+### Pandas-wide history
+
+Multi-symbol history is long-form by default. Pivot it after conversion when
+an analysis needs a timestamp-by-symbol Pandas matrix, such as portfolio
+returns or correlations:
+
+```python
+wide = (
+    yoghurt.history(["AAPL", "MSFT"], period="1y")
+    .to_pandas()
+    .pivot(
+        index="ts",
+        columns="symbol",
+        values=["open", "high", "low", "close", "volume"],
+    )
+)
+```
+
+This produces hierarchical `(field, symbol)` columns without adding a second
+history return shape. Keep the long-form table for per-symbol processing such
+as TA-Lib.
+
 ## Features
 
 - Raw Yahoo Finance JSON on stdout, with no pretty-printing or interpretation.

@@ -53,6 +53,26 @@ fundamentals_df = data.fundamentals.to_polars()
 ratings_df = data.analyst_ratings.to_polars()
 ```
 
+## Pandas-wide history
+
+Keep multi-symbol history long-form for grouping and TA-Lib. Pivot only when
+the analysis needs an aligned timestamp-by-symbol Pandas matrix:
+
+```python
+wide = (
+    yoghurt.history(["AAPL", "MSFT"], period="1y")
+    .to_pandas()
+    .pivot(
+        index="ts",
+        columns="symbol",
+        values=["open", "high", "low", "close", "volume"],
+    )
+)
+```
+
+The result has hierarchical `(field, symbol)` columns without changing
+yoghurt's history return shape.
+
 ## Parquet from the CLI
 
 `chart`, `history`, `screener`, and `visualization` can write Parquet directly instead
