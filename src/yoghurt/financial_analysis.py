@@ -511,7 +511,10 @@ def build_financial_analysis(
     return FinancialAnalysis(
         income_statement=_timeseries_frame(timeseries, _INCOME_METRICS),
         balance_sheet=_timeseries_frame(timeseries, _BALANCE_SHEET_METRICS),
-        cash_flow=_timeseries_frame(timeseries, _CASH_FLOW_METRICS),
+        cash_flow=_timeseries_frame(
+            timeseries,
+            _CASH_FLOW_METRICS - {"NetIncome"} | {"annualNetIncome"},
+        ),
         valuation_history=_timeseries_frame(timeseries, _VALUATION_METRICS),
         earnings_estimates=_frame(
             earnings_estimates, _EARNINGS_ESTIMATES_SCHEMA, timeseries

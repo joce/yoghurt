@@ -274,6 +274,11 @@ def test_ticker_financial_analysis_uses_existing_retrievals(
     assert result.income_statement.to_polars().height > 0
     assert result.balance_sheet.to_polars().height > 0
     assert result.cash_flow.to_polars().height > 0
+    assert set(result.cash_flow.to_polars()["type"]) <= {
+        type_name
+        for type_name in FINANCIAL_ANALYSIS_TIMESERIES_TYPES
+        if type_name.startswith("annual")
+    }
     estimates = result.earnings_estimates.to_dicts()
     assert estimates[0]["currency"] == "USD"
     assert estimates[0]["end_date"].isoformat() == "2026-06-30"
