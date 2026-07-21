@@ -345,6 +345,17 @@ def build_financial_analysis(
             "number_of_analysts": entry.earnings_estimate.number_of_analysts,
         }
         for entry in trend
+        if any(
+            value is not None
+            for value in (
+                entry.earnings_estimate.avg,
+                entry.earnings_estimate.low,
+                entry.earnings_estimate.high,
+                entry.earnings_estimate.year_ago_eps,
+                entry.earnings_estimate.growth,
+                entry.earnings_estimate.number_of_analysts,
+            )
+        )
     ]
     revenue_estimates: list[dict[str, Any]] = [
         {
@@ -384,6 +395,16 @@ def build_financial_analysis(
             "ninety_days_ago": entry.eps_trend.ninety_days_ago,
         }
         for entry in trend
+        if any(
+            value is not None
+            for value in (
+                entry.eps_trend.current,
+                entry.eps_trend.seven_days_ago,
+                entry.eps_trend.thirty_days_ago,
+                entry.eps_trend.sixty_days_ago,
+                entry.eps_trend.ninety_days_ago,
+            )
+        )
     ]
     eps_revisions: list[dict[str, Any]] = [
         {
@@ -397,23 +418,47 @@ def build_financial_analysis(
             "down_last_90_days": entry.eps_revisions.down_last_90_days,
         }
         for entry in trend
+        if any(
+            value is not None
+            for value in (
+                entry.eps_revisions.up_last_7_days,
+                entry.eps_revisions.up_last_30_days,
+                entry.eps_revisions.down_last_7_days,
+                entry.eps_revisions.down_last_30_days,
+                entry.eps_revisions.down_last_90_days,
+            )
+        )
     ]
     price_targets: list[dict[str, Any]] = []
     if summary.financial_data is not None:
         data = summary.financial_data
-        price_targets.append(
-            {
-                "currency": data.financial_currency,
-                "current_price": data.current_price,
-                "target_low_price": data.target_low_price,
-                "target_mean_price": data.target_mean_price,
-                "target_median_price": data.target_median_price,
-                "target_high_price": data.target_high_price,
-                "number_of_analyst_opinions": data.number_of_analyst_opinions,
-                "recommendation_key": data.recommendation_key,
-                "recommendation_mean": data.recommendation_mean,
-            }
-        )
+        if (
+            data.recommendation_key != "none"
+            or (data.number_of_analyst_opinions or 0) > 0
+            or any(
+                value is not None
+                for value in (
+                    data.target_low_price,
+                    data.target_mean_price,
+                    data.target_median_price,
+                    data.target_high_price,
+                    data.recommendation_mean,
+                )
+            )
+        ):
+            price_targets.append(
+                {
+                    "currency": data.financial_currency,
+                    "current_price": data.current_price,
+                    "target_low_price": data.target_low_price,
+                    "target_mean_price": data.target_mean_price,
+                    "target_median_price": data.target_median_price,
+                    "target_high_price": data.target_high_price,
+                    "number_of_analyst_opinions": data.number_of_analyst_opinions,
+                    "recommendation_key": data.recommendation_key,
+                    "recommendation_mean": data.recommendation_mean,
+                }
+            )
     growth_comparison: list[dict[str, Any]] = [
         {
             "source": "stock",

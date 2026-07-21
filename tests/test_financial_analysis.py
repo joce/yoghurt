@@ -326,6 +326,23 @@ def test_ticker_financial_analysis_keeps_empty_schemas_for_an_etf(
         assert table.columns, field.name
 
 
+def test_ticker_financial_analysis_omits_empty_analyst_rows(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Revenue coverage does not manufacture unavailable analyst tables."""
+
+    fake = _FakeClient(quote_summary_fixture="BAC-PL.json")
+    monkeypatch.setattr(core, "_get_client", lambda: fake)
+
+    result = Ticker("BAC-PL").financial_analysis()
+
+    assert not result.revenue_estimates.to_polars().is_empty()
+    assert result.earnings_estimates.to_polars().is_empty()
+    assert result.eps_trends.to_polars().is_empty()
+    assert result.eps_revisions.to_polars().is_empty()
+    assert result.analyst_price_targets.to_polars().is_empty()
+
+
 def test_financial_analysis_cli_emits_one_json_object(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
