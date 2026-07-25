@@ -693,10 +693,36 @@ def quote_type_lookup_kind(record: Mapping[str, Any]) -> str:
 
 
 CORPUS_TRENDING_DIR: Final[Path] = CORPUS_ROOT / "trending"
+CORPUS_SEARCH_DIR: Final[Path] = CORPUS_ROOT / "search"
+CORPUS_LOOKUP_DIR: Final[Path] = CORPUS_ROOT / "lookup"
 CORPUS_MARKET_SUMMARY_DIR: Final[Path] = CORPUS_ROOT / "market-summary"
 CORPUS_MARKET_INFO_DIR: Final[Path] = CORPUS_ROOT / "market-info"
 CORPUS_MARKET_TIME_DIR: Final[Path] = CORPUS_ROOT / "market-time"
 CORPUS_SECTOR_DIR: Final[Path] = CORPUS_ROOT / "sector"
+
+
+def search_records(
+    category: str, corpus_dir: Path = CORPUS_SEARCH_DIR
+) -> Iterator[dict[str, Any]]:
+    """Yield object rows from one top-level search result category."""
+
+    for path in sorted(corpus_dir.glob("*.json")):
+        payload = _load_json(path)
+        rows: list[dict[str, Any]] = payload.get(category) or []
+        yield from rows
+
+
+def lookup_document_records(
+    corpus_dir: Path = CORPUS_LOOKUP_DIR,
+) -> Iterator[dict[str, Any]]:
+    """Yield every lookup capture's ``finance.result[0].documents`` rows."""
+
+    for path in sorted(corpus_dir.glob("*.json")):
+        payload = _load_json(path)
+        results: list[dict[str, Any]] = payload.get("finance", {}).get("result") or []
+        for result in results:
+            documents: list[dict[str, Any]] = result.get("documents") or []
+            yield from documents
 
 
 def trending_records(
@@ -892,6 +918,12 @@ _STREAMS: Final[dict[str, Callable[[], Iterator[Mapping[str, Any]]]]] = {
     "insights": insights_records,
     "analyst": analyst_records,
     "ratings-top": ratings_top_records,
+    "search:quotes": lambda: search_records("quotes"),
+    "search:news": lambda: search_records("news"),
+    "search:nav": lambda: search_records("nav"),
+    "search:lists": lambda: search_records("lists"),
+    "search:researchReports": lambda: search_records("researchReports"),
+    "lookup": lookup_document_records,
     "trending": trending_records,
     "market-summary": market_summary_records,
     "market-info": market_info_records,
@@ -920,6 +952,12 @@ _KIND_OF: Final[dict[str, Callable[[Mapping[str, Any]], str]]] = {
     "insights": quote_type_lookup_kind,
     "analyst": quote_type_lookup_kind,
     "ratings-top": quote_type_lookup_kind,
+    "search:quotes": lambda record: str(record.get("quoteType", "non-finance")),
+    "search:news": lambda _record: "news",
+    "search:nav": lambda _record: "nav",
+    "search:lists": lambda record: str(record.get("type", "?")),
+    "search:researchReports": lambda _record: "research-report",
+    "lookup": lambda record: str(record.get("quoteType", "?")),
     "trending": _quote_kind,
     "market-summary": _quote_kind,
     "market-info": market_info_kind,

@@ -28,6 +28,7 @@ import yoghurt
 bars = yoghurt.Ticker("AAPL").chart(interval="1d").to_polars()
 history = yoghurt.history(["AAPL", "MSFT"], period="1y").to_polars()
 quote = yoghurt.Ticker("AAPL").quote()
+matches = yoghurt.search("Apple", quotes_count=5)
 tech = yoghurt.screener(
     "SELECT ticker, intradaymarketcap FROM EQUITY "
     "WHERE region = 'us' AND sector = 'Technology' "
@@ -61,6 +62,7 @@ like the CLI):
    `calendar_events`, `recommendations`, `stock_recommender`,
    `price_insights`, `insights`, `analyst`, `ratings_top`, `trending`,
    `market_summary`, `market_info`, `market_time`, `sector`,
+   `search`, `lookup`,
    `screener_predefined`, `screener_instrument_fields`,
    `timeseries_fields`, `screener_discover`) returns its own typed
    pydantic model.
@@ -70,7 +72,8 @@ like the CLI):
 
 Errors follow one contract: symbol lookups raise `SymbolNotFoundError`
 (carrying `.symbol`), Yahoo-reported failures raise `YahooApiError`
-(`.code`, `.description`), queries with zero matches return empty frames,
+(`.code`, `.description`), queries with zero matches return empty
+collections/frames,
 and transport failures raise `YahooRequestError` or `YahooUnavailableError`.
 The library never prints and never prompts; `yoghurt.configure(...)` adjusts
 session-cache behavior before first use.
@@ -442,6 +445,8 @@ Current commands, grouped roughly by how often they're reached for:
 
 | Command | Yahoo data |
 | --- | --- |
+| `search` | Search instruments, news, lists, navigation, and research metadata. |
+| `lookup` | Search paged instruments with optional asset-type filters. |
 | `screener-predefined` | Run one or more of Yahoo's predefined screeners. |
 | `visualization` | Query any Yahoo data-platform entity via a SQL-flavored DSL. |
 | `screener` | Query any Yahoo asset class via a SQL-flavored DSL. |
@@ -494,6 +499,42 @@ uv run yoghurt timeseries --help
 Endpoint help is the primary documentation surface. It shows Yahoo's target
 endpoint, accepted parameters, defaults, examples, and common open-ended values
 where available.
+
+### Search and lookup
+
+Use `search` for Yahoo's broad search experience: public instruments,
+private-company profiles, related news, saved lists, navigation links, and
+research-report metadata. Use `lookup` when the result should be only
+instruments, paged and optionally filtered by asset type:
+
+```python
+matches = yoghurt.search(
+    "Appel",
+    fuzzy=True,
+    quotes_count=5,
+    include_research_reports=True,
+)
+symbols = [
+    match.symbol for match in matches.quotes if match.symbol is not None
+]
+
+page = yoghurt.lookup("Apple", type="equity", count=25)
+equities = page.documents
+```
+
+Both functions return typed pydantic models. An unmatched lookup is a
+`LookupResult` with an empty `documents` list. Search keeps each empty result
+family as an empty list. Private-company and cultural-asset matches share
+search's `quotes` list but have no symbol.
+
+The CLI prints the unchanged Yahoo response and additionally exposes
+`--lang`/`--region`; the Python functions deliberately use their command
+defaults and do not accept per-call locale overrides:
+
+```powershell
+uv run yoghurt search Airbus --lang fr-FR --region FR
+uv run yoghurt lookup Bitcoin --type cryptocurrency --count 25
+```
 
 ### Chart
 

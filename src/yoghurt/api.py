@@ -30,6 +30,7 @@ from yoghurt.models import (
     ChartEvents,
     ChartMeta,
     Insights,
+    LookupResult,
     MarketInfoResult,
     MarketSummaryQuote,
     MarketTimeResult,
@@ -42,6 +43,7 @@ from yoghurt.models import (
     ScreenerDiscoverResult,
     ScreenerInstrumentFieldsResult,
     ScreenerPredefinedResult,
+    SearchResult,
     SectorResult,
     StockRecommenderResult,
     TimeseriesFieldsResult,
@@ -879,6 +881,89 @@ def quotes(  # ruff:ignore[too-many-arguments] - one keyword-only arg per quote 
     return [
         validate_model(Quote, record) for record in payload["quoteResponse"]["result"]
     ]
+
+
+def search(  # ruff:ignore[too-many-arguments] - one keyword-only arg per wire control.
+    query: str,
+    *,
+    quotes_count: int | None = None,
+    news_count: int | None = None,
+    lists_count: int | None = None,
+    recommended_count: int | None = None,
+    fuzzy: bool | None = None,
+    include_private_companies: bool | None = None,
+    include_navigation_links: bool | None = None,
+    include_research_reports: bool | None = None,
+    include_cultural_assets: bool | None = None,
+) -> SearchResult:
+    """Search instruments and related Yahoo Finance content.
+
+    Private-company and cultural-asset matches share ``result.quotes`` with
+    public instruments but have no ticker symbol. Research matches contain
+    report metadata, not report bodies. Empty result families are returned
+    as empty lists.
+
+    Returns:
+        SearchResult: The validated search response and all result families.
+    """
+
+    payload = run(
+        _core.call_endpoint(
+            "search",
+            values=_values(
+                q=query,
+                quotesCount=quotes_count,
+                newsCount=news_count,
+                listsCount=lists_count,
+                recommendedCount=recommended_count,
+                enableFuzzyQuery=fuzzy,
+                enableCb=include_private_companies,
+                enableNavLinks=include_navigation_links,
+                enableResearchReports=include_research_reports,
+                enableCulturalAssets=include_cultural_assets,
+            ),
+        )
+    )
+    return validate_model(SearchResult, payload)
+
+
+def lookup(  # ruff:ignore[too-many-arguments] - one keyword-only arg per wire control.
+    query: str,
+    *,
+    type: (  # ruff:ignore[builtin-argument-shadowing] - mirrors Yahoo's wire/CLI name
+        str | None
+    ) = None,
+    start: int | None = None,
+    count: int | None = None,
+    formatted: bool | None = None,
+    fetch_pricing_data: bool | None = None,
+) -> LookupResult:
+    """Look up a page of instruments, optionally filtered by asset type.
+
+    Known ``type`` values are ``all``, ``equity``, ``mutualfund``, ``etf``,
+    ``index``, ``future``, ``currency``, and ``cryptocurrency``. The value
+    remains open-ended because Yahoo defines the vocabulary. With
+    ``formatted=True``, wrapped pricing values are still exposed as their
+    typed raw numbers. An unmatched query returns an empty ``documents`` list.
+
+    Returns:
+        LookupResult: The validated page and per-type match totals.
+    """
+
+    payload = run(
+        _core.call_endpoint(
+            "lookup",
+            values=_values(
+                query=query,
+                type=type,
+                start=start,
+                count=count,
+                formatted=formatted,
+                fetchPricingData=fetch_pricing_data,
+            ),
+        )
+    )
+    return validate_model(LookupResult, payload["finance"]["result"][0])
 
 
 def screener(query: str) -> Frame:

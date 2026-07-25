@@ -1,8 +1,8 @@
 """Pin the README ``## Library`` quickstart examples.
 
-Each unit test below mirrors one of the three lines shown in README.md's
+Each unit test below mirrors one of the four calls shown in README.md's
 ``## Library`` section, exercised against the fake client and corpus
-fixtures (no network). One additional integration test runs the same three
+fixtures (no network). One additional integration test runs the same four
 calls for real against Yahoo, marked so it stays out of the default
 ``pytest`` run.
 """
@@ -117,6 +117,14 @@ def test_readme_quote_quickstart(monkeypatch: pytest.MonkeyPatch) -> None:
     assert record.symbol == "AAPL"
 
 
+def test_readme_search_quickstart(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Pins the README search quickstart: ``search(..., quotes_count=...)``."""
+
+    _install_fake(monkeypatch, _corpus_text("search/default.json"))
+    result = yoghurt.search("Apple", quotes_count=5)
+    assert result.quotes
+
+
 def test_readme_screener_quickstart(monkeypatch: pytest.MonkeyPatch) -> None:
     """Pins the README screener quickstart: ``screener(...).to_polars()``."""
 
@@ -136,6 +144,9 @@ def test_readme_quickstart_examples_live() -> None:
 
     quote = yoghurt.Ticker("AAPL").quote()
     assert quote.symbol == "AAPL"
+
+    matches = yoghurt.search("Apple", quotes_count=5)
+    assert matches.quotes
 
     frame = yoghurt.screener(
         "SELECT ticker FROM EQUITY WHERE region = 'us' LIMIT 5"

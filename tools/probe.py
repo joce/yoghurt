@@ -482,9 +482,9 @@ def _market_cases() -> list[ProbeCase]:
     """Symbol-free and market-wide endpoints.
 
     Returns:
-        list[ProbeCase]: Market summary/info/time/trending/discovery cases,
-        a sector sweep, an instrument-fields sweep, and a predefined
-        screener sweep.
+        list[ProbeCase]: Search/lookup discovery cases, market
+        summary/info/time/trending/discovery cases, a sector sweep, an
+        instrument-fields sweep, and a predefined screener sweep.
     """
 
     # Every documented instrument: asset classes, event entities, and
@@ -502,6 +502,90 @@ def _market_cases() -> list[ProbeCase]:
         "TOP_OPTIONS_OPEN_INTEREST",  # options
     )
     cases = [
+        ProbeCase("search", "default", ("search", "AAPL")),
+        ProbeCase(
+            "search",
+            "AAPL_content",
+            (
+                "search",
+                "AAPL",
+                "--quotes-count",
+                "3",
+                "--news-count",
+                "3",
+                "--lists-count",
+                "3",
+                "--recommended-count",
+                "3",
+                "--navigation-links",
+                "--research-reports",
+                "--cultural-assets",
+            ),
+        ),
+        ProbeCase(
+            "search",
+            "markets_content",
+            (
+                "search",
+                "markets",
+                "--quotes-count",
+                "3",
+                "--news-count",
+                "3",
+                "--lists-count",
+                "3",
+                "--recommended-count",
+                "3",
+                "--navigation-links",
+                "--research-reports",
+                "--cultural-assets",
+            ),
+        ),
+        ProbeCase(
+            "search",
+            "crypto_content",
+            (
+                "search",
+                "crypto",
+                "--quotes-count",
+                "3",
+                "--news-count",
+                "1",
+                "--lists-count",
+                "5",
+                "--navigation-links",
+            ),
+        ),
+        ProbeCase(
+            "search",
+            "stock_screener_navigation",
+            (
+                "search",
+                "stock screener",
+                "--quotes-count",
+                "1",
+                "--news-count",
+                "0",
+                "--lists-count",
+                "0",
+                "--recommended-count",
+                "0",
+                "--navigation-links",
+            ),
+        ),
+        ProbeCase("search", "Appel_fuzzy", ("search", "Appel", "--fuzzy")),
+        ProbeCase("lookup", "default", ("lookup", "A", "--count", "5")),
+        ProbeCase(
+            "lookup",
+            "formatted",
+            ("lookup", "A", "--count", "2", "--formatted"),
+        ),
+        ProbeCase(
+            "lookup",
+            "no_pricing",
+            ("lookup", "A", "--count", "3", "--no-pricing-data"),
+        ),
+        ProbeCase("lookup", "no_match", ("lookup", INVALID_SYMBOL, "--count", "5")),
         ProbeCase("market-summary", "default", ("market-summary",)),
         ProbeCase("market-info", "default", ("market-info",)),
         ProbeCase("market-time", "default", ("market-time",)),
@@ -527,6 +611,15 @@ def _market_cases() -> list[ProbeCase]:
     cases += [
         ProbeCase("screener-predefined", sid, ("screener-predefined", sid))
         for sid in screener_ids
+    ]
+    cases += [
+        ProbeCase(
+            "lookup",
+            f"type_{lookup_type}",
+            ("lookup", "A", "--type", lookup_type, "--count", "5"),
+        )
+        for lookup_type in COMMANDS_BY_NAME["lookup"].common_types
+        if lookup_type != "all"
     ]
     return cases
 

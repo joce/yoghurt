@@ -117,14 +117,14 @@ def test_sharp_edges_entries_follow_the_fixed_shape(domain: str) -> None:
 # Every fenced ``python`` block across SKILL.md + the ten domain files is
 # accounted for below: either as a README-mirror assertion or as its own
 # offline, corpus-backed behavioral test. Running `grep -c '^```python'`
-# across the content tree and summing gives 21 blocks total (2 SKILL.md +
-# 5 market-data/README + 2 fundamentals/README + 4 analysis/README +
+# across the content tree and summing gives 23 blocks total (2 SKILL.md +
+# 7 market-data/README + 2 fundamentals/README + 4 analysis/README +
 # 3 queries/README + 3 dataframes/README + 1 fundamentals/SHARP-EDGES +
 # 1 queries/SHARP-EDGES). Of these, 3 are byte-identical mirrors of
 # README.md's ``## Library`` quickstart (already behaviorally pinned by
 # tests/test_readme_examples.py): SKILL.md's `quote()` line,
 # market-data/README.md's `chart(...).to_polars()` line, and
-# queries/README.md's `screener(...)` block. The remaining 18 are
+# queries/README.md's `screener(...)` block. The remaining 20 are
 # domain-original and each gets its own behavioral pin below (one test,
 # fundamentals/SHARP-EDGES.md's "wrong way" snippet, is pinned
 # verbatim-only -- see its docstring for why it is not executed).
@@ -263,7 +263,43 @@ def test_queries_screener_snippet_mirrors_readme_verbatim() -> None:
     _assert_in_content("dataframes", "README.md", query_text_only)
 
 
-# --- Domain-original snippets (18), pinned behaviorally --------------------
+# --- Domain-original snippets (20), pinned behaviorally --------------------
+
+
+def test_market_data_readme_search_and_lookup(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """market-data/README.md: broad search and typed instrument lookup."""
+
+    search_snippets = [
+        'matches = yoghurt.search("Appel", fuzzy=True, quotes_count=5)',
+        (
+            "symbols = [\n"
+            "    match.symbol for match in matches.quotes "
+            "if match.symbol is not None\n"
+            "]"
+        ),
+    ]
+    for snippet in search_snippets:
+        _assert_in_content("market-data", "README.md", snippet)
+
+    _install_fake(monkeypatch, _corpus_text("search/Appel_fuzzy.json"))
+    matches = yoghurt.search("Appel", fuzzy=True, quotes_count=5)
+    symbols = [match.symbol for match in matches.quotes if match.symbol is not None]
+    assert "AAPL" in symbols
+
+    lookup_snippets = [
+        'page = yoghurt.lookup("Apple", type="equity", count=25)',
+        "instruments = page.documents",
+    ]
+    for snippet in lookup_snippets:
+        _assert_in_content("market-data", "README.md", snippet)
+
+    _install_fake(monkeypatch, _corpus_text("lookup/type_equity.json"))
+    page = yoghurt.lookup("Apple", type="equity", count=25)
+    instruments = page.documents
+    assert instruments
+    assert all(document.quote_type.value == "equity" for document in instruments)
 
 
 def test_market_data_readme_quote(monkeypatch: pytest.MonkeyPatch) -> None:
