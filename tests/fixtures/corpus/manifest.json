@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "case_count": 302,
+    "case_count": 310,
     "fetched_at": "2026-07-04T04:35:12.640976+00:00"
   },
   "analyst/AAPL": {
@@ -3187,6 +3187,86 @@
       "SELECT ticker, transactiondate, shares FROM INSIDER_TRANSACTION WHERE ticker = 'AAPL' ORDER BY transactiondate DESC LIMIT 5"
     ],
     "file": "visualization/insider_transaction.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "visualization/market_calendar_earnings": {
+    "argv": [
+      "visualization",
+      "--query",
+      "SELECT ticker, companyshortname, intradaymarketcap, eventname, startdatetime, startdatetimetype, epsestimate, epsactual, epssurprisepct FROM sp_earnings WHERE startdatetime BETWEEN '2026-07-20' AND '2026-08-15' ORDER BY startdatetime ASC LIMIT 5"
+    ],
+    "file": "visualization/market_calendar_earnings.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "visualization/market_calendar_earnings_empty": {
+    "argv": [
+      "visualization",
+      "--query",
+      "SELECT ticker, companyshortname, intradaymarketcap, eventname, startdatetime, startdatetimetype, epsestimate, epsactual, epssurprisepct FROM sp_earnings WHERE startdatetime >= '2100-01-01' AND startdatetime < '2100-01-03' ORDER BY startdatetime ASC LIMIT 5 OFFSET 0"
+    ],
+    "file": "visualization/market_calendar_earnings_empty.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "visualization/market_calendar_economic": {
+    "argv": [
+      "visualization",
+      "--query",
+      "SELECT econ_release, country_code, startdatetime, period, after_release_actual, consensus_estimate, prior_release_actual, originally_reported_actual FROM economic_event WHERE startdatetime BETWEEN '2026-07-20' AND '2026-08-15' ORDER BY startdatetime ASC LIMIT 5"
+    ],
+    "file": "visualization/market_calendar_economic.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "visualization/market_calendar_economic_empty": {
+    "argv": [
+      "visualization",
+      "--query",
+      "SELECT econ_release, country_code, startdatetime, period, after_release_actual, consensus_estimate, prior_release_actual, originally_reported_actual FROM economic_event WHERE startdatetime >= '2100-01-01' AND startdatetime < '2100-01-03' ORDER BY startdatetime ASC LIMIT 5 OFFSET 0"
+    ],
+    "file": "visualization/market_calendar_economic_empty.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "visualization/market_calendar_ipo": {
+    "argv": [
+      "visualization",
+      "--query",
+      "SELECT ticker, companyshortname, exchange_short_name, filingdate, startdatetime, amendeddate, pricefrom, priceto, offerprice, currencyname, shares, dealtype FROM ipo_info WHERE startdatetime BETWEEN '2026-07-01' AND '2026-09-30' ORDER BY startdatetime ASC LIMIT 5"
+    ],
+    "file": "visualization/market_calendar_ipo.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "visualization/market_calendar_ipo_empty": {
+    "argv": [
+      "visualization",
+      "--query",
+      "SELECT ticker, companyshortname, exchange_short_name, filingdate, startdatetime, amendeddate, pricefrom, priceto, offerprice, currencyname, shares, dealtype FROM ipo_info WHERE startdatetime >= '2100-01-01' AND startdatetime < '2100-01-03' ORDER BY startdatetime ASC LIMIT 5 OFFSET 0"
+    ],
+    "file": "visualization/market_calendar_ipo_empty.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "visualization/market_calendar_splits": {
+    "argv": [
+      "visualization",
+      "--query",
+      "SELECT ticker, companyshortname, startdatetime, optionable, old_share_worth, share_worth FROM splits WHERE startdatetime BETWEEN '2026-07-20' AND '2026-08-15' ORDER BY startdatetime ASC LIMIT 5"
+    ],
+    "file": "visualization/market_calendar_splits.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "visualization/market_calendar_splits_empty": {
+    "argv": [
+      "visualization",
+      "--query",
+      "SELECT ticker, companyshortname, startdatetime, optionable, old_share_worth, share_worth FROM splits WHERE startdatetime >= '2100-01-01' AND startdatetime < '2100-01-03' ORDER BY startdatetime ASC LIMIT 5 OFFSET 0"
+    ],
+    "file": "visualization/market_calendar_splits_empty.json",
     "http_status": 200,
     "status": "ok"
   },

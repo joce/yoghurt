@@ -113,3 +113,10 @@ metadata. Eleven `lookup` captures cover all seven observed asset types,
 formatted price wrappers, pricing-disabled results, and an empty match.
 All responses were captured through `_run_case`; `manifest.json` was merged
 without changing the earlier full-run `fetched_at` (`case_count` 285 -> 302).
+
+**2026-07-25 surgical addition (market calendars):** eight visualization
+captures back the four normalized `market-calendar` schemas: populated and
+empty responses for `sp_earnings`, `ipo_info`, `economic_event`, and `splits`.
+The empty captures confirm Yahoo returns column metadata even with no rows.
+All responses were captured live through the visualization CLI; the manifest's
+full-run `fetched_at` remains unchanged (`case_count` 302 -> 310).

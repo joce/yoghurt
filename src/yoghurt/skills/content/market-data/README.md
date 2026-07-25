@@ -1,7 +1,7 @@
 # Market data
 
-Symbol discovery, quotes, adjusted history, charts, sparklines, and option
-chains — the market-data surfaces.
+Symbol discovery, quotes, adjusted history, market calendars, charts,
+sparklines, and option chains — the market-data surfaces.
 
 ## Search and lookup
 
@@ -106,6 +106,32 @@ CLI equivalent (derived JSON rows, not Yahoo's raw response envelope):
 uv run yoghurt history AAPL,MSFT --period 1y --interval 1d
 ```
 
+## Market-wide calendars
+
+Use `market_calendar()` for chronological earnings, IPO, economic-event, or
+stock-split rows across the market:
+
+```python
+events = yoghurt.market_calendar(
+    "earnings", start_date="2026-07-20", end_date="2026-07-25"
+).to_polars()
+```
+
+The date window is inclusive and defaults to today through seven days ahead
+in UTC. The four kinds are `earnings`, `ipo`, `economic`, and `splits`; each
+keeps a stable schema when empty. Use `offset=` with `limit=` for manual
+pagination.
+
+CLI equivalents emit normalized JSON rows or Parquet:
+
+```bash
+uv run yoghurt market-calendar earnings
+uv run yoghurt market-calendar economic --format parquet --out economic.parquet
+```
+
+This is market-wide. Use `Ticker.calendar_events()` for one symbol, or
+`visualization()` when custom fields and predicates are required.
+
 ## Sparklines
 
 ```python
@@ -147,6 +173,7 @@ uv run yoghurt search --help
 uv run yoghurt lookup --help
 uv run yoghurt chart --help
 uv run yoghurt history --help
+uv run yoghurt market-calendar --help
 uv run yoghurt options --help
 ```
 

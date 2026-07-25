@@ -19,10 +19,12 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
+from yoghurt._market_calendar import build_market_calendar_query
 from yoghurt.cli import _dispatch_command, build_parser
 from yoghurt.client import YahooClient
 from yoghurt.commands import COMMANDS_BY_NAME
 from yoghurt.exceptions import YahooRequestError, YoghurtError
+from yoghurt.types import MARKET_CALENDAR_KINDS
 
 if TYPE_CHECKING:
     import argparse
@@ -666,6 +668,36 @@ def _dsl_cases() -> list[ProbeCase]:
             "WHERE startdatetime BETWEEN '2026-05-09' AND '2026-05-16' LIMIT 25"
         ),
     }
+    calendar_ranges = {
+        "earnings": ("2026-07-20", "2026-08-15"),
+        "ipo": ("2026-07-01", "2026-09-30"),
+        "economic": ("2026-07-20", "2026-08-15"),
+        "splits": ("2026-07-20", "2026-08-15"),
+    }
+    viz_queries.update(
+        {
+            f"market_calendar_{kind}": build_market_calendar_query(
+                kind,
+                start_date=calendar_ranges[kind][0],
+                end_date=calendar_ranges[kind][1],
+                limit=5,
+                offset=0,
+            )
+            for kind in MARKET_CALENDAR_KINDS
+        }
+    )
+    viz_queries.update(
+        {
+            f"market_calendar_{kind}_empty": build_market_calendar_query(
+                kind,
+                start_date="2100-01-01",
+                end_date="2100-01-02",
+                limit=5,
+                offset=0,
+            )
+            for kind in MARKET_CALENDAR_KINDS
+        }
+    )
     return [
         ProbeCase("screener", name, ("screener", "--query", query))
         for name, query in screener_queries.items()

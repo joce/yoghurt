@@ -41,6 +41,7 @@ def test_expected_surface() -> None:
         "configure",
         "history",
         "lookup",
+        "market_calendar",
         "quotes",
         "raw",
         "screener",
