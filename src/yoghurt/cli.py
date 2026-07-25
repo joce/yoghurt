@@ -44,6 +44,7 @@ from yoghurt.skills import uninstall as skills_uninstall
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
+    from yoghurt.frames import Frame
     from yoghurt.types import ParamValue
 
 _HELP_WIDTH = 100
@@ -375,6 +376,38 @@ Notes:
   or intraday OHLC, adjusted close, metadata, and events.
 """
 
+_FINANCIAL_ANALYSIS_TABLES: Final[tuple[FieldReference, ...]] = (
+    FieldReference("income_statement", "Annual, quarterly, and trailing income rows."),
+    FieldReference("balance_sheet", "Annual balance-sheet rows."),
+    FieldReference("cash_flow", "Annual cash-flow rows."),
+    FieldReference("valuation_history", "Quarterly and trailing valuation rows."),
+    FieldReference("earnings_estimates", "Forward analyst EPS estimates."),
+    FieldReference("revenue_estimates", "Forward analyst revenue estimates."),
+    FieldReference("earnings_history", "Quarterly actual-versus-estimated EPS."),
+    FieldReference("eps_trends", "Consensus EPS estimates over time."),
+    FieldReference("eps_revisions", "Recent analyst EPS revision counts."),
+    FieldReference("analyst_price_targets", "Consensus price targets and rating."),
+    FieldReference("growth_comparison", "Stock, industry, sector, and index growth."),
+    FieldReference("major_holders_breakdown", "Aggregate holder percentages."),
+    FieldReference("institutional_ownership", "Institutional positions."),
+    FieldReference("fund_ownership", "Fund positions."),
+    FieldReference("insider_roster", "Insider roles, positions, and latest activity."),
+    FieldReference("insider_transactions", "Reported insider transactions."),
+    FieldReference("insider_purchase_activity", "Aggregate insider buy/sell activity."),
+)
+
+_FINANCIAL_ANALYSIS_EPILOG: Final[str] = f"""Examples:
+  yoghurt financial-analysis AAPL
+
+Tables:
+{_reference_text(_FINANCIAL_ANALYSIS_TABLES)}
+
+Notes:
+  This derived command combines fundamentals-timeseries and quote-summary data.
+  Modules that do not apply to the symbol are emitted as empty row arrays.
+  Output is JSON only.
+"""
+
 
 def _add_history_parser(subparsers: Any) -> None:  # ruff:ignore[any-type]
     """Add the analysis-ready history command after the raw chart command."""
@@ -451,6 +484,34 @@ def _add_history_parser(subparsers: Any) -> None:  # ruff:ignore[any-type]
     parser.set_defaults(command_kind="history", command_name="history")
 
 
+def _add_financial_analysis_parser(
+    subparsers: Any,  # ruff:ignore[any-type]
+) -> None:
+    """Add the derived financial-analysis command after timeseries."""
+
+    parser = subparsers.add_parser(
+        "financial-analysis",
+        help="Fetch analysis-ready financial tables for a symbol.",
+        description=(
+            "Financial statements, valuation history, analyst estimates, "
+            "growth comparisons, and ownership data as stable row arrays."
+        ),
+        epilog=_FINANCIAL_ANALYSIS_EPILOG,
+        formatter_class=_HelpFormatter,
+        add_help=False,
+    )
+    _add_help_option(parser)
+    parser.add_argument(
+        "symbol",
+        metavar="SYMBOL",
+        help="A single Yahoo symbol, such as AAPL or SHOP.TO.",
+    )
+    _add_parquet_negative_guards(parser)
+    parser.set_defaults(
+        command_kind="financial-analysis", command_name="financial-analysis"
+    )
+
+
 def build_parser() -> argparse.ArgumentParser:
     """Build yoghurt's adaptive argument parser.
 
@@ -462,8 +523,8 @@ def build_parser() -> argparse.ArgumentParser:
         prog="yoghurt",
         description=(
             "Expose Yahoo Finance endpoints to the command line and print raw "
-            "JSON response bodies. The history command instead emits an "
-            "analysis-ready adjusted table."
+            "JSON response bodies. The history and financial-analysis commands "
+            "instead emit analysis-ready tables."
         ),
         epilog="Run `yoghurt <endpoint> --help` for endpoint-specific parameters.",
         formatter_class=_HelpFormatter,
@@ -495,6 +556,9 @@ def build_parser() -> argparse.ArgumentParser:
 
         if command.name == "chart":
             _add_history_parser(subparsers)
+
+        if command.name == "timeseries":
+            _add_financial_analysis_parser(subparsers)
 
         # Slot the DSL screeners in between screener-predefined and
         # screener-discover so help output reads as a single discovery block.
@@ -923,6 +987,9 @@ async def _dispatch_command(
     elif namespace.command_kind == "history":
         await _dispatch_history(namespace, stdout, client)
         return 0
+    elif namespace.command_kind == "financial-analysis":
+        await _dispatch_financial_analysis(namespace, stdout, client)
+        return 0
     elif namespace.command_kind == "raw":
         body = await client.get(
             namespace.path,
@@ -1035,6 +1102,91 @@ async def _dispatch_history(
     stdout.write(body)
     if not body.endswith("\n"):
         stdout.write("\n")
+
+
+async def _dispatch_financial_analysis(
+    namespace: argparse.Namespace,
+    stdout: TextIO,
+    client: _YahooClientProtocol,
+) -> None:
+    """Fetch the two source endpoints and emit the derived table bundle.
+
+    Raises:
+        ValueError: If the symbol is empty.
+        SymbolNotFoundError: If Yahoo returns no quote-summary record.
+    """
+
+    from dataclasses import fields  # ruff:ignore[import-outside-top-level]
+
+    from yoghurt import _core  # ruff:ignore[import-outside-top-level]
+    from yoghurt.api import (  # ruff:ignore[import-outside-top-level]
+        _timeseries_from_payload,  # pyright: ignore[reportPrivateUsage]
+    )
+    from yoghurt.exceptions import (  # ruff:ignore[import-outside-top-level]
+        SymbolNotFoundError,
+    )
+    from yoghurt.financial_analysis import (  # ruff:ignore[import-outside-top-level]
+        FINANCIAL_ANALYSIS_QUOTE_SUMMARY_MODULES,
+        FINANCIAL_ANALYSIS_TIMESERIES_TYPES,
+        build_financial_analysis,
+    )
+    from yoghurt.models import (  # ruff:ignore[import-outside-top-level]
+        QuoteSummary,
+        validate_model,
+    )
+
+    symbol = namespace.symbol.strip()
+    if not symbol:
+        message = "symbol cannot be empty"
+        raise ValueError(message)
+    request_values = (
+        (
+            "timeseries",
+            {
+                "symbol": symbol,
+                "type": ",".join(FINANCIAL_ANALYSIS_TIMESERIES_TYPES),
+                "period1": 0,
+            },
+        ),
+        (
+            "quote-summary",
+            {
+                "symbol": symbol,
+                "modules": ",".join(FINANCIAL_ANALYSIS_QUOTE_SUMMARY_MODULES),
+            },
+        ),
+    )
+    requests: list[tuple[str, str, dict[str, ParamValue]]] = []
+    for command_name, values in request_values:
+        command = COMMANDS_BY_NAME[command_name]
+        params = build_params(command, values)
+        validate_params(command, params)
+        requests.append((command_name, build_path(command, values), params))
+    bodies = await asyncio.gather(
+        *(
+            client.get(
+                path,
+                params,
+                use_crumb=COMMANDS_BY_NAME[command_name].use_crumb,
+                base_url=COMMANDS_BY_NAME[command_name].base_url,
+            )
+            for command_name, path, params in requests
+        )
+    )
+    timeseries_payload = _core.interpret_body("timeseries", bodies[0], symbol=symbol)
+    summary_payload = _core.interpret_body("quote-summary", bodies[1], symbol=symbol)
+    summary_results = summary_payload["quoteSummary"]["result"]
+    if not summary_results:
+        raise SymbolNotFoundError(symbol)
+    result = build_financial_analysis(
+        _timeseries_from_payload(timeseries_payload),
+        validate_model(QuoteSummary, summary_results[0]),
+    )
+    tables: list[str] = []
+    for field in fields(result):
+        frame = cast("Frame", getattr(result, field.name))
+        tables.append(f"{json.dumps(field.name)}:{frame.to_polars().write_json()}")
+    stdout.write("{" + ",".join(tables) + "}\n")
 
 
 async def _run_async(
