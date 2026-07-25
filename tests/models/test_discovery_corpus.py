@@ -47,6 +47,8 @@ _EXPECTED_SEARCH_ROW_COUNTS = {
 }
 _EXPECTED_LOOKUP_DOCUMENT_COUNT = 45
 _EXPECTED_SEARCH_RESULT_REQUIRED_FIELD_COUNT = 19
+_EXPECTED_SEARCH_THUMBNAIL_REQUIRED_FIELD_COUNT = 1
+_EXPECTED_SEARCH_THUMBNAIL_RESOLUTION_REQUIRED_FIELD_COUNT = 4
 _EXPECTED_LOOKUP_DOCUMENT_REQUIRED_FIELD_COUNT = 4
 _EXPECTED_LOOKUP_RESULT_REQUIRED_FIELD_COUNT = 5
 _EXPECTED_LOOKUP_TOTALS_REQUIRED_FIELD_COUNT = 9
@@ -72,6 +74,23 @@ def _universal_keys(records: Iterable[Mapping[str, Any]]) -> set[str]:
 
 def _search_payloads() -> list[dict[str, Any]]:
     return [_load_json(path) for path in sorted(CORPUS_SEARCH_DIR.glob("*.json"))]
+
+
+def _search_thumbnails() -> list[dict[str, Any]]:
+    return [
+        news["thumbnail"]
+        for payload in _search_payloads()
+        for news in payload["news"]
+        if "thumbnail" in news
+    ]
+
+
+def _search_thumbnail_resolutions() -> list[dict[str, Any]]:
+    return [
+        resolution
+        for thumbnail in _search_thumbnails()
+        for resolution in thumbnail["resolutions"]
+    ]
 
 
 def _lookup_results() -> list[dict[str, Any]]:
@@ -148,6 +167,33 @@ def test_search_result_required_fields_match_corpus() -> None:
     universal_keys = _universal_keys(_search_payloads())
     assert len(universal_keys) == _EXPECTED_SEARCH_RESULT_REQUIRED_FIELD_COUNT
     assert _required_aliases(SearchResult) == universal_keys
+
+
+@pytest.mark.parametrize(
+    ("model_cls", "records", "expected_required_count"),
+    [
+        (
+            SearchThumbnail,
+            _search_thumbnails(),
+            _EXPECTED_SEARCH_THUMBNAIL_REQUIRED_FIELD_COUNT,
+        ),
+        (
+            SearchThumbnailResolution,
+            _search_thumbnail_resolutions(),
+            _EXPECTED_SEARCH_THUMBNAIL_RESOLUTION_REQUIRED_FIELD_COUNT,
+        ),
+    ],
+)
+def test_search_nested_required_fields_match_corpus(
+    model_cls: type[YahooModel],
+    records: list[dict[str, Any]],
+    expected_required_count: int,
+) -> None:
+    """Each nested search model requires exactly its universal corpus keys."""
+
+    universal_keys = _universal_keys(records)
+    assert len(universal_keys) == expected_required_count
+    assert _required_aliases(model_cls) == universal_keys
 
 
 def test_lookup_document_required_fields_match_corpus() -> None:

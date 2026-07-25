@@ -164,9 +164,10 @@ def test_quotes_returns_result_list(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_quotes_joins_symbols_csv(monkeypatch: pytest.MonkeyPatch) -> None:
     """quotes() joins the symbols list into the wire CSV param."""
     fake = _install_fake(monkeypatch, _corpus_text("quote/multi.json"))
-    api.quotes(["AAPL", "MSFT"])
+    api.quotes(["AAPL", "MSFT"], include_private_companies=False)
     _, params = fake.calls[0]
     assert params["symbols"] == "AAPL,MSFT"
+    assert params["enablePrivateCompany"] is False
 
 
 def test_quotes_empty_list_raises_before_io(monkeypatch: pytest.MonkeyPatch) -> None:

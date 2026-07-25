@@ -124,7 +124,7 @@ class Ticker:
         *,
         fields: list[str] | None = None,
         formatted: bool | None = None,
-        enable_private_company: bool | None = None,
+        include_private_companies: bool | None = None,
         overnight_price: bool | None = None,
         top_pick_this_month: bool | None = None,
         img_heights: int | None = None,
@@ -133,7 +133,7 @@ class Ticker:
     ) -> Quote:
         """Fetch this symbol's quote record.
 
-        ``enable_private_company=True`` includes private-company quote
+        ``include_private_companies=True`` includes private-company quote
         matches; ``overnight_price=True`` requests overnight price fields.
 
         Returns:
@@ -151,7 +151,7 @@ class Ticker:
                     symbols=self.symbol,
                     fields=fields,
                     formatted=formatted,
-                    enablePrivateCompany=enable_private_company,
+                    enablePrivateCompany=include_private_companies,
                     overnightPrice=overnight_price,
                     topPickThisMonth=top_pick_this_month,
                     imgHeights=img_heights,
@@ -304,12 +304,12 @@ class Ticker:
         self,
         *,
         formatted: bool | None = None,
-        enable_private_company: bool | None = None,
+        include_private_companies: bool | None = None,
         overnight_price: bool | None = None,
     ) -> QuoteTypeResult:
         """Fetch instrument classification metadata for this symbol.
 
-        ``enable_private_company=True`` includes private-company data;
+        ``include_private_companies=True`` includes private-company data;
         ``overnight_price=True`` requests overnight price fields.
 
         Returns:
@@ -326,7 +326,7 @@ class Ticker:
                 values=_values(
                     symbol=self.symbol,
                     formatted=formatted,
-                    enablePrivateCompany=enable_private_company,
+                    enablePrivateCompany=include_private_companies,
                     overnightPrice=overnight_price,
                 ),
             )
@@ -341,14 +341,14 @@ class Ticker:
         *,
         modules: list[str] | None = None,
         formatted: bool | None = None,
-        enable_private_company: bool | None = None,
-        enable_qsp_expanded_earnings: bool | None = None,
+        include_private_companies: bool | None = None,
+        include_expanded_earnings: bool | None = None,
         overnight_price: bool | None = None,
     ) -> QuoteSummary:
         """Fetch quoteSummary modules for this symbol.
 
-        ``enable_private_company=True`` includes private-company data;
-        ``enable_qsp_expanded_earnings=True`` requests Yahoo's expanded
+        ``include_private_companies=True`` includes private-company data;
+        ``include_expanded_earnings=True`` requests Yahoo's expanded
         earnings fields; ``overnight_price=True`` requests overnight price
         fields.
 
@@ -375,8 +375,8 @@ class Ticker:
                     symbol=self.symbol,
                     modules=modules,
                     formatted=formatted,
-                    enablePrivateCompany=enable_private_company,
-                    enableQSPExpandedEarnings=enable_qsp_expanded_earnings,
+                    enablePrivateCompany=include_private_companies,
+                    enableQSPExpandedEarnings=include_expanded_earnings,
                     overnightPrice=overnight_price,
                 ),
             )
@@ -838,7 +838,7 @@ def quotes(  # ruff:ignore[too-many-arguments] - one keyword-only arg per quote 
     *,
     fields: list[str] | None = None,
     formatted: bool | None = None,
-    enable_private_company: bool | None = None,
+    include_private_companies: bool | None = None,
     overnight_price: bool | None = None,
     top_pick_this_month: bool | None = None,
     img_heights: int | None = None,
@@ -847,7 +847,7 @@ def quotes(  # ruff:ignore[too-many-arguments] - one keyword-only arg per quote 
 ) -> list[Quote]:
     """Fetch quote records for one or more symbols.
 
-    ``enable_private_company=True`` includes private-company quote matches;
+    ``include_private_companies=True`` includes private-company quote matches;
     ``overnight_price=True`` requests overnight price fields. Symbols Yahoo
     does not recognize are simply absent from the returned list rather than
     raising.
@@ -869,7 +869,7 @@ def quotes(  # ruff:ignore[too-many-arguments] - one keyword-only arg per quote 
                 symbols=",".join(symbols),
                 fields=fields,
                 formatted=formatted,
-                enablePrivateCompany=enable_private_company,
+                enablePrivateCompany=include_private_companies,
                 overnightPrice=overnight_price,
                 topPickThisMonth=top_pick_this_month,
                 imgHeights=img_heights,
