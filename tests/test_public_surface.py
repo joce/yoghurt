@@ -24,6 +24,7 @@ def test_expected_surface() -> None:
 
     expected = {
         "Chart",
+        "FinancialAnalysis",
         "Frame",
         "History",
         "Quote",

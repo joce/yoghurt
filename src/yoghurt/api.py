@@ -19,6 +19,12 @@ from yoghurt import _core
 from yoghurt._bridge import run
 from yoghurt.commands import COMMANDS_BY_NAME
 from yoghurt.exceptions import SymbolNotFoundError, YahooApiError
+from yoghurt.financial_analysis import (
+    FINANCIAL_ANALYSIS_QUOTE_SUMMARY_MODULES,
+    FINANCIAL_ANALYSIS_TIMESERIES_TYPES,
+    FinancialAnalysis,
+    build_financial_analysis,
+)
 from yoghurt.frames import Chart, Frame, History, Spark, Timeseries
 from yoghurt.history import HISTORY_REQUEST_BATCH_SIZE
 from yoghurt.history import concat_frames as concat_history_frames
@@ -108,8 +114,41 @@ def _chart_from_payload(payload: dict[str, Any], fetched_at: datetime) -> Chart:
     return Chart(df=df, fetched_at=fetched_at, meta=meta, events=chart_events)
 
 
+def _timeseries_from_payload(
+    payload: dict[str, Any], fetched_at: datetime | None = None
+) -> Timeseries:
+    """Build typed timeseries frames from a decoded endpoint payload.
+
+    Returns:
+        Timeseries: Four schema-stable frames plus type bookkeeping.
+
+    Raises:
+        YahooApiError: If the response cannot be flattened into the fixed
+            timeseries schemas (code ``"malformed-response"``).
+    """
+
+    try:
+        tables = build_timeseries_frames(payload)
+    except TabularShapeError as exc:
+        raise YahooApiError(code="malformed-response", description=str(exc)) from exc
+    timestamp = fetched_at or _now_utc()
+    return Timeseries(
+        fundamentals=Frame(df=tables.fundamentals, fetched_at=timestamp),
+        geographic_segments=Frame(df=tables.geographic_segments, fetched_at=timestamp),
+        economic_events=Frame(df=tables.economic_events, fetched_at=timestamp),
+        analyst_ratings=Frame(df=tables.analyst_ratings, fetched_at=timestamp),
+        empty_types=tables.empty_types,
+        unrecognized_types=tables.unrecognized_types,
+        fetched_at=timestamp,
+    )
+
+
 class Ticker:
-    """Symbol-bound entry point; every method performs one HTTP call."""
+    """Symbol-bound entry point; methods perform one HTTP call by default.
+
+    :meth:`financial_analysis` is the deliberate exception: it combines one
+    fundamentals-timeseries request with one quote-summary request.
+    """
 
     def __init__(self, symbol: str) -> None:
         """Bind the ticker to one Yahoo symbol (no I/O)."""
@@ -447,9 +486,6 @@ class Ticker:
             segments, economic events, analyst ratings) plus the
             ``empty_types``/``unrecognized_types`` bookkeeping tuples.
 
-        Raises:
-            YahooApiError: If the response cannot be flattened into the
-                fixed timeseries schemas (code ``"malformed-response"``).
         """
 
         payload = run(
@@ -466,24 +502,27 @@ class Ticker:
                 ),
             )
         )
-        try:
-            tables = build_timeseries_frames(payload)
-        except TabularShapeError as exc:
-            raise YahooApiError(
-                code="malformed-response", description=str(exc)
-            ) from exc
-        fetched_at = _now_utc()
-        return Timeseries(
-            fundamentals=Frame(df=tables.fundamentals, fetched_at=fetched_at),
-            geographic_segments=Frame(
-                df=tables.geographic_segments, fetched_at=fetched_at
-            ),
-            economic_events=Frame(df=tables.economic_events, fetched_at=fetched_at),
-            analyst_ratings=Frame(df=tables.analyst_ratings, fetched_at=fetched_at),
-            empty_types=tables.empty_types,
-            unrecognized_types=tables.unrecognized_types,
-            fetched_at=fetched_at,
+        return _timeseries_from_payload(payload)
+
+    def financial_analysis(self) -> FinancialAnalysis:
+        """Fetch analysis-ready financial, analyst, and ownership tables.
+
+        This convenience method deliberately performs two existing retrievals:
+        one fundamentals-timeseries request for statement and valuation history,
+        then one quote-summary request for analyst and ownership modules.
+        Inapplicable or absent modules become schema-stable empty frames.
+
+        Returns:
+            FinancialAnalysis: Seventeen stable long-form frames.
+        """
+
+        timeseries = self.timeseries(
+            type=list(FINANCIAL_ANALYSIS_TIMESERIES_TYPES), period1=0
         )
+        summary = self.quote_summary(
+            modules=list(FINANCIAL_ANALYSIS_QUOTE_SUMMARY_MODULES)
+        )
+        return build_financial_analysis(timeseries, summary)
 
     def calendar_events(  # ruff:ignore[too-many-arguments] - one keyword-only arg per event filter.
         self,

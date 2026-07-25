@@ -1,9 +1,10 @@
 # Dataframes
 
-Every tabular result in yoghurt — `Chart`, `History`, `Spark`, `Timeseries`'s four
-frames, and `screener()`/`visualization()` results — shares one conversion
-vocabulary. Conversions take no shaping arguments: the frame's columns and
-row order are already final.
+Every tabular result in yoghurt — `Chart`, `History`, `Spark`, `Timeseries`'s
+four frames, `FinancialAnalysis`'s 17 frames, and
+`screener()`/`visualization()` results — shares one conversion vocabulary.
+Conversions take no shaping arguments: the frame's columns and row order are
+already final.
 
 ## Conversion vocabulary
 
@@ -53,6 +54,14 @@ fundamentals_df = data.fundamentals.to_polars()
 ratings_df = data.analyst_ratings.to_polars()
 ```
 
+`FinancialAnalysis` similarly bundles 17 schema-stable frames:
+
+```python
+analysis = yoghurt.Ticker("AAPL").financial_analysis()
+cash_flow_df = analysis.cash_flow.to_polars()
+eps_revisions_df = analysis.eps_revisions.to_polars()
+```
+
 ## Pandas-wide history
 
 Keep multi-symbol history long-form for grouping and TA-Lib. Pivot only when
@@ -82,6 +91,9 @@ of JSON:
 uv run yoghurt chart AAPL --interval 1d --format parquet --out aapl_1d.parquet
 uv run yoghurt history AAPL,MSFT --period 1y --format parquet --out history.parquet
 ```
+
+The derived `financial-analysis` CLI is JSON-only. In Python, call
+`save_parquet()` on whichever bundle fields need separate files.
 
 ## Empty results
 

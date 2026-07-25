@@ -2,6 +2,21 @@
 
 Research, ratings, recommendations, and calendar events for a symbol.
 
+## Financial analysis tables
+
+```python
+analysis = Ticker("AAPL").financial_analysis()
+estimates = analysis.earnings_estimates.to_polars()
+targets = analysis.analyst_price_targets.to_polars()
+growth = analysis.growth_comparison.to_polars()
+insiders = analysis.insider_transactions.to_polars()
+```
+
+The bundle includes earnings/revenue estimates, earnings history, EPS trends
+and revisions, price targets, stock/industry/sector/index growth comparison,
+and ownership/insider tables. Treat empty frames as unavailable or
+instrument-inapplicable data, not as `None`.
+
 ## Calendar events
 
 ```python
@@ -69,6 +84,7 @@ Full parameter lists live in `--help`:
 
 ```bash
 uv run yoghurt calendar-events --help
+uv run yoghurt financial-analysis --help
 uv run yoghurt analyst --help
 uv run yoghurt insights --help
 ```

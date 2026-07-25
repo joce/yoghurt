@@ -13,10 +13,10 @@ Python. It is built for scripts, agents, and quick terminal work that needs
 the JSON returned by Yahoo's finance endpoints.
 
 The endpoint CLI stays deliberately close to the source: it prints Yahoo's
-response bodies as-is and adds no discovery API beyond CLI help. The separate
-`history` command is analysis-oriented: it emits a corporate-action-adjusted
-long-form table instead of Yahoo's response envelope. The library layer
-(below) models responses as typed pydantic structures or typed frames.
+response bodies as-is and adds no discovery API beyond CLI help. The derived
+`history` and `financial-analysis` commands instead emit analysis-ready tables.
+The library layer (below) models responses as typed pydantic structures or
+typed frames.
 
 ## Library
 
@@ -29,6 +29,8 @@ bars = yoghurt.Ticker("AAPL").chart(interval="1d").to_polars()
 history = yoghurt.history(["AAPL", "MSFT"], period="1y").to_polars()
 quote = yoghurt.Ticker("AAPL").quote()
 matches = yoghurt.search("Apple", quotes_count=5)
+analysis = yoghurt.Ticker("AAPL").financial_analysis()
+income_statement = analysis.income_statement.to_polars()
 tech = yoghurt.screener(
     "SELECT ticker, intradaymarketcap FROM EQUITY "
     "WHERE region = 'us' AND sector = 'Technology' "
@@ -57,7 +59,11 @@ like the CLI):
    a typed `OptionChain` (pydantic), including the underlying security's
    `Quote`. `Ticker.quote_summary()` returns a typed `QuoteSummary`
    (pydantic), with one optional field per requested-and-applicable
-   `quote-summary` module (41 total, all typed). Every other `Ticker`
+   `quote-summary` module (41 total, all typed).
+   `Ticker.financial_analysis()` deliberately combines those two retrieval
+   paths into a frozen `FinancialAnalysis` bundle of 17 stable statement,
+   valuation, analyst, growth, and ownership frames; inapplicable tables keep
+   their schemas and contain zero rows. Every other `Ticker`
    method and market-wide/introspection function (`quote_type`,
    `calendar_events`, `recommendations`, `stock_recommender`,
    `price_insights`, `insights`, `analyst`, `ratings_top`, `trending`,
@@ -105,6 +111,8 @@ as TA-Lib.
 - Raw Yahoo Finance JSON on stdout, with no pretty-printing or interpretation.
 - Analysis-ready adjusted history for one or more symbols in the library and
   CLI, with JSON and Parquet output.
+- Analysis-ready financial statement, valuation, analyst, and ownership tables
+  for one symbol in the library and JSON-only CLI.
 - Endpoint-specific commands for common Yahoo Finance data.
 - A SQL-flavored DSL (`screener`, `visualization`) for ad-hoc filters and
   cross-entity queries against Yahoo's data-platform endpoints.
@@ -457,6 +465,7 @@ Current commands, grouped roughly by how often they're reached for:
 | Command | Yahoo data |
 | --- | --- |
 | `timeseries` | Fetch fundamentals timeseries for a symbol. |
+| `financial-analysis` | Fetch analysis-ready financial tables for a symbol. |
 | `calendar-events` | Fetch earnings, IPO, economic, and SEC filing events for a symbol. |
 | `analyst` | Fetch analyst intelligence for a symbol. |
 | `ratings-top` | Fetch top analyst rating buckets for a symbol. |
@@ -591,6 +600,36 @@ to execution time.
 
 See [TIMESERIES_TYPES.md](src/yoghurt/docs/TIMESERIES_TYPES.md) for the observed `--type`
 reference with descriptions.
+
+### Financial analysis
+
+`Ticker.financial_analysis()` deliberately makes one `timeseries()` request
+for statement and valuation history and one `quote_summary()` request for
+analyst and ownership data. It returns a frozen `FinancialAnalysis` bundle:
+
+```python
+analysis = yoghurt.Ticker("AAPL").financial_analysis()
+income = analysis.income_statement.to_polars()
+targets = analysis.analyst_price_targets.to_polars()
+institutions = analysis.institutional_ownership.to_polars()
+```
+
+The 17 fields cover income statement, balance sheet, cash flow, valuation
+history, earnings and revenue estimates, earnings history, EPS trends and
+revisions, analyst price targets, stock/industry/sector/index growth,
+major/institutional/fund ownership, insider holdings and transactions, and
+insider purchase activity. Every field is a `Frame`; unavailable or
+inapplicable data is an empty frame with the same stable columns.
+
+The derived CLI command emits one JSON object keyed by those table field names,
+with row arrays as values:
+
+```powershell
+uv run yoghurt financial-analysis AAPL
+```
+
+It is JSON-only. Use each library frame's `save_parquet()` method when Parquet
+files are needed.
 
 ## Dates and Booleans
 
