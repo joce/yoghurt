@@ -468,6 +468,7 @@ def build_financial_analysis(
             "growth": entry.growth,
         }
         for entry in trend
+        if entry.growth is not None
     ]
     for source, group in (
         ("industry", summary.industry_trend),

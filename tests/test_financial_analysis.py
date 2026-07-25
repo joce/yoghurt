@@ -283,7 +283,9 @@ def test_ticker_financial_analysis_uses_existing_retrievals(
     assert estimates[0]["currency"] == "USD"
     assert estimates[0]["end_date"].isoformat() == "2026-06-30"
     assert not result.earnings_history.to_polars().is_empty()
-    assert set(result.growth_comparison.to_polars()["source"]) == {"stock", "index"}
+    growth = result.growth_comparison.to_polars()
+    assert set(growth["source"]) == {"stock", "index"}
+    assert growth["growth"].null_count() == 0
     assert not result.institutional_ownership.to_polars().is_empty()
     assert not result.insider_transactions.to_polars().is_empty()
     assert len(fake.calls) == _SOURCE_REQUEST_COUNT
@@ -329,7 +331,7 @@ def test_ticker_financial_analysis_keeps_empty_schemas_for_an_etf(
 def test_ticker_financial_analysis_omits_empty_analyst_rows(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Revenue coverage does not manufacture unavailable analyst tables."""
+    """Revenue coverage does not manufacture unavailable analysis rows."""
 
     fake = _FakeClient(quote_summary_fixture="BAC-PL.json")
     monkeypatch.setattr(core, "_get_client", lambda: fake)
@@ -341,6 +343,9 @@ def test_ticker_financial_analysis_omits_empty_analyst_rows(
     assert result.eps_trends.to_polars().is_empty()
     assert result.eps_revisions.to_polars().is_empty()
     assert result.analyst_price_targets.to_polars().is_empty()
+    growth = result.growth_comparison.to_polars()
+    assert set(growth["source"]) == {"index"}
+    assert growth["growth"].null_count() == 0
 
 
 def test_financial_analysis_cli_emits_one_json_object(
