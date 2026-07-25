@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import inspect
 import json
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -16,6 +17,7 @@ from yoghurt.exceptions import YahooApiError
 from yoghurt.frames import Frame, History
 from yoghurt.history import HISTORY_REQUEST_BATCH_SIZE
 from yoghurt.models import (
+    LookupResult,
     MarketInfoResult,
     MarketSummaryQuote,
     MarketTimeResult,
@@ -23,12 +25,14 @@ from yoghurt.models import (
     ScreenerDiscoverResult,
     ScreenerInstrumentFieldsResult,
     ScreenerPredefinedResult,
+    SearchResult,
     SectorResult,
     TimeseriesFieldsResult,
     TrendingResult,
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from typing import Any
 
     from yoghurt.types import ParamValue
@@ -160,9 +164,10 @@ def test_quotes_returns_result_list(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_quotes_joins_symbols_csv(monkeypatch: pytest.MonkeyPatch) -> None:
     """quotes() joins the symbols list into the wire CSV param."""
     fake = _install_fake(monkeypatch, _corpus_text("quote/multi.json"))
-    api.quotes(["AAPL", "MSFT"])
+    api.quotes(["AAPL", "MSFT"], include_private_companies=False)
     _, params = fake.calls[0]
     assert params["symbols"] == "AAPL,MSFT"
+    assert params["enablePrivateCompany"] is False
 
 
 def test_quotes_empty_list_raises_before_io(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -175,6 +180,87 @@ def test_quotes_empty_list_raises_before_io(monkeypatch: pytest.MonkeyPatch) -> 
     monkeypatch.setattr(core, "_get_client", _fail_get_client)
     with pytest.raises(ValueError, match="symbols must not be empty"):
         api.quotes([])
+
+
+def test_search_returns_typed_result_and_maps_controls(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """search() validates the whole response and maps readable Python controls."""
+
+    fake = _install_fake(monkeypatch, _corpus_text("search/AAPL_content.json"))
+    result = api.search(
+        "AAPL",
+        quotes_count=3,
+        news_count=3,
+        lists_count=3,
+        recommended_count=3,
+        fuzzy=True,
+        include_private_companies=False,
+        include_navigation_links=True,
+        include_research_reports=True,
+        include_cultural_assets=True,
+    )
+
+    assert isinstance(result, SearchResult)
+    assert result.quotes[0].symbol == "AAPL"
+    path, params = fake.calls[0]
+    assert path == "/v1/finance/search"
+    assert params == {
+        "q": "AAPL",
+        "quotesCount": 3,
+        "newsCount": 3,
+        "listsCount": 3,
+        "recommendedCount": 3,
+        "enableFuzzyQuery": True,
+        "enableCb": False,
+        "enableNavLinks": True,
+        "enableResearchReports": True,
+        "enableCulturalAssets": True,
+        "lang": "en-US",
+        "region": "US",
+    }
+
+
+def test_lookup_returns_typed_result_and_empty_documents(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """lookup() preserves an unmatched query as an empty typed page."""
+
+    fake = _install_fake(monkeypatch, _corpus_text("lookup/no_match.json"))
+    result = api.lookup(
+        "ZZZZXYZQ",
+        type="equity",
+        start=5,
+        count=10,
+        formatted=True,
+        fetch_pricing_data=False,
+    )
+
+    assert isinstance(result, LookupResult)
+    assert result.documents == []
+    path, params = fake.calls[0]
+    assert path == "/v1/finance/lookup"
+    assert params == {
+        "query": "ZZZZXYZQ",
+        "type": "equity",
+        "start": 5,
+        "count": 10,
+        "formatted": True,
+        "fetchPricingData": False,
+        "lang": "en-US",
+        "region": "US",
+    }
+
+
+@pytest.mark.parametrize("function", [api.search, api.lookup])
+def test_discovery_library_functions_do_not_expose_locale_overrides(
+    function: Callable[..., object],
+) -> None:
+    """Search and lookup keep lang/region at CommandSpec defaults in Python."""
+
+    parameters = inspect.signature(function).parameters
+    assert "lang" not in parameters
+    assert "region" not in parameters
 
 
 def test_history_fetches_symbols_concurrently_into_one_long_frame(

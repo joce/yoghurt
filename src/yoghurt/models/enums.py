@@ -20,6 +20,9 @@ class QuoteType(str, Enum):
     observed in the chart+spark corpus (CRYPTOCURRENCY, CURRENCY, EQUITY,
     ETF, FUTURE, INDEX, MUTUALFUND) is a member here, verified independently
     against that corpus rather than assumed from the quote corpus.
+
+    Search-quote records also reuse this enum; the search corpus independently
+    verifies EQUITY and ETF.
     """
 
     EQUITY = "EQUITY"

@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "case_count": 285,
+    "case_count": 302,
     "fetched_at": "2026-07-04T04:35:12.640976+00:00"
   },
   "analyst/AAPL": {
@@ -1007,6 +1007,143 @@
       "^GSPC"
     ],
     "file": "insights/_GSPC.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "lookup/default": {
+    "argv": [
+      "lookup",
+      "A",
+      "--count",
+      "5"
+    ],
+    "file": "lookup/default.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "lookup/formatted": {
+    "argv": [
+      "lookup",
+      "A",
+      "--count",
+      "2",
+      "--formatted"
+    ],
+    "file": "lookup/formatted.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "lookup/no_match": {
+    "argv": [
+      "lookup",
+      "ZZZZXYZQ",
+      "--count",
+      "5"
+    ],
+    "file": "lookup/no_match.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "lookup/no_pricing": {
+    "argv": [
+      "lookup",
+      "A",
+      "--count",
+      "3",
+      "--no-pricing-data"
+    ],
+    "file": "lookup/no_pricing.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "lookup/type_cryptocurrency": {
+    "argv": [
+      "lookup",
+      "A",
+      "--type",
+      "cryptocurrency",
+      "--count",
+      "5"
+    ],
+    "file": "lookup/type_cryptocurrency.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "lookup/type_currency": {
+    "argv": [
+      "lookup",
+      "A",
+      "--type",
+      "currency",
+      "--count",
+      "5"
+    ],
+    "file": "lookup/type_currency.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "lookup/type_equity": {
+    "argv": [
+      "lookup",
+      "A",
+      "--type",
+      "equity",
+      "--count",
+      "5"
+    ],
+    "file": "lookup/type_equity.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "lookup/type_etf": {
+    "argv": [
+      "lookup",
+      "A",
+      "--type",
+      "etf",
+      "--count",
+      "5"
+    ],
+    "file": "lookup/type_etf.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "lookup/type_future": {
+    "argv": [
+      "lookup",
+      "A",
+      "--type",
+      "future",
+      "--count",
+      "5"
+    ],
+    "file": "lookup/type_future.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "lookup/type_index": {
+    "argv": [
+      "lookup",
+      "A",
+      "--type",
+      "index",
+      "--count",
+      "5"
+    ],
+    "file": "lookup/type_index.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "lookup/type_mutualfund": {
+    "argv": [
+      "lookup",
+      "A",
+      "--type",
+      "mutualfund",
+      "--count",
+      "5"
+    ],
+    "file": "lookup/type_mutualfund.json",
     "http_status": 200,
     "status": "ok"
   },
@@ -2328,6 +2465,99 @@
       "SELECT ticker, fundnetassets FROM MUTUALFUND WHERE region = 'us' ORDER BY fundnetassets DESC LIMIT 5"
     ],
     "file": "screener/mutualfund.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "search/AAPL_content": {
+    "argv": [
+      "search",
+      "AAPL",
+      "--quotes-count",
+      "3",
+      "--news-count",
+      "3",
+      "--lists-count",
+      "3",
+      "--recommended-count",
+      "3",
+      "--navigation-links",
+      "--research-reports",
+      "--cultural-assets"
+    ],
+    "file": "search/AAPL_content.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "search/Appel_fuzzy": {
+    "argv": [
+      "search",
+      "Appel",
+      "--fuzzy"
+    ],
+    "file": "search/Appel_fuzzy.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "search/crypto_content": {
+    "argv": [
+      "search",
+      "crypto",
+      "--quotes-count",
+      "3",
+      "--news-count",
+      "1",
+      "--lists-count",
+      "5",
+      "--navigation-links"
+    ],
+    "file": "search/crypto_content.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "search/default": {
+    "argv": [
+      "search",
+      "AAPL"
+    ],
+    "file": "search/default.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "search/markets_content": {
+    "argv": [
+      "search",
+      "markets",
+      "--quotes-count",
+      "3",
+      "--news-count",
+      "3",
+      "--lists-count",
+      "3",
+      "--recommended-count",
+      "3",
+      "--navigation-links",
+      "--research-reports",
+      "--cultural-assets"
+    ],
+    "file": "search/markets_content.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "search/stock_screener_navigation": {
+    "argv": [
+      "search",
+      "stock screener",
+      "--quotes-count",
+      "1",
+      "--news-count",
+      "0",
+      "--lists-count",
+      "0",
+      "--recommended-count",
+      "0",
+      "--navigation-links"
+    ],
+    "file": "search/stock_screener_navigation.json",
     "http_status": 200,
     "status": "ok"
   },

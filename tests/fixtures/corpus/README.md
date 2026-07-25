@@ -105,3 +105,11 @@ data-platform entity distinct from `sp_earnings`/`INSIDER_TRANSACTION`.
 One live call, politeness delay respected, merged into `manifest.json` with
 no changes to any pre-existing entry (`case_count` 284 -> 285,
 `fetched_at` unchanged, per the surgical-addition precedent above).
+
+**2026-07-24 surgical addition (search and lookup):** six `search` captures
+cover default results, fuzzy matching, public and non-finance quote rows,
+both saved-list schemas, both navigation shapes, news, and research-report
+metadata. Eleven `lookup` captures cover all seven observed asset types,
+formatted price wrappers, pricing-disabled results, and an empty match.
+All responses were captured through `_run_case`; `manifest.json` was merged
+without changing the earlier full-run `fetched_at` (`case_count` 285 -> 302).

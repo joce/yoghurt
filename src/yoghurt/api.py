@@ -36,6 +36,7 @@ from yoghurt.models import (
     ChartEvents,
     ChartMeta,
     Insights,
+    LookupResult,
     MarketInfoResult,
     MarketSummaryQuote,
     MarketTimeResult,
@@ -48,6 +49,7 @@ from yoghurt.models import (
     ScreenerDiscoverResult,
     ScreenerInstrumentFieldsResult,
     ScreenerPredefinedResult,
+    SearchResult,
     SectorResult,
     StockRecommenderResult,
     TimeseriesFieldsResult,
@@ -161,7 +163,7 @@ class Ticker:
         *,
         fields: list[str] | None = None,
         formatted: bool | None = None,
-        enable_private_company: bool | None = None,
+        include_private_companies: bool | None = None,
         overnight_price: bool | None = None,
         top_pick_this_month: bool | None = None,
         img_heights: int | None = None,
@@ -170,7 +172,7 @@ class Ticker:
     ) -> Quote:
         """Fetch this symbol's quote record.
 
-        ``enable_private_company=True`` includes private-company quote
+        ``include_private_companies=True`` includes private-company quote
         matches; ``overnight_price=True`` requests overnight price fields.
 
         Returns:
@@ -188,7 +190,7 @@ class Ticker:
                     symbols=self.symbol,
                     fields=fields,
                     formatted=formatted,
-                    enablePrivateCompany=enable_private_company,
+                    enablePrivateCompany=include_private_companies,
                     overnightPrice=overnight_price,
                     topPickThisMonth=top_pick_this_month,
                     imgHeights=img_heights,
@@ -341,12 +343,12 @@ class Ticker:
         self,
         *,
         formatted: bool | None = None,
-        enable_private_company: bool | None = None,
+        include_private_companies: bool | None = None,
         overnight_price: bool | None = None,
     ) -> QuoteTypeResult:
         """Fetch instrument classification metadata for this symbol.
 
-        ``enable_private_company=True`` includes private-company data;
+        ``include_private_companies=True`` includes private-company data;
         ``overnight_price=True`` requests overnight price fields.
 
         Returns:
@@ -363,7 +365,7 @@ class Ticker:
                 values=_values(
                     symbol=self.symbol,
                     formatted=formatted,
-                    enablePrivateCompany=enable_private_company,
+                    enablePrivateCompany=include_private_companies,
                     overnightPrice=overnight_price,
                 ),
             )
@@ -378,14 +380,14 @@ class Ticker:
         *,
         modules: list[str] | None = None,
         formatted: bool | None = None,
-        enable_private_company: bool | None = None,
-        enable_qsp_expanded_earnings: bool | None = None,
+        include_private_companies: bool | None = None,
+        include_expanded_earnings: bool | None = None,
         overnight_price: bool | None = None,
     ) -> QuoteSummary:
         """Fetch quoteSummary modules for this symbol.
 
-        ``enable_private_company=True`` includes private-company data;
-        ``enable_qsp_expanded_earnings=True`` requests Yahoo's expanded
+        ``include_private_companies=True`` includes private-company data;
+        ``include_expanded_earnings=True`` requests Yahoo's expanded
         earnings fields; ``overnight_price=True`` requests overnight price
         fields.
 
@@ -412,8 +414,8 @@ class Ticker:
                     symbol=self.symbol,
                     modules=modules,
                     formatted=formatted,
-                    enablePrivateCompany=enable_private_company,
-                    enableQSPExpandedEarnings=enable_qsp_expanded_earnings,
+                    enablePrivateCompany=include_private_companies,
+                    enableQSPExpandedEarnings=include_expanded_earnings,
                     overnightPrice=overnight_price,
                 ),
             )
@@ -875,7 +877,7 @@ def quotes(  # ruff:ignore[too-many-arguments] - one keyword-only arg per quote 
     *,
     fields: list[str] | None = None,
     formatted: bool | None = None,
-    enable_private_company: bool | None = None,
+    include_private_companies: bool | None = None,
     overnight_price: bool | None = None,
     top_pick_this_month: bool | None = None,
     img_heights: int | None = None,
@@ -884,7 +886,7 @@ def quotes(  # ruff:ignore[too-many-arguments] - one keyword-only arg per quote 
 ) -> list[Quote]:
     """Fetch quote records for one or more symbols.
 
-    ``enable_private_company=True`` includes private-company quote matches;
+    ``include_private_companies=True`` includes private-company quote matches;
     ``overnight_price=True`` requests overnight price fields. Symbols Yahoo
     does not recognize are simply absent from the returned list rather than
     raising.
@@ -906,7 +908,7 @@ def quotes(  # ruff:ignore[too-many-arguments] - one keyword-only arg per quote 
                 symbols=",".join(symbols),
                 fields=fields,
                 formatted=formatted,
-                enablePrivateCompany=enable_private_company,
+                enablePrivateCompany=include_private_companies,
                 overnightPrice=overnight_price,
                 topPickThisMonth=top_pick_this_month,
                 imgHeights=img_heights,
@@ -918,6 +920,89 @@ def quotes(  # ruff:ignore[too-many-arguments] - one keyword-only arg per quote 
     return [
         validate_model(Quote, record) for record in payload["quoteResponse"]["result"]
     ]
+
+
+def search(  # ruff:ignore[too-many-arguments] - one keyword-only arg per wire control.
+    query: str,
+    *,
+    quotes_count: int | None = None,
+    news_count: int | None = None,
+    lists_count: int | None = None,
+    recommended_count: int | None = None,
+    fuzzy: bool | None = None,
+    include_private_companies: bool | None = None,
+    include_navigation_links: bool | None = None,
+    include_research_reports: bool | None = None,
+    include_cultural_assets: bool | None = None,
+) -> SearchResult:
+    """Search instruments and related Yahoo Finance content.
+
+    Private-company and cultural-asset matches share ``result.quotes`` with
+    public instruments but have no ticker symbol. Research matches contain
+    report metadata, not report bodies. Empty result families are returned
+    as empty lists.
+
+    Returns:
+        SearchResult: The validated search response and all result families.
+    """
+
+    payload = run(
+        _core.call_endpoint(
+            "search",
+            values=_values(
+                q=query,
+                quotesCount=quotes_count,
+                newsCount=news_count,
+                listsCount=lists_count,
+                recommendedCount=recommended_count,
+                enableFuzzyQuery=fuzzy,
+                enableCb=include_private_companies,
+                enableNavLinks=include_navigation_links,
+                enableResearchReports=include_research_reports,
+                enableCulturalAssets=include_cultural_assets,
+            ),
+        )
+    )
+    return validate_model(SearchResult, payload)
+
+
+def lookup(  # ruff:ignore[too-many-arguments] - one keyword-only arg per wire control.
+    query: str,
+    *,
+    type: (  # ruff:ignore[builtin-argument-shadowing] - mirrors Yahoo's wire/CLI name
+        str | None
+    ) = None,
+    start: int | None = None,
+    count: int | None = None,
+    formatted: bool | None = None,
+    fetch_pricing_data: bool | None = None,
+) -> LookupResult:
+    """Look up a page of instruments, optionally filtered by asset type.
+
+    Known ``type`` values are ``all``, ``equity``, ``mutualfund``, ``etf``,
+    ``index``, ``future``, ``currency``, and ``cryptocurrency``. The value
+    remains open-ended because Yahoo defines the vocabulary. With
+    ``formatted=True``, wrapped pricing values are still exposed as their
+    typed raw numbers. An unmatched query returns an empty ``documents`` list.
+
+    Returns:
+        LookupResult: The validated page and per-type match totals.
+    """
+
+    payload = run(
+        _core.call_endpoint(
+            "lookup",
+            values=_values(
+                query=query,
+                type=type,
+                start=start,
+                count=count,
+                formatted=formatted,
+                fetchPricingData=fetch_pricing_data,
+            ),
+        )
+    )
+    return validate_model(LookupResult, payload["finance"]["result"][0])
 
 
 def screener(query: str) -> Frame:

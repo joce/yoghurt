@@ -76,7 +76,7 @@ When adding or editing a CLI command:
 - Error contract: symbol lookups raise SymbolNotFoundError; Yahoo error payloads raise YahooApiError; empty query results return empty Frames (never None, never raise); transport failures raise YahooRequestError/YahooUnavailableError.
 - One conversion vocabulary on every tabular result: to_polars, to_pandas, to_arrow, to_dicts, save_parquet. Conversions take no shaping arguments.
 - One name per concept; no aliases; no value-dependent return types.
-- Kwargs mirror CLI command metadata 1:1 (wire-name keys); booleans whose CLI flag inverts the wire value are named after the wire param. lang/region ride their defaults; per-call overrides remain deliberately unexposed.
+- Typed endpoint wrappers use clear, stable Python parameter names rather than mechanically exposing Yahoo wire names. Map each parameter explicitly to its `CommandSpec` wire key and pin the emitted request in tests, especially when a CLI flag inverts a wire boolean. Keep one Python name per concept and do not add wire-name aliases. `raw()` remains the wire-oriented escape hatch. lang/region ride their defaults; per-call overrides remain deliberately unexposed.
 - Response models are frozen pydantic models with extra="allow"; internal metadata records are frozen dataclasses; orchestrators are plain classes.
 - The corpus at tests/fixtures/corpus/ is the evidence for response shapes; parser code and tests reference corpus files, not hand-invented JSON, wherever a real capture exists.
 
