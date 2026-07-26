@@ -17,8 +17,18 @@ import polars as pl
 
 from yoghurt import _core
 from yoghurt._bridge import run
+from yoghurt._market_calendar import (
+    build_market_calendar_query,
+    normalize_market_calendar,
+)
 from yoghurt.commands import COMMANDS_BY_NAME
 from yoghurt.exceptions import SymbolNotFoundError, YahooApiError
+from yoghurt.financial_analysis import (
+    FINANCIAL_ANALYSIS_QUOTE_SUMMARY_MODULES,
+    FINANCIAL_ANALYSIS_TIMESERIES_TYPES,
+    FinancialAnalysis,
+    build_financial_analysis,
+)
 from yoghurt.frames import Chart, Frame, History, Spark, Timeseries
 from yoghurt.history import HISTORY_REQUEST_BATCH_SIZE
 from yoghurt.history import concat_frames as concat_history_frames
@@ -30,6 +40,7 @@ from yoghurt.models import (
     ChartEvents,
     ChartMeta,
     Insights,
+    LookupResult,
     MarketInfoResult,
     MarketSummaryQuote,
     MarketTimeResult,
@@ -42,6 +53,7 @@ from yoghurt.models import (
     ScreenerDiscoverResult,
     ScreenerInstrumentFieldsResult,
     ScreenerPredefinedResult,
+    SearchResult,
     SectorResult,
     StockRecommenderResult,
     TimeseriesFieldsResult,
@@ -65,7 +77,7 @@ from yoghurt.tabular import (
 if TYPE_CHECKING:
     from datetime import date
 
-    from yoghurt.types import ParamValue
+    from yoghurt.types import MarketCalendarKind, ParamValue
 
 DateLike: TypeAlias = "int | str | date | datetime"
 
@@ -106,8 +118,41 @@ def _chart_from_payload(payload: dict[str, Any], fetched_at: datetime) -> Chart:
     return Chart(df=df, fetched_at=fetched_at, meta=meta, events=chart_events)
 
 
+def _timeseries_from_payload(
+    payload: dict[str, Any], fetched_at: datetime | None = None
+) -> Timeseries:
+    """Build typed timeseries frames from a decoded endpoint payload.
+
+    Returns:
+        Timeseries: Four schema-stable frames plus type bookkeeping.
+
+    Raises:
+        YahooApiError: If the response cannot be flattened into the fixed
+            timeseries schemas (code ``"malformed-response"``).
+    """
+
+    try:
+        tables = build_timeseries_frames(payload)
+    except TabularShapeError as exc:
+        raise YahooApiError(code="malformed-response", description=str(exc)) from exc
+    timestamp = fetched_at or _now_utc()
+    return Timeseries(
+        fundamentals=Frame(df=tables.fundamentals, fetched_at=timestamp),
+        geographic_segments=Frame(df=tables.geographic_segments, fetched_at=timestamp),
+        economic_events=Frame(df=tables.economic_events, fetched_at=timestamp),
+        analyst_ratings=Frame(df=tables.analyst_ratings, fetched_at=timestamp),
+        empty_types=tables.empty_types,
+        unrecognized_types=tables.unrecognized_types,
+        fetched_at=timestamp,
+    )
+
+
 class Ticker:
-    """Symbol-bound entry point; every method performs one HTTP call."""
+    """Symbol-bound entry point; methods perform one HTTP call by default.
+
+    :meth:`financial_analysis` is the deliberate exception: it combines one
+    fundamentals-timeseries request with one quote-summary request.
+    """
 
     def __init__(self, symbol: str) -> None:
         """Bind the ticker to one Yahoo symbol (no I/O)."""
@@ -122,7 +167,7 @@ class Ticker:
         *,
         fields: list[str] | None = None,
         formatted: bool | None = None,
-        enable_private_company: bool | None = None,
+        include_private_companies: bool | None = None,
         overnight_price: bool | None = None,
         top_pick_this_month: bool | None = None,
         img_heights: int | None = None,
@@ -131,7 +176,7 @@ class Ticker:
     ) -> Quote:
         """Fetch this symbol's quote record.
 
-        ``enable_private_company=True`` includes private-company quote
+        ``include_private_companies=True`` includes private-company quote
         matches; ``overnight_price=True`` requests overnight price fields.
 
         Returns:
@@ -149,7 +194,7 @@ class Ticker:
                     symbols=self.symbol,
                     fields=fields,
                     formatted=formatted,
-                    enablePrivateCompany=enable_private_company,
+                    enablePrivateCompany=include_private_companies,
                     overnightPrice=overnight_price,
                     topPickThisMonth=top_pick_this_month,
                     imgHeights=img_heights,
@@ -302,12 +347,12 @@ class Ticker:
         self,
         *,
         formatted: bool | None = None,
-        enable_private_company: bool | None = None,
+        include_private_companies: bool | None = None,
         overnight_price: bool | None = None,
     ) -> QuoteTypeResult:
         """Fetch instrument classification metadata for this symbol.
 
-        ``enable_private_company=True`` includes private-company data;
+        ``include_private_companies=True`` includes private-company data;
         ``overnight_price=True`` requests overnight price fields.
 
         Returns:
@@ -324,7 +369,7 @@ class Ticker:
                 values=_values(
                     symbol=self.symbol,
                     formatted=formatted,
-                    enablePrivateCompany=enable_private_company,
+                    enablePrivateCompany=include_private_companies,
                     overnightPrice=overnight_price,
                 ),
             )
@@ -339,14 +384,14 @@ class Ticker:
         *,
         modules: list[str] | None = None,
         formatted: bool | None = None,
-        enable_private_company: bool | None = None,
-        enable_qsp_expanded_earnings: bool | None = None,
+        include_private_companies: bool | None = None,
+        include_expanded_earnings: bool | None = None,
         overnight_price: bool | None = None,
     ) -> QuoteSummary:
         """Fetch quoteSummary modules for this symbol.
 
-        ``enable_private_company=True`` includes private-company data;
-        ``enable_qsp_expanded_earnings=True`` requests Yahoo's expanded
+        ``include_private_companies=True`` includes private-company data;
+        ``include_expanded_earnings=True`` requests Yahoo's expanded
         earnings fields; ``overnight_price=True`` requests overnight price
         fields.
 
@@ -373,8 +418,8 @@ class Ticker:
                     symbol=self.symbol,
                     modules=modules,
                     formatted=formatted,
-                    enablePrivateCompany=enable_private_company,
-                    enableQSPExpandedEarnings=enable_qsp_expanded_earnings,
+                    enablePrivateCompany=include_private_companies,
+                    enableQSPExpandedEarnings=include_expanded_earnings,
                     overnightPrice=overnight_price,
                 ),
             )
@@ -445,9 +490,6 @@ class Ticker:
             segments, economic events, analyst ratings) plus the
             ``empty_types``/``unrecognized_types`` bookkeeping tuples.
 
-        Raises:
-            YahooApiError: If the response cannot be flattened into the
-                fixed timeseries schemas (code ``"malformed-response"``).
         """
 
         payload = run(
@@ -464,24 +506,27 @@ class Ticker:
                 ),
             )
         )
-        try:
-            tables = build_timeseries_frames(payload)
-        except TabularShapeError as exc:
-            raise YahooApiError(
-                code="malformed-response", description=str(exc)
-            ) from exc
-        fetched_at = _now_utc()
-        return Timeseries(
-            fundamentals=Frame(df=tables.fundamentals, fetched_at=fetched_at),
-            geographic_segments=Frame(
-                df=tables.geographic_segments, fetched_at=fetched_at
-            ),
-            economic_events=Frame(df=tables.economic_events, fetched_at=fetched_at),
-            analyst_ratings=Frame(df=tables.analyst_ratings, fetched_at=fetched_at),
-            empty_types=tables.empty_types,
-            unrecognized_types=tables.unrecognized_types,
-            fetched_at=fetched_at,
+        return _timeseries_from_payload(payload)
+
+    def financial_analysis(self) -> FinancialAnalysis:
+        """Fetch analysis-ready financial, analyst, and ownership tables.
+
+        This convenience method deliberately performs two existing retrievals:
+        one fundamentals-timeseries request for statement and valuation history,
+        then one quote-summary request for analyst and ownership modules.
+        Inapplicable or absent modules become schema-stable empty frames.
+
+        Returns:
+            FinancialAnalysis: Seventeen stable long-form frames.
+        """
+
+        timeseries = self.timeseries(
+            type=list(FINANCIAL_ANALYSIS_TIMESERIES_TYPES), period1=0
         )
+        summary = self.quote_summary(
+            modules=list(FINANCIAL_ANALYSIS_QUOTE_SUMMARY_MODULES)
+        )
+        return build_financial_analysis(timeseries, summary)
 
     def calendar_events(  # ruff:ignore[too-many-arguments] - one keyword-only arg per event filter.
         self,
@@ -836,7 +881,7 @@ def quotes(  # ruff:ignore[too-many-arguments] - one keyword-only arg per quote 
     *,
     fields: list[str] | None = None,
     formatted: bool | None = None,
-    enable_private_company: bool | None = None,
+    include_private_companies: bool | None = None,
     overnight_price: bool | None = None,
     top_pick_this_month: bool | None = None,
     img_heights: int | None = None,
@@ -845,7 +890,7 @@ def quotes(  # ruff:ignore[too-many-arguments] - one keyword-only arg per quote 
 ) -> list[Quote]:
     """Fetch quote records for one or more symbols.
 
-    ``enable_private_company=True`` includes private-company quote matches;
+    ``include_private_companies=True`` includes private-company quote matches;
     ``overnight_price=True`` requests overnight price fields. Symbols Yahoo
     does not recognize are simply absent from the returned list rather than
     raising.
@@ -867,7 +912,7 @@ def quotes(  # ruff:ignore[too-many-arguments] - one keyword-only arg per quote 
                 symbols=",".join(symbols),
                 fields=fields,
                 formatted=formatted,
-                enablePrivateCompany=enable_private_company,
+                enablePrivateCompany=include_private_companies,
                 overnightPrice=overnight_price,
                 topPickThisMonth=top_pick_this_month,
                 imgHeights=img_heights,
@@ -879,6 +924,89 @@ def quotes(  # ruff:ignore[too-many-arguments] - one keyword-only arg per quote 
     return [
         validate_model(Quote, record) for record in payload["quoteResponse"]["result"]
     ]
+
+
+def search(  # ruff:ignore[too-many-arguments] - one keyword-only arg per wire control.
+    query: str,
+    *,
+    quotes_count: int | None = None,
+    news_count: int | None = None,
+    lists_count: int | None = None,
+    recommended_count: int | None = None,
+    fuzzy: bool | None = None,
+    include_private_companies: bool | None = None,
+    include_navigation_links: bool | None = None,
+    include_research_reports: bool | None = None,
+    include_cultural_assets: bool | None = None,
+) -> SearchResult:
+    """Search instruments and related Yahoo Finance content.
+
+    Private-company and cultural-asset matches share ``result.quotes`` with
+    public instruments but have no ticker symbol. Research matches contain
+    report metadata, not report bodies. Empty result families are returned
+    as empty lists.
+
+    Returns:
+        SearchResult: The validated search response and all result families.
+    """
+
+    payload = run(
+        _core.call_endpoint(
+            "search",
+            values=_values(
+                q=query,
+                quotesCount=quotes_count,
+                newsCount=news_count,
+                listsCount=lists_count,
+                recommendedCount=recommended_count,
+                enableFuzzyQuery=fuzzy,
+                enableCb=include_private_companies,
+                enableNavLinks=include_navigation_links,
+                enableResearchReports=include_research_reports,
+                enableCulturalAssets=include_cultural_assets,
+            ),
+        )
+    )
+    return validate_model(SearchResult, payload)
+
+
+def lookup(  # ruff:ignore[too-many-arguments] - one keyword-only arg per wire control.
+    query: str,
+    *,
+    type: (  # ruff:ignore[builtin-argument-shadowing] - mirrors Yahoo's wire/CLI name
+        str | None
+    ) = None,
+    start: int | None = None,
+    count: int | None = None,
+    formatted: bool | None = None,
+    fetch_pricing_data: bool | None = None,
+) -> LookupResult:
+    """Look up a page of instruments, optionally filtered by asset type.
+
+    Known ``type`` values are ``all``, ``equity``, ``mutualfund``, ``etf``,
+    ``index``, ``future``, ``currency``, and ``cryptocurrency``. The value
+    remains open-ended because Yahoo defines the vocabulary. With
+    ``formatted=True``, wrapped pricing values are still exposed as their
+    typed raw numbers. An unmatched query returns an empty ``documents`` list.
+
+    Returns:
+        LookupResult: The validated page and per-type match totals.
+    """
+
+    payload = run(
+        _core.call_endpoint(
+            "lookup",
+            values=_values(
+                query=query,
+                type=type,
+                start=start,
+                count=count,
+                formatted=formatted,
+                fetchPricingData=fetch_pricing_data,
+            ),
+        )
+    )
+    return validate_model(LookupResult, payload["finance"]["result"][0])
 
 
 def screener(query: str) -> Frame:
@@ -1018,6 +1146,35 @@ def trending(  # ruff:ignore[too-many-arguments] - one keyword-only arg per wire
         )
     )
     return validate_model(TrendingResult, payload["finance"]["result"][0])
+
+
+def market_calendar(
+    kind: MarketCalendarKind,
+    *,
+    start_date: DateLike | None = None,
+    end_date: DateLike | None = None,
+    limit: int = 100,
+    offset: int = 0,
+) -> Frame:
+    """Fetch one analysis-ready market-wide event calendar.
+
+    ``kind`` is one of ``earnings``, ``ipo``, ``economic``, or ``splits``.
+    The inclusive date window defaults to today through seven days ahead.
+    Results are ordered chronologically and keep a stable, kind-specific
+    schema even when Yahoo returns no rows.
+
+    Returns:
+        Frame: Normalized calendar rows with the standard conversion methods.
+    """
+
+    query = build_market_calendar_query(
+        kind,
+        start_date=start_date,
+        end_date=end_date,
+        limit=limit,
+        offset=offset,
+    )
+    return normalize_market_calendar(kind, visualization(query))
 
 
 def sector(

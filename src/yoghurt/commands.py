@@ -1767,6 +1767,233 @@ PREDEFINED_SCREENER_SECTIONS: tuple[ReferenceSection, ...] = (
     ReferenceSection(title="Options", values=_SCREENER_OPTIONS),
 )
 
+SEARCH_COMMAND = CommandSpec(
+    name="search",
+    path="/v1/finance/search",
+    summary="Search quotes, news, lists, and related Yahoo content.",
+    description=(
+        "Matching public instruments and private-company profiles, related "
+        "articles, saved lists, navigation links, and research-report metadata."
+    ),
+    use_crumb=True,
+    base_url="https://query2.finance.yahoo.com",
+    params=(
+        ParamSpec(
+            name="q",
+            cli_name="q",
+            kind=ParamKind.STRING,
+            positional=True,
+            required=True,
+            metavar="QUERY",
+            help="Symbol, company name, or phrase to search for.",
+        ),
+        ParamSpec(
+            name="quotesCount",
+            cli_name="quotes-count",
+            kind=ParamKind.INTEGER,
+            default=8,
+            metavar="COUNT",
+            help="Maximum number of public-instrument matches to request.",
+        ),
+        ParamSpec(
+            name="newsCount",
+            cli_name="news-count",
+            kind=ParamKind.INTEGER,
+            default=8,
+            metavar="COUNT",
+            help="Maximum number of related news articles to request.",
+        ),
+        ParamSpec(
+            name="listsCount",
+            cli_name="lists-count",
+            kind=ParamKind.INTEGER,
+            default=8,
+            metavar="COUNT",
+            help="Maximum number of matching saved lists to request.",
+        ),
+        ParamSpec(
+            name="recommendedCount",
+            cli_name="recommended-count",
+            kind=ParamKind.INTEGER,
+            default=8,
+            metavar="COUNT",
+            help="Maximum number of recommended matches to request.",
+        ),
+        ParamSpec(
+            name="enableFuzzyQuery",
+            cli_name="fuzzy",
+            kind=ParamKind.BOOLEAN,
+            default=False,
+            help="Enable approximate matching for misspelled queries.",
+        ),
+        ParamSpec(
+            name="enableCb",
+            cli_name="no-private-companies",
+            kind=ParamKind.BOOLEAN,
+            default=True,
+            help=(
+                "Include private-company profile matches; "
+                "--no-private-companies disables them."
+            ),
+        ),
+        ParamSpec(
+            name="enableNavLinks",
+            cli_name="navigation-links",
+            kind=ParamKind.BOOLEAN,
+            default=False,
+            help="Include matching Yahoo Finance navigation links.",
+        ),
+        ParamSpec(
+            name="enableResearchReports",
+            cli_name="research-reports",
+            kind=ParamKind.BOOLEAN,
+            default=False,
+            help="Include matching research-report metadata.",
+        ),
+        ParamSpec(
+            name="enableCulturalAssets",
+            cli_name="cultural-assets",
+            kind=ParamKind.BOOLEAN,
+            default=False,
+            help="Include non-financial cultural-asset matches.",
+        ),
+        ParamSpec(
+            name="lang",
+            cli_name="lang",
+            kind=ParamKind.STRING,
+            default="en-US",
+            metavar="LANG",
+            help="Yahoo response language.",
+        ),
+        ParamSpec(
+            name="region",
+            cli_name="region",
+            kind=ParamKind.STRING,
+            default="US",
+            metavar="REGION",
+            help="Yahoo response region.",
+        ),
+    ),
+    examples=(
+        "yoghurt search AAPL",
+        'yoghurt search "Apple Inc" --quotes-count 5 --news-count 0',
+        ("yoghurt search Appel --fuzzy --research-reports --navigation-links"),
+    ),
+    notes=(
+        (
+            "Private-company and cultural-asset matches share the quotes array "
+            "and can make it exceed --quotes-count."
+        ),
+        "Research results contain report metadata, not report bodies.",
+    ),
+)
+
+LOOKUP_TYPES: tuple[str, ...] = (
+    "all",
+    "equity",
+    "mutualfund",
+    "etf",
+    "index",
+    "future",
+    "currency",
+    "cryptocurrency",
+)
+
+LOOKUP_COMMAND = CommandSpec(
+    name="lookup",
+    path="/v1/finance/lookup",
+    summary="Search instruments by name or symbol, with type filters.",
+    description=(
+        "Paged instrument documents and per-asset-type match totals, optionally "
+        "including current pricing fields."
+    ),
+    use_crumb=True,
+    params=(
+        ParamSpec(
+            name="query",
+            cli_name="query",
+            kind=ParamKind.STRING,
+            positional=True,
+            required=True,
+            metavar="QUERY",
+            help="Instrument name, symbol, or partial text to look up.",
+        ),
+        ParamSpec(
+            name="type",
+            cli_name="type",
+            kind=ParamKind.STRING,
+            default="all",
+            metavar="TYPE",
+            help="Asset type to search. See the common values below.",
+        ),
+        ParamSpec(
+            name="start",
+            cli_name="start",
+            kind=ParamKind.INTEGER,
+            default=0,
+            metavar="OFFSET",
+            help="Zero-based result offset for paging through matches.",
+        ),
+        ParamSpec(
+            name="count",
+            cli_name="count",
+            kind=ParamKind.INTEGER,
+            default=25,
+            metavar="COUNT",
+            help="Number of instrument documents to request.",
+        ),
+        ParamSpec(
+            name="formatted",
+            cli_name="formatted",
+            kind=ParamKind.BOOLEAN,
+            default=False,
+            help="Request Yahoo formatted values.",
+        ),
+        ParamSpec(
+            name="fetchPricingData",
+            cli_name="no-pricing-data",
+            kind=ParamKind.BOOLEAN,
+            default=True,
+            help=(
+                "Request current price and change fields; "
+                "--no-pricing-data disables them."
+            ),
+        ),
+        ParamSpec(
+            name="lang",
+            cli_name="lang",
+            kind=ParamKind.STRING,
+            default="en-US",
+            metavar="LANG",
+            help="Yahoo response language.",
+        ),
+        ParamSpec(
+            name="region",
+            cli_name="region",
+            kind=ParamKind.STRING,
+            default="US",
+            metavar="REGION",
+            help="Yahoo response region.",
+        ),
+    ),
+    examples=(
+        "yoghurt lookup Apple",
+        "yoghurt lookup A --type equity --count 25",
+        ("yoghurt lookup Bitcoin --type cryptocurrency --start 25 --no-pricing-data"),
+    ),
+    common_types=LOOKUP_TYPES,
+    notes=(
+        (
+            "--no-pricing-data can change Yahoo's match ordering and source "
+            "details as well as omit price fields."
+        ),
+        (
+            "In observed responses, total is the returned page size; "
+            "lookupTotals carries match counts by asset type."
+        ),
+    ),
+)
+
 PREDEFINED_SCREENER_COMMAND = CommandSpec(
     name="screener-predefined",
     path="/v1/finance/screener/predefined/saved",
@@ -2709,6 +2936,8 @@ COMMANDS: tuple[CommandSpec, ...] = (
     # Discovery (find symbols, build custom queries).
     # visualization and screener (DSL-driven, defined in cli.py) slot in
     # between screener-predefined and screener-discover at the CLI layer.
+    SEARCH_COMMAND,
+    LOOKUP_COMMAND,
     PREDEFINED_SCREENER_COMMAND,
     SCREENER_DISCOVER_COMMAND,
     # Symbol-bound analysis

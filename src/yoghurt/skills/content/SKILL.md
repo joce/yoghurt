@@ -1,13 +1,13 @@
 ---
 name: yoghurt
-description: Fetch and analyze Yahoo Finance market data — quotes, adjusted history, charts, options chains, fundamentals, analyst research, and market screeners — through the yoghurt Python library (typed pydantic models, polars frames) or CLI. Use when a task needs live or historical market data, financial statements, options data, market-wide screening, or any Yahoo Finance API access.
+description: Fetch and analyze Yahoo Finance market data — symbol search, quotes, adjusted history, market calendars, charts, options chains, fundamentals, analyst research, and screeners — through the yoghurt Python library (typed pydantic models, polars frames) or CLI. Use when a task needs instrument discovery, live or historical market data, financial statements, event calendars, options data, market-wide screening, or any Yahoo Finance API access.
 ---
 
 # yoghurt
 
-Yahoo Finance market data: quotes, adjusted history, charts, options,
-fundamentals, analyst research, and SQL-flavored screeners — as a typed Python
-library or CLI.
+Yahoo Finance market data: symbol search, quotes, adjusted history, market
+calendars, charts, options, fundamentals, analyst research, and SQL-flavored
+screeners — as a typed Python library or CLI.
 
 ## Quickstart
 
@@ -38,8 +38,9 @@ typed errors, polars-backed frames.
 (`uvx yoghurt …`). Same command names as the library; flags mirror kwargs
 mechanically: `--start-date` ↔ `start_date=`, `--modules a,b` ↔
 `modules=["a", "b"]`. Endpoint commands print Yahoo's raw wire JSON to
-stdout; the derived `history` command instead emits adjusted long-form rows.
-The library returns typed models/frames and raises typed errors.
+stdout; the derived `history`, `financial-analysis`, and `market-calendar`
+commands instead emit analysis-ready rows. The library returns typed
+models/frames and raises typed errors.
 
 Shell-quote symbols with special characters: `^GSPC`, `EURUSD=X`, `ES=F`.
 
@@ -55,11 +56,14 @@ yoghurt.Ticker("^GSPC").chart(interval="1d")
 
 | Task | Use |
 | --- | --- |
+| Find symbols or page instruments by asset type | `search()` / `lookup()` |
 | Typed, per-symbol data (quote, chart, options, fundamentals, analysis) | `Ticker` methods |
 | Adjusted single- or multi-symbol OHLCV for analysis | `Ticker.history()` / `history()` |
+| Market-wide earnings, IPO, economic, or split events | `market_calendar()` |
+| Financial statements, valuation, analyst, and ownership tables | `Ticker.financial_analysis()` |
 | Typed, market-wide lists (trending, sectors, market summary) | module-level functions |
 | Asset-class filtering (equities, ETFs, crypto, …) | `screener()` |
-| Data-platform entities — cross-entity queries, splits/IPO/earnings calendars | `visualization()` |
+| Custom data-platform fields, filters, or cross-entity queries | `visualization()` |
 | An endpoint with no typed wrapper yet | `raw()` |
 
 ## Errors
@@ -67,7 +71,8 @@ yoghurt.Ticker("^GSPC").chart(interval="1d")
 One contract everywhere: symbol lookups raise `SymbolNotFoundError`, Yahoo
 error payloads raise `YahooApiError` (`.code`, `.description`), transport
 failures raise `YahooRequestError`/`YahooUnavailableError`. Queries with
-zero matches return **empty frames** — never `None`, never an exception.
+zero matches return **empty collections or frames** — never `None`, never an
+exception.
 
 ## Parameters
 
@@ -75,11 +80,15 @@ Do not guess parameter names or values. Run `yoghurt <command> --help` —
 it is generated, complete, and authoritative for both surfaces via the
 flag↔kwarg mirror rule.
 
+`search` and `lookup` expose `--lang`/`--region` only in the CLI. Their Python
+functions use the command defaults and intentionally have no per-call locale
+kwargs.
+
 ## Domain index
 
 | Domain | Read when… |
 | --- | --- |
-| [market-data](market-data/README.md) | fetching quotes, adjusted history, charts, sparklines, or options chains |
+| [market-data](market-data/README.md) | finding symbols or fetching quotes, adjusted history, market calendars, charts, sparklines, or options chains |
 | [fundamentals](fundamentals/README.md) | pulling quote-summary modules or fundamentals timeseries |
 | [analysis](analysis/README.md) | working with insights, ratings, recommendations, or calendar events |
 | [queries](queries/README.md) | writing a screener or visualization DSL query |

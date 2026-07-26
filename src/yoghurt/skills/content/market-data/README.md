@@ -1,7 +1,38 @@
 # Market data
 
-Quotes, adjusted history, charts, sparklines, and option chains — the
-price-level surfaces.
+Symbol discovery, quotes, adjusted history, market calendars, charts,
+sparklines, and option chains — the market-data surfaces.
+
+## Search and lookup
+
+Use broad `search()` when the task may need instruments, private-company
+profiles, related news, saved lists, navigation, or research metadata:
+
+```python
+matches = yoghurt.search("Appel", fuzzy=True, quotes_count=5)
+symbols = [
+    match.symbol for match in matches.quotes if match.symbol is not None
+]
+```
+
+Use `lookup()` for instrument-only, paged results with an optional asset-type
+filter:
+
+```python
+page = yoghurt.lookup("Apple", type="equity", count=25)
+instruments = page.documents
+```
+
+An unmatched lookup has an empty `documents` list. Search result families are
+also empty lists when no category matches. Private-company and cultural-asset
+search rows have no ticker symbol.
+
+CLI equivalents print Yahoo's raw JSON. Locale overrides are CLI-only:
+
+```bash
+uv run yoghurt search Airbus --lang fr-FR --region FR
+uv run yoghurt lookup Bitcoin --type cryptocurrency --count 25
+```
 
 ## Quotes
 
@@ -75,6 +106,32 @@ CLI equivalent (derived JSON rows, not Yahoo's raw response envelope):
 uv run yoghurt history AAPL,MSFT --period 1y --interval 1d
 ```
 
+## Market-wide calendars
+
+Use `market_calendar()` for chronological earnings, IPO, economic-event, or
+stock-split rows across the market:
+
+```python
+events = yoghurt.market_calendar(
+    "earnings", start_date="2026-07-20", end_date="2026-07-25"
+).to_polars()
+```
+
+The date window is inclusive and defaults to today through seven days ahead
+in UTC. The four kinds are `earnings`, `ipo`, `economic`, and `splits`; each
+keeps a stable schema when empty. Use `offset=` with `limit=` for manual
+pagination.
+
+CLI equivalents emit normalized JSON rows or Parquet:
+
+```bash
+uv run yoghurt market-calendar earnings
+uv run yoghurt market-calendar economic --format parquet --out economic.parquet
+```
+
+This is market-wide. Use `Ticker.calendar_events()` for one symbol, or
+`visualization()` when custom fields and predicates are required.
+
 ## Sparklines
 
 ```python
@@ -112,8 +169,11 @@ Full parameter lists, defaults, and examples live in `--help`, not here:
 
 ```bash
 uv run yoghurt quote --help
+uv run yoghurt search --help
+uv run yoghurt lookup --help
 uv run yoghurt chart --help
 uv run yoghurt history --help
+uv run yoghurt market-calendar --help
 uv run yoghurt options --help
 ```
 

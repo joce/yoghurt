@@ -63,6 +63,17 @@ def test_dsl_cases_include_the_splits_entity() -> None:
     assert "splits" in visualization_cases
 
 
+def test_dsl_cases_cover_populated_and_empty_market_calendars() -> None:
+    """Each normalized calendar schema retains raw corpus evidence."""
+
+    visualization_cases = {
+        case.case for case in build_cases() if case.command == "visualization"
+    }
+    for kind in ("earnings", "ipo", "economic", "splits"):
+        assert f"market_calendar_{kind}" in visualization_cases
+        assert f"market_calendar_{kind}_empty" in visualization_cases
+
+
 def test_symbol_matrix_is_probed_for_quote() -> None:
     """Every baseline symbol and the invalid symbol get a quote case."""
     quote_cases = {c.case for c in build_cases() if c.command == "quote"}

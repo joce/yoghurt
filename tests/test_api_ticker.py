@@ -178,9 +178,15 @@ def test_ticker_quote_model_violation_raises_yahoo_api_error(
 def test_ticker_quote_passes_new_wire_params(monkeypatch: pytest.MonkeyPatch) -> None:
     """Typed quote kwargs land under their Yahoo wire names and forms."""
     fake = _install_fake(monkeypatch, _corpus_text("quote/AAPL_default.json"))
-    Ticker("AAPL").quote(formatted=True, img_labels=["logoUrl"], img_heights=_IMG_SIZE)
+    Ticker("AAPL").quote(
+        formatted=True,
+        include_private_companies=False,
+        img_labels=["logoUrl"],
+        img_heights=_IMG_SIZE,
+    )
     _, params = fake.calls[0]
     assert params["formatted"] is True
+    assert params["enablePrivateCompany"] is False
     assert params["imgLabels"] == "logoUrl"
     assert params["imgHeights"] == _IMG_SIZE
 
@@ -190,11 +196,12 @@ def test_ticker_quote_type_returns_single_record(
 ) -> None:
     """quote_type() unwraps the one-record result list into a typed QuoteTypeResult."""
     fake = _install_fake(monkeypatch, _corpus_text("quote-type/AAPL.json"))
-    record = Ticker("AAPL").quote_type()
+    record = Ticker("AAPL").quote_type(include_private_companies=False)
     assert isinstance(record, QuoteTypeResult)
     assert record.symbol == "AAPL"
-    path, _ = fake.calls[0]
+    path, params = fake.calls[0]
     assert path == "/v1/finance/quoteType/AAPL"
+    assert params["enablePrivateCompany"] is False
 
 
 def test_ticker_quote_type_empty_result_raises_symbol_error(
@@ -567,9 +574,12 @@ def test_ticker_quote_summary_passes_boolean_wire_names(
     """Boolean kwargs pass their values through to matching wire names."""
     fake = _install_fake(monkeypatch, _corpus_text("quote-summary/AAPL.json"))
     Ticker("AAPL").quote_summary(
-        enable_qsp_expanded_earnings=False, overnight_price=False
+        include_expanded_earnings=False,
+        include_private_companies=False,
+        overnight_price=False,
     )
     _, params = fake.calls[0]
+    assert params["enablePrivateCompany"] is False
     assert params["enableQSPExpandedEarnings"] is False
     assert params["overnightPrice"] is False
 

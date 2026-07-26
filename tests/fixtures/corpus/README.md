@@ -105,3 +105,18 @@ data-platform entity distinct from `sp_earnings`/`INSIDER_TRANSACTION`.
 One live call, politeness delay respected, merged into `manifest.json` with
 no changes to any pre-existing entry (`case_count` 284 -> 285,
 `fetched_at` unchanged, per the surgical-addition precedent above).
+
+**2026-07-24 surgical addition (search and lookup):** six `search` captures
+cover default results, fuzzy matching, public and non-finance quote rows,
+both saved-list schemas, both navigation shapes, news, and research-report
+metadata. Eleven `lookup` captures cover all seven observed asset types,
+formatted price wrappers, pricing-disabled results, and an empty match.
+All responses were captured through `_run_case`; `manifest.json` was merged
+without changing the earlier full-run `fetched_at` (`case_count` 285 -> 302).
+
+**2026-07-25 surgical addition (market calendars):** eight visualization
+captures back the four normalized `market-calendar` schemas: populated and
+empty responses for `sp_earnings`, `ipo_info`, `economic_event`, and `splits`.
+The empty captures confirm Yahoo returns column metadata even with no rows.
+All responses were captured live through the visualization CLI; the manifest's
+full-run `fetched_at` remains unchanged (`case_count` 302 -> 310).

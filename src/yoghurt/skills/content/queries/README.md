@@ -45,9 +45,11 @@ insiders = yoghurt.visualization(
 ).to_polars()
 ```
 
-## Market-wide stock splits
+## Custom market-wide stock splits
 
-Stock splits are a `visualization()` entity, not a per-symbol endpoint:
+Use `market_calendar("splits")` for the standard normalized date-window
+surface. Reach for the lower-level `visualization()` entity when custom fields
+or predicates are required:
 
 ```python
 splits = yoghurt.visualization(

@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "case_count": 285,
+    "case_count": 310,
     "fetched_at": "2026-07-04T04:35:12.640976+00:00"
   },
   "analyst/AAPL": {
@@ -1007,6 +1007,143 @@
       "^GSPC"
     ],
     "file": "insights/_GSPC.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "lookup/default": {
+    "argv": [
+      "lookup",
+      "A",
+      "--count",
+      "5"
+    ],
+    "file": "lookup/default.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "lookup/formatted": {
+    "argv": [
+      "lookup",
+      "A",
+      "--count",
+      "2",
+      "--formatted"
+    ],
+    "file": "lookup/formatted.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "lookup/no_match": {
+    "argv": [
+      "lookup",
+      "ZZZZXYZQ",
+      "--count",
+      "5"
+    ],
+    "file": "lookup/no_match.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "lookup/no_pricing": {
+    "argv": [
+      "lookup",
+      "A",
+      "--count",
+      "3",
+      "--no-pricing-data"
+    ],
+    "file": "lookup/no_pricing.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "lookup/type_cryptocurrency": {
+    "argv": [
+      "lookup",
+      "A",
+      "--type",
+      "cryptocurrency",
+      "--count",
+      "5"
+    ],
+    "file": "lookup/type_cryptocurrency.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "lookup/type_currency": {
+    "argv": [
+      "lookup",
+      "A",
+      "--type",
+      "currency",
+      "--count",
+      "5"
+    ],
+    "file": "lookup/type_currency.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "lookup/type_equity": {
+    "argv": [
+      "lookup",
+      "A",
+      "--type",
+      "equity",
+      "--count",
+      "5"
+    ],
+    "file": "lookup/type_equity.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "lookup/type_etf": {
+    "argv": [
+      "lookup",
+      "A",
+      "--type",
+      "etf",
+      "--count",
+      "5"
+    ],
+    "file": "lookup/type_etf.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "lookup/type_future": {
+    "argv": [
+      "lookup",
+      "A",
+      "--type",
+      "future",
+      "--count",
+      "5"
+    ],
+    "file": "lookup/type_future.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "lookup/type_index": {
+    "argv": [
+      "lookup",
+      "A",
+      "--type",
+      "index",
+      "--count",
+      "5"
+    ],
+    "file": "lookup/type_index.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "lookup/type_mutualfund": {
+    "argv": [
+      "lookup",
+      "A",
+      "--type",
+      "mutualfund",
+      "--count",
+      "5"
+    ],
+    "file": "lookup/type_mutualfund.json",
     "http_status": 200,
     "status": "ok"
   },
@@ -2331,6 +2468,99 @@
     "http_status": 200,
     "status": "ok"
   },
+  "search/AAPL_content": {
+    "argv": [
+      "search",
+      "AAPL",
+      "--quotes-count",
+      "3",
+      "--news-count",
+      "3",
+      "--lists-count",
+      "3",
+      "--recommended-count",
+      "3",
+      "--navigation-links",
+      "--research-reports",
+      "--cultural-assets"
+    ],
+    "file": "search/AAPL_content.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "search/Appel_fuzzy": {
+    "argv": [
+      "search",
+      "Appel",
+      "--fuzzy"
+    ],
+    "file": "search/Appel_fuzzy.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "search/crypto_content": {
+    "argv": [
+      "search",
+      "crypto",
+      "--quotes-count",
+      "3",
+      "--news-count",
+      "1",
+      "--lists-count",
+      "5",
+      "--navigation-links"
+    ],
+    "file": "search/crypto_content.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "search/default": {
+    "argv": [
+      "search",
+      "AAPL"
+    ],
+    "file": "search/default.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "search/markets_content": {
+    "argv": [
+      "search",
+      "markets",
+      "--quotes-count",
+      "3",
+      "--news-count",
+      "3",
+      "--lists-count",
+      "3",
+      "--recommended-count",
+      "3",
+      "--navigation-links",
+      "--research-reports",
+      "--cultural-assets"
+    ],
+    "file": "search/markets_content.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "search/stock_screener_navigation": {
+    "argv": [
+      "search",
+      "stock screener",
+      "--quotes-count",
+      "1",
+      "--news-count",
+      "0",
+      "--lists-count",
+      "0",
+      "--recommended-count",
+      "0",
+      "--navigation-links"
+    ],
+    "file": "search/stock_screener_navigation.json",
+    "http_status": 200,
+    "status": "ok"
+  },
   "sector/energy": {
     "argv": [
       "sector",
@@ -2957,6 +3187,86 @@
       "SELECT ticker, transactiondate, shares FROM INSIDER_TRANSACTION WHERE ticker = 'AAPL' ORDER BY transactiondate DESC LIMIT 5"
     ],
     "file": "visualization/insider_transaction.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "visualization/market_calendar_earnings": {
+    "argv": [
+      "visualization",
+      "--query",
+      "SELECT ticker, companyshortname, intradaymarketcap, eventname, startdatetime, startdatetimetype, epsestimate, epsactual, epssurprisepct FROM sp_earnings WHERE startdatetime BETWEEN '2026-07-20' AND '2026-08-15' ORDER BY startdatetime ASC LIMIT 5"
+    ],
+    "file": "visualization/market_calendar_earnings.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "visualization/market_calendar_earnings_empty": {
+    "argv": [
+      "visualization",
+      "--query",
+      "SELECT ticker, companyshortname, intradaymarketcap, eventname, startdatetime, startdatetimetype, epsestimate, epsactual, epssurprisepct FROM sp_earnings WHERE startdatetime >= '2100-01-01' AND startdatetime < '2100-01-03' ORDER BY startdatetime ASC LIMIT 5 OFFSET 0"
+    ],
+    "file": "visualization/market_calendar_earnings_empty.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "visualization/market_calendar_economic": {
+    "argv": [
+      "visualization",
+      "--query",
+      "SELECT econ_release, country_code, startdatetime, period, after_release_actual, consensus_estimate, prior_release_actual, originally_reported_actual FROM economic_event WHERE startdatetime BETWEEN '2026-07-20' AND '2026-08-15' ORDER BY startdatetime ASC LIMIT 5"
+    ],
+    "file": "visualization/market_calendar_economic.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "visualization/market_calendar_economic_empty": {
+    "argv": [
+      "visualization",
+      "--query",
+      "SELECT econ_release, country_code, startdatetime, period, after_release_actual, consensus_estimate, prior_release_actual, originally_reported_actual FROM economic_event WHERE startdatetime >= '2100-01-01' AND startdatetime < '2100-01-03' ORDER BY startdatetime ASC LIMIT 5 OFFSET 0"
+    ],
+    "file": "visualization/market_calendar_economic_empty.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "visualization/market_calendar_ipo": {
+    "argv": [
+      "visualization",
+      "--query",
+      "SELECT ticker, companyshortname, exchange_short_name, filingdate, startdatetime, amendeddate, pricefrom, priceto, offerprice, currencyname, shares, dealtype FROM ipo_info WHERE startdatetime BETWEEN '2026-07-01' AND '2026-09-30' ORDER BY startdatetime ASC LIMIT 5"
+    ],
+    "file": "visualization/market_calendar_ipo.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "visualization/market_calendar_ipo_empty": {
+    "argv": [
+      "visualization",
+      "--query",
+      "SELECT ticker, companyshortname, exchange_short_name, filingdate, startdatetime, amendeddate, pricefrom, priceto, offerprice, currencyname, shares, dealtype FROM ipo_info WHERE startdatetime >= '2100-01-01' AND startdatetime < '2100-01-03' ORDER BY startdatetime ASC LIMIT 5 OFFSET 0"
+    ],
+    "file": "visualization/market_calendar_ipo_empty.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "visualization/market_calendar_splits": {
+    "argv": [
+      "visualization",
+      "--query",
+      "SELECT ticker, companyshortname, startdatetime, optionable, old_share_worth, share_worth FROM splits WHERE startdatetime BETWEEN '2026-07-20' AND '2026-08-15' ORDER BY startdatetime ASC LIMIT 5"
+    ],
+    "file": "visualization/market_calendar_splits.json",
+    "http_status": 200,
+    "status": "ok"
+  },
+  "visualization/market_calendar_splits_empty": {
+    "argv": [
+      "visualization",
+      "--query",
+      "SELECT ticker, companyshortname, startdatetime, optionable, old_share_worth, share_worth FROM splits WHERE startdatetime >= '2100-01-01' AND startdatetime < '2100-01-03' ORDER BY startdatetime ASC LIMIT 5 OFFSET 0"
+    ],
+    "file": "visualization/market_calendar_splits_empty.json",
     "http_status": 200,
     "status": "ok"
   },

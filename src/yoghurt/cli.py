@@ -40,10 +40,12 @@ from yoghurt.skills import install as skills_install
 from yoghurt.skills import resolve_roots as skills_resolve_roots
 from yoghurt.skills import status as skills_status
 from yoghurt.skills import uninstall as skills_uninstall
+from yoghurt.types import MARKET_CALENDAR_KINDS
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
+    from yoghurt.frames import Frame
     from yoghurt.types import ParamValue
 
 _HELP_WIDTH = 100
@@ -304,7 +306,7 @@ def _set_command_parser(parser: argparse.ArgumentParser, command: CommandSpec) -
 
 
 _PARQUET_COMMANDS: Final[frozenset[str]] = frozenset(
-    {"chart", "history", "screener", "visualization"}
+    {"chart", "history", "market-calendar", "screener", "visualization"}
 )
 _PARQUET_COMMANDS_HELP: Final[str] = ", ".join(sorted(_PARQUET_COMMANDS))
 
@@ -373,6 +375,60 @@ Notes:
   unchanged. A price row without usable adjusted close is rejected rather than
   returned raw. No heuristic price repair is applied. Use chart for Yahoo's raw
   or intraday OHLC, adjusted close, metadata, and events.
+"""
+
+_FINANCIAL_ANALYSIS_TABLES: Final[tuple[FieldReference, ...]] = (
+    FieldReference("income_statement", "Annual, quarterly, and trailing income rows."),
+    FieldReference("balance_sheet", "Annual balance-sheet rows."),
+    FieldReference("cash_flow", "Annual cash-flow rows."),
+    FieldReference("valuation_history", "Quarterly and trailing valuation rows."),
+    FieldReference("earnings_estimates", "Forward analyst EPS estimates."),
+    FieldReference("revenue_estimates", "Forward analyst revenue estimates."),
+    FieldReference("earnings_history", "Quarterly actual-versus-estimated EPS."),
+    FieldReference("eps_trends", "Consensus EPS estimates over time."),
+    FieldReference("eps_revisions", "Recent analyst EPS revision counts."),
+    FieldReference("analyst_price_targets", "Consensus price targets and rating."),
+    FieldReference("growth_comparison", "Stock, industry, sector, and index growth."),
+    FieldReference("major_holders_breakdown", "Aggregate holder percentages."),
+    FieldReference("institutional_ownership", "Institutional positions."),
+    FieldReference("fund_ownership", "Fund positions."),
+    FieldReference("insider_roster", "Insider roles, positions, and latest activity."),
+    FieldReference("insider_transactions", "Reported insider transactions."),
+    FieldReference("insider_purchase_activity", "Aggregate insider buy/sell activity."),
+)
+
+_FINANCIAL_ANALYSIS_EPILOG: Final[str] = f"""Examples:
+  yoghurt financial-analysis AAPL
+
+Tables:
+{_reference_text(_FINANCIAL_ANALYSIS_TABLES)}
+
+Notes:
+  This derived command combines fundamentals-timeseries and quote-summary data.
+  Modules that do not apply to the symbol are emitted as empty row arrays.
+  Output is JSON only.
+"""
+
+
+_MARKET_CALENDAR_EPILOG: Final[str] = """Examples:
+  yoghurt market-calendar earnings
+  yoghurt market-calendar ipo --start-date 2026-08-01 --end-date 2026-08-31
+  yoghurt market-calendar economic --format parquet --out economic.parquet
+
+Kinds and columns:
+  earnings  symbol, company_name, market_cap, event_name, event_at, timing,
+            eps_estimate, eps_actual, eps_surprise_percent
+  ipo       symbol, company_name, exchange, filing_date, event_at, amended_date,
+            price_from, price_to, offer_price, currency, shares, deal_type
+  economic  event, country_code, event_at, period, actual, expected, prior,
+            revised
+  splits    symbol, company_name, payable_at, optionable, old_share_worth,
+            new_share_worth
+
+Notes:
+  The date window is inclusive and defaults to today through seven days ahead.
+  Results are ordered earliest first. This derived command normalizes Yahoo's
+  visualization rows; use visualization for custom fields and filters.
 """
 
 
@@ -451,6 +507,122 @@ def _add_history_parser(subparsers: Any) -> None:  # ruff:ignore[any-type]
     parser.set_defaults(command_kind="history", command_name="history")
 
 
+def _add_financial_analysis_parser(
+    subparsers: Any,  # ruff:ignore[any-type]
+) -> None:
+    """Add the derived financial-analysis command after timeseries."""
+
+    parser = subparsers.add_parser(
+        "financial-analysis",
+        help="Fetch analysis-ready financial tables for a symbol.",
+        description=(
+            "Financial statements, valuation history, analyst estimates, "
+            "growth comparisons, and ownership data as stable row arrays."
+        ),
+        epilog=_FINANCIAL_ANALYSIS_EPILOG,
+        formatter_class=_HelpFormatter,
+        add_help=False,
+    )
+    _add_help_option(parser)
+    parser.add_argument(
+        "symbol",
+        metavar="SYMBOL",
+        help="A single Yahoo symbol, such as AAPL or SHOP.TO.",
+    )
+    _add_parquet_negative_guards(parser)
+    parser.set_defaults(
+        command_kind="financial-analysis", command_name="financial-analysis"
+    )
+
+
+def _add_market_calendar_parser(
+    subparsers: Any,  # ruff:ignore[any-type]
+) -> None:
+    """Add the derived market-wide calendar command after trending."""
+
+    parser = subparsers.add_parser(
+        "market-calendar",
+        help="Fetch an analysis-ready market-wide event calendar.",
+        description=(
+            "Earnings, IPO, economic-event, or split rows over an inclusive "
+            "date window with a stable kind-specific schema."
+        ),
+        epilog=_MARKET_CALENDAR_EPILOG,
+        formatter_class=_HelpFormatter,
+        add_help=False,
+    )
+    _add_help_option(parser)
+    parser.add_argument(
+        "kind",
+        choices=MARKET_CALENDAR_KINDS,
+        metavar="KIND",
+        help="Calendar kind: earnings, ipo, economic, or splits.",
+    )
+    parser.add_argument(
+        "--start-date",
+        default=None,
+        metavar="DATE",
+        help=(
+            "First calendar day as Unix seconds, Unix milliseconds, YYYY-MM-DD, "
+            "or ISO datetime. Defaults to today in UTC."
+        ),
+    )
+    parser.add_argument(
+        "--end-date",
+        default=None,
+        metavar="DATE",
+        help=(
+            "Last calendar day, inclusive, in the same formats as --start-date. "
+            "Defaults to seven days after the effective start."
+        ),
+    )
+    parser.add_argument(
+        "--limit",
+        type=int,
+        default=100,
+        metavar="COUNT",
+        help="Maximum rows to request; Yahoo caps this at 100.",
+    )
+    parser.add_argument(
+        "--offset",
+        type=int,
+        default=0,
+        metavar="COUNT",
+        help="Rows to skip for manual pagination.",
+    )
+    parser.add_argument(
+        "--lang",
+        default="en-US",
+        metavar="LANG",
+        help="Yahoo response language.",
+    )
+    parser.add_argument(
+        "--region",
+        default="US",
+        metavar="REGION",
+        help="Yahoo response region.",
+    )
+    parser.add_argument(
+        "--format",
+        dest="output_format",
+        choices=("json", "parquet"),
+        default="json",
+        help=(
+            "Output normalized rows as JSON on stdout or write a Parquet "
+            "table to --out."
+        ),
+    )
+    parser.add_argument(
+        "--out",
+        dest="out_path",
+        type=Path,
+        default=None,
+        metavar="PATH",
+        help="Destination required with --format parquet.",
+    )
+    parser.set_defaults(command_kind="market-calendar", command_name="market-calendar")
+
+
 def build_parser() -> argparse.ArgumentParser:
     """Build yoghurt's adaptive argument parser.
 
@@ -462,8 +634,8 @@ def build_parser() -> argparse.ArgumentParser:
         prog="yoghurt",
         description=(
             "Expose Yahoo Finance endpoints to the command line and print raw "
-            "JSON response bodies. The history command instead emits an "
-            "analysis-ready adjusted table."
+            "JSON response bodies. The history, financial-analysis, and "
+            "market-calendar commands instead emit analysis-ready tables."
         ),
         epilog="Run `yoghurt <endpoint> --help` for endpoint-specific parameters.",
         formatter_class=_HelpFormatter,
@@ -495,6 +667,12 @@ def build_parser() -> argparse.ArgumentParser:
 
         if command.name == "chart":
             _add_history_parser(subparsers)
+
+        if command.name == "timeseries":
+            _add_financial_analysis_parser(subparsers)
+
+        if command.name == "trending":
+            _add_market_calendar_parser(subparsers)
 
         # Slot the DSL screeners in between screener-predefined and
         # screener-discover so help output reads as a single discovery block.
@@ -920,8 +1098,17 @@ async def _dispatch_command(
         if _wants_parquet(namespace):
             _emit_chart_parquet(namespace, params, body, stdout)
             return 0
-    elif namespace.command_kind == "history":
-        await _dispatch_history(namespace, stdout, client)
+    elif namespace.command_kind in {
+        "history",
+        "financial-analysis",
+        "market-calendar",
+    }:
+        if namespace.command_kind == "history":
+            await _dispatch_history(namespace, stdout, client)
+        elif namespace.command_kind == "financial-analysis":
+            await _dispatch_financial_analysis(namespace, stdout, client)
+        else:
+            await _dispatch_market_calendar(namespace, stdout, client)
         return 0
     elif namespace.command_kind == "raw":
         body = await client.get(
@@ -1034,6 +1221,147 @@ async def _dispatch_history(
     body = frame.write_json()
     stdout.write(body)
     if not body.endswith("\n"):
+        stdout.write("\n")
+
+
+async def _dispatch_financial_analysis(
+    namespace: argparse.Namespace,
+    stdout: TextIO,
+    client: _YahooClientProtocol,
+) -> None:
+    """Fetch the two source endpoints and emit the derived table bundle.
+
+    Raises:
+        ValueError: If the symbol is empty.
+        SymbolNotFoundError: If Yahoo returns no quote-summary record.
+    """
+
+    from dataclasses import fields  # ruff:ignore[import-outside-top-level]
+
+    from yoghurt import _core  # ruff:ignore[import-outside-top-level]
+    from yoghurt.api import (  # ruff:ignore[import-outside-top-level]
+        _timeseries_from_payload,  # pyright: ignore[reportPrivateUsage]
+    )
+    from yoghurt.exceptions import (  # ruff:ignore[import-outside-top-level]
+        SymbolNotFoundError,
+    )
+    from yoghurt.financial_analysis import (  # ruff:ignore[import-outside-top-level]
+        FINANCIAL_ANALYSIS_QUOTE_SUMMARY_MODULES,
+        FINANCIAL_ANALYSIS_TIMESERIES_TYPES,
+        build_financial_analysis,
+    )
+    from yoghurt.models import (  # ruff:ignore[import-outside-top-level]
+        QuoteSummary,
+        validate_model,
+    )
+
+    symbol = namespace.symbol.strip()
+    if not symbol:
+        message = "symbol cannot be empty"
+        raise ValueError(message)
+    request_values = (
+        (
+            "timeseries",
+            {
+                "symbol": symbol,
+                "type": ",".join(FINANCIAL_ANALYSIS_TIMESERIES_TYPES),
+                "period1": 0,
+            },
+        ),
+        (
+            "quote-summary",
+            {
+                "symbol": symbol,
+                "modules": ",".join(FINANCIAL_ANALYSIS_QUOTE_SUMMARY_MODULES),
+            },
+        ),
+    )
+    requests: list[tuple[str, str, dict[str, ParamValue]]] = []
+    for command_name, values in request_values:
+        command = COMMANDS_BY_NAME[command_name]
+        params = build_params(command, values)
+        validate_params(command, params)
+        requests.append((command_name, build_path(command, values), params))
+    bodies = await asyncio.gather(
+        *(
+            client.get(
+                path,
+                params,
+                use_crumb=COMMANDS_BY_NAME[command_name].use_crumb,
+                base_url=COMMANDS_BY_NAME[command_name].base_url,
+            )
+            for command_name, path, params in requests
+        )
+    )
+    timeseries_payload = _core.interpret_body("timeseries", bodies[0], symbol=symbol)
+    summary_payload = _core.interpret_body("quote-summary", bodies[1], symbol=symbol)
+    summary_results = summary_payload["quoteSummary"]["result"]
+    if not summary_results:
+        raise SymbolNotFoundError(symbol)
+    result = build_financial_analysis(
+        _timeseries_from_payload(timeseries_payload),
+        validate_model(QuoteSummary, summary_results[0]),
+    )
+    tables: list[str] = []
+    for field in fields(result):
+        frame = cast("Frame", getattr(result, field.name))
+        tables.append(f"{json.dumps(field.name)}:{frame.to_polars().write_json()}")
+    stdout.write("{" + ",".join(tables) + "}\n")
+
+
+async def _dispatch_market_calendar(
+    namespace: argparse.Namespace,
+    stdout: TextIO,
+    client: _YahooClientProtocol,
+) -> None:
+    """Fetch, normalize, and emit one market-wide calendar table."""
+
+    from yoghurt import _core  # ruff:ignore[import-outside-top-level]
+    from yoghurt._market_calendar import (  # ruff:ignore[import-outside-top-level]
+        build_market_calendar_query,
+        normalize_market_calendar,
+    )
+    from yoghurt.api import (  # ruff:ignore[import-outside-top-level]
+        _tabular_frame,  # pyright: ignore[reportPrivateUsage]
+    )
+
+    query = build_market_calendar_query(
+        namespace.kind,
+        start_date=namespace.start_date,
+        end_date=namespace.end_date,
+        limit=namespace.limit,
+        offset=namespace.offset,
+    )
+    wire_params: dict[str, ParamValue] = {
+        "lang": namespace.lang,
+        "region": namespace.region,
+    }
+    body = await client.post(
+        _QUERY_ROUTE_PATHS["visualization"],
+        wire_params,
+        parse_query(query).to_body(),
+    )
+    payload = _core.interpret_body("visualization", body)
+    frame = normalize_market_calendar(
+        namespace.kind, _tabular_frame(payload, "visualization")
+    )
+    if _wants_parquet(namespace):
+        from yoghurt.parquet_writer import (  # ruff:ignore[import-outside-top-level]
+            write_market_calendar_parquet,
+        )
+
+        descriptor = write_market_calendar_parquet(
+            frame.to_polars(),
+            namespace.out_path,
+            kind=namespace.kind,
+            query=query,
+        )
+        stdout.write(json.dumps(descriptor))
+        stdout.write("\n")
+        return
+    rows = frame.to_polars().write_json()
+    stdout.write(rows)
+    if not rows.endswith("\n"):
         stdout.write("\n")
 
 

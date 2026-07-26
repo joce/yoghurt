@@ -102,6 +102,9 @@ def test_top_level_help_lists_quote_endpoint(
     assert "ratings-top" in captured.out
     assert "chart" in captured.out
     assert "history" in captured.out
+    assert "search" in captured.out
+    assert "lookup" in captured.out
+    assert "market-calendar" in captured.out
     assert "raw" in captured.out
     assert "visualization" in captured.out
     assert "screener" in captured.out
@@ -114,8 +117,15 @@ def test_top_level_help_lists_quote_endpoint(
     screener_index = captured.out.index("\n    screener ")
     chart_index = captured.out.index("\n    chart ")
     history_index = captured.out.index("\n    history ")
+    search_index = captured.out.index("\n    search ")
+    lookup_index = captured.out.index("\n    lookup ")
+    predefined_index = captured.out.index("\n    screener-predefined ")
+    market_calendar_index = captured.out.index("\n    market-calendar ")
+    trending_index = captured.out.index("\n    trending ")
     raw_index = captured.out.index("\n    raw ")
     assert chart_index < history_index
+    assert search_index < lookup_index < predefined_index
+    assert trending_index < market_calendar_index
     assert visualization_index < raw_index
     assert screener_index < raw_index
 
@@ -289,6 +299,165 @@ def test_quote_command_passes_top_pick_param_when_requested() -> None:
                 "lang": "en-US",
                 "region": "US",
                 "topPickThisMonth": True,
+            },
+            True,
+        )
+    ]
+
+
+def test_search_help_documents_categories_and_locale_options(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Search help exposes result controls and the CLI-only locale options."""
+
+    with pytest.raises(SystemExit) as exc_info:
+        main(["search", "--help"])
+
+    assert exc_info.value.code == 0
+    captured = capsys.readouterr().out
+    assert "private-company profiles" in captured
+    assert "--quotes-count" in captured
+    assert "--news-count" in captured
+    assert "--fuzzy" in captured
+    assert "--no-private-companies" in captured
+    assert "--navigation-links" in captured
+    assert "--research-reports" in captured
+    assert "--cultural-assets" in captured
+    assert "--lang LANG" in captured
+    assert "--region REGION" in captured
+    assert "Research results contain report metadata" in captured
+    assert "Calls Yahoo" not in captured
+    assert "Output:" not in captured
+
+
+def test_search_command_passes_controls_and_prints_raw_body() -> None:
+    """Search sends every supported control and preserves Yahoo's JSON body."""
+
+    client = StubClient('{"quotes":[]}')
+    stdout = StringIO()
+    stderr = StringIO()
+
+    exit_code = main(
+        [
+            "search",
+            "Appel",
+            "--quotes-count",
+            "3",
+            "--news-count",
+            "0",
+            "--lists-count",
+            "2",
+            "--recommended-count",
+            "1",
+            "--fuzzy",
+            "--no-private-companies",
+            "--navigation-links",
+            "--research-reports",
+            "--cultural-assets",
+            "--lang",
+            "fr-CA",
+            "--region",
+            "CA",
+        ],
+        stdout=stdout,
+        stderr=stderr,
+        client=client,
+    )
+
+    assert exit_code == 0
+    assert stdout.getvalue() == '{"quotes":[]}\n'
+    assert not stderr.getvalue()
+    assert client.base_urls == ["https://query2.finance.yahoo.com"]
+    assert client.calls == [
+        (
+            "/v1/finance/search",
+            {
+                "q": "Appel",
+                "quotesCount": 3,
+                "newsCount": 0,
+                "listsCount": 2,
+                "recommendedCount": 1,
+                "enableFuzzyQuery": True,
+                "enableCb": False,
+                "enableNavLinks": True,
+                "enableResearchReports": True,
+                "enableCulturalAssets": True,
+                "lang": "fr-CA",
+                "region": "CA",
+            },
+            True,
+        )
+    ]
+
+
+def test_lookup_help_documents_types_and_pricing_switch(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Lookup help covers paging, pricing, locale, and known type values."""
+
+    with pytest.raises(SystemExit) as exc_info:
+        main(["lookup", "--help"])
+
+    assert exc_info.value.code == 0
+    captured = capsys.readouterr().out
+    assert "per-asset-type match totals" in captured
+    assert "--type TYPE" in captured
+    assert "--start OFFSET" in captured
+    assert "--count COUNT" in captured
+    assert "--no-pricing-data" in captured
+    assert_formatted_default_false(captured)
+    assert "--lang LANG" in captured
+    assert "--region REGION" in captured
+    assert "all, equity, mutualfund, etf, index, future, currency" in captured
+    assert "cryptocurrency" in captured
+    assert "Calls Yahoo" not in captured
+    assert "Output:" not in captured
+
+
+def test_lookup_command_passes_controls_and_prints_raw_body() -> None:
+    """Lookup sends filters and CLI locale overrides without reshaping JSON."""
+
+    client = StubClient('{"finance":{"result":[],"error":null}}')
+    stdout = StringIO()
+    stderr = StringIO()
+
+    exit_code = main(
+        [
+            "lookup",
+            "Apple",
+            "--type",
+            "equity",
+            "--start",
+            "5",
+            "--count",
+            "10",
+            "--formatted",
+            "--no-pricing-data",
+            "--lang",
+            "fr-CA",
+            "--region",
+            "CA",
+        ],
+        stdout=stdout,
+        stderr=stderr,
+        client=client,
+    )
+
+    assert exit_code == 0
+    assert stdout.getvalue() == '{"finance":{"result":[],"error":null}}\n'
+    assert not stderr.getvalue()
+    assert client.calls == [
+        (
+            "/v1/finance/lookup",
+            {
+                "query": "Apple",
+                "type": "equity",
+                "start": 5,
+                "count": 10,
+                "formatted": True,
+                "fetchPricingData": False,
+                "lang": "fr-CA",
+                "region": "CA",
             },
             True,
         )

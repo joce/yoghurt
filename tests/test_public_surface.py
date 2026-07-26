@@ -24,6 +24,7 @@ def test_expected_surface() -> None:
 
     expected = {
         "Chart",
+        "FinancialAnalysis",
         "Frame",
         "History",
         "Quote",
@@ -39,11 +40,14 @@ def test_expected_surface() -> None:
         "YoghurtError",
         "configure",
         "history",
+        "lookup",
+        "market_calendar",
         "quotes",
         "raw",
         "screener",
         "visualization",
         "screener_predefined",
+        "search",
         "screener_discover",
         "screener_instrument_fields",
         "timeseries_fields",
