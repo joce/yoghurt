@@ -260,7 +260,7 @@ def test_ticker_financial_analysis_uses_existing_retrievals(
     monkeypatch.setattr(core, "_get_client", lambda: fake)
     monkeypatch.setattr("yoghurt.params.time.time", lambda: 1777903200.9)
 
-    result = Ticker("AAPL").financial_analysis()
+    result = Ticker("AAPL").financial_analysis(lang="en-CA", region="CA")
 
     assert isinstance(result, FinancialAnalysis)
     with pytest.raises(FrozenInstanceError):
@@ -294,6 +294,8 @@ def test_ticker_financial_analysis_uses_existing_retrievals(
     assert timeseries_params["period1"] == 0
     assert timeseries_params["period2"] == _NOW_EPOCH
     assert timeseries_params["type"] == ",".join(FINANCIAL_ANALYSIS_TIMESERIES_TYPES)
+    assert timeseries_params["lang"] == "en-CA"
+    assert timeseries_params["region"] == "CA"
     assert {
         "annualOperatingCashFlow",
         "annualTotalAssets",
@@ -305,6 +307,8 @@ def test_ticker_financial_analysis_uses_existing_retrievals(
     assert summary_params["modules"] == ",".join(
         FINANCIAL_ANALYSIS_QUOTE_SUMMARY_MODULES
     )
+    assert summary_params["lang"] == "en-CA"
+    assert summary_params["region"] == "CA"
     assert "quoteType" in fake.returned_quote_summary_modules
 
 
@@ -357,11 +361,24 @@ def test_financial_analysis_cli_emits_one_json_object(
     stdout = StringIO()
     monkeypatch.setattr("yoghurt.params.time.time", lambda: 1777903200.9)
 
-    exit_code = main(["financial-analysis", "AAPL"], stdout=stdout, client=fake)
+    exit_code = main(
+        [
+            "financial-analysis",
+            "AAPL",
+            "--lang",
+            "en-CA",
+            "--region",
+            "CA",
+        ],
+        stdout=stdout,
+        client=fake,
+    )
 
     assert exit_code == 0
     assert fake.closed
     assert len(fake.calls) == _SOURCE_REQUEST_COUNT
+    assert all(params["lang"] == "en-CA" for _path, params, _crumb in fake.calls)
+    assert all(params["region"] == "CA" for _path, params, _crumb in fake.calls)
     payload = json.loads(stdout.getvalue())
     assert list(payload) == list(_EXPECTED_COLUMNS)
     assert payload["earnings_estimates"][0]["end_date"] == "2026-06-30"
@@ -379,6 +396,8 @@ def test_financial_analysis_help_is_derived_json_only(
     assert exc_info.value.code == 0
     help_text = capsys.readouterr().out
     assert "SYMBOL" in help_text
+    assert "--lang" in help_text
+    assert "--region" in help_text
     assert "derived command combines" in help_text
     assert "Output is JSON only" in help_text
     assert "income_statement:" in help_text

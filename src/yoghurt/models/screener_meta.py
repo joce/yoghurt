@@ -75,6 +75,9 @@ ruled out on the same required-set clause that produced
 rows; ``postMarketChange``/``postMarketChangePercent``/``postMarketPrice``/
 ``postMarketTime`` (43/44), ``longName`` (43/44), ``averageAnalystRating``
 (31/44), and ``netAssets`` (5/44, ETF/fund rows only) are optional.
+A live ``fr-FR``/``FR`` response on 2026-07-26 returned French warrants
+without ``firstTradeDateMilliseconds`` or ``shortName``, so those two
+US-corpus-universal fields are also optional.
 Each :class:`ScreenerDiscoverIdeaSection`'s own ``records`` list is left
 untyped (``list[dict[str, object]]``): unlike ``quotes``, these rows are a
 per-idea-module, Yahoo-selected field subset (the 9 corpus modules share
@@ -425,9 +428,12 @@ class ScreenerDiscoverQuote(YahooModel):
     Short abbreviation of the exchange timezone.
     """
 
-    first_trade_date_milliseconds: int
+    first_trade_date_milliseconds: int | None = None
     """
     Epoch-milliseconds timestamp of this instrument's first trade.
+
+    Live-observed as absent on ``fr-FR``/``FR`` warrant rows
+    (2026-07-26), despite being universal in the US corpus.
     """
 
     full_exchange_name: str
@@ -555,9 +561,12 @@ class ScreenerDiscoverQuote(YahooModel):
     Epoch-seconds timestamp of ``regular_market_price``.
     """
 
-    short_name: str
+    short_name: str | None = None
     """
     Short display name of the security.
+
+    Live-observed as absent on ``fr-FR``/``FR`` warrant rows
+    (2026-07-26), despite being universal in the US corpus.
     """
 
     source_interval: int

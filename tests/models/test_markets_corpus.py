@@ -16,7 +16,7 @@ reused (zero extras, but 8 of its 34 required fields are not universal).
 from __future__ import annotations
 
 import json
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import pytest
 
@@ -35,6 +35,8 @@ from yoghurt.models.markets import (
     MarketInfoResult,
     MarketSummaryQuote,
     MarketTimeResult,
+    SectorCompany,
+    SectorOverview,
     SectorResult,
     TrendingQuote,
     TrendingResult,
@@ -144,7 +146,7 @@ def _trending_quote_kind(record: Mapping[str, Any]) -> str:
 
 
 def test_trending_quote_required_field_set_matches_corpus_universal_keys() -> None:
-    """TrendingQuote's required fields match the corpus-measured universal keys."""
+    """French-region evidence loosens two corpus-universal trending fields."""
 
     report = collect_presence(trending_records(), kind_of=_trending_quote_kind)
     universal_keys = {key for key, field in report.fields.items() if field.universal}
@@ -152,7 +154,25 @@ def test_trending_quote_required_field_set_matches_corpus_universal_keys() -> No
     required_aliases = _required_aliases(TrendingQuote)
 
     assert len(universal_keys) == _EXPECTED_TRENDING_REQUIRED_FIELD_COUNT
-    assert required_aliases == universal_keys
+    assert required_aliases < universal_keys
+    assert universal_keys - required_aliases == {
+        "firstTradeDateMilliseconds",
+        "trendingScore",
+    }
+
+
+def test_trending_accepts_live_observed_missing_fields() -> None:
+    """French-region rows may omit first-trade time and trending score."""
+
+    payload = _load_json(_CORPUS_TRENDING_DIR / "default.json")["finance"]["result"][0]
+    row = payload["quotes"][0]
+    del row["firstTradeDateMilliseconds"]
+    del row["trendingScore"]
+
+    result = TrendingResult.model_validate(payload)
+
+    assert result.quotes[0].first_trade_date_milliseconds is None
+    assert result.quotes[0].trending_score is None
 
 
 # ---------------------------------------------------------------------------
@@ -401,6 +421,55 @@ def test_sector_validates_with_no_extra_fields(
         f"SectorResult gained unmodeled fields (drift alarm): {_flatten_extras(nested)}"
     )
     assert not nested, message
+
+
+def test_sector_required_fields_are_below_corpus_universal_keys() -> None:
+    """French-region evidence loosens four corpus-universal sector fields."""
+
+    payloads = [payload for _case_id, payload in _sector_cases()]
+    overview_records = [
+        cast("dict[str, Any]", payload["overview"]) for payload in payloads
+    ]
+    overview_universal = set(overview_records[0])
+    for record in overview_records[1:]:
+        overview_universal.intersection_update(record)
+    overview_required = _required_aliases(SectorOverview)
+    assert overview_required < overview_universal
+    assert overview_universal - overview_required == {"description"}
+
+    companies = [
+        row
+        for payload in payloads
+        for row in cast("list[dict[str, Any]]", payload["topCompanies"])
+    ]
+    company_universal = set(companies[0])
+    for record in companies[1:]:
+        company_universal.intersection_update(record)
+    company_required = _required_aliases(SectorCompany)
+    assert company_required < company_universal
+    assert company_universal - company_required == {
+        "rating",
+        "targetPrice",
+        "ytdReturn",
+    }
+
+
+def test_sector_accepts_live_observed_missing_fields() -> None:
+    """French-region sector data may omit overview and company metrics."""
+
+    payload = _load_json(_CORPUS_SECTOR_DIR / "technology.json")["data"]
+    del payload["overview"]["description"]
+    company = payload["topCompanies"][0]
+    del company["rating"]
+    del company["targetPrice"]
+    del company["ytdReturn"]
+
+    result = SectorResult.model_validate(payload)
+
+    assert result.overview.description is None
+    assert result.top_companies[0].rating is None
+    assert result.top_companies[0].target_price is None
+    assert result.top_companies[0].ytd_return is None
 
 
 def test_sector_technology_with_returns_variant_matches_plain_shape() -> None:

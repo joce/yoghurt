@@ -1,10 +1,10 @@
 """Public synchronous yoghurt API.
 
-Yahoo's shared ``lang``/``region`` wire params ride their CommandSpec
-defaults; per-call overrides are deliberately unexposed (YAGNI — no caller
-has needed one; revisit if a real need appears). Parameter names mirror the
-CLI's command metadata, except booleans whose CLI flag inverts the wire
-value — those use the wire name so the kwarg's meaning matches its effect.
+Locale-aware endpoints expose Yahoo's shared ``lang``/``region`` wire
+parameters; when omitted they ride their CommandSpec defaults. Parameter
+names mirror the CLI's command metadata, except booleans whose CLI flag
+inverts the wire value — those use the wire name so the kwarg's meaning
+matches its effect.
 """
 
 from __future__ import annotations
@@ -173,6 +173,8 @@ class Ticker:
         img_heights: int | None = None,
         img_labels: list[str] | None = None,
         img_widths: int | None = None,
+        lang: str | None = None,
+        region: str | None = None,
     ) -> Quote:
         """Fetch this symbol's quote record.
 
@@ -200,6 +202,8 @@ class Ticker:
                     imgHeights=img_heights,
                     imgLabels=img_labels,
                     imgWidths=img_widths,
+                    lang=lang,
+                    region=region,
                 ),
             )
         )
@@ -219,6 +223,8 @@ class Ticker:
         interval: str | None = None,
         events: list[str] | None = None,
         include_pre_post: bool | None = None,
+        lang: str | None = None,
+        region: str | None = None,
     ) -> Chart:
         """Fetch OHLCV bars.
 
@@ -246,12 +252,14 @@ class Ticker:
                     interval=interval,
                     events=events,
                     includePrePost=include_pre_post,
+                    lang=lang,
+                    region=region,
                 ),
             )
         )
         return _chart_from_payload(payload, _now_utc())
 
-    def history(
+    def history(  # ruff:ignore[too-many-arguments] - five controls plus shared locale.
         self,
         *,
         period: str | None = None,
@@ -259,6 +267,8 @@ class Ticker:
         end: DateLike | None = None,
         interval: str = "1d",
         include_pre_post: bool = False,
+        lang: str | None = None,
+        region: str | None = None,
     ) -> History:
         """Fetch analysis-ready, corporate-action-adjusted OHLCV history.
 
@@ -279,6 +289,8 @@ class Ticker:
             end=end,
             interval=interval,
             include_pre_post=include_pre_post,
+            lang=lang,
+            region=region,
         )
 
     def spark(  # ruff:ignore[too-many-arguments] - one keyword-only arg per spark wire param.
@@ -349,6 +361,8 @@ class Ticker:
         formatted: bool | None = None,
         include_private_companies: bool | None = None,
         overnight_price: bool | None = None,
+        lang: str | None = None,
+        region: str | None = None,
     ) -> QuoteTypeResult:
         """Fetch instrument classification metadata for this symbol.
 
@@ -371,6 +385,8 @@ class Ticker:
                     formatted=formatted,
                     enablePrivateCompany=include_private_companies,
                     overnightPrice=overnight_price,
+                    lang=lang,
+                    region=region,
                 ),
             )
         )
@@ -379,7 +395,7 @@ class Ticker:
             raise SymbolNotFoundError(self.symbol)
         return validate_model(QuoteTypeResult, results[0])
 
-    def quote_summary(
+    def quote_summary(  # ruff:ignore[too-many-arguments] - one keyword-only arg per wire param.
         self,
         *,
         modules: list[str] | None = None,
@@ -387,6 +403,8 @@ class Ticker:
         include_private_companies: bool | None = None,
         include_expanded_earnings: bool | None = None,
         overnight_price: bool | None = None,
+        lang: str | None = None,
+        region: str | None = None,
     ) -> QuoteSummary:
         """Fetch quoteSummary modules for this symbol.
 
@@ -421,6 +439,8 @@ class Ticker:
                     enablePrivateCompany=include_private_companies,
                     enableQSPExpandedEarnings=include_expanded_earnings,
                     overnightPrice=overnight_price,
+                    lang=lang,
+                    region=region,
                 ),
             )
         )
@@ -435,6 +455,8 @@ class Ticker:
         date: DateLike | None = None,
         formatted: bool | None = None,
         straddle: bool | None = None,
+        lang: str | None = None,
+        region: str | None = None,
     ) -> OptionChain:
         """Fetch the option chain for this symbol.
 
@@ -455,6 +477,8 @@ class Ticker:
                     date=date,
                     formatted=formatted,
                     straddle=straddle,
+                    lang=lang,
+                    region=region,
                 ),
             )
         )
@@ -463,7 +487,7 @@ class Ticker:
             raise SymbolNotFoundError(self.symbol)
         return validate_model(OptionChain, results[0])
 
-    def timeseries(
+    def timeseries(  # ruff:ignore[too-many-arguments] - one keyword-only arg per wire param.
         self,
         *,
         type: (  # ruff:ignore[builtin-argument-shadowing] - mirrors Yahoo's wire/CLI name
@@ -473,6 +497,8 @@ class Ticker:
         period2: DateLike | None = None,
         merge: bool | None = None,
         pad_time_series: bool | None = None,
+        lang: str | None = None,
+        region: str | None = None,
     ) -> Timeseries:
         """Fetch fundamentals timeseries for this symbol as typed frames.
 
@@ -503,12 +529,19 @@ class Ticker:
                     period2=period2,
                     merge=merge,
                     padTimeSeries=pad_time_series,
+                    lang=lang,
+                    region=region,
                 ),
             )
         )
         return _timeseries_from_payload(payload)
 
-    def financial_analysis(self) -> FinancialAnalysis:
+    def financial_analysis(
+        self,
+        *,
+        lang: str | None = None,
+        region: str | None = None,
+    ) -> FinancialAnalysis:
         """Fetch analysis-ready financial, analyst, and ownership tables.
 
         This convenience method deliberately performs two existing retrievals:
@@ -521,10 +554,15 @@ class Ticker:
         """
 
         timeseries = self.timeseries(
-            type=list(FINANCIAL_ANALYSIS_TIMESERIES_TYPES), period1=0
+            type=list(FINANCIAL_ANALYSIS_TIMESERIES_TYPES),
+            period1=0,
+            lang=lang,
+            region=region,
         )
         summary = self.quote_summary(
-            modules=list(FINANCIAL_ANALYSIS_QUOTE_SUMMARY_MODULES)
+            modules=list(FINANCIAL_ANALYSIS_QUOTE_SUMMARY_MODULES),
+            lang=lang,
+            region=region,
         )
         return build_financial_analysis(timeseries, summary)
 
@@ -537,6 +575,8 @@ class Ticker:
         end_date: DateLike | None = None,
         economic_events_high_importance_only: bool | None = None,
         economic_events_region_filter: str | None = None,
+        lang: str | None = None,
+        region: str | None = None,
     ) -> CalendarEventsResult:
         """Fetch earnings, IPO, economic, and SEC filing events for this symbol.
 
@@ -572,12 +612,20 @@ class Ticker:
                         economic_events_high_importance_only
                     ),
                     economicEventsRegionFilter=economic_events_region_filter,
+                    lang=lang,
+                    region=region,
                 ),
             )
         )
         return validate_model(CalendarEventsResult, payload["finance"]["result"])
 
-    def analyst(self, *, debug_flag: bool | None = None) -> AnalystResult:
+    def analyst(
+        self,
+        *,
+        debug_flag: bool | None = None,
+        lang: str | None = None,
+        region: str | None = None,
+    ) -> AnalystResult:
         """Fetch analyst intelligence for this symbol.
 
         The corpus has no captured thin-but-valid shape for this endpoint,
@@ -593,13 +641,22 @@ class Ticker:
             _core.call_endpoint(
                 "analyst",
                 symbol=self.symbol,
-                values=_values(symbol=self.symbol, debug_flag=debug_flag),
+                values=_values(
+                    symbol=self.symbol,
+                    debug_flag=debug_flag,
+                    lang=lang,
+                    region=region,
+                ),
             )
         )
         return validate_model(AnalystResult, payload)
 
     def ratings_top(
-        self, *, exclude_noncurrent: bool | None = None
+        self,
+        *,
+        exclude_noncurrent: bool | None = None,
+        lang: str | None = None,
+        region: str | None = None,
     ) -> TopRatingsResult:
         """Fetch top analyst rating buckets for this symbol.
 
@@ -619,7 +676,10 @@ class Ticker:
                 "ratings-top",
                 symbol=self.symbol,
                 values=_values(
-                    symbol=self.symbol, exclude_noncurrent=exclude_noncurrent
+                    symbol=self.symbol,
+                    exclude_noncurrent=exclude_noncurrent,
+                    lang=lang,
+                    region=region,
                 ),
             )
         )
@@ -631,6 +691,8 @@ class Ticker:
         modules: list[str] | None = None,
         ai_modules: list[str] | None = None,
         check_anomaly: bool | None = None,
+        lang: str | None = None,
+        region: str | None = None,
     ) -> PriceInsights:
         """Fetch AI-generated price insights for this symbol.
 
@@ -656,13 +718,15 @@ class Ticker:
                     modules=modules,
                     aiModules=ai_modules,
                     checkAnomaly=check_anomaly,
+                    lang=lang,
+                    region=region,
                 ),
             )
         )
         record = payload["finance"]["result"].get(self.symbol, {})
         return validate_model(PriceInsights, record)
 
-    def insights(
+    def insights(  # ruff:ignore[too-many-arguments] - one keyword-only arg per wire param.
         self,
         *,
         disable_related_reports: bool | None = None,
@@ -670,6 +734,8 @@ class Ticker:
         get_all_research_reports: bool | None = None,
         reports_count: int | None = None,
         ssl: bool | None = None,
+        lang: str | None = None,
+        region: str | None = None,
     ) -> Insights:
         """Fetch research reports and insights for this symbol.
 
@@ -698,6 +764,8 @@ class Ticker:
                     getAllResearchReports=get_all_research_reports,
                     reportsCount=reports_count,
                     ssl=ssl,
+                    lang=lang,
+                    region=region,
                 ),
             )
         )
@@ -706,7 +774,11 @@ class Ticker:
         return validate_model(Insights, record)
 
     def recommendations(
-        self, *, fields: list[str] | None = None
+        self,
+        *,
+        fields: list[str] | None = None,
+        lang: str | None = None,
+        region: str | None = None,
     ) -> RecommendationsResult:
         """Fetch related-symbol recommendations for this symbol.
 
@@ -729,7 +801,12 @@ class Ticker:
             _core.call_endpoint(
                 "recommendations-by-symbol",
                 symbol=self.symbol,
-                values=_values(symbol=self.symbol, fields=fields),
+                values=_values(
+                    symbol=self.symbol,
+                    fields=fields,
+                    lang=lang,
+                    region=region,
+                ),
             )
         )
         results: list[dict[str, Any]] = payload["finance"]["result"]
@@ -823,7 +900,7 @@ async def _history_payloads(
     return payloads
 
 
-def history(  # ruff:ignore[too-many-arguments] - history's five orthogonal controls are public.
+def history(  # ruff:ignore[too-many-arguments] - five controls plus shared locale.
     symbols: list[str],
     *,
     period: str | None = None,
@@ -831,6 +908,8 @@ def history(  # ruff:ignore[too-many-arguments] - history's five orthogonal cont
     end: DateLike | None = None,
     interval: str = "1d",
     include_pre_post: bool = False,
+    lang: str | None = None,
+    region: str | None = None,
 ) -> History:
     """Fetch adjusted OHLCV history for one or more symbols.
 
@@ -858,13 +937,16 @@ def history(  # ruff:ignore[too-many-arguments] - history's five orthogonal cont
     if any(not symbol for symbol in normalized):
         message = "symbols must not contain empty values"
         raise ValueError(message)
-    values = history_request_values(
-        period=period,
-        start=start,
-        end=end,
-        interval=interval,
-        include_pre_post=include_pre_post,
-    )
+    values = {
+        **history_request_values(
+            period=period,
+            start=start,
+            end=end,
+            interval=interval,
+            include_pre_post=include_pre_post,
+        ),
+        **_values(lang=lang, region=region),
+    }
     payloads = run(_history_payloads(normalized, values))
     try:
         frames = [
@@ -887,6 +969,8 @@ def quotes(  # ruff:ignore[too-many-arguments] - one keyword-only arg per quote 
     img_heights: int | None = None,
     img_labels: list[str] | None = None,
     img_widths: int | None = None,
+    lang: str | None = None,
+    region: str | None = None,
 ) -> list[Quote]:
     """Fetch quote records for one or more symbols.
 
@@ -918,6 +1002,8 @@ def quotes(  # ruff:ignore[too-many-arguments] - one keyword-only arg per quote 
                 imgHeights=img_heights,
                 imgLabels=img_labels,
                 imgWidths=img_widths,
+                lang=lang,
+                region=region,
             ),
         )
     )
@@ -938,6 +1024,8 @@ def search(  # ruff:ignore[too-many-arguments] - one keyword-only arg per wire c
     include_navigation_links: bool | None = None,
     include_research_reports: bool | None = None,
     include_cultural_assets: bool | None = None,
+    lang: str | None = None,
+    region: str | None = None,
 ) -> SearchResult:
     """Search instruments and related Yahoo Finance content.
 
@@ -964,6 +1052,8 @@ def search(  # ruff:ignore[too-many-arguments] - one keyword-only arg per wire c
                 enableNavLinks=include_navigation_links,
                 enableResearchReports=include_research_reports,
                 enableCulturalAssets=include_cultural_assets,
+                lang=lang,
+                region=region,
             ),
         )
     )
@@ -980,6 +1070,8 @@ def lookup(  # ruff:ignore[too-many-arguments] - one keyword-only arg per wire c
     count: int | None = None,
     formatted: bool | None = None,
     fetch_pricing_data: bool | None = None,
+    lang: str | None = None,
+    region: str | None = None,
 ) -> LookupResult:
     """Look up a page of instruments, optionally filtered by asset type.
 
@@ -1003,13 +1095,20 @@ def lookup(  # ruff:ignore[too-many-arguments] - one keyword-only arg per wire c
                 count=count,
                 formatted=formatted,
                 fetchPricingData=fetch_pricing_data,
+                lang=lang,
+                region=region,
             ),
         )
     )
     return validate_model(LookupResult, payload["finance"]["result"][0])
 
 
-def screener(query: str) -> Frame:
+def screener(
+    query: str,
+    *,
+    lang: str | None = None,
+    region: str | None = None,
+) -> Frame:
     """Run a screener DSL query and flatten the records into a table.
 
     Returns:
@@ -1021,11 +1120,16 @@ def screener(query: str) -> Frame:
         or unsupported response shape can raise.
     """
 
-    payload = run(_core.call_query("screener", query))
+    payload = run(_core.call_query("screener", query, lang=lang, region=region))
     return _tabular_frame(payload, "screener")
 
 
-def visualization(query: str) -> Frame:
+def visualization(
+    query: str,
+    *,
+    lang: str | None = None,
+    region: str | None = None,
+) -> Frame:
     """Run a visualization DSL query and flatten the rows into a table.
 
     Returns:
@@ -1037,7 +1141,7 @@ def visualization(query: str) -> Frame:
         or unsupported response shape can raise.
     """
 
-    payload = run(_core.call_query("visualization", query))
+    payload = run(_core.call_query("visualization", query, lang=lang, region=region))
     return _tabular_frame(payload, "visualization")
 
 
@@ -1050,6 +1154,8 @@ def screener_predefined(  # ruff:ignore[too-many-arguments] - one keyword-only a
     use_records_response: bool | None = None,
     sort_field: str | None = None,
     sort_type: str | None = None,
+    lang: str | None = None,
+    region: str | None = None,
 ) -> list[ScreenerPredefinedResult]:
     """Run one or more of Yahoo's predefined screeners.
 
@@ -1078,6 +1184,8 @@ def screener_predefined(  # ruff:ignore[too-many-arguments] - one keyword-only a
                 useRecordsResponse=use_records_response,
                 sortField=sort_field,
                 sortType=sort_type,
+                lang=lang,
+                region=region,
             ),
         )
     )
@@ -1118,6 +1226,7 @@ def trending(  # ruff:ignore[too-many-arguments] - one keyword-only arg per wire
     fields: list[str] | None = None,
     quote_type: str | None = None,
     formatted: bool | None = None,
+    lang: str | None = None,
 ) -> TrendingResult:
     """List trending tickers for a region.
 
@@ -1142,19 +1251,22 @@ def trending(  # ruff:ignore[too-many-arguments] - one keyword-only arg per wire
                 fields=fields,
                 quoteType=quote_type,
                 formatted=formatted,
+                lang=lang,
             ),
         )
     )
     return validate_model(TrendingResult, payload["finance"]["result"][0])
 
 
-def market_calendar(
+def market_calendar(  # ruff:ignore[too-many-arguments] - four controls plus shared locale.
     kind: MarketCalendarKind,
     *,
     start_date: DateLike | None = None,
     end_date: DateLike | None = None,
     limit: int = 100,
     offset: int = 0,
+    lang: str | None = None,
+    region: str | None = None,
 ) -> Frame:
     """Fetch one analysis-ready market-wide event calendar.
 
@@ -1174,7 +1286,10 @@ def market_calendar(
         limit=limit,
         offset=offset,
     )
-    return normalize_market_calendar(kind, visualization(query))
+    return normalize_market_calendar(
+        kind,
+        visualization(query, lang=lang, region=region),
+    )
 
 
 def sector(
@@ -1182,6 +1297,8 @@ def sector(
     *,
     with_returns: bool | None = None,
     formatted: bool | None = None,
+    lang: str | None = None,
+    region: str | None = None,
 ) -> SectorResult:
     """Fetch sector overview, performance, top holdings, and industries.
 
@@ -1200,13 +1317,20 @@ def sector(
                 sector=slug,
                 withReturns=with_returns,
                 formatted=formatted,
+                lang=lang,
+                region=region,
             ),
         )
     )
     return validate_model(SectorResult, payload["data"])
 
 
-def market_summary(*, formatted: bool | None = None) -> list[MarketSummaryQuote]:
+def market_summary(
+    *,
+    formatted: bool | None = None,
+    lang: str | None = None,
+    region: str | None = None,
+) -> list[MarketSummaryQuote]:
     """Fetch a global market summary: indices, futures, forex, crypto.
 
     Returns:
@@ -1217,7 +1341,7 @@ def market_summary(*, formatted: bool | None = None) -> list[MarketSummaryQuote]
     payload = run(
         _core.call_endpoint(
             "market-summary",
-            values=_values(formatted=formatted),
+            values=_values(formatted=formatted, lang=lang, region=region),
         )
     )
     return [
@@ -1226,7 +1350,12 @@ def market_summary(*, formatted: bool | None = None) -> list[MarketSummaryQuote]
     ]
 
 
-def market_info(*, modules: list[str] | None = None) -> MarketInfoResult:
+def market_info(
+    *,
+    modules: list[str] | None = None,
+    lang: str | None = None,
+    region: str | None = None,
+) -> MarketInfoResult:
     """Fetch commodity and currency market data.
 
     ``modules`` selects which module Yahoo populates; an unrequested
@@ -1239,7 +1368,7 @@ def market_info(*, modules: list[str] | None = None) -> MarketInfoResult:
     payload = run(
         _core.call_endpoint(
             "market-info",
-            values=_values(modules=modules),
+            values=_values(modules=modules, lang=lang, region=region),
         )
     )
     return validate_model(MarketInfoResult, payload["finance"]["result"])
@@ -1249,6 +1378,8 @@ def market_time(
     *,
     formatted: bool | None = None,
     key: str | None = None,
+    lang: str | None = None,
+    region: str | None = None,
 ) -> MarketTimeResult:
     """Show current market hours and session status.
 
@@ -1259,13 +1390,23 @@ def market_time(
     payload = run(
         _core.call_endpoint(
             "market-time",
-            values=_values(formatted=formatted, key=key),
+            values=_values(
+                formatted=formatted,
+                key=key,
+                lang=lang,
+                region=region,
+            ),
         )
     )
     return validate_model(MarketTimeResult, payload["finance"])
 
 
-def screener_instrument_fields(instrument: str) -> ScreenerInstrumentFieldsResult:
+def screener_instrument_fields(
+    instrument: str,
+    *,
+    lang: str | None = None,
+    region: str | None = None,
+) -> ScreenerInstrumentFieldsResult:
     """List every field available for a Yahoo data-platform entity.
 
     This endpoint is market-wide, not symbol-bound: an empty ``fields``
@@ -1280,7 +1421,7 @@ def screener_instrument_fields(instrument: str) -> ScreenerInstrumentFieldsResul
     payload = run(
         _core.call_endpoint(
             "screener-instrument-fields",
-            values=_values(instrument=instrument),
+            values=_values(instrument=instrument, lang=lang, region=region),
         )
     )
     return validate_model(
@@ -1293,6 +1434,8 @@ def timeseries_fields(
     type: (  # ruff:ignore[builtin-argument-shadowing] - mirrors Yahoo's wire/CLI name
         str | None
     ) = None,
+    lang: str | None = None,
+    region: str | None = None,
 ) -> TimeseriesFieldsResult:
     """List available fundamentals timeseries field names for a type.
 
@@ -1304,7 +1447,7 @@ def timeseries_fields(
     payload = run(
         _core.call_endpoint(
             "timeseries-fields",
-            values=_values(type=type),
+            values=_values(type=type, lang=lang, region=region),
         )
     )
     return validate_model(
@@ -1317,6 +1460,8 @@ def screener_discover(
     modules: list[str] | None = None,
     count: int | None = None,
     formatted: bool | None = None,
+    lang: str | None = None,
+    region: str | None = None,
 ) -> ScreenerDiscoverResult:
     """Discover investment ideas from Yahoo screener modules.
 
@@ -1330,7 +1475,13 @@ def screener_discover(
     payload = run(
         _core.call_endpoint(
             "screener-discover",
-            values=_values(modules=modules, count=count, formatted=formatted),
+            values=_values(
+                modules=modules,
+                count=count,
+                formatted=formatted,
+                lang=lang,
+                region=region,
+            ),
         )
     )
     return validate_model(ScreenerDiscoverResult, payload["finance"]["result"])

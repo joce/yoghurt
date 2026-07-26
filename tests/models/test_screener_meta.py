@@ -86,6 +86,21 @@ def test_screener_discover_quotes_are_typed_screener_discover_quote_rows() -> No
     assert msft.average_analyst_rating == "1.3 - Strong Buy"
 
 
+def test_screener_discover_accepts_live_observed_missing_quote_fields() -> None:
+    """French-region warrants may omit first-trade time and short name."""
+
+    payload = _load("screener-discover/default.json")
+    quote = payload["finance"]["result"]["quotes"]["MSFT"]
+    del quote["firstTradeDateMilliseconds"]
+    del quote["shortName"]
+
+    result = ScreenerDiscoverResult.model_validate(payload["finance"]["result"])
+
+    msft = result.quotes["MSFT"]
+    assert msft.first_trade_date_milliseconds is None
+    assert msft.short_name is None
+
+
 def test_screener_discover_idea_sections_expose_canonical_names() -> None:
     """ScreenersList rows carry stable canonicalName identifiers."""
 

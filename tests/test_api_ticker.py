@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import inspect
 import json
 from datetime import date
 from pathlib import Path
@@ -33,6 +34,7 @@ from yoghurt.models import (
 from yoghurt.tabular import TabularShapeError
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from typing import Any
 
     from yoghurt.types import ParamValue
@@ -51,6 +53,46 @@ def _corpus_text(relative_path: str) -> str:
     """
 
     return (_CORPUS_ROOT / relative_path).read_text(encoding="utf-8")
+
+
+@pytest.mark.parametrize(
+    "method",
+    [
+        Ticker.quote,
+        Ticker.chart,
+        Ticker.history,
+        Ticker.quote_type,
+        Ticker.quote_summary,
+        Ticker.options,
+        Ticker.timeseries,
+        Ticker.financial_analysis,
+        Ticker.calendar_events,
+        Ticker.analyst,
+        Ticker.ratings_top,
+        Ticker.price_insights,
+        Ticker.insights,
+        Ticker.recommendations,
+    ],
+)
+def test_locale_aware_ticker_methods_expose_overrides(
+    method: Callable[..., object],
+) -> None:
+    """Every locale-aware Ticker method accepts lang and region overrides."""
+
+    parameters = inspect.signature(method).parameters
+    assert "lang" in parameters
+    assert "region" in parameters
+
+
+@pytest.mark.parametrize("method", [Ticker.spark, Ticker.stock_recommender])
+def test_locale_ignored_ticker_methods_do_not_expose_overrides(
+    method: Callable[..., object],
+) -> None:
+    """Endpoints observed ignoring locale params keep them out of the API."""
+
+    parameters = inspect.signature(method).parameters
+    assert "lang" not in parameters
+    assert "region" not in parameters
 
 
 class _FakeClient:
@@ -183,12 +225,16 @@ def test_ticker_quote_passes_new_wire_params(monkeypatch: pytest.MonkeyPatch) ->
         include_private_companies=False,
         img_labels=["logoUrl"],
         img_heights=_IMG_SIZE,
+        lang="en-CA",
+        region="CA",
     )
     _, params = fake.calls[0]
     assert params["formatted"] is True
     assert params["enablePrivateCompany"] is False
     assert params["imgLabels"] == "logoUrl"
     assert params["imgHeights"] == _IMG_SIZE
+    assert params["lang"] == "en-CA"
+    assert params["region"] == "CA"
 
 
 def test_ticker_quote_type_returns_single_record(

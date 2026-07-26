@@ -15,6 +15,10 @@ across all seven observed asset types; pricing fields are optional because
 ``fetchPricingData=false`` omits them, while industry fields apply only to
 some equities. An unmatched query is a valid result with an empty
 ``documents`` list.
+
+Live ``fr-FR``/``FR`` probes on 2026-07-26 diverged from the US corpus:
+search-news rows omitted ``relatedTickers`` and lookup documents omitted
+``rank``. Both fields therefore remain typed but are optional.
 """
 
 from __future__ import annotations
@@ -92,11 +96,12 @@ class SearchNews(YahooModel):
     Observed on: all search-news records.
     """
 
-    related_tickers: list[str]
+    related_tickers: list[str] | None = None
     """
     Yahoo symbols associated with the article.
 
-    Observed on: all search-news records.
+    Live-observed as absent on ``fr-FR``/``FR`` search-news records
+    (Airbus, 2026-07-26), despite being universal in the US corpus.
     """
 
     thumbnail: SearchThumbnail | None = None
@@ -562,11 +567,12 @@ class LookupDocument(YahooModel):
     Observed on: all lookup documents.
     """
 
-    rank: int
+    rank: int | None = None
     """
     Yahoo lookup rank.
 
-    Observed on: all lookup documents.
+    Live-observed as absent on ``fr-FR``/``FR`` lookup documents
+    (Airbus, 2026-07-26), despite being universal in the US corpus.
     """
 
     regular_market_change: RawFloat | None = None

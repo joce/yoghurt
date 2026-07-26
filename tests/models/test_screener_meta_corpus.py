@@ -64,7 +64,7 @@ _EXPECTED_SCREENER_DISCOVER_QUOTE_COUNT = 44
 _EXPECTED_SCREENER_PREDEFINED_FILE_COUNT = 5
 
 _EXPECTED_SCREENER_FIELD_REQUIRED_FIELD_COUNT = 9
-_EXPECTED_SCREENER_DISCOVER_QUOTE_REQUIRED_FIELD_COUNT = 29
+_EXPECTED_SCREENER_DISCOVER_QUOTE_REQUIRED_FIELD_COUNT = 27
 _QUOTE_REQUIRED_FIELD_COUNT = 34
 
 
@@ -278,7 +278,7 @@ def test_screener_discover_quotes_fail_validation_against_quote() -> None:
 
 
 def test_screener_discover_quote_required_fields_are_universal() -> None:
-    """ScreenerDiscoverQuote's required set matches the corpus-universal keys."""
+    """French warrants loosen two corpus-universal quote fields."""
 
     required_aliases = _required_aliases(ScreenerDiscoverQuote)
     assert (
@@ -290,7 +290,11 @@ def test_screener_discover_quote_required_fields_are_universal() -> None:
         kind_of=lambda record: str(record.get("quoteType", "")),
     )
     universal_keys = {key for key, field in report.fields.items() if field.universal}
-    assert required_aliases <= universal_keys
+    assert required_aliases < universal_keys
+    assert universal_keys - required_aliases == {
+        "firstTradeDateMilliseconds",
+        "shortName",
+    }
 
 
 def test_screener_discover_idea_section_records_stay_untyped() -> None:

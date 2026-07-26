@@ -254,7 +254,16 @@ def test_history_json_adjusts_and_combines_symbols() -> None:
     stderr = StringIO()
 
     exit_code = main(
-        ["history", "AAPL,MSFT", "--period", "1y"],
+        [
+            "history",
+            "AAPL,MSFT",
+            "--period",
+            "1y",
+            "--lang",
+            "en-CA",
+            "--region",
+            "CA",
+        ],
         stdout=stdout,
         stderr=stderr,
         client=client,
@@ -273,6 +282,8 @@ def test_history_json_adjusts_and_combines_symbols() -> None:
     ]
     assert all(call[1]["range"] == "1y" for call in client.calls)
     assert all(call[1]["interval"] == "1d" for call in client.calls)
+    assert all(call[1]["lang"] == "en-CA" for call in client.calls)
+    assert all(call[1]["region"] == "CA" for call in client.calls)
 
 
 def test_history_cli_bounds_concurrent_requests() -> None:

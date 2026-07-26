@@ -145,14 +145,19 @@ async def test_call_query_screener_posts_body_and_wire_params(
     body = json.dumps({"finance": {"result": [{}], "error": None}})
     fake = _FakeClient(body)
     monkeypatch.setattr(core, "_get_client", lambda: fake)
-    await core.call_query("screener", "SELECT ticker FROM EQUITY LIMIT 1")
+    await core.call_query(
+        "screener",
+        "SELECT ticker FROM EQUITY LIMIT 1",
+        lang="en-CA",
+        region="CA",
+    )
     path, call = fake.calls[0]
     assert path == "/v1/finance/screener"
     assert isinstance(call, dict)
     params = call["params"]
     assert isinstance(params, dict)
-    assert params["lang"] == core._QUERY_LANG  # pyright: ignore[reportPrivateUsage]
-    assert params["region"] == core._QUERY_REGION  # pyright: ignore[reportPrivateUsage]
+    assert params["lang"] == "en-CA"
+    assert params["region"] == "CA"
     assert params["formatted"] is False
     assert params["useRecordsResponse"] is True
     assert call["body"] == {

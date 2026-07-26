@@ -525,6 +525,8 @@ matches = yoghurt.search(
     fuzzy=True,
     quotes_count=5,
     include_research_reports=True,
+    lang="fr-FR",
+    region="FR",
 )
 symbols = [match.symbol for match in matches.quotes if match.symbol is not None]
 
@@ -537,9 +539,8 @@ Both functions return typed pydantic models. An unmatched lookup is a
 family as an empty list. Private-company and cultural-asset matches share
 search's `quotes` list but have no symbol.
 
-The CLI prints the unchanged Yahoo response and additionally exposes
-`--lang`/`--region`; the Python functions deliberately use their command
-defaults and do not accept per-call locale overrides:
+The CLI prints the unchanged Yahoo response. Both surfaces expose locale
+overrides on Yahoo routes that use them:
 
 ```powershell
 uv run yoghurt search Airbus --lang fr-FR --region FR
@@ -571,7 +572,7 @@ kind keeps a stable schema even when no rows match:
 | `economic` | `event`, `country_code`, `event_at`, `period`, `actual`, `expected`, `prior`, `revised` |
 | `splits` | `symbol`, `company_name`, `payable_at`, `optionable`, `old_share_worth`, `new_share_worth` |
 
-The CLI emits the same rows as JSON or Parquet and exposes locale overrides:
+The CLI emits the same rows as JSON or Parquet with the same locale overrides:
 
 ```powershell
 uv run yoghurt market-calendar earnings --start-date 2026-07-20 --end-date 2026-07-25

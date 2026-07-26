@@ -17,9 +17,11 @@ refresh. Reconciliation notes:
   reconciled against prior art.
 - ``OptionContract`` has 15 wire keys; 14 are universal across all 365
   contracts and ``volume`` is optional (present on 353/365 — absent on a
-  handful of illiquid strikes). Every other contract field's type was
-  checked directly against every one of the 365 records, not just a
-  sample: ``ask``, ``bid``, ``change``, ``impliedVolatility``,
+  handful of illiquid strikes). A live ``fr-FR``/``FR`` AAPL chain on
+  2026-07-26 omitted ``bid`` from one put, so ``bid`` is also optional
+  despite being universal in the US corpus. Every contract field's type
+  was checked directly against every one of the 365 records, not just a
+  sample: ``ask``, ``change``, ``impliedVolatility``,
   ``lastPrice``, ``percentChange``, and ``strike`` are consistently
   ``float``; ``contractSize``, ``contractSymbol``, and ``currency`` are
   ``str``; ``openInterest`` and ``volume`` are ``int``; ``inTheMoney`` is
@@ -70,9 +72,12 @@ class OptionContract(YahooModel):
     Lowest price a seller is willing to accept for the contract.
     """
 
-    bid: float
+    bid: float | None = None
     """
     Highest price a buyer is willing to pay for the contract.
+
+    Live-observed as absent on one AAPL put in a ``fr-FR``/``FR`` chain
+    (2026-07-26), despite being universal in the US corpus.
     """
 
     change: float

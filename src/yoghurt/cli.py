@@ -488,6 +488,18 @@ def _add_history_parser(subparsers: Any) -> None:  # ruff:ignore[any-type]
         help="Include pre-market and post-market rows when supported.",
     )
     parser.add_argument(
+        "--lang",
+        default="en-US",
+        metavar="LANG",
+        help="Yahoo response language.",
+    )
+    parser.add_argument(
+        "--region",
+        default="US",
+        metavar="REGION",
+        help="Yahoo response region.",
+    )
+    parser.add_argument(
         "--format",
         dest="output_format",
         choices=("json", "parquet"),
@@ -528,6 +540,18 @@ def _add_financial_analysis_parser(
         "symbol",
         metavar="SYMBOL",
         help="A single Yahoo symbol, such as AAPL or SHOP.TO.",
+    )
+    parser.add_argument(
+        "--lang",
+        default="en-US",
+        metavar="LANG",
+        help="Yahoo response language.",
+    )
+    parser.add_argument(
+        "--region",
+        default="US",
+        metavar="REGION",
+        help="Yahoo response region.",
     )
     _add_parquet_negative_guards(parser)
     parser.set_defaults(
@@ -1168,6 +1192,7 @@ async def _dispatch_history(
         interval=namespace.interval,
         include_pre_post=namespace.include_pre_post,
     )
+    common_values.update(lang=namespace.lang, region=namespace.region)
     effective_period = common_values.get("range")
     if effective_period is not None and not isinstance(effective_period, str):
         message = "history period must be a string"
@@ -1266,6 +1291,8 @@ async def _dispatch_financial_analysis(
                 "symbol": symbol,
                 "type": ",".join(FINANCIAL_ANALYSIS_TIMESERIES_TYPES),
                 "period1": 0,
+                "lang": namespace.lang,
+                "region": namespace.region,
             },
         ),
         (
@@ -1273,6 +1300,8 @@ async def _dispatch_financial_analysis(
             {
                 "symbol": symbol,
                 "modules": ",".join(FINANCIAL_ANALYSIS_QUOTE_SUMMARY_MODULES),
+                "lang": namespace.lang,
+                "region": namespace.region,
             },
         ),
     )

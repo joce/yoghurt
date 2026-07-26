@@ -49,6 +49,17 @@ def test_search_publication_times_are_aware_datetimes() -> None:
     assert all(value.tzinfo is not None for value in values)
 
 
+def test_search_news_accepts_live_observed_missing_related_tickers() -> None:
+    """French-region news may omit relatedTickers."""
+
+    payload = _load("search/default.json")
+    del payload["news"][0]["relatedTickers"]
+
+    result = SearchResult.model_validate(payload)
+
+    assert result.news[0].related_tickers is None
+
+
 def test_lookup_unwraps_formatted_prices_and_types_quote_type() -> None:
     """Formatted wrappers expose raw floats and the lowercase lookup enum."""
 
@@ -66,3 +77,14 @@ def test_lookup_no_match_is_an_empty_typed_page() -> None:
     assert result.documents == []
     assert result.total == 0
     assert result.lookup_totals.all == 0
+
+
+def test_lookup_accepts_live_observed_missing_rank() -> None:
+    """French-region lookup documents may omit rank."""
+
+    payload = _load("lookup/formatted.json")["finance"]["result"][0]
+    del payload["documents"][0]["rank"]
+
+    result = LookupResult.model_validate(payload)
+
+    assert result.documents[0].rank is None

@@ -80,9 +80,11 @@ Do not guess parameter names or values. Run `yoghurt <command> --help` —
 it is generated, complete, and authoritative for both surfaces via the
 flag↔kwarg mirror rule.
 
-`search` and `lookup` expose `--lang`/`--region` only in the CLI. Their Python
-functions use the command defaults and intentionally have no per-call locale
-kwargs.
+Locale-aware commands expose `--lang`/`--region` in the CLI and matching
+`lang=`/`region=` kwargs in Python. Omit them to use the endpoint defaults.
+`trending(region=...)` uses its region in the URL path. `spark` and
+`stock_recommender()` omit locale kwargs because Yahoo ignores those query
+parameters.
 
 ## Domain index
 

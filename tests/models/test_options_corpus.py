@@ -137,10 +137,10 @@ def test_chain_validates_with_no_extra_fields(
 
 
 def test_contract_required_field_set_matches_corpus_universal_keys() -> None:
-    """OptionContract's required fields are exactly the corpus-measured universal keys.
+    """Live evidence loosens bid below the corpus-universal required set.
 
-    ``volume`` is present on only 353 of 365 contracts, so it must stay
-    optional; every other key is universal across the whole stream.
+    ``volume`` is corpus-optional; ``bid`` was live-observed absent on a
+    ``fr-FR``/``FR`` contract despite being corpus-universal.
     """
 
     report = collect_presence(option_contract_records(), kind_of=contract_kind)
@@ -153,8 +153,9 @@ def test_contract_required_field_set_matches_corpus_universal_keys() -> None:
     }
 
     assert len(universal_keys) == _EXPECTED_CONTRACT_REQUIRED_FIELD_COUNT
-    assert required_aliases == universal_keys
-    assert "volume" not in required_aliases
+    assert required_aliases < universal_keys
+    assert universal_keys - required_aliases == {"bid"}
+    assert {"bid", "volume"}.isdisjoint(required_aliases)
 
 
 def test_chain_required_field_set_matches_corpus_universal_keys() -> None:

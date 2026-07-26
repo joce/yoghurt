@@ -199,6 +199,8 @@ def test_search_returns_typed_result_and_maps_controls(
         include_navigation_links=True,
         include_research_reports=True,
         include_cultural_assets=True,
+        lang="fr-FR",
+        region="FR",
     )
 
     assert isinstance(result, SearchResult)
@@ -216,8 +218,8 @@ def test_search_returns_typed_result_and_maps_controls(
         "enableNavLinks": True,
         "enableResearchReports": True,
         "enableCulturalAssets": True,
-        "lang": "en-US",
-        "region": "US",
+        "lang": "fr-FR",
+        "region": "FR",
     }
 
 
@@ -234,6 +236,8 @@ def test_lookup_returns_typed_result_and_empty_documents(
         count=10,
         formatted=True,
         fetch_pricing_data=False,
+        lang="en-CA",
+        region="CA",
     )
 
     assert isinstance(result, LookupResult)
@@ -247,20 +251,40 @@ def test_lookup_returns_typed_result_and_empty_documents(
         "count": 10,
         "formatted": True,
         "fetchPricingData": False,
-        "lang": "en-US",
-        "region": "US",
+        "lang": "en-CA",
+        "region": "CA",
     }
 
 
-@pytest.mark.parametrize("function", [api.search, api.lookup])
-def test_discovery_library_functions_do_not_expose_locale_overrides(
+@pytest.mark.parametrize(
+    "function",
+    [
+        api.history,
+        api.quotes,
+        api.search,
+        api.lookup,
+        api.screener,
+        api.visualization,
+        api.screener_predefined,
+        api.trending,
+        api.market_calendar,
+        api.sector,
+        api.market_summary,
+        api.market_info,
+        api.market_time,
+        api.screener_instrument_fields,
+        api.timeseries_fields,
+        api.screener_discover,
+    ],
+)
+def test_locale_aware_library_functions_expose_overrides(
     function: Callable[..., object],
 ) -> None:
-    """Search and lookup keep lang/region at CommandSpec defaults in Python."""
+    """Every locale-aware module function accepts lang and region overrides."""
 
     parameters = inspect.signature(function).parameters
-    assert "lang" not in parameters
-    assert "region" not in parameters
+    assert "lang" in parameters
+    assert "region" in parameters
 
 
 def test_history_fetches_symbols_concurrently_into_one_long_frame(
@@ -269,7 +293,12 @@ def test_history_fetches_symbols_concurrently_into_one_long_frame(
     """history() preserves input symbol order in one adjusted History table."""
 
     fake = _install_fake(monkeypatch, _corpus_text("chart/AAPL.json"))
-    result = api.history(["AAPL", "MSFT"], period="1y")
+    result = api.history(
+        ["AAPL", "MSFT"],
+        period="1y",
+        lang="en-CA",
+        region="CA",
+    )
 
     assert isinstance(result, History)
     symbols = result.to_polars()["symbol"].to_list()
@@ -280,6 +309,8 @@ def test_history_fetches_symbols_concurrently_into_one_long_frame(
         "/v8/finance/chart/MSFT",
     ]
     assert all(params["range"] == "1y" for _path, params in fake.calls)
+    assert all(params["lang"] == "en-CA" for _path, params in fake.calls)
+    assert all(params["region"] == "CA" for _path, params in fake.calls)
 
 
 def test_history_bounds_concurrent_requests(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -308,26 +339,36 @@ def test_screener_builds_frame(monkeypatch: pytest.MonkeyPatch) -> None:
     """screener() flattens records into a Frame with the expected row count."""
     body = _corpus_text("screener/equity_us_tech.json")
     fake = _install_fake(monkeypatch, body)
-    frame = api.screener(_SCREENER_QUERY)
+    frame = api.screener(_SCREENER_QUERY, lang="en-CA", region="CA")
     expected_records = json.loads(body)["finance"]["result"][0]["records"]
     assert isinstance(frame, Frame)
     assert frame.to_polars().height == len(expected_records)
     assert "ticker" in frame.to_polars().columns
-    path, _ = fake.calls[0]
+    path, call = fake.calls[0]
     assert path == "/v1/finance/screener"
+    assert isinstance(call, dict)
+    params = call["params"]
+    assert isinstance(params, dict)
+    assert params["lang"] == "en-CA"
+    assert params["region"] == "CA"
 
 
 def test_visualization_builds_frame(monkeypatch: pytest.MonkeyPatch) -> None:
     """visualization() flattens documents into a Frame with the expected row count."""
     body = _corpus_text("visualization/insider_transaction.json")
     fake = _install_fake(monkeypatch, body)
-    frame = api.visualization(_VISUALIZATION_QUERY)
+    frame = api.visualization(_VISUALIZATION_QUERY, lang="fr-FR", region="FR")
     expected_rows = json.loads(body)["finance"]["result"][0]["documents"][0]["rows"]
     assert isinstance(frame, Frame)
     assert frame.to_polars().height == len(expected_rows)
     assert "ticker" in frame.to_polars().columns
-    path, _ = fake.calls[0]
+    path, call = fake.calls[0]
     assert path == "/v1/finance/visualization"
+    assert isinstance(call, dict)
+    params = call["params"]
+    assert isinstance(params, dict)
+    assert params["lang"] == "fr-FR"
+    assert params["region"] == "FR"
 
 
 def test_screener_empty_records_returns_empty_frame(

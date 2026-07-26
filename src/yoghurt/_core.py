@@ -370,7 +370,13 @@ _QUERY_LANG: Final[str] = "en-US"
 _QUERY_REGION: Final[str] = "US"
 
 
-async def call_query(route: str, query: str) -> dict[str, Any]:
+async def call_query(
+    route: str,
+    query: str,
+    *,
+    lang: str | None = None,
+    region: str | None = None,
+) -> dict[str, Any]:
     """Run a DSL query against a data-platform route.
 
     Yahoo-reported errors are translated per the library error contract (see
@@ -387,7 +393,10 @@ async def call_query(route: str, query: str) -> dict[str, Any]:
     """
 
     statement = parse_query(query)
-    params: dict[str, ParamValue] = {"lang": _QUERY_LANG, "region": _QUERY_REGION}
+    params: dict[str, ParamValue] = {
+        "lang": lang if lang is not None else _QUERY_LANG,
+        "region": region if region is not None else _QUERY_REGION,
+    }
     if route == "screener":
         params["formatted"] = False
         params["useRecordsResponse"] = True

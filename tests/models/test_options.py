@@ -168,3 +168,16 @@ def test_option_chain_msft_and_spy_records_also_validate() -> None:
     assert msft.quote.symbol == "MSFT"
     assert spy.underlying_symbol == "SPY"
     assert spy.quote.symbol == "SPY"
+
+
+def test_option_contract_accepts_live_observed_missing_bid() -> None:
+    """A contract may omit bid in a non-US locale response."""
+
+    record = _load_chain("AAPL.json")
+    options = cast("list[dict[str, object]]", record["options"])
+    puts = cast("list[dict[str, object]]", options[0]["puts"])
+    del puts[0]["bid"]
+
+    chain = OptionChain.model_validate(record)
+
+    assert chain.options[0].puts[0].bid is None

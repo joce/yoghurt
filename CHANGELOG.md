@@ -8,6 +8,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- `lang` and `region` keyword overrides across every typed Python API route
+  where Yahoo uses them, matching the CLI controls; the derived `history` and
+  `financial-analysis` commands now expose the same flags.
 - Analysis-ready `Ticker.history()` and module-level `history()` APIs with a
   stable multi-symbol long-form schema. Yahoo's adjusted close scales the
   complete OHLC bar; volume is unchanged and heuristic price repair is
@@ -20,6 +23,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Raw `chart` retrieval now accepts Yahoo relative ranges and the broader
   interval vocabulary used by yfinance, while retaining its existing default
   three-day/minute window and typed metadata/events semantics.
+- Typed models accept live regional payloads that omit fields the US corpus
+  had measured as universal across options, discovery, trending, sector, and
+  screener-discover responses.
 
 ## [0.4.2] - 2026-07-12
 

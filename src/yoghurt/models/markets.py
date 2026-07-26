@@ -22,6 +22,11 @@ equivalent for. Thin, single-capture evidence: only ``priceHint`` (1/5 rows)
 is optional; every other observed key is universal across this small
 sample.
 
+A live ``fr-FR``/``FR`` capture on 2026-07-26 returned French equities and
+indices without ``trendingScore`` on every row and without
+``firstTradeDateMilliseconds`` on one row. Both corpus-universal fields are
+therefore optional.
+
 **market-summary** (endpoint noun: "market-summary records"). 15 rows
 spanning INDEX/FUTURE/CURRENCY/CRYPTOCURRENCY quoteTypes. Per the plan's
 decision procedure, every row was first script-validated directly against
@@ -84,6 +89,10 @@ Sub-models per wire block: :class:`SectorOverview`, :class:`SectorPerformance`
 embeds the shared metrics), :class:`SectorCompany`, :class:`SectorFund`
 (shared by ``topETFs``/``topMutualFunds``, identical shape),
 :class:`SectorIndustry`, and :class:`SectorResearchReport`.
+Live ``fr-FR``/``FR`` technology-sector data on 2026-07-26 omitted
+``overview.description`` and omitted ``rating``/``targetPrice``/``ytdReturn``
+from some or all ``topCompanies`` rows, so those US-corpus-universal fields
+are optional.
 ``SectorIndustry.key``/``.symbol`` are optional: every capture's first
 ``industries`` row (Yahoo's "All Industries" aggregate) omits both, while
 every other row carries them. ``SectorResearchReport.investment_rating``/
@@ -156,9 +165,12 @@ class TrendingQuote(YahooModel):
     Short abbreviation of the exchange timezone (for example ``"UTC"``).
     """
 
-    first_trade_date_milliseconds: int
+    first_trade_date_milliseconds: int | None = None
     """
     Epoch-milliseconds timestamp of this instrument's first trade.
+
+    Live-observed as absent on one ``fr-FR``/``FR`` trending row
+    (2026-07-26), despite being universal in the US corpus.
     """
 
     full_exchange_name: str
@@ -242,11 +254,14 @@ class TrendingQuote(YahooModel):
     integration.
     """
 
-    trending_score: float = Field(alias="trendingScore")
+    trending_score: float | None = Field(default=None, alias="trendingScore")
     """
     Yahoo's internal trending-rank score for this symbol (higher is more
     trending); no equivalent field on
     :class:`~yoghurt.models.quote.Quote`.
+
+    Live-observed as absent on every ``fr-FR``/``FR`` trending row
+    (2026-07-26), despite being universal in the US corpus.
     """
 
     triggerable: bool
@@ -713,9 +728,12 @@ class SectorOverview(YahooModel):
     Number of companies classified under this sector.
     """
 
-    description: str
+    description: str | None = None
     """
     Prose description of the industries and companies this sector covers.
+
+    Live-observed as absent from the ``fr-FR``/``FR`` technology-sector
+    overview (2026-07-26), despite being universal in the US corpus.
     """
 
     employee_count: RawFloat = Field(alias="employeeCount")
@@ -874,9 +892,12 @@ class SectorCompany(YahooModel):
     Absent on 1 of 200 corpus rows (symbol ``AHR``).
     """
 
-    rating: str
+    rating: str | None = None
     """
     Aggregate analyst rating label (for example ``"Strong Buy"``).
+
+    Live-observed as absent on some ``fr-FR``/``FR`` technology-sector
+    companies (2026-07-26), despite being universal in the US corpus.
     """
 
     reg_market_change_percent: RawFloat = Field(alias="regMarketChangePercent")
@@ -892,18 +913,22 @@ class SectorCompany(YahooModel):
     Yahoo ticker symbol.
     """
 
-    target_price: RawFloat = Field(alias="targetPrice")
+    target_price: RawFloat | None = Field(default=None, alias="targetPrice")
     """
     Aggregate analyst price target.
 
     Wrapped as ``{"raw": ..., "fmt": ...}`` on the wire.
+    Live-observed as absent on some ``fr-FR``/``FR`` technology-sector
+    companies (2026-07-26), despite being universal in the US corpus.
     """
 
-    ytd_return: RawFloat = Field(alias="ytdReturn")
+    ytd_return: RawFloat | None = Field(default=None, alias="ytdReturn")
     """
     Year-to-date return, as a fraction.
 
     Wrapped as ``{"raw": ..., "fmt": ...}`` on the wire.
+    Live-observed as absent on all ``fr-FR``/``FR`` technology-sector
+    companies (2026-07-26), despite being universal in the US corpus.
     """
 
 

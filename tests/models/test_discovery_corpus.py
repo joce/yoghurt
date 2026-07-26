@@ -46,6 +46,7 @@ _EXPECTED_SEARCH_ROW_COUNTS = {
     "researchReports": 6,
 }
 _EXPECTED_LOOKUP_DOCUMENT_COUNT = 45
+_EXPECTED_SEARCH_NEWS_REQUIRED_FIELD_COUNT = 7
 _EXPECTED_SEARCH_RESULT_REQUIRED_FIELD_COUNT = 19
 _EXPECTED_SEARCH_THUMBNAIL_REQUIRED_FIELD_COUNT = 1
 _EXPECTED_SEARCH_THUMBNAIL_RESOLUTION_REQUIRED_FIELD_COUNT = 4
@@ -143,7 +144,6 @@ def test_lookup_corpus_validates_without_extras(payload: dict[str, Any]) -> None
     ("model_cls", "category", "expected_required_count"),
     [
         (SearchQuote, "quotes", 2),
-        (SearchNews, "news", 7),
         (SearchNavigation, "nav", 0),
         (SearchList, "lists", 4),
         (SearchResearchReport, "researchReports", 4),
@@ -159,6 +159,16 @@ def test_search_row_required_fields_match_corpus(
     universal_keys = _universal_keys(search_records(category))
     assert len(universal_keys) == expected_required_count
     assert _required_aliases(model_cls) == universal_keys
+
+
+def test_search_news_required_fields_are_below_corpus_universal_keys() -> None:
+    """French-region news can omit corpus-universal relatedTickers."""
+
+    universal_keys = _universal_keys(search_records("news"))
+    required_aliases = _required_aliases(SearchNews)
+    assert len(universal_keys) == _EXPECTED_SEARCH_NEWS_REQUIRED_FIELD_COUNT
+    assert required_aliases < universal_keys
+    assert universal_keys - required_aliases == {"relatedTickers"}
 
 
 def test_search_result_required_fields_match_corpus() -> None:
@@ -197,11 +207,13 @@ def test_search_nested_required_fields_match_corpus(
 
 
 def test_lookup_document_required_fields_match_corpus() -> None:
-    """LookupDocument requires exactly the document-universal keys."""
+    """French-region lookup can omit corpus-universal rank."""
 
     universal_keys = _universal_keys(lookup_document_records())
+    required_aliases = _required_aliases(LookupDocument)
     assert len(universal_keys) == _EXPECTED_LOOKUP_DOCUMENT_REQUIRED_FIELD_COUNT
-    assert _required_aliases(LookupDocument) == universal_keys
+    assert required_aliases < universal_keys
+    assert universal_keys - required_aliases == {"rank"}
 
 
 def test_lookup_result_required_fields_match_corpus() -> None:
