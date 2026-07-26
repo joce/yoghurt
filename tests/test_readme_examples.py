@@ -125,6 +125,20 @@ def test_readme_search_quickstart(monkeypatch: pytest.MonkeyPatch) -> None:
     assert result.quotes
 
 
+def test_readme_market_calendar_quickstart(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Pins the README market-calendar quickstart."""
+
+    _install_fake(
+        monkeypatch,
+        _corpus_text("visualization/market_calendar_earnings.json"),
+    )
+    earnings = yoghurt.market_calendar("earnings").to_polars()
+    assert earnings.height > 0
+    assert "event_at" in earnings.columns
+
+
 def test_readme_screener_quickstart(monkeypatch: pytest.MonkeyPatch) -> None:
     """Pins the README screener quickstart: ``screener(...).to_polars()``."""
 

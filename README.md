@@ -14,9 +14,9 @@ the JSON returned by Yahoo's finance endpoints.
 
 The endpoint CLI stays deliberately close to the source: it prints Yahoo's
 response bodies as-is and adds no discovery API beyond CLI help. The derived
-`history` and `financial-analysis` commands instead emit analysis-ready tables.
-The library layer (below) models responses as typed pydantic structures or
-typed frames.
+`history`, `financial-analysis`, and `market-calendar` commands instead emit
+analysis-ready tables. The library layer (below) models responses as typed
+pydantic structures or typed frames.
 
 ## Library
 
@@ -27,6 +27,7 @@ import yoghurt
 
 bars = yoghurt.Ticker("AAPL").chart(interval="1d").to_polars()
 history = yoghurt.history(["AAPL", "MSFT"], period="1y").to_polars()
+earnings = yoghurt.market_calendar("earnings").to_polars()
 quote = yoghurt.Ticker("AAPL").quote()
 matches = yoghurt.search("Apple", quotes_count=5)
 analysis = yoghurt.Ticker("AAPL").financial_analysis()
@@ -41,11 +42,12 @@ tech = yoghurt.screener(
 Three tiers, all sharing one Yahoo session (cookies and crumb cached exactly
 like the CLI):
 
-1. **Typed** — `Ticker` methods and module-level functions. Every endpoint
-   returns a typed result except `screener()`/`visualization()`, which
-   return a `Frame` with `to_polars()`, `to_pandas()`
+1. **Typed** — `Ticker` methods and module-level functions.
+   `market_calendar()`, `screener()`, and `visualization()` return a `Frame`
+   with `to_polars()`, `to_pandas()`
    (`pip install yoghurt[pandas]`), `to_arrow()`, `to_dicts()`, and
-   `save_parquet()`: both are SQL-flavored DSLs over caller-chosen,
+   `save_parquet()`. The calendar has a stable schema for each kind; the two
+   SQL-flavored DSLs use caller-chosen,
    dynamic column lists, so their row shape is a table, not a fixed
    pydantic model, by design. `chart`/`spark` return `Chart`/`Spark` (also
    `Frame` subclasses) whose `.meta` is typed `ChartMeta` (pydantic) and
@@ -478,6 +480,7 @@ Current commands, grouped roughly by how often they're reached for:
 | Command | Yahoo data |
 | --- | --- |
 | `trending` | List trending tickers for a region. |
+| `market-calendar` | Fetch earnings, IPO, economic, or split events across the market. |
 | `sector` | Fetch sector overview, performance, top holdings, and industries. |
 | `market-summary` | Fetch global market summary: indices, futures, forex, crypto. |
 | `market-info` | Fetch commodity and currency market data. |
@@ -544,6 +547,41 @@ defaults and do not accept per-call locale overrides:
 uv run yoghurt search Airbus --lang fr-FR --region FR
 uv run yoghurt lookup Bitcoin --type cryptocurrency --count 25
 ```
+
+### Market-wide calendars
+
+`market_calendar()` returns analysis-ready earnings, IPO, economic-event, or
+stock-split rows across the market:
+
+```python
+earnings = yoghurt.market_calendar(
+    "earnings",
+    start_date="2026-07-20",
+    end_date="2026-07-25",
+    limit=100,
+).to_polars()
+```
+
+The date window is inclusive and defaults to today through seven days ahead
+in UTC. Results are chronological; `offset` supports manual pagination. Each
+kind keeps a stable schema even when no rows match:
+
+| Kind | Columns |
+| --- | --- |
+| `earnings` | `symbol`, `company_name`, `market_cap`, `event_name`, `event_at`, `timing`, `eps_estimate`, `eps_actual`, `eps_surprise_percent` |
+| `ipo` | `symbol`, `company_name`, `exchange`, `filing_date`, `event_at`, `amended_date`, `price_from`, `price_to`, `offer_price`, `currency`, `shares`, `deal_type` |
+| `economic` | `event`, `country_code`, `event_at`, `period`, `actual`, `expected`, `prior`, `revised` |
+| `splits` | `symbol`, `company_name`, `payable_at`, `optionable`, `old_share_worth`, `new_share_worth` |
+
+The CLI emits the same rows as JSON or Parquet and exposes locale overrides:
+
+```powershell
+uv run yoghurt market-calendar earnings --start-date 2026-07-20 --end-date 2026-07-25
+uv run yoghurt market-calendar economic --format parquet --out economic.parquet
+```
+
+Use `Ticker.calendar_events()` for symbol-bound events. Use `visualization()`
+when custom calendar fields or filters matter more than the stable schemas.
 
 ### Chart
 
@@ -665,8 +703,10 @@ Yoghurt never prints cookies, crumbs, or full session-cache contents.
 
 ## Output Contract
 
-Yoghurt writes the Yahoo response body to stdout exactly as returned. This makes
-it easy to pipe into tools that expect JSON:
+Endpoint commands write Yahoo response bodies to stdout exactly as returned.
+The derived `history`, `financial-analysis`, and `market-calendar` commands
+emit normalized analysis tables instead. Raw endpoint output remains easy to
+pipe into tools that expect JSON:
 
 ```powershell
 uv run yoghurt quote AAPL | jq .

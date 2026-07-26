@@ -3,7 +3,8 @@
 This module is a documented, scoped exception to the ``AGENTS.md`` rule that
 yoghurt prints Yahoo bodies to stdout exactly as returned. The exception
 applies only when the user opts in to Parquet output on a supported tabular
-command. ``history`` is already a derived table in both output formats.
+command. ``history`` and ``market-calendar`` are already derived tables in
+both output formats.
 
 Polars is the Parquet engine; the CLI imports this module lazily so the JSON
 path never loads it.
@@ -159,6 +160,37 @@ def write_history_parquet(  # ruff:ignore[too-many-arguments] - keyword-only met
         "symbols": symbols,
         "interval": interval,
         "rows": frame.height,
+        "bytes": out_path.stat().st_size,
+    }
+
+
+def write_market_calendar_parquet(
+    frame: pl.DataFrame,
+    out_path: Path,
+    *,
+    kind: str,
+    query: str,
+) -> dict[str, Any]:
+    """Write one normalized market calendar and return its CLI descriptor.
+
+    Returns:
+        dict[str, Any]: The single-line stdout descriptor for the write.
+    """
+
+    metadata = {
+        "yoghurt_command": "market-calendar",
+        "yoghurt_version": __version__,
+        "kind": kind,
+        "query": query,
+    }
+    _write_frame(frame, out_path, metadata)
+    return {
+        "format": "parquet",
+        "out": str(out_path),
+        "command": "market-calendar",
+        "kind": kind,
+        "rows": frame.height,
+        "columns": frame.columns,
         "bytes": out_path.stat().st_size,
     }
 

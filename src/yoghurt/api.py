@@ -17,6 +17,10 @@ import polars as pl
 
 from yoghurt import _core
 from yoghurt._bridge import run
+from yoghurt._market_calendar import (
+    build_market_calendar_query,
+    normalize_market_calendar,
+)
 from yoghurt.commands import COMMANDS_BY_NAME
 from yoghurt.exceptions import SymbolNotFoundError, YahooApiError
 from yoghurt.financial_analysis import (
@@ -73,7 +77,7 @@ from yoghurt.tabular import (
 if TYPE_CHECKING:
     from datetime import date
 
-    from yoghurt.types import ParamValue
+    from yoghurt.types import MarketCalendarKind, ParamValue
 
 DateLike: TypeAlias = "int | str | date | datetime"
 
@@ -1142,6 +1146,35 @@ def trending(  # ruff:ignore[too-many-arguments] - one keyword-only arg per wire
         )
     )
     return validate_model(TrendingResult, payload["finance"]["result"][0])
+
+
+def market_calendar(
+    kind: MarketCalendarKind,
+    *,
+    start_date: DateLike | None = None,
+    end_date: DateLike | None = None,
+    limit: int = 100,
+    offset: int = 0,
+) -> Frame:
+    """Fetch one analysis-ready market-wide event calendar.
+
+    ``kind`` is one of ``earnings``, ``ipo``, ``economic``, or ``splits``.
+    The inclusive date window defaults to today through seven days ahead.
+    Results are ordered chronologically and keep a stable, kind-specific
+    schema even when Yahoo returns no rows.
+
+    Returns:
+        Frame: Normalized calendar rows with the standard conversion methods.
+    """
+
+    query = build_market_calendar_query(
+        kind,
+        start_date=start_date,
+        end_date=end_date,
+        limit=limit,
+        offset=offset,
+    )
+    return normalize_market_calendar(kind, visualization(query))
 
 
 def sector(

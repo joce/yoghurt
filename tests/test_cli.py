@@ -104,6 +104,7 @@ def test_top_level_help_lists_quote_endpoint(
     assert "history" in captured.out
     assert "search" in captured.out
     assert "lookup" in captured.out
+    assert "market-calendar" in captured.out
     assert "raw" in captured.out
     assert "visualization" in captured.out
     assert "screener" in captured.out
@@ -119,9 +120,12 @@ def test_top_level_help_lists_quote_endpoint(
     search_index = captured.out.index("\n    search ")
     lookup_index = captured.out.index("\n    lookup ")
     predefined_index = captured.out.index("\n    screener-predefined ")
+    market_calendar_index = captured.out.index("\n    market-calendar ")
+    trending_index = captured.out.index("\n    trending ")
     raw_index = captured.out.index("\n    raw ")
     assert chart_index < history_index
     assert search_index < lookup_index < predefined_index
+    assert trending_index < market_calendar_index
     assert visualization_index < raw_index
     assert screener_index < raw_index
 
