@@ -136,7 +136,7 @@ _CALENDARS: Final[dict[MarketCalendarKind, _CalendarSpec]] = {
         ),
         names={
             "econ_release": "event",
-            "country_code": "region",
+            "country_code": "country_code",
             "startdatetime": "event_at",
             "period": "period",
             "after_release_actual": "actual",
@@ -146,7 +146,7 @@ _CALENDARS: Final[dict[MarketCalendarKind, _CalendarSpec]] = {
         },
         schema={
             "event": pl.String,
-            "region": pl.String,
+            "country_code": pl.String,
             "event_at": pl.Datetime("ms", "UTC"),
             "period": pl.String,
             "actual": pl.String,
@@ -233,7 +233,8 @@ def normalize_market_calendar(kind: MarketCalendarKind | str, frame: Frame) -> F
         declared column.
 
     Raises:
-        YahooApiError: If a populated response omits a requested field.
+        YahooApiError: If a populated response omits a requested field or
+            contains a value incompatible with the declared schema.
     """
 
     spec = _calendar_spec(kind)
@@ -259,7 +260,12 @@ def normalize_market_calendar(kind: MarketCalendarKind | str, frame: Frame) -> F
         else:
             column = column.cast(spec.schema[target], strict=True)
         expressions.append(column.alias(target))
-    return Frame(df=frame.df.select(expressions), fetched_at=frame.fetched_at)
+    try:
+        normalized = frame.df.select(expressions)
+    except pl.exceptions.PolarsError as exc:
+        message = f"{kind} calendar response could not be normalized: {exc}"
+        raise YahooApiError(code="malformed-response", description=message) from exc
+    return Frame(df=normalized, fetched_at=frame.fetched_at)
 
 
 def _calendar_spec(kind: MarketCalendarKind | str) -> _CalendarSpec:
@@ -278,13 +284,17 @@ def _resolve_window(
     start = (
         _coerce_date(start_value, "start_date") if start_value is not None else today
     )
-    end = (
-        _coerce_date(end_value, "end_date")
-        if end_value is not None
-        else start + timedelta(days=_DEFAULT_WINDOW_DAYS)
-    )
+    if end_value is not None:
+        end = _coerce_date(end_value, "end_date")
+    else:
+        try:
+            end = start + timedelta(days=_DEFAULT_WINDOW_DAYS)
+        except OverflowError as exc:
+            message = "start_date is too large to form the default calendar window"
+            raise ValueError(message) from exc
     if end < start:
-        message = "end_date must be on or after start_date"
+        effective_start = start.isoformat()
+        message = f"end_date must be on or after effective start_date {effective_start}"
         raise ValueError(message)
     return start, end
 

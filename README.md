@@ -570,7 +570,7 @@ kind keeps a stable schema even when no rows match:
 | --- | --- |
 | `earnings` | `symbol`, `company_name`, `market_cap`, `event_name`, `event_at`, `timing`, `eps_estimate`, `eps_actual`, `eps_surprise_percent` |
 | `ipo` | `symbol`, `company_name`, `exchange`, `filing_date`, `event_at`, `amended_date`, `price_from`, `price_to`, `offer_price`, `currency`, `shares`, `deal_type` |
-| `economic` | `event`, `region`, `event_at`, `period`, `actual`, `expected`, `prior`, `revised` |
+| `economic` | `event`, `country_code`, `event_at`, `period`, `actual`, `expected`, `prior`, `revised` |
 | `splits` | `symbol`, `company_name`, `payable_at`, `optionable`, `old_share_worth`, `new_share_worth` |
 
 The CLI emits the same rows as JSON or Parquet and exposes locale overrides:

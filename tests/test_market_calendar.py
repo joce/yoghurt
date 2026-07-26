@@ -69,7 +69,7 @@ _CASES = {
     "economic": (
         [
             "event",
-            "region",
+            "country_code",
             "event_at",
             "period",
             "actual",
@@ -209,7 +209,11 @@ def test_market_calendar_builds_inclusive_window_and_page() -> None:
                 "start_date": "2026-07-26",
                 "end_date": "2026-07-25",
             },
-            "end_date must be",
+            "effective start_date 2026-07-26",
+        ),
+        (
+            {"kind": "earnings", "start_date": "not-a-date"},
+            "invalid start_date",
         ),
         ({"kind": "earnings", "limit": 101}, "limit must be"),
         ({"kind": "earnings", "offset": -1}, "offset must be"),
@@ -229,6 +233,43 @@ def test_market_calendar_rejects_invalid_requests(
     call = cast("Callable[..., str]", build_market_calendar_query)
     with pytest.raises(ValueError, match=message):
         call(**(defaults | kwargs))
+
+
+@pytest.mark.parametrize("value", [True, object()], ids=["bool", "object"])
+def test_market_calendar_rejects_invalid_date_types(value: object) -> None:
+    """Runtime callers get a clear type error before any network call."""
+
+    call = cast("Callable[..., str]", build_market_calendar_query)
+    with pytest.raises(TypeError, match="start_date must be"):
+        call(
+            "earnings",
+            start_date=value,
+            end_date="2026-07-25",
+            limit=100,
+            offset=0,
+        )
+
+
+@pytest.mark.parametrize(
+    ("end_date", "message"),
+    [
+        (None, "start_date is too large"),
+        (date.max, "end_date is too large"),
+    ],
+)
+def test_market_calendar_rejects_out_of_range_date_max_windows(
+    end_date: date | None, message: str
+) -> None:
+    """Inclusive/default windows cannot extend beyond Python's date range."""
+
+    with pytest.raises(ValueError, match=message):
+        build_market_calendar_query(
+            "earnings",
+            start_date=date.max,
+            end_date=end_date,
+            limit=100,
+            offset=0,
+        )
 
 
 def test_market_calendar_populated_response_requires_every_source_field(
@@ -253,6 +294,45 @@ def test_market_calendar_populated_response_requires_every_source_field(
     assert exc_info.value.code == "malformed-response"
 
 
+@pytest.mark.parametrize(
+    ("kind", "source_field", "replacement"),
+    [
+        ("earnings", "startdatetime", 1_784_524_800),
+        ("splits", "optionable", "true"),
+    ],
+)
+def test_market_calendar_translates_polars_type_drift(
+    monkeypatch: pytest.MonkeyPatch,
+    kind: str,
+    source_field: str,
+    replacement: object,
+) -> None:
+    """Wrong Yahoo cell types retain the public malformed-response contract."""
+
+    payload = json.loads(_body(kind))
+    document = payload["finance"]["result"][0]["documents"][0]
+    column_index = next(
+        index
+        for index, column in enumerate(document["columns"])
+        if column["id"] == source_field
+    )
+    for row in document["rows"]:
+        row[column_index] = replacement
+    fake = _FakeClient(json.dumps(payload))
+    monkeypatch.setattr(core, "_get_client", lambda: fake)
+
+    with pytest.raises(YahooApiError) as exc_info:
+        api.market_calendar(
+            kind,  # pyright: ignore[reportArgumentType]
+            start_date="2026-07-20",
+            end_date="2026-08-15",
+            limit=5,
+        )
+
+    assert exc_info.value.code == "malformed-response"
+    assert isinstance(exc_info.value.__cause__, pl.exceptions.PolarsError)
+
+
 def test_market_calendar_help_documents_kinds_schemas_and_window(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
@@ -273,6 +353,7 @@ def test_market_calendar_help_documents_kinds_schemas_and_window(
     assert "--region" in output
     assert "--format {json,parquet}" in output
     assert "eps_surprise_percent" in output
+    assert "country_code" in output
     assert "old_share_worth" in output
     assert "inclusive" in output
     assert "use visualization for custom fields and filters" in output
