@@ -526,9 +526,7 @@ matches = yoghurt.search(
     quotes_count=5,
     include_research_reports=True,
 )
-symbols = [
-    match.symbol for match in matches.quotes if match.symbol is not None
-]
+symbols = [match.symbol for match in matches.quotes if match.symbol is not None]
 
 page = yoghurt.lookup("Apple", type="equity", count=25)
 equities = page.documents

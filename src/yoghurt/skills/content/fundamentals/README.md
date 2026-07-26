@@ -8,7 +8,9 @@ and the fundamentals timeseries endpoint.
 ```python
 from yoghurt import Ticker
 
-summary = Ticker("AAPL").quote_summary(modules=["price", "summaryDetail", "financialsTemplate"])
+summary = Ticker("AAPL").quote_summary(
+    modules=["price", "summaryDetail", "financialsTemplate"]
+)
 ```
 
 `quote_summary()` returns a typed `QuoteSummary` with one optional field per
