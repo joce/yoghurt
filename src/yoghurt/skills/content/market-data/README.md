@@ -10,9 +10,7 @@ profiles, related news, saved lists, navigation, or research metadata:
 
 ```python
 matches = yoghurt.search("Appel", fuzzy=True, quotes_count=5)
-symbols = [
-    match.symbol for match in matches.quotes if match.symbol is not None
-]
+symbols = [match.symbol for match in matches.quotes if match.symbol is not None]
 ```
 
 Use `lookup()` for instrument-only, paged results with an optional asset-type

@@ -274,10 +274,8 @@ def test_market_data_readme_search_and_lookup(
     search_snippets = [
         'matches = yoghurt.search("Appel", fuzzy=True, quotes_count=5)',
         (
-            "symbols = [\n"
-            "    match.symbol for match in matches.quotes "
-            "if match.symbol is not None\n"
-            "]"
+            "symbols = [match.symbol for match in matches.quotes "
+            "if match.symbol is not None]"
         ),
     ]
     for snippet in search_snippets:
@@ -398,8 +396,9 @@ def test_fundamentals_readme_quote_summary(monkeypatch: pytest.MonkeyPatch) -> N
     """fundamentals/README.md: ``quote_summary(modules=[...])``."""
 
     snippet = (
-        'summary = Ticker("AAPL").quote_summary('
-        'modules=["price", "summaryDetail", "financialsTemplate"])'
+        'summary = Ticker("AAPL").quote_summary(\n'
+        '    modules=["price", "summaryDetail", "financialsTemplate"]\n'
+        ")"
     )
     _assert_in_content("fundamentals", "README.md", snippet)
 
