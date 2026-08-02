@@ -8,105 +8,9 @@
 
 Yahoo!-Originated Graphs, Histories, Updates, Returns & Tickers.
 
-Yoghurt brings Yahoo Finance's HTTP endpoints to the command line and to
-Python. It is built for scripts, agents, and quick terminal work that needs
-the JSON returned by Yahoo's finance endpoints.
-
-The endpoint CLI stays deliberately close to the source: it prints Yahoo's
-response bodies as-is and adds no discovery API beyond CLI help. The derived
-`history`, `financial-analysis`, and `market-calendar` commands instead emit
-analysis-ready tables. The library layer (below) models responses as typed
-pydantic structures or typed frames.
-
-## Library
-
-Yoghurt is also an importable, typed Python library:
-
-```python
-import yoghurt
-
-bars = yoghurt.Ticker("AAPL").chart(interval="1d").to_polars()
-history = yoghurt.history(["AAPL", "MSFT"], period="1y").to_polars()
-earnings = yoghurt.market_calendar("earnings").to_polars()
-quote = yoghurt.Ticker("AAPL").quote()
-matches = yoghurt.search("Apple", quotes_count=5)
-analysis = yoghurt.Ticker("AAPL").financial_analysis()
-income_statement = analysis.income_statement.to_polars()
-tech = yoghurt.screener(
-    "SELECT ticker, intradaymarketcap FROM EQUITY "
-    "WHERE region = 'us' AND sector = 'Technology' "
-    "ORDER BY intradaymarketcap DESC LIMIT 25"
-).to_polars()
-```
-
-Three tiers, all sharing one Yahoo session (cookies and crumb cached exactly
-like the CLI):
-
-1. **Typed** — `Ticker` methods and module-level functions.
-   `market_calendar()`, `screener()`, and `visualization()` return a `Frame`
-   with `to_polars()`, `to_pandas()`
-   (`pip install yoghurt[pandas]`), `to_arrow()`, `to_dicts()`, and
-   `save_parquet()`. The calendar has a stable schema for each kind; the two
-   SQL-flavored DSLs use caller-chosen,
-   dynamic column lists, so their row shape is a table, not a fixed
-   pydantic model, by design. `chart`/`spark` return `Chart`/`Spark` (also
-   `Frame` subclasses) whose `.meta` is typed `ChartMeta` (pydantic) and
-   whose `.events` is typed `ChartEvents` when the response carries one.
-   `Ticker.history()` and module-level `history()` return a `History` frame:
-   long-form corporate-action-adjusted OHLCV for one or more symbols.
-   `Ticker.timeseries()` returns `Timeseries`: four typed frames
-   (fundamentals, geographic segments, economic events, analyst ratings)
-   plus `empty_types`/`unrecognized_types` bookkeeping. `Ticker.quote()`/
-   `quotes()` return `Quote` (pydantic) models. `Ticker.options()` returns
-   a typed `OptionChain` (pydantic), including the underlying security's
-   `Quote`. `Ticker.quote_summary()` returns a typed `QuoteSummary`
-   (pydantic), with one optional field per requested-and-applicable
-   `quote-summary` module (41 total, all typed).
-   `Ticker.financial_analysis()` deliberately combines those two retrieval
-   paths into a frozen `FinancialAnalysis` bundle of 17 stable statement,
-   valuation, analyst, growth, and ownership frames; inapplicable tables keep
-   their schemas and contain zero rows. Every other `Ticker`
-   method and market-wide/introspection function (`quote_type`,
-   `calendar_events`, `recommendations`, `stock_recommender`,
-   `price_insights`, `insights`, `analyst`, `ratings_top`, `trending`,
-   `market_summary`, `market_info`, `market_time`, `sector`,
-   `search`, `lookup`,
-   `screener_predefined`, `screener_instrument_fields`,
-   `timeseries_fields`, `screener_discover`) returns its own typed
-   pydantic model.
-2. **Parsed raw** — `yoghurt.raw(path, params)` for any Yahoo query path.
-3. **Raw async** — `yoghurt.YahooClient`, the async client the CLI itself
-   uses.
-
-Errors follow one contract: symbol lookups raise `SymbolNotFoundError`
-(carrying `.symbol`), Yahoo-reported failures raise `YahooApiError`
-(`.code`, `.description`), queries with zero matches return empty
-collections/frames,
-and transport failures raise `YahooRequestError` or `YahooUnavailableError`.
-The library never prints and never prompts; `yoghurt.configure(...)` adjusts
-session-cache behavior before first use.
-
-### Pandas-wide history
-
-Multi-symbol history is long-form by default. Pivot it after conversion when
-an analysis needs a timestamp-by-symbol Pandas matrix, such as portfolio
-returns or correlations:
-
-```python
-wide = (
-    yoghurt.history(["AAPL", "MSFT"], period="1y")
-    .to_pandas()
-    .pivot(
-        index="ts",
-        columns="symbol",
-        values=["open", "high", "low", "close", "volume"],
-    )
-)
-```
-
-This produces hierarchical `(field, symbol)` columns without adding a second
-history return shape. Keep the long-form table for per-symbol processing such
-as TA-Lib.
+Yoghurt brings Yahoo Finance data to Python, agents, and the command line.
+Use the CLI when you want Yahoo's raw JSON; use the typed Python API when you
+want models and analysis-ready tables.
 
 ## Features
 
@@ -387,6 +291,57 @@ Pass through a Yahoo query path directly:
 ```powershell
 uv run yoghurt raw /v7/finance/quote --param symbols=AAPL,MSFT --param formatted=true
 ```
+
+## Python library
+
+Yoghurt is also an importable, typed Python library. `Ticker` methods and
+module-level functions return typed pydantic models or analysis-ready frames;
+frames provide `to_polars()`, `to_pandas()` (`pip install yoghurt[pandas]`),
+`to_arrow()`, `to_dicts()`, and `save_parquet()`.
+
+```python
+import yoghurt
+
+bars = yoghurt.Ticker("AAPL").chart(interval="1d").to_polars()
+history = yoghurt.history(["AAPL", "MSFT"], period="1y").to_polars()
+earnings = yoghurt.market_calendar("earnings").to_polars()
+quote = yoghurt.Ticker("AAPL").quote()
+analysis = yoghurt.Ticker("AAPL").financial_analysis()
+income_statement = analysis.income_statement.to_polars()
+tech = yoghurt.screener(
+    "SELECT ticker, intradaymarketcap FROM EQUITY "
+    "WHERE region = 'us' AND sector = 'Technology' "
+    "ORDER BY intradaymarketcap DESC LIMIT 25"
+).to_polars()
+```
+
+Use `yoghurt.raw(path, params)` for any Yahoo query path without a dedicated
+typed wrapper. Symbol lookups raise `SymbolNotFoundError`, Yahoo-reported
+failures raise `YahooApiError`, empty queries return empty collections or
+frames, and transport failures raise `YahooRequestError` or
+`YahooUnavailableError`.
+
+### Pandas-wide history
+
+Multi-symbol history is long-form by default. Pivot it after conversion when
+an analysis needs a timestamp-by-symbol Pandas matrix, such as portfolio
+returns or correlations:
+
+```python
+wide = (
+    yoghurt.history(["AAPL", "MSFT"], period="1y")
+    .to_pandas()
+    .pivot(
+        index="ts",
+        columns="symbol",
+        values=["open", "high", "low", "close", "volume"],
+    )
+)
+```
+
+This produces hierarchical `(field, symbol)` columns without adding a second
+history return shape. Keep the long-form table for per-symbol processing such
+as TA-Lib.
 
 ## Parquet output
 
