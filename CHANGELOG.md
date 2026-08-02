@@ -6,6 +6,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-08-02
+
+Minor release adding analysis-ready history, financial analysis, instrument
+discovery, and market-wide event calendars.
+
 ### Added
 
 - Analysis-ready `Ticker.history()` and module-level `history()` APIs with a
@@ -14,12 +19,26 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   deliberately not applied.
 - A matching `yoghurt history` CLI command with period or explicit-date
   windows, the full chart interval set, JSON output, and Parquet export.
+- `Ticker.financial_analysis()` and `yoghurt financial-analysis`, combining
+  financial statements, valuation, analyst, growth, ownership, and insider
+  data into 17 schema-stable tables.
+- Typed `search()` and `lookup()` library functions plus raw-JSON CLI commands
+  for Yahoo Finance discovery and instrument lookup.
+- `market_calendar()` and `yoghurt market-calendar` for normalized earnings,
+  IPO, economic-event, and stock-split calendars with JSON or Parquet output.
 
 ### Changed
 
 - Raw `chart` retrieval now accepts Yahoo relative ranges and the broader
   interval vocabulary used by yfinance, while retaining its existing default
   three-day/minute window and typed metadata/events semantics.
+- Documentation now includes the standard Pandas pivot from long-form
+  multi-symbol history to aligned `(field, symbol)` columns.
+
+### Internal
+
+- Tracked text files are normalized to LF, with `.gitattributes` and
+  `.editorconfig` preserving the repository's formatting conventions.
 
 ## [0.4.2] - 2026-07-12
 
@@ -384,7 +403,8 @@ First PyPI release.
 - Reusable Yahoo session cache for faster one-shot calls.
 - `raw` escape hatch for query paths yoghurt doesn't model yet.
 
-[Unreleased]: https://github.com/joce/yoghurt/compare/v0.4.2...HEAD
+[Unreleased]: https://github.com/joce/yoghurt/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/joce/yoghurt/compare/v0.4.2...v0.5.0
 [0.4.2]: https://github.com/joce/yoghurt/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/joce/yoghurt/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/joce/yoghurt/compare/v0.3.3...v0.4.0
