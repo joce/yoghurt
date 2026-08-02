@@ -308,6 +308,11 @@ earnings = yoghurt.market_calendar("earnings").to_polars()
 quote = yoghurt.Ticker("AAPL").quote()
 analysis = yoghurt.Ticker("AAPL").financial_analysis()
 income_statement = analysis.income_statement.to_polars()
+tech = yoghurt.screener(
+    "SELECT ticker, intradaymarketcap FROM EQUITY "
+    "WHERE region = 'us' AND sector = 'Technology' "
+    "ORDER BY intradaymarketcap DESC LIMIT 25"
+).to_polars()
 ```
 
 Use `yoghurt.raw(path, params)` for any Yahoo query path without a dedicated
