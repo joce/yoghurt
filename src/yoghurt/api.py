@@ -1,10 +1,10 @@
 """Public synchronous yoghurt API.
 
 Yahoo's shared ``lang``/``region`` wire params ride their CommandSpec
-defaults; per-call overrides are deliberately unexposed (YAGNI — no caller
-has needed one; revisit if a real need appears). Parameter names mirror the
-CLI's command metadata, except booleans whose CLI flag inverts the wire
-value — those use the wire name so the kwarg's meaning matches its effect.
+defaults; per-call locale overrides are deliberately unexposed. Python
+parameters name their effects explicitly, including positive booleans where
+CLI switches invert the default wire value. The public signatures are the
+source of truth for accepted kwargs.
 """
 
 from __future__ import annotations
@@ -17,6 +17,10 @@ import polars as pl
 
 from yoghurt import _core
 from yoghurt._bridge import run
+from yoghurt._history import HISTORY_REQUEST_BATCH_SIZE
+from yoghurt._history import concat_frames as concat_history_frames
+from yoghurt._history import frame_from_chart_result as history_frame_from_result
+from yoghurt._history import request_values as history_request_values
 from yoghurt._market_calendar import (
     build_market_calendar_query,
     normalize_market_calendar,
@@ -30,10 +34,6 @@ from yoghurt.financial_analysis import (
     build_financial_analysis,
 )
 from yoghurt.frames import Chart, Frame, History, Spark, Timeseries
-from yoghurt.history import HISTORY_REQUEST_BATCH_SIZE
-from yoghurt.history import concat_frames as concat_history_frames
-from yoghurt.history import frame_from_chart_result as history_frame_from_result
-from yoghurt.history import request_values as history_request_values
 from yoghurt.models import (
     AnalystResult,
     CalendarEventsResult,
@@ -481,12 +481,15 @@ class Ticker:
 
         ``pad_time_series=True`` asks Yahoo to pad missing timeseries values.
 
-        Known Yahoo-side bug: requesting the ``spEarningsReleaseEvents``
-        type currently fails with ``YahooApiError`` (code
-        ``"malformed-response"``) because Yahoo serves invalid JSON for
-        this type — for every symbol, even when it is requested alone. A
-        request bundling it with other types fails wholesale, so keep it
-        out of ``type`` lists until Yahoo fixes the feed.
+        Historical AAPL requests for ``spEarningsReleaseEvents`` returned
+        malformed JSON in July 2026. Scoped September 5 requests recovered;
+        see the packaged fundamentals SHARP-EDGES note for dated evidence.
+        This bundle has no earnings-release frame. Populated earnings-release
+        results are recorded by type name in ``unrecognized_types``;
+        metadata-only results appear in ``empty_types``. Use ``raw()`` to
+        inspect the records.
+        If response corruption recurs, ``YahooApiError`` carries code
+        ``"malformed-response"``; retry with only the needed financial types.
 
         Returns:
             Timeseries: Four typed frames (fundamentals, geographic

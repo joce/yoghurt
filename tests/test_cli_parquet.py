@@ -10,8 +10,8 @@ from typing import TYPE_CHECKING, Any
 import polars as pl
 import pytest
 
+from yoghurt._history import HISTORY_REQUEST_BATCH_SIZE
 from yoghurt.cli import main
-from yoghurt.history import HISTORY_REQUEST_BATCH_SIZE
 
 from .test_cli import StubClient, assert_formatted_toggle_help
 

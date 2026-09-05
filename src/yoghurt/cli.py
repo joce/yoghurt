@@ -8,9 +8,10 @@ import json
 import logging
 import sys
 import textwrap
+from contextvars import ContextVar
 from importlib.resources import files
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Final, Protocol, TextIO, cast
+from typing import TYPE_CHECKING, Any, Final, Protocol, TextIO, TypeVar, cast, overload
 
 # ``override`` lives in :mod:`typing` from 3.12 and in
 # :mod:`typing_extensions` on older interpreters. typing_extensions
@@ -44,7 +45,7 @@ from yoghurt.skills import uninstall as skills_uninstall
 from yoghurt.types import MARKET_CALENDAR_KINDS
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Iterable, Sequence
 
     from yoghurt.frames import Frame
     from yoghurt.types import ParamValue
@@ -101,43 +102,63 @@ class _HelpFormatter(
         return f"{help_text} (default: %(default)s)"
 
 
-def _add_help_option(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument(
-        "-h",
-        "--help",
-        action="help",
-        default=argparse.SUPPRESS,
-        help="Show this help message and exit.",
-    )
-
-
+_Namespace = TypeVar("_Namespace")
+_HELP_VERBOSE: ContextVar[bool] = ContextVar("help_verbose", default=False)
 _VERBOSE_HELP_DOCS: Final[dict[str, str]] = {
+    "quote": "quote",
+    "timeseries": "timeseries",
+    "quote-summary": "quote-summary",
     "screener": "QUERY_DSL.md",
     "visualization": "QUERY_DSL.md",
 }
 
 
-class _VerboseHelpAction(argparse.Action):
-    """Print standard help, append the configured reference doc, then exit."""
+class _ArgumentParser(argparse.ArgumentParser):
+    """Share verbosity with nested help actions before argparse exits early."""
 
-    def __init__(
+    @overload
+    def parse_known_args(
         self,
-        option_strings: list[str],
-        dest: str = argparse.SUPPRESS,
-        default: object = argparse.SUPPRESS,
-        doc_filename: str = "",
-        help: str | None = None,  # ruff:ignore[builtin-argument-shadowing]
-    ) -> None:
-        """Store the doc filename and register the flag as a nargs=0 switch."""
+        args: Iterable[str] | None = None,
+        namespace: None = None,
+    ) -> tuple[argparse.Namespace, list[str]]: ...
 
-        super().__init__(
-            option_strings=option_strings,
-            dest=dest,
-            default=default,
-            nargs=0,
-            help=help,
+    @overload
+    def parse_known_args(
+        self,
+        args: Iterable[str] | None,
+        namespace: _Namespace,
+    ) -> tuple[_Namespace, list[str]]: ...
+
+    @overload
+    def parse_known_args(
+        self, *, namespace: _Namespace
+    ) -> tuple[_Namespace, list[str]]: ...
+
+    @override
+    def parse_known_args(
+        self,
+        args: Iterable[str] | None = None,
+        namespace: Any = None,
+    ) -> tuple[Any, list[str]]:
+        arguments = list(sys.argv[1:] if args is None else args)
+        options = arguments[: arguments.index("--")] if "--" in arguments else arguments
+        verbose = any(
+            value == "--verbose"
+            or (value.startswith("-") and set(value[1:]) <= {"h", "v"} and "v" in value)
+            for value in options
         )
-        self._doc_filename = doc_filename
+        token = _HELP_VERBOSE.set(_HELP_VERBOSE.get() or verbose)
+        try:
+            return super().parse_known_args(
+                arguments, namespace if namespace is not None else argparse.Namespace()
+            )
+        finally:
+            _HELP_VERBOSE.reset(token)
+
+
+class _HelpAction(argparse.Action):
+    """Print ordinary help and optionally its complete reference, then exit."""
 
     @override
     def __call__(
@@ -147,31 +168,34 @@ class _VerboseHelpAction(argparse.Action):
         values: Any,
         option_string: str | None = None,
     ) -> None:
-        """Print help, dump the doc, exit cleanly."""
-
         del namespace, values, option_string
         parser.print_help()
-        doc_text = (files("yoghurt.docs") / self._doc_filename).read_text(
-            encoding="utf-8"
-        )
-        sys.stdout.write("\n")
-        sys.stdout.write(doc_text)
-        if not doc_text.endswith("\n"):
-            sys.stdout.write("\n")
+        reference = _VERBOSE_HELP_DOCS.get(parser.prog.rsplit(" ", 1)[-1])
+        if _HELP_VERBOSE.get() and reference:
+            text = (
+                (files("yoghurt.docs") / reference).read_text(encoding="utf-8")
+                if reference.endswith(".md")
+                else _command_reference(COMMANDS_BY_NAME[reference])
+            )
+            sys.stdout.write("\n" + text.rstrip() + "\n")
         parser.exit()
 
 
-def _add_verbose_help_option(
-    parser: argparse.ArgumentParser, command_name: str
-) -> None:
-    doc_filename = _VERBOSE_HELP_DOCS.get(command_name)
-    if doc_filename is None:
-        return
+def _add_help_option(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
-        "--help-verbose",
-        action=_VerboseHelpAction,
-        doc_filename=doc_filename,
-        help="Show this help plus the full reference documentation and exit.",
+        "-h",
+        "--help",
+        action=_HelpAction,
+        nargs=0,
+        default=argparse.SUPPRESS,
+        help="Show this help message and exit.",
+    )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        default=argparse.SUPPRESS,
+        help="Enable debug logging, or show the full reference with --help.",
     )
 
 
@@ -207,7 +231,7 @@ def _reference_text(references: tuple[FieldReference, ...]) -> str:
     return "\n".join(lines)
 
 
-def _epilog_for_command(command: CommandSpec) -> str:
+def _command_reference(command: CommandSpec) -> str:
     field_reference = ""
     if command.field_reference:
         field_reference = (
@@ -228,16 +252,23 @@ def _epilog_for_command(command: CommandSpec) -> str:
     common_types = ""
     if command.common_types:
         common_types = "\n\nCommon --type values:\n  " + ", ".join(command.common_types)
+    return f"{reference_sections}{field_reference}{common_modules}{common_types}"
+
+
+def _epilog_for_command(command: CommandSpec) -> str:
+    compact = command.name in {"quote", "timeseries", "quote-summary"}
+    reference = (
+        f"\n\nRun `yoghurt {command.name} --help --verbose` for the full reference."
+        if compact
+        else _command_reference(command)
+    )
     notes = ""
     if command.notes:
         notes = "\n\nNotes:\n" + "\n".join(f"  {note}" for note in command.notes)
     return (
         f"Yahoo endpoint:\n  {command.yahoo_url}\n\n"
         f"Examples:\n{_examples_text(command.examples)}"
-        f"{reference_sections}"
-        f"{field_reference}"
-        f"{common_modules}"
-        f"{common_types}"
+        f"{reference}"
         f"{notes}"
     )
 
@@ -248,11 +279,6 @@ def _add_global_options(parser: argparse.ArgumentParser) -> None:
         action="version",
         version=f"yoghurt {__version__}",
         help="Show the program version and exit.",
-    )
-    parser.add_argument(
-        "--verbose",
-        action="store_true",
-        help="Enable debug logging to stderr.",
     )
     parser.add_argument(
         "--no-session-cache",
@@ -633,7 +659,7 @@ def build_parser() -> argparse.ArgumentParser:
         argparse.ArgumentParser: The configured root parser.
     """
 
-    parser = argparse.ArgumentParser(
+    parser = _ArgumentParser(
         prog="yoghurt",
         description=(
             "Expose Yahoo Finance endpoints to the command line and print raw "
@@ -645,6 +671,7 @@ def build_parser() -> argparse.ArgumentParser:
         add_help=False,
     )
     _add_help_option(parser)
+    parser.set_defaults(verbose=False)
     _add_global_options(parser)
     subparsers = parser.add_subparsers(
         title="commands",
@@ -661,7 +688,6 @@ def build_parser() -> argparse.ArgumentParser:
             add_help=False,
         )
         _add_help_option(command_parser)
-        _add_verbose_help_option(command_parser, command.name)
         _set_command_parser(command_parser, command)
         if command.name in _PARQUET_COMMANDS:
             _add_parquet_output_options(command_parser)
@@ -694,7 +720,6 @@ def build_parser() -> argparse.ArgumentParser:
                 add_help=False,
             )
             _add_help_option(visualization_parser)
-            _add_verbose_help_option(visualization_parser, "visualization")
             _add_query_command_options(visualization_parser, route="visualization")
             _add_parquet_output_options(visualization_parser)
 
@@ -711,7 +736,6 @@ def build_parser() -> argparse.ArgumentParser:
                 add_help=False,
             )
             _add_help_option(screener_parser)
-            _add_verbose_help_option(screener_parser, "screener")
             _add_query_command_options(screener_parser, route="screener")
             _add_parquet_output_options(screener_parser)
 
@@ -855,7 +879,7 @@ Yahoo endpoint:
 Grammar: SELECT cols FROM entities [WHERE expr] [ORDER BY field] [LIMIT n]
          AGGREGATE date_hist(field, 'interval') FROM entities [WHERE expr]
                    [JOIN BY field] [FILL ident] [LIMIT n]
-Run `yoghurt visualization --help-verbose` for the full DSL reference.
+Run `yoghurt visualization --help --verbose` for the full DSL reference.
 
 Examples:
   # Earnings calendar (sub-week, US, exclude OTC)
@@ -910,7 +934,7 @@ Yahoo endpoint:
   {YAHOO_FINANCE_QUERY_URL}/v1/finance/screener
 
 Grammar: SELECT cols FROM quote_type [WHERE expr] [ORDER BY field] [LIMIT n]
-Run `yoghurt screener --help-verbose` for the full DSL reference.
+Run `yoghurt screener --help --verbose` for the full DSL reference.
 
 Examples:
   # Large-cap technology screen
@@ -1154,7 +1178,7 @@ async def _dispatch_history(
         ValueError: If the symbol list or period/date arguments are invalid.
     """
 
-    from yoghurt.history import (  # ruff:ignore[import-outside-top-level]
+    from yoghurt._history import (  # ruff:ignore[import-outside-top-level]
         HISTORY_REQUEST_BATCH_SIZE,
         concat_frames,
         frame_from_chart_result,

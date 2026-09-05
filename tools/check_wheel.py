@@ -32,4 +32,11 @@ assert content.joinpath("SKILL.md").read_text(encoding="utf-8")
 for domain in ("analysis", "dataframes", "fundamentals", "market-data", "queries"):
     for name in ("README.md", "SHARP-EDGES.md"):
         assert content.joinpath(domain).joinpath(name).read_text(encoding="utf-8")
+assert "<!-- BEGIN GENERATED PYTHON REFERENCE -->" in content.joinpath(
+    "dataframes/README.md"
+).read_text(encoding="utf-8")
+for domain in ("queries", "dataframes", "fundamentals"):
+    assert "## Workflow:" in content.joinpath(domain).joinpath("README.md").read_text(
+        encoding="utf-8"
+    )
 print("Installed wheel imports and bundled resources verified.")

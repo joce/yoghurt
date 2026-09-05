@@ -92,3 +92,15 @@ def test_py_typed_ships_in_wheel(tmp_path: Path) -> None:
     assert len(wheels) == 1
     with zipfile.ZipFile(wheels[0]) as wheel:
         assert "yoghurt/py.typed" in wheel.namelist()
+
+
+def test_history_remains_callable_after_ticker_import() -> None:
+    """Lazy Ticker loading must not shadow the public history function."""
+    subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            "import yoghurt; yoghurt.Ticker; assert callable(yoghurt.history)",
+        ],
+        check=True,
+    )

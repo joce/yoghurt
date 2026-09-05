@@ -3,6 +3,7 @@
 import json
 from datetime import datetime
 from pathlib import Path
+from typing import cast
 
 import pytest
 
@@ -12,6 +13,9 @@ from tools.probe import (
     INVALID_SYMBOL,
     SYMBOLS,
     ProbeCase,
+    _check_claims,  # pyright: ignore[reportPrivateUsage]
+    _claim_cases,  # pyright: ignore[reportPrivateUsage]
+    _classify_claim_response,  # pyright: ignore[reportPrivateUsage]
     _contract_cases,  # pyright: ignore[reportPrivateUsage]
     _cross_asset_cases,  # pyright: ignore[reportPrivateUsage]
     _first_contract_symbol,  # pyright: ignore[reportPrivateUsage]
@@ -21,6 +25,9 @@ from tools.probe import (
     _timeseries_all_type_cases,  # pyright: ignore[reportPrivateUsage]
     build_cases,
     sanitize,
+)
+from tools.probe import (
+    main as probe_main,
 )
 from yoghurt.cli import build_parser
 from yoghurt.commands import COMMANDS_BY_NAME
@@ -399,3 +406,153 @@ def test_contract_cases_cover_quote_endpoints() -> None:
     for case in cases:
         assert case.case == "OPTION_CONTRACT"
         assert "AAPL260117C00200000" in case.argv
+
+
+_CLAIM_CASE_COUNT = 4
+_ARGPARSE_ERROR = 2
+_CLAIMS = Path(__file__).parents[1] / "fixtures/corpus/claims"
+
+
+@pytest.mark.parametrize(("case", "expected"), _claim_cases())
+def test_claim_baseline_matches_real_capture(
+    case: ProbeCase, expected: dict[str, object]
+) -> None:
+    """Dated expected counts/classifications match captured Yahoo bodies."""
+    args = build_parser().parse_args(case.argv)
+    body = (_CLAIMS / f"{case.case}.json").read_text(encoding="utf-8")
+    assert _classify_claim_response(body, tuple(args.type.split(","))) == expected
+
+
+def test_claim_classifier_preserves_historical_malformed_evidence() -> None:
+    """A successful HTTP status cannot hide the July malformed response."""
+    body = (_CLAIMS.parent / "timeseries/AAPL_types_00.json").read_text(
+        encoding="utf-8"
+    )
+    assert _classify_claim_response(body, ("spEarningsReleaseEvents",)) == {
+        "status": "malformed_json"
+    }
+
+
+def test_claim_classifier_detects_missing_family_among_populated_results() -> None:
+    """Revenue success does not conceal missing earnings in a mixed request."""
+    payload = json.loads((_CLAIMS / "AAPL_mixed.json").read_text(encoding="utf-8"))
+    payload["timeseries"]["result"] = payload["timeseries"]["result"][1:]
+    actual = _classify_claim_response(
+        json.dumps(payload), ("spEarningsReleaseEvents", "quarterlyTotalRevenue")
+    )
+    assert actual["families"] == {
+        "spEarningsReleaseEvents": {
+            "status": "missing_or_duplicate",
+            "observations": 0,
+        },
+        "quarterlyTotalRevenue": {"status": "populated", "observations": 2},
+    }
+
+
+@pytest.mark.parametrize("replacement", [[], [None], {}, ["invalid"]])
+def test_claim_classifier_distinguishes_empty_and_invalid_rows(
+    replacement: object,
+) -> None:
+    """An empty or invalid observation array is not metadata-only success."""
+    payload = json.loads((_CLAIMS / "SPY_earnings.json").read_text(encoding="utf-8"))
+    payload["timeseries"]["result"][0]["spEarningsReleaseEvents"] = replacement
+    actual = _classify_claim_response(json.dumps(payload), ("spEarningsReleaseEvents",))
+    expected_status = (
+        "empty_observations" if replacement in ([], [None]) else "unexpected_shape"
+    )
+    assert actual["families"] == {
+        "spEarningsReleaseEvents": {"status": expected_status, "observations": 0}
+    }
+
+
+class _ClaimClient(_FakeClient):
+    """Replay the exact dated claim responses through the CLI dispatcher."""
+
+    async def get(
+        self,
+        path: str,
+        params: dict[str, ParamValue],
+        *,
+        use_crumb: bool = True,
+        base_url: str | None = None,
+    ) -> str:
+        """Return the requested real capture."""
+        del use_crumb, base_url
+        if self._error is not None:
+            raise self._error
+        suffix = "mixed" if "," in str(params["type"]) else "earnings"
+        symbol = path.rsplit("/", 1)[-1]
+        return (_CLAIMS / f"{symbol}_{suffix}.json").read_text(encoding="utf-8")
+
+
+async def test_claim_report_matches_all_families(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """All four fixed requests match without changing the corpus."""
+    monkeypatch.setattr("tools.probe.POLITENESS_DELAY_SECONDS", 0)
+    report = await _check_claims(_ClaimClient())
+    assert report["changed"] == 0
+    assert report["baseline_date"] == "2026-09-05"
+    cases = report["cases"]
+    assert isinstance(cases, list)
+    assert len(cast("list[object]", cases)) == _CLAIM_CASE_COUNT
+
+
+def test_claim_report_entrypoint_writes_only_report(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Opt-in checks write safe comparison JSON, with no raw response or secrets."""
+    report_path = tmp_path / "report.json"
+    client = _ClaimClient()
+    monkeypatch.setattr("tools.probe.YahooClient", lambda: client)
+    monkeypatch.setattr("tools.probe.POLITENESS_DELAY_SECONDS", 0)
+    monkeypatch.setattr("sys.argv", ["probe", "--claims", "--report", str(report_path)])
+    assert probe_main() == 0
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    assert report["changed"] == 0
+    assert client.closed
+    assert list(tmp_path.iterdir()) == [report_path]
+    assert "epsActual" not in report_path.read_text(encoding="utf-8")
+
+
+def test_claim_report_rejects_historical_corpus_destination(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A typo cannot overwrite historical evidence with a new report."""
+    monkeypatch.setattr(
+        "sys.argv", ["probe", "--claims", "--report", str(_CLAIMS / "AAPL_mixed.json")]
+    )
+    with pytest.raises(SystemExit) as result:
+        probe_main()
+    assert result.value.code == _ARGPARSE_ERROR
+
+
+def test_claim_classifier_yahoo_error_uses_corpus() -> None:
+    """Yahoo rejection stays distinct from empty or malformed responses."""
+    source = json.loads(
+        (_CLAIMS.parent / "quote-summary/ZZZZXYZQ.json").read_text(encoding="utf-8")
+    )
+    body = json.dumps({"timeseries": source["quoteSummary"]})
+    assert _classify_claim_response(body, ("spEarningsReleaseEvents",)) == {
+        "status": "yahoo_error"
+    }
+
+
+def test_claim_report_changes_fail_without_leaking_errors(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Changed responses fail the command and omit error URLs/bodies."""
+    report_path = tmp_path / "changed.json"
+    error = YahooRequestError(
+        _HTTP_NOT_FOUND, "https://example.test/private", body="sensitive-body"
+    )
+    client = _ClaimClient(error=error)
+    monkeypatch.setattr("tools.probe.YahooClient", lambda: client)
+    monkeypatch.setattr("tools.probe.POLITENESS_DELAY_SECONDS", 0)
+    monkeypatch.setattr("sys.argv", ["probe", "--claims", "--report", str(report_path)])
+    assert probe_main() == 1
+    text = report_path.read_text(encoding="utf-8")
+    assert json.loads(text)["changed"] == _CLAIM_CASE_COUNT
+    assert "http_error" in text
+    assert "sensitive-body" not in text
+    assert "example.test" not in text

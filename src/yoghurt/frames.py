@@ -155,10 +155,8 @@ class Timeseries:
     instead of being silently eaten.
     """
 
-    # ponytail: no unmodeled-dict field here. The only known-unreachable
-    # family is spEarningsReleaseEvents, which fails upstream at JSON parse
-    # (Yahoo serves invalid JSON for that type), so nothing survives to
-    # store. If Yahoo ever fixes that feed, add a dedicated frame for it.
+    # ponytail: earnings-release rows have no dedicated frame; their type is
+    # reported in unrecognized_types. Use raw() until a typed frame is needed.
     fundamentals: Frame
     geographic_segments: Frame
     economic_events: Frame

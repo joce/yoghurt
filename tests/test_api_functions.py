@@ -12,10 +12,10 @@ import pytest
 
 import yoghurt._core as core
 from yoghurt import api
+from yoghurt._history import HISTORY_REQUEST_BATCH_SIZE
 from yoghurt.commands import COMMANDS_BY_NAME
 from yoghurt.exceptions import YahooApiError
 from yoghurt.frames import Frame, History
-from yoghurt.history import HISTORY_REQUEST_BATCH_SIZE
 from yoghurt.models import (
     LookupResult,
     MarketInfoResult,

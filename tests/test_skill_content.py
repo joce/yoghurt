@@ -22,15 +22,19 @@ Two families of tests live here:
 
 from __future__ import annotations
 
+import json
 import re
+import runpy
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+import polars as pl
 import pytest
 
 import yoghurt
 import yoghurt._core as core
 from yoghurt.api import Ticker, screener, visualization
+from yoghurt.cli import build_parser
 
 if TYPE_CHECKING:
     from typing import Any
@@ -663,16 +667,10 @@ def test_queries_sharp_edges_splits_snippet(monkeypatch: pytest.MonkeyPatch) -> 
 
 
 def test_fundamentals_sharp_edges_sp_earnings_release_events_snippet() -> None:
-    """fundamentals/SHARP-EDGES.md's "wrong way" snippet: verbatim-only.
+    """Preserve the historical failing combination as an audit example.
 
-    This snippet demonstrates broken usage (a Yahoo-side malformed-JSON
-    failure for ``spEarningsReleaseEvents``) -- it is pinned as text only,
-    not executed, since the point is that it *should* raise rather than
-    return usable data. ``tests/fixtures/corpus/README.md`` documents the
-    permanent malformed-response evidence (``timeseries/AAPL_types_00.json``
-    is kept as a non-parsing capture); the ``"malformed-response"``
-    ``YahooApiError`` behavior itself is already pinned in
-    ``tests/test_api_ticker.py`` and ``tests/test_core_envelope.py``.
+    The July capture was malformed; scoped September requests recovered.
+    This test pins the documented request, not a permanent Yahoo failure.
     """
 
     snippet = (
@@ -691,3 +689,130 @@ def test_skill_md_two_surfaces_chart_snippet(monkeypatch: pytest.MonkeyPatch) ->
     _install_fake(monkeypatch, _corpus_text("chart/_GSPC.json"))
     bars = yoghurt.Ticker("^GSPC").chart(interval="1d").to_polars()
     assert bars.height > 0
+
+
+def test_generated_python_reference_is_current() -> None:
+    """The shipped signature cache matches the implementation."""
+    generator = runpy.run_path(
+        str(CONTENT.parents[3] / "tools/generate_python_reference.py")
+    )
+    expected = generator["_render_reference"]()
+    assert expected in (CONTENT / "dataframes/README.md").read_text(encoding="utf-8")
+
+
+_WORKFLOW_LIMIT = 5
+_FINANCIAL_EXPORT_COUNT = 3
+
+
+class _WorkflowClient(_FakeClient):
+    """Route complete recipes through real corpus response shapes."""
+
+    def __init__(self) -> None:
+        super().__init__("")
+        self.calls: list[tuple[str, dict[str, ParamValue]]] = []
+
+    async def get(
+        self,
+        path: str,
+        params: dict[str, ParamValue],
+        *,
+        use_crumb: bool = True,
+        base_url: str | None = None,
+    ) -> str:
+        """Return the corpus body for this endpoint."""
+        del use_crumb, base_url
+        self.calls.append((path, params))
+        if "fundamentals-timeseries" in path:
+            results = []
+            for number in (1, 2, 3):
+                body = json.loads(_corpus_text(f"timeseries/AAPL_types_0{number}.json"))
+                results.extend(body["timeseries"]["result"])
+            return json.dumps({"timeseries": {"result": results, "error": None}})
+        if "quoteSummary" in path:
+            return _corpus_text("quote-summary/AAPL.json")
+        if "/chart/" in path:
+            return _corpus_text(f"chart/{path.rsplit('/', 1)[-1]}.json")
+        if "search" in path:
+            return _corpus_text("search/Appel_fuzzy.json")
+        if "screener" in path:
+            return _corpus_text("screener-instrument-fields/equity.json")
+        return _corpus_text("quote/AAPL_default.json")
+
+    async def post(
+        self,
+        path: str,
+        params: dict[str, ParamValue],
+        json_body: dict[str, Any],
+        *,
+        use_crumb: bool = True,
+        base_url: str | None = None,
+    ) -> str:
+        """Assert the bounded screen before returning its corpus response."""
+        del use_crumb, base_url
+        self.calls.append((path, params))
+        assert params["formatted"] is False
+        assert json_body["size"] == _WORKFLOW_LIMIT
+        return _corpus_text("screener/equity_us_tech.json")
+
+
+@pytest.mark.parametrize("domain", ["queries", "dataframes", "fundamentals"])
+def test_complete_workflow(
+    domain: str, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Execute the canonical main recipe and verify exports and semantics."""
+    fake = _WorkflowClient()
+    monkeypatch.setattr(core, "_get_client", lambda: fake)
+    monkeypatch.chdir(tmp_path)
+    text = (CONTENT / domain / "README.md").read_text(encoding="utf-8")
+    workflow = text.split("## Workflow:", 1)[1].split("\n## ", 1)[0]
+    snippet = re.findall(r"```python\n(.*?)```", workflow, re.DOTALL)[0]
+    namespace: dict[str, Any] = {}
+    code = compile(snippet, f"{domain}/README.md", "exec")
+    exec(code, namespace)  # ruff:ignore[exec-builtin] - trusted recipe.
+    outputs = list(tmp_path.glob("*.parquet"))
+    assert outputs
+    assert all(pl.read_parquet(path).width > 0 for path in outputs)
+    if domain == "dataframes":
+        returns = pl.read_parquet(tmp_path / "returns.parquet")
+        for group in returns.partition_by("symbol"):
+            assert group["return"][0] is None
+            assert group["return"][1] == pytest.approx(
+                group["close"][1] / group["close"][0] - 1
+            )
+        assert {
+            params["range"] for path, params in fake.calls if "/chart/" in path
+        } == {"1y"}
+        pytest.importorskip("pyarrow")
+        continuation = re.findall(r"```python\n(.*?)```", workflow, re.DOTALL)[1]
+        exec(continuation, namespace)  # ruff:ignore[exec-builtin] - trusted recipe.
+        wide = pl.read_parquet(tmp_path / "close_wide.parquet")
+        assert {"AAPL", "MSFT"}.issubset(wide.columns)
+    elif domain == "fundamentals":
+        assert namespace["trading_currency"] == "USD"
+        assert namespace["reporting_currencies"] == ["USD"]
+        assert len(outputs) == _FINANCIAL_EXPORT_COUNT
+    else:
+        assert namespace["identity"].symbol == "AAPL"
+        assert namespace["quotes"]
+
+
+def test_documented_boolean_surface_mapping(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Documented positive Python kwargs map to inverted CLI switches."""
+    fake = _WorkflowClient()
+    monkeypatch.setattr(core, "_get_client", lambda: fake)
+    Ticker("AAPL").quote(include_private_companies=False)
+    assert fake.calls[-1][1]["enablePrivateCompany"] is False
+    assert fake.calls[-1][1]["formatted"] is False
+    Ticker("AAPL").timeseries(pad_time_series=False)
+    assert fake.calls[-1][1]["padTimeSeries"] is False
+    parser = build_parser()
+    quote_args = parser.parse_args(
+        ["quote", "AAPL", "--disable-private-company", "--formatted"]
+    )
+    assert quote_args.enablePrivateCompany is False
+    assert quote_args.formatted is True
+    time_args = parser.parse_args(["timeseries", "AAPL", "--no-pad-time-series"])
+    assert time_args.padTimeSeries is False
+    invalid: Any = {"fields": ["regularMarketPrice"]}
+    with pytest.raises(TypeError):
+        Ticker("AAPL").quote(**invalid)

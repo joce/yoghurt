@@ -181,7 +181,7 @@ def test_quote_help_includes_endpoint_params_and_examples(
     """Endpoint help includes dense result context, params, and examples."""
 
     with pytest.raises(SystemExit) as exc_info:
-        main(["quote", "--help"])
+        main(["quote", "--help", "--verbose"])
 
     assert exc_info.value.code == 0
     captured = capsys.readouterr()
@@ -869,7 +869,7 @@ def test_quote_summary_help_includes_modules_and_probe_notes(
     """Quote summary help documents modules and live probe caveats."""
 
     with pytest.raises(SystemExit) as exc_info:
-        main(["quote-summary", "--help"])
+        main(["quote-summary", "--help", "--verbose"])
 
     assert exc_info.value.code == 0
     captured = capsys.readouterr()
@@ -1525,7 +1525,7 @@ def test_fundamentals_timeseries_help_includes_params_and_type_values(
     """Fundamentals timeseries help documents dates and observed type values."""
 
     with pytest.raises(SystemExit) as exc_info:
-        main(["timeseries", "--help"])
+        main(["timeseries", "--help", "--verbose"])
 
     assert exc_info.value.code == 0
     captured = capsys.readouterr()

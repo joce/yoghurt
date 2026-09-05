@@ -9,8 +9,31 @@
 Yahoo!-Originated Graphs, Histories, Updates, Returns & Tickers.
 
 Yoghurt brings Yahoo Finance data to Python, agents, and the command line.
-Use the CLI when you want Yahoo's raw JSON; use the typed Python API when you
-want models and analysis-ready tables.
+Endpoint CLI commands preserve Yahoo's response bodies exactly. The typed
+Python API validates responses; explicit derived operations provide adjusted
+history and financial tables, with Polars, pandas, Arrow, and Parquet conversions.
+
+| Choose | When |
+| --- | --- |
+| Endpoint CLI | Preserve or inspect Yahoo JSON. |
+| Typed Python | Work with models, typed errors, or analysis tables. |
+| `raw()` / `raw` | Send wire parameters or reach an endpoint without a wrapper. |
+
+See the [Python reference](src/yoghurt/skills/content/dataframes/README.md#python-reference)
+for callable signatures and the [workflow recipes](#workflows) for complete examples.
+
+## Workflows
+
+- [Discover, screen, inspect, export](src/yoghurt/skills/content/queries/README.md#workflow-discover-screen-inspect-export): resolve the listing, inspect field metadata, bound a query, and save candidates.
+- [Adjusted history and returns](src/yoghurt/skills/content/dataframes/README.md#workflow-adjusted-history-and-returns): calculate returns within each symbol, optionally pivot to pandas, and export.
+- [Financial tables and currencies](src/yoghurt/skills/content/fundamentals/README.md#workflow-financial-tables-and-currencies): choose bundle tables and preserve units and missing values.
+
+Known limitations and their evidence live alongside the recipes:
+[market data](src/yoghurt/skills/content/market-data/SHARP-EDGES.md),
+[fundamentals](src/yoghurt/skills/content/fundamentals/SHARP-EDGES.md),
+[queries](src/yoghurt/skills/content/queries/SHARP-EDGES.md),
+[analysis](src/yoghurt/skills/content/analysis/SHARP-EDGES.md), and
+[conversions](src/yoghurt/skills/content/dataframes/SHARP-EDGES.md).
 
 ## Features
 
@@ -477,8 +500,9 @@ uv run yoghurt timeseries --help
 ```
 
 Endpoint help is the primary documentation surface. It shows Yahoo's target
-endpoint, accepted parameters, defaults, examples, and common open-ended values
-where available.
+endpoint, accepted parameters, defaults, and representative examples. For quote
+fields, quote-summary modules, and timeseries types, use `--help --verbose` to
+append the complete reference.
 
 ### Search and lookup
 
@@ -649,8 +673,9 @@ requests run, `period2` defaults to the current Unix timestamp when omitted, and
 yoghurt rejects windows where `period2` is not greater than `period1`. Supplying
 `period2` without `period1` is also rejected.
 
-Boolean parameters accept common true and false forms such as `true`, `false`,
-`1`, `0`, `yes`, and `no`.
+Boolean CLI options are switches: use `--formatted` or `--no-pad-time-series`
+without a value. Python accepts booleans under the documented parameter names.
+The wire-oriented `raw --param key=value` escape hatch accepts wire values.
 
 ## Session Cache
 

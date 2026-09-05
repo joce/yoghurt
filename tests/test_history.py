@@ -8,7 +8,7 @@ from typing import Any
 
 import pytest
 
-from yoghurt.history import frame_from_chart_result, request_values
+from yoghurt._history import frame_from_chart_result, request_values
 from yoghurt.tabular import TabularShapeError
 
 EXPECTED_FIRST_VOLUME = 1000
@@ -108,7 +108,7 @@ def test_history_request_resolves_omitted_end_once(
     """An explicit start gets one fixed end shared by every symbol batch."""
 
     expected_end = 1_800_000_000
-    monkeypatch.setattr("yoghurt.history.time", lambda: expected_end)
+    monkeypatch.setattr("yoghurt._history.time", lambda: expected_end)
 
     values = request_values(
         period=None,
