@@ -13,7 +13,10 @@ path never loads it.
 from __future__ import annotations
 
 import json
+import os
+import stat
 import tempfile
+from contextlib import ExitStack
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -207,19 +210,34 @@ def _write_frame(
             denied, etc.).
     """
 
-    temporary: Path | None = None
-    try:
+    try:  # ruff:ignore[too-many-statements-in-try-clause] - translate every filesystem failure.
         out_path.parent.mkdir(parents=True, exist_ok=True)
-        with tempfile.NamedTemporaryFile(dir=out_path.parent, delete=False) as stream:
-            temporary = Path(stream.name)
-        frame.write_parquet(temporary, compression="snappy", metadata=metadata)
-        temporary.replace(out_path)
+        try:
+            mode = stat.S_IMODE(out_path.stat().st_mode)
+        except FileNotFoundError:
+            mode = None
+        with ExitStack() as cleanup:
+            if os.name == "nt":
+                # Stage beside the target to retain Windows ACL inheritance.
+                with tempfile.NamedTemporaryFile(
+                    dir=out_path.parent, delete=False
+                ) as stream:
+                    temporary = Path(stream.name)
+                cleanup.callback(temporary.unlink, missing_ok=True)
+            else:
+                # A new file respects umask, while the private directory hides
+                # partial contents until the atomic replacement.
+                directory = cleanup.enter_context(
+                    tempfile.TemporaryDirectory(dir=out_path.parent)
+                )
+                temporary = Path(directory) / "data.parquet"
+            frame.write_parquet(temporary, compression="snappy", metadata=metadata)
+            if os.name != "nt" and mode is not None:
+                temporary.chmod(mode)
+            temporary.replace(out_path)
     except OSError as exc:
         message = f"failed to write Parquet file {out_path}: {exc}"
         raise ParquetWriterError(message) from exc
-    finally:
-        if temporary is not None:
-            temporary.unlink(missing_ok=True)
 
 
 def write_tabular_parquet(  # ruff:ignore[too-many-arguments] - keyword-only metadata.
