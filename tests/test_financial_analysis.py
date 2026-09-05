@@ -251,6 +251,19 @@ class _FakeClient:
         self.closed = True
 
 
+@pytest.mark.parametrize(
+    ("symbol", "currency"), [("BABA", "USD"), ("0700.HK", "HKD"), ("SHEL.L", "GBp")]
+)
+def test_price_targets_use_trading_currency(
+    monkeypatch: pytest.MonkeyPatch, symbol: str, currency: str
+) -> None:
+    """Cross-currency captures label target prices in the quote's currency."""
+    fake = _FakeClient(quote_summary_fixture=f"{symbol}.json")
+    monkeypatch.setattr(core, "_get_client", lambda: fake)
+    result = Ticker(symbol).financial_analysis()
+    assert result.analyst_price_targets.to_dicts()[0]["currency"] == currency
+
+
 def test_ticker_financial_analysis_uses_existing_retrievals(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -321,7 +334,7 @@ def test_ticker_financial_analysis_keeps_empty_schemas_for_an_etf(
 
     result = Ticker("SPY").financial_analysis()
 
-    assert fake.returned_quote_summary_modules == {"quoteType"}
+    assert fake.returned_quote_summary_modules == {"quoteType", "price"}
     for field in fields(result):
         table = getattr(result, field.name).to_polars()
         assert table.is_empty(), field.name

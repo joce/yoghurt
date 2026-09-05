@@ -143,7 +143,12 @@ from yoghurt.models.markets import (
     TrendingQuote,
     TrendingResult,
 )
-from yoghurt.models.options import OptionChain, OptionContract, OptionExpiration
+from yoghurt.models.options import (
+    OptionChain,
+    OptionContract,
+    OptionExpiration,
+    OptionStraddle,
+)
 from yoghurt.models.quote import CorporateAction, Quote
 from yoghurt.models.screener_meta import (
     NeoInvestmentIdeas,
@@ -390,6 +395,7 @@ __all__ = [
     "OptionChain",
     "OptionContract",
     "OptionExpiration",
+    "OptionStraddle",
     "OptionsAnalysis",
     "OptionsAnalysisKeyTakeaways",
     "OptionsAnalysisPcr",

@@ -489,6 +489,27 @@ class Quote(YahooModel):
     OPTION quotes.
     """
 
+    fullday_change: float | None = None
+    """
+    Full-session price change returned in options variant captures, 2026-09-05.
+
+    Observed on: EQUITY, ETF quotes.
+    """
+
+    fullday_change_percent: float | None = None
+    """
+    Full-session percentage change in options variant captures, 2026-09-05.
+
+    Observed on: EQUITY, ETF quotes.
+    """
+
+    fullday_price: float | None = None
+    """
+    Full-session price returned in options variant captures, 2026-09-05.
+
+    Observed on: EQUITY, ETF quotes.
+    """
+
     gmt_off_set_milliseconds: int
     """
     Offset from GMT of the exchange, in milliseconds.

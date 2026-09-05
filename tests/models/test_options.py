@@ -69,6 +69,8 @@ def test_option_chain_single_expiration_has_typed_calls_and_puts() -> None:
     assert len(chain.options) == 1
     expiration = chain.options[0]
     assert expiration.has_mini_options is False
+    assert expiration.calls is not None
+    assert expiration.puts is not None
     assert len(expiration.calls) > 0
     assert len(expiration.puts) > 0
 
@@ -96,6 +98,7 @@ def test_option_contract_expiration_equals_utc_date_of_raw_epoch() -> None:
     ).date()
 
     chain = OptionChain.model_validate(record)
+    assert chain.options[0].calls is not None
     call = chain.options[0].calls[0]
 
     assert call.expiration == expected
@@ -143,6 +146,7 @@ def test_option_contract_out_of_the_money_flag_varies() -> None:
     record = _load_chain("AAPL.json")
     chain = OptionChain.model_validate(record)
     calls = chain.options[0].calls
+    assert calls is not None
 
     otm_call = next(c for c in calls if c.strike == pytest.approx(_AAPL_OTM_STRIKE))
     assert otm_call.in_the_money is False
@@ -153,6 +157,7 @@ def test_option_contract_last_trade_date_is_aware_utc() -> None:
 
     record = _load_chain("AAPL.json")
     chain = OptionChain.model_validate(record)
+    assert chain.options[0].calls is not None
     call = chain.options[0].calls[0]
 
     assert call.last_trade_date.tzinfo == datetime.timezone.utc

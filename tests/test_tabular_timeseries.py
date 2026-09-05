@@ -129,6 +129,30 @@ def test_fundamentals_capture_row_counts_match_raw_json() -> None:
     assert tables.unrecognized_types == ()
 
 
+@pytest.mark.parametrize("types", ["annualRevenue", {}, [], None])
+def test_type_container_must_be_a_nonempty_list(types: object) -> None:
+    """Malformed metadata cannot become a first-character empty type."""
+    payload = _payload("AAPL_types_01.json")
+    payload["timeseries"]["result"][0]["meta"]["type"] = types
+    with pytest.raises(TabularShapeError, match=r"meta\.type"):
+        build_timeseries_frames(payload)
+
+
+@pytest.mark.parametrize("reported", [[], "invalid", 1])
+def test_reported_value_container_cannot_silently_become_null(reported: object) -> None:
+    """Malformed numeric wrappers raise instead of silently losing a value."""
+    payload = _payload("AAPL_types_01.json")
+    for entry in payload["timeseries"]["result"]:
+        type_name = entry["meta"]["type"][0]
+        for row in entry.get(type_name, []):
+            if isinstance(row, dict) and "reportedValue" in row:
+                row["reportedValue"] = reported
+                with pytest.raises(TabularShapeError, match="reportedValue"):
+                    build_timeseries_frames(payload)
+                return
+    pytest.fail("corpus fixture has no reportedValue to mutate")
+
+
 def test_fundamentals_value_spot_check() -> None:
     """reportedValue.raw lands in ``value``; fmt is dropped."""
 

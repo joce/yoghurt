@@ -5,10 +5,14 @@ Run from the repo root:  uv run python -m tools.probe
 Writes raw response bodies to tests/fixtures/corpus/<command>/<case>.json and
 a manifest.json describing every case (argv, status, timestamp). Re-running
 and diffing the corpus is the Yahoo schema-drift detector.
+
+For report-only earnings checks without changing the corpus:
+uv run python -m tools.probe --claims --report .tox/claims-report.json
 """
 
 from __future__ import annotations
 
+import argparse
 import asyncio
 import io
 import json
@@ -17,7 +21,7 @@ import sys
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Any, Final, cast
 
 from yoghurt._market_calendar import build_market_calendar_query
 from yoghurt.cli import _dispatch_command, build_parser
@@ -27,8 +31,6 @@ from yoghurt.exceptions import YahooRequestError, YoghurtError
 from yoghurt.types import MARKET_CALENDAR_KINDS
 
 if TYPE_CHECKING:
-    import argparse
-
     from yoghurt.cli import _YahooClientProtocol
 
 REPO_ROOT: Final[Path] = Path(__file__).resolve().parents[1]
@@ -221,12 +223,9 @@ def _chart_variant_cases() -> list[ProbeCase]:
     ]
 
 
-# Yahoo serves stable, systemic malformed JSON for spEarningsReleaseEvents
-# (every symbol, every re-probe, even requested alone): a request bundling it
-# with any other type fails wholesale at JSON parse. Quarantined out of the
-# all-types chunks below; analystRatings and economicEvents are event types
-# too but are individually clean, so they get their own dedicated cases
-# instead of riding in the bulk fundamentals sweep.
+# Keep event types in dedicated cases rather than the bulk fundamentals sweep.
+# Historical spEarningsReleaseEvents JSON corruption motivated that separation;
+# scoped September 2026 recovery does not establish every request combination.
 _QUARANTINED_EVENT_TYPES: Final[frozenset[str]] = frozenset(
     {"spEarningsReleaseEvents", "analystRatings", "economicEvents"}
 )
@@ -297,9 +296,8 @@ def _timeseries_all_type_cases() -> list[ProbeCase]:
                 p2,
             ),
         ),
-        # Requesting spEarningsReleaseEvents records Yahoo's own JSON
-        # corruption as manifest evidence (status "error", no file) on
-        # future full runs; that's intentional, not a probe bug.
+        # Retest spEarningsReleaseEvents after historical JSON corruption.
+        # Malformed bodies record status "error"; valid bodies are captured.
         ProbeCase(
             "timeseries",
             "AAPL_spEarnings",
@@ -964,13 +962,190 @@ async def _run_all(cases: list[ProbeCase], corpus_dir: Path) -> None:
         _write_manifest(manifest, len(manifest), corpus_dir)
 
 
-def main() -> int:
-    """Run the full probe.
+_CLAIM_BASELINE_DATE = "2026-09-05"
+_CLAIM_START = "2026-01-01"
+_CLAIM_EARNINGS = "spEarningsReleaseEvents"
+_CLAIM_REVENUE = "quarterlyTotalRevenue"
+
+
+def _claim_cases() -> list[tuple[ProbeCase, dict[str, object]]]:
+    cases: list[tuple[ProbeCase, dict[str, object]]] = []
+    for symbol in ("AAPL", "SPY"):
+        for suffix, types in (
+            ("earnings", (_CLAIM_EARNINGS,)),
+            ("mixed", (_CLAIM_EARNINGS, _CLAIM_REVENUE)),
+        ):
+            counts = (
+                {_CLAIM_EARNINGS: 3, _CLAIM_REVENUE: 2}
+                if symbol == "AAPL"
+                else dict.fromkeys(types, 0)
+            )
+            expected: dict[str, object] = {
+                "status": "valid",
+                "families": {
+                    name: {
+                        "status": "populated" if counts[name] else "metadata_only",
+                        "observations": counts[name],
+                    }
+                    for name in types
+                },
+            }
+            case = ProbeCase(
+                "timeseries",
+                f"{symbol}_{suffix}",
+                (
+                    "timeseries",
+                    symbol,
+                    "--type",
+                    ",".join(types),
+                    "--period1",
+                    _CLAIM_START,
+                    "--period2",
+                    _CLAIM_BASELINE_DATE,
+                ),
+            )
+            cases.append((case, expected))
+    return cases
+
+
+def _classify_claim_response(body: str, types: tuple[str, ...]) -> dict[str, object]:
+    """Classify requested families without exposing response data.
 
     Returns:
-        int: Process exit code.
+        dict[str, object]: Envelope status and per-family observation counts.
     """
+    try:
+        raw: object = json.loads(body)
+    except ValueError:
+        return {"status": "malformed_json"}
+    if not isinstance(raw, dict):
+        return {"status": "unexpected_shape"}
+    payload = cast("dict[str, Any]", raw)
+    if not isinstance(payload.get("timeseries"), dict):
+        return {"status": "unexpected_shape"}
+    envelope = cast("dict[str, Any]", payload["timeseries"])
+    if envelope.get("error") is not None:
+        return {"status": "yahoo_error"}
+    if not isinstance(envelope.get("result"), list):
+        return {"status": "unexpected_shape"}
+    results = cast("list[object]", envelope["result"])
+    return {
+        "status": "valid",
+        "families": {name: _classify_claim_family(results, name) for name in types},
+    }
 
+
+def _classify_claim_family(results: list[object], name: str) -> dict[str, str | int]:
+    matching: list[dict[str, Any]] = []
+    for item in results:
+        if not isinstance(item, dict):
+            continue
+        row = cast("dict[str, Any]", item)
+        meta = row.get("meta")
+        if isinstance(meta, dict) and cast("dict[str, Any]", meta).get("type") == [
+            name
+        ]:
+            matching.append(row)
+    if len(matching) != 1:
+        return {"status": "missing_or_duplicate", "observations": 0}
+    row = matching[0]
+    if name not in row:
+        return {"status": "metadata_only", "observations": 0}
+    if not isinstance(row[name], list):
+        return {"status": "unexpected_shape", "observations": 0}
+    values = cast("list[object]", row[name])
+    if any(value is not None and not isinstance(value, dict) for value in values):
+        return {"status": "unexpected_shape", "observations": 0}
+    count = sum(value is not None and value != {} for value in values)
+    return {
+        "status": "populated" if count else "empty_observations",
+        "observations": count,
+    }
+
+
+async def _check_claims(client: _YahooClientProtocol) -> dict[str, object]:
+    """Compare fixed requests with dated observations; never write the corpus.
+
+    Returns:
+        dict[str, object]: Safe comparison report with a count of changed cases.
+    """
+    parser = build_parser()
+    cases: list[dict[str, object]] = []
+    for case, expected in _claim_cases():
+        out = io.StringIO()
+        namespace = parser.parse_args(case.argv)
+        try:
+            await _dispatch_command(namespace, out, client)
+            actual = _classify_claim_response(
+                out.getvalue(), tuple(namespace.type.split(","))
+            )
+        except YahooRequestError as exc:
+            actual = {"status": "http_error", "http_status": exc.status_code}
+        except (YoghurtError, ValueError):
+            actual = {"status": "request_error"}
+        cases.append(
+            {
+                "case": case.case,
+                "argv": list(case.argv),
+                "expected": expected,
+                "actual": actual,
+                "changed": actual != expected,
+            }
+        )
+        await asyncio.sleep(POLITENESS_DELAY_SECONDS)
+    return {
+        "changed": sum(case["changed"] is True for case in cases),
+        "baseline_date": _CLAIM_BASELINE_DATE,
+        "checked_at": datetime.now(timezone.utc).isoformat(),
+        "cases": cases,
+    }
+
+
+async def _collect_claims() -> dict[str, object]:
+    client = YahooClient()
+    try:
+        return await _check_claims(client)
+    finally:
+        await client.aclose()
+
+
+def _write_claim_report(path: Path) -> int:
+    report = asyncio.run(_collect_claims())
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    changed = report["changed"] != 0
+    print(f"Claim report: {path} ({'changed' if changed else 'unchanged'})")
+    return int(changed)
+
+
+def main() -> int:
+    """Run a corpus refresh or opt-in, report-only claim checks.
+
+    Returns:
+        int: Zero for unchanged claims, one for changes, or corpus success.
+    """
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--claims",
+        action="store_true",
+        help="Check the four fixed earnings claims without updating the corpus.",
+    )
+    parser.add_argument(
+        "--report",
+        type=Path,
+        help="JSON claim report destination (required with --claims).",
+    )
+    args = parser.parse_args()
+    if args.claims:
+        if args.report is None:
+            parser.error("--claims requires --report PATH")
+        if args.report.resolve().is_relative_to(CORPUS_DIR.resolve()):
+            parser.error("Claim reports must be outside the historical corpus")
+        return _write_claim_report(args.report)
+    if args.report is not None:
+        parser.error("--report requires --claims")
     asyncio.run(_run_all(build_cases(), CORPUS_DIR))
     return 0
 

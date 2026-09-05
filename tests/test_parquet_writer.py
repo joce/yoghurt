@@ -3,6 +3,10 @@
 from __future__ import annotations
 
 import json
+import os
+import stat
+import subprocess  # ruff:ignore[suspicious-subprocess-import] - isolated permission tests.
+import sys
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
@@ -11,6 +15,7 @@ import pytest
 
 from yoghurt import __version__
 from yoghurt.exceptions import YoghurtError
+from yoghurt.frames import Frame
 from yoghurt.parquet_writer import (
     ParquetWriterError,
     write_chart_parquet,
@@ -966,3 +971,66 @@ def test_tabular_writer_visualization_total_rows_from_result(tmp_path: Path) -> 
     raw_meta = pl.read_parquet_metadata(out_path)
     meta = {k: v for k, v in raw_meta.items() if k != "ARROW:schema"}
     assert meta["total_rows"] == "742"
+
+
+@pytest.mark.skipif(os.name != "posix", reason="POSIX permission bits")
+@pytest.mark.parametrize("mask", [0o022, 0o077])
+def test_new_parquet_permissions_respect_umask(tmp_path: Path, mask: int) -> None:
+    """A child process sets its own umask; the writer never mutates ours."""
+    program = """
+import stat
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+import polars as pl
+from yoghurt.frames import Frame
+path = Path(sys.argv[1])
+Frame(pl.DataFrame({"x": [1]}), datetime.now(timezone.utc)).save_parquet(path)
+assert stat.S_IMODE(path.stat().st_mode) == 0o666 & ~int(sys.argv[2])
+"""
+    subprocess.run(  # ruff:ignore[subprocess-without-shell-equals-true] - fixed regression program.
+        [sys.executable, "-c", program, str(tmp_path / "rows.parquet"), str(mask)],
+        umask=mask,
+        check=True,
+    )
+
+
+@pytest.mark.skipif(os.name != "posix", reason="POSIX permission bits")
+@pytest.mark.parametrize("mode", [0o640, 0o664])
+def test_replacing_parquet_preserves_existing_permissions(
+    tmp_path: Path, mode: int
+) -> None:
+    """Replacing a readable shared export must keep its access mode."""
+    path = tmp_path / "rows.parquet"
+    path.write_bytes(b"old")
+    path.chmod(mode)
+    Frame(pl.DataFrame({"x": [1]}), datetime.now(timezone.utc)).save_parquet(path)
+    assert stat.S_IMODE(path.stat().st_mode) == mode
+    assert pl.read_parquet(path).to_dicts() == [{"x": 1}]
+    assert list(tmp_path.iterdir()) == [path]
+
+
+def test_parquet_success_replaces_and_cleans_staging(tmp_path: Path) -> None:
+    """Replacement and staging cleanup work on Windows as well as POSIX."""
+    path = tmp_path / "rows.parquet"
+    path.write_bytes(b"old")
+    Frame(pl.DataFrame({"x": [1]}), datetime.now(timezone.utc)).save_parquet(path)
+    assert pl.read_parquet(path).to_dicts() == [{"x": 1}]
+    assert list(tmp_path.iterdir()) == [path]
+
+
+@pytest.mark.skipif(os.name != "nt", reason="Windows read-only file semantics")
+def test_readonly_windows_target_failure_cleans_staging(tmp_path: Path) -> None:
+    """A denied replacement leaves the original read-only file and no staging."""
+    path = tmp_path / "rows.parquet"
+    path.write_bytes(b"old")
+    path.chmod(stat.S_IREAD)
+    try:
+        with pytest.raises(ParquetWriterError):
+            Frame(pl.DataFrame({"x": [1]}), datetime.now(timezone.utc)).save_parquet(
+                path
+            )
+        assert path.read_bytes() == b"old"
+        assert list(tmp_path.iterdir()) == [path]
+    finally:
+        path.chmod(stat.S_IREAD | stat.S_IWRITE)

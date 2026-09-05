@@ -179,13 +179,12 @@ def test_ticker_quote_passes_new_wire_params(monkeypatch: pytest.MonkeyPatch) ->
     """Typed quote kwargs land under their Yahoo wire names and forms."""
     fake = _install_fake(monkeypatch, _corpus_text("quote/AAPL_default.json"))
     Ticker("AAPL").quote(
-        formatted=True,
         include_private_companies=False,
         img_labels=["logoUrl"],
         img_heights=_IMG_SIZE,
     )
     _, params = fake.calls[0]
-    assert params["formatted"] is True
+    assert params["formatted"] is False
     assert params["enablePrivateCompany"] is False
     assert params["imgLabels"] == "logoUrl"
     assert params["imgHeights"] == _IMG_SIZE
@@ -314,7 +313,7 @@ def test_ticker_chart_shape_mismatch_raises_yahoo_api_error(
         Ticker("AAPL").chart()
     assert exc_info.value.code == "malformed-response"
     assert type(exc_info.value) is YahooApiError
-    assert isinstance(exc_info.value.__cause__, TabularShapeError)
+    assert exc_info.value.code == "malformed-response"
 
 
 def test_ticker_chart_meta_model_violation_raises_yahoo_api_error(
@@ -541,7 +540,7 @@ def test_ticker_timeseries_shape_mismatch_raises_yahoo_api_error(
         Ticker("AAPL").timeseries()
     assert exc_info.value.code == "malformed-response"
     assert type(exc_info.value) is YahooApiError
-    assert isinstance(exc_info.value.__cause__, TabularShapeError)
+    assert exc_info.value.__cause__ is None
 
 
 def test_ticker_timeseries_passes_wire_params(

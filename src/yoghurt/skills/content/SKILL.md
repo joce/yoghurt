@@ -35,9 +35,7 @@ uvx yoghurt quote AAPL
 typed errors, polars-backed frames.
 
 **CLI secondary:** shell one-offs and no-dependency contexts
-(`uvx yoghurt …`). Same command names as the library; flags mirror kwargs
-mechanically: `--start-date` ↔ `start_date=`, `--modules a,b` ↔
-`modules=["a", "b"]`. Endpoint commands print Yahoo's raw wire JSON to
+(`uvx yoghurt …`). Endpoint commands print Yahoo's raw wire JSON to
 stdout; the derived `history`, `financial-analysis`, and `market-calendar`
 commands instead emit analysis-ready rows. The library returns typed
 models/frames and raises typed errors.
@@ -76,13 +74,13 @@ exception.
 
 ## Parameters
 
-Do not guess parameter names or values. Run `yoghurt <command> --help` —
-it is generated, complete, and authoritative for both surfaces via the
-flag↔kwarg mirror rule.
-
-`search` and `lookup` expose `--lang`/`--region` only in the CLI. Their Python
-functions use the command defaults and intentionally have no per-call locale
-kwargs.
+Use `yoghurt <command> --help` for CLI syntax and `--help --verbose` for
+extended references. Before writing Python calls, read the
+[Python reference](dataframes/README.md#python-reference), whose signatures
+come from the implementation. CLI switches and Python kwargs are not a
+mechanical mirror: inverted switches have positive Python booleans;
+`--lang`/`--region` are CLI-only per-call controls; typed quotes have no
+`fields` projection; formatted responses are CLI/`raw()` only.
 
 ## Domain index
 

@@ -85,3 +85,40 @@ FILL ...` form for cross-entity time histograms. Single-quoted strings only
 uv run yoghurt screener --help
 uv run yoghurt visualization --help
 ```
+
+## Workflow: discover, screen, inspect, export
+
+Prerequisites: install `yoghurt`, allow Yahoo network access, and use a writable
+directory. This example targets US equities; check a discovered listing's
+exchange, currency, and instrument type before adapting it to another market.
+
+```python
+import yoghurt
+
+matches = yoghurt.search("Apple", quotes_count=5)
+listing = next(match for match in matches.quotes if match.symbol == "AAPL")
+identity = yoghurt.Ticker(listing.symbol).quote()
+fields = yoghurt.screener_instrument_fields("equity").fields
+required = {"region", "sector", "intradaymarketcap"}
+if not required.issubset(fields):
+    raise ValueError("Check Yahoo field metadata before adapting the query")
+candidates = yoghurt.screener(
+    "SELECT ticker, intradaymarketcap FROM EQUITY "
+    "WHERE region = 'us' AND sector = 'Technology' "
+    "ORDER BY intradaymarketcap DESC LIMIT 5"
+)
+rows = candidates.to_dicts()
+symbols = [row["ticker"] for row in rows]
+quotes = yoghurt.quotes(symbols) if symbols else []
+candidates.save_parquet("candidates.parquet")
+```
+
+Inspect `identity` to confirm the listing and `fields` for filter types/operators;
+`quotes` contains complete typed records for the selected securities. The saved
+candidate table retains Yahoo's returned columns (`ticker`, `marketCap`, etc.),
+which need not match the DSL's field spelling. `LIMIT 5` bounds this request;
+there is no automatic pagination. Empty matches stop at `next()`; change the
+search/selection deliberately. An empty screen exports an empty table and skips
+quote lookup. Local DSL mistakes raise `ValueError`; Yahoo rejection and
+transport errors raise typed library errors. Field discovery does not prove
+that every combination or premium field is available to the current session.

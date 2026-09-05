@@ -4,8 +4,9 @@
 
 **Severity:** medium
 
-Stock splits are not available on any per-symbol endpoint. Market-wide
-splits live on the `visualization()` route as the `splits` entity.
+Market-wide split calendars live on the `visualization()` route as the
+`splits` entity. Historical per-symbol split events are also available in
+`chart().events`; this is distinct from a market-wide calendar.
 Per-symbol `calendar-events` with `modules=["secReports"]` is SEC filings
 (10-K, 10-Q, 8-K, etc.), not stock splits — see
 [analysis/SHARP-EDGES.md](../analysis/SHARP-EDGES.md#secreports-is-sec-filings-not-stock-splits).
@@ -69,8 +70,8 @@ empty frame, while `'Software—Application'` returns SAP/SHOP/CRM/ADBE/INTU.
 
 **Severity:** low
 
-The `screener()` route only responds with `formatted=true` (yoghurt sets
-this by default) and returns camelCase record keys (`marketCap`,
+The `screener()` route requests unformatted values and returns camelCase
+record keys (`marketCap`,
 `peRatioLtm`). The `visualization()` route returns snake_case or dotted
 keys (`intradaymarketcap`, `peratio.lasttwelvemonths`) matching what you
 wrote in `SELECT`.

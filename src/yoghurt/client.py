@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import time
-from typing import TYPE_CHECKING, Any, Final, Literal
+from contextvars import ContextVar
+from typing import TYPE_CHECKING, Any, Final, Literal, cast
 
 import httpx2 as httpx
 
+from yoghurt._urls import YAHOO_FINANCE_QUERY_URL
 from yoghurt.exceptions import YahooRequestError, YahooUnavailableError
 from yoghurt.session_cache import (
     default_cache_path,
@@ -23,12 +26,53 @@ if TYPE_CHECKING:
     from yoghurt.types import ParamValue
 
 
+def _redact_url(url: httpx.URL) -> str:
+    params = [
+        (name, value)
+        for name, value in url.params.multi_items()
+        if name.lower() not in {"crumb", "gcrumb", "sessionid", "csrftoken"}
+    ]
+    return str(url.copy_with(params=params))
+
+
+_YAHOO_REQUEST = ContextVar("yoghurt_request", default=False)
+
+
+class _RequestLogFilter(logging.Filter):
+    """Keep upstream HTTP diagnostics from disclosing Yahoo credentials."""
+
+    def filter(  # ruff:ignore[no-self-use] - logging.Filter override
+        self,
+        record: logging.LogRecord,
+    ) -> bool:
+        if not _YAHOO_REQUEST.get():
+            return True
+        if record.name.startswith("httpcore2."):
+            return False  # Protocol traces include request and response headers.
+        if isinstance(record.args, tuple):
+            record.args = tuple(
+                _redact_url(value) if isinstance(value, httpx.URL) else value
+                for value in record.args
+            )
+        return True
+
+
+for _logger_name in (
+    "httpx2",
+    "httpcore2.http11",
+    "httpcore2.http2",
+    "httpcore2.connection",
+    "httpcore2.proxy",
+    "httpcore2.socks",
+):
+    logging.getLogger(_logger_name).addFilter(_RequestLogFilter())
+
+
 class YahooClient:
     """Async Yahoo Finance API client."""
 
     _YAHOO_FINANCE_URL: Final[str] = "https://finance.yahoo.com"
-    _YAHOO_FINANCE_QUERY_URL: Final[str] = "https://query1.finance.yahoo.com"
-    _CRUMB_URL: Final[str] = _YAHOO_FINANCE_QUERY_URL + "/v1/test/getcrumb"
+    _CRUMB_URL: Final[str] = YAHOO_FINANCE_QUERY_URL + "/v1/test/getcrumb"
     _ACCEPT_MIME_TYPES: Final[str] = (
         "text/html,application/xhtml+xml,application/xml;"
         "q=0.9,image/avif,image/webp,image/apng,*/*;"
@@ -63,7 +107,7 @@ class YahooClient:
         self._timeout = timeout or httpx.Timeout(connect=5, read=15, write=5, pool=5)
         self._client = httpx.AsyncClient(
             headers={
-                "authority": "query1.finance.yahoo.com",
+                "authority": httpx.URL(YAHOO_FINANCE_QUERY_URL).netloc.decode("ascii"),
                 "accept": "*/*",
                 "accept-language": "en-US,en;q=0.9",
                 "origin": self._YAHOO_FINANCE_URL,
@@ -74,6 +118,7 @@ class YahooClient:
         )
         self._expiry = 0.0
         self._crumb = ""
+        self._session_generation = 0
         self._use_session_cache = use_session_cache
         self._refresh_session = refresh_session
         self._session_cache_path = session_cache_path or default_cache_path()
@@ -104,13 +149,6 @@ class YahooClient:
         except OSError:
             self._logger.warning("Could not save Yahoo session cache")
 
-    @staticmethod
-    def _redact_url(url: httpx.URL) -> str:
-        params = [
-            (name, value) for name, value in url.params.multi_items() if name != "crumb"
-        ]
-        return str(url.copy_with(params=params))
-
     async def _request_or_raise(
         self,
         method: Literal["GET", "POST"],
@@ -122,8 +160,12 @@ class YahooClient:
         request = self._client.get if method == "GET" else self._client.post
         attempt = 1
         while True:
-            try:
-                response = await request(url, **kwargs)
+            try:  # ruff:ignore[too-many-statements-in-try-clause] - context must cover the upstream request
+                token = _YAHOO_REQUEST.set(True)
+                try:
+                    response = await request(url, **kwargs)
+                finally:
+                    _YAHOO_REQUEST.reset(token)
                 if response.is_error:
                     response.raise_for_status()
             except httpx.HTTPStatusError as exc:  # ruff:ignore[try-except-in-loop]
@@ -136,15 +178,15 @@ class YahooClient:
                     await asyncio.sleep(self._RETRY_DELAY_SECONDS * attempt)
                     attempt += 1
                     continue
-                url_str = self._redact_url(exc.request.url)
+                url_str = _redact_url(exc.request.url)
                 body = exc.response.text if exc.response else None
-                raise YahooRequestError(status_code, url_str, body=body) from exc
-            except httpx.TransportError as exc:
+                raise YahooRequestError(status_code, url_str, body=body) from None
+            except httpx.TransportError:
                 if method == "GET" and attempt < self._REQUEST_ATTEMPTS:
                     await asyncio.sleep(self._RETRY_DELAY_SECONDS * attempt)
                     attempt += 1
                     continue
-                raise YahooUnavailableError(context) from exc
+                raise YahooUnavailableError(context) from None
             else:
                 return response
 
@@ -169,7 +211,7 @@ class YahooClient:
         if not any(cookie == "A3" for cookie in cookies):
             raise YahooRequestError(
                 response.status_code,
-                str(response.url),
+                _redact_url(response.url),
                 reason="A3 cookie missing after login",
             )
         self._client.cookies.update(cookies)
@@ -193,7 +235,7 @@ class YahooClient:
         if not session_id:
             raise YahooRequestError(
                 response.status_code,
-                str(response.url),
+                _redact_url(response.url),
                 reason="Session identifier missing in consent redirect",
             )
         return session_id
@@ -209,7 +251,7 @@ class YahooClient:
         if not csrf_token:
             raise YahooRequestError(
                 response.status_code,
-                str(response.url),
+                _redact_url(response.url),
                 reason="CSRF token missing in consent redirect history",
             )
         return csrf_token
@@ -224,7 +266,7 @@ class YahooClient:
         if len(gucs_cookie) == 0:
             raise YahooRequestError(
                 response.status_code,
-                str(response.url),
+                _redact_url(response.url),
                 reason="GUCS cookie missing in consent redirect history",
             )
         return gucs_cookie
@@ -274,7 +316,7 @@ class YahooClient:
                 return history_response.cookies
         raise YahooRequestError(
             response.status_code,
-            str(response.url),
+            _redact_url(response.url),
             reason="A3 cookie missing after consent POST",
         )
 
@@ -289,18 +331,88 @@ class YahooClient:
         if not self._crumb:
             raise YahooRequestError(
                 response.status_code,
-                str(response.url),
+                _redact_url(response.url),
                 reason="Crumb response empty",
             )
 
-    async def _ensure_ready(self) -> None:
+    async def _ensure_ready(self, *, use_crumb: bool = True) -> None:
         async with self._refresh_lock:
+            changed = False
             one_minute = 60.0
             if self._expiry - time.time() < one_minute:
                 await self._refresh_cookies()
-            if not self._crumb:
+                changed = True
+            if use_crumb and not self._crumb:
                 await self._refresh_crumb()
-            self._save_cached_session()
+                changed = True
+            if changed:
+                self._session_generation += 1
+                self._save_cached_session()
+
+    async def _api_request(
+        self,
+        method: Literal["GET", "POST"],
+        path: str,
+        params: dict[str, ParamValue],
+        *,
+        use_crumb: bool,
+        base_url: str | None,
+        **kwargs: Any,  # ruff:ignore[any-type]
+    ) -> str:
+        await self._ensure_ready(use_crumb=use_crumb)
+        for attempt in range(2):
+            crumb = self._crumb
+            generation = self._session_generation
+            request_params = dict(params)
+            if use_crumb and crumb:
+                request_params["crumb"] = crumb
+            try:
+                response = await self._request_or_raise(
+                    method,
+                    (base_url or YAHOO_FINANCE_QUERY_URL) + path,
+                    context=f"api call: {path}",
+                    params=request_params,
+                    **kwargs,
+                )
+            except YahooRequestError as exc:
+                if attempt or not use_crumb or not self._is_stale_auth(exc):
+                    raise
+                async with self._refresh_lock:
+                    if self._session_generation == generation:
+                        await self._refresh_cookies()
+                        await self._refresh_crumb()
+                        self._session_generation += 1
+                        self._save_cached_session()
+            else:
+                return response.text
+        message = "request replay exhausted"
+        raise AssertionError(message)
+
+    @staticmethod
+    def _is_stale_auth(exc: YahooRequestError) -> bool:
+        if exc.status_code not in {401, 403} or not exc.body:
+            return False
+        try:
+            payload = json.loads(exc.body)
+        except ValueError:
+            return False
+        if not isinstance(payload, dict):
+            return False
+        for envelope in cast("dict[str, Any]", payload).values():
+            if not isinstance(envelope, dict):
+                continue
+            error: Any = cast("dict[str, Any]", envelope).get("error")
+            if not isinstance(error, dict):
+                continue
+            description = cast("dict[str, Any]", error).get("description")
+            if isinstance(description, str) and description in {
+                "Invalid Crumb",
+                "Invalid Cookie",
+                "Invalid cookie",
+                "Invalid crumb",
+            }:
+                return True
+        return False
 
     async def get(
         self,
@@ -316,18 +428,13 @@ class YahooClient:
             str: Raw Yahoo response body.
         """
 
-        await self._ensure_ready()
-        request_params = dict(params)
-        if use_crumb and self._crumb:
-            request_params["crumb"] = self._crumb
-        host = base_url or self._YAHOO_FINANCE_QUERY_URL
-        response = await self._request_or_raise(
+        return await self._api_request(
             "GET",
-            host + path,
-            context=f"api call: {path}",
-            params=request_params,
+            path,
+            params,
+            use_crumb=use_crumb,
+            base_url=base_url,
         )
-        return response.text
 
     async def post(
         self,
@@ -344,19 +451,14 @@ class YahooClient:
             str: Raw Yahoo response body.
         """
 
-        await self._ensure_ready()
-        request_params = dict(params)
-        if use_crumb and self._crumb:
-            request_params["crumb"] = self._crumb
-        host = base_url or self._YAHOO_FINANCE_QUERY_URL
-        response = await self._request_or_raise(
+        return await self._api_request(
             "POST",
-            host + path,
-            context=f"api call: {path}",
-            params=request_params,
+            path,
+            params,
+            use_crumb=use_crumb,
+            base_url=base_url,
             json=json_body,
         )
-        return response.text
 
     async def aclose(self) -> None:
         """Close the underlying HTTP client."""

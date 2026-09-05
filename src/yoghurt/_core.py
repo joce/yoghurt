@@ -175,11 +175,48 @@ def interpret_body(
 
     Returns:
         dict[str, Any]: The full parsed payload (envelope included).
+
+    Raises:
+        YahooApiError: If a required response envelope or result is malformed.
     """
     payload_dict = _parse_json_object(body)
     error = _envelope_error(command, payload_dict)
     if error is not None:
         _raise_for_envelope_error(error, symbol=symbol, http_status=None)
+    envelope_key = ENVELOPES.get(command)
+    if envelope_key is not None:
+        envelope = _as_object_dict(payload_dict.get(envelope_key))
+        if envelope is None:
+            message = f"Yahoo response requires object {envelope_key}"
+            raise YahooApiError(code="malformed-response", description=message)
+        if command not in {"sector", "market-time"}:
+            result = envelope.get("result")
+            result_type = (
+                dict
+                if command
+                in {
+                    "calendar-events",
+                    "market-info",
+                    "price-insights",
+                    "screener-discover",
+                }
+                else list
+            )
+            if not isinstance(result, result_type) or (
+                isinstance(result, list)
+                and any(not isinstance(row, dict) for row in cast("list[Any]", result))
+            ):
+                message = f"Yahoo response has invalid {envelope_key}.result"
+                raise YahooApiError(code="malformed-response", description=message)
+            if result == [] and command in {
+                "chart",
+                "lookup",
+                "trending",
+                "screener-instrument-fields",
+                "timeseries-fields",
+            }:
+                message = f"Yahoo response missing {envelope_key}.result[0]"
+                raise YahooApiError(code="malformed-response", description=message)
     return payload_dict
 
 

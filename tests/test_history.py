@@ -2,14 +2,24 @@
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
 from typing import Any
 
 import pytest
 
-from yoghurt.history import frame_from_chart_result, request_values
+from yoghurt._history import frame_from_chart_result, request_values
 from yoghurt.tabular import TabularShapeError
 
 EXPECTED_FIRST_VOLUME = 1000
+
+
+def test_partial_btc_history_capture_is_rejected() -> None:
+    """The BTC capture cannot mix a latest raw bar with adjusted history."""
+    path = Path(__file__).parent / "fixtures" / "corpus" / "chart" / "BTC-USD.json"
+    result = json.loads(path.read_text(encoding="utf-8"))["chart"]["result"][0]
+    with pytest.raises(TabularShapeError, match=r"adj_close|adjusted"):
+        frame_from_chart_result(result, "BTC-USD")
 
 
 def test_history_adjusts_entire_ohlc_bar_from_adjusted_close() -> None:
@@ -98,7 +108,7 @@ def test_history_request_resolves_omitted_end_once(
     """An explicit start gets one fixed end shared by every symbol batch."""
 
     expected_end = 1_800_000_000
-    monkeypatch.setattr("yoghurt.history.time", lambda: expected_end)
+    monkeypatch.setattr("yoghurt._history.time", lambda: expected_end)
 
     values = request_values(
         period=None,

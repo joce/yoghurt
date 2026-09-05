@@ -4,11 +4,13 @@
 
 **Severity:** high
 
-`calendar-events` returns empty results without an explicit
-`start_date`/`end_date` window covering a day that actually had events. The
-default window is roughly now−3 days to now, which almost never lands on a
-real earnings, IPO, or SEC-filing day. This applies to the `earnings`
-(default module), `economicEvents`, `ipoEvents`, and `secReports` modules.
+The July 5 corpus probes returned empty `calendar-events` results
+without an explicit `start_date`/`end_date` window covering a day that
+actually had events. The default window is roughly now−3 days to now,
+which may not cover a relevant event. A no-window empty response is not
+evidence about future earnings. The date-window behavior is relevant to
+the `earnings` (default), `economicEvents`, `ipoEvents`, and `secReports`
+modules.
 
 Wrong way: calling `Ticker("AAPL").calendar_events()` with no window and
 concluding the symbol has no upcoming earnings.
@@ -62,8 +64,9 @@ report. Yahoo answers with a valid-but-empty shape that fails
 `SymbolNotFoundError`.
 
 Right way: catch `YahooApiError` with `code == "model-validation"` around
-`recommendations()` and treat it as "nothing to report" for instrument
-types outside equities.
+`recommendations()` and inspect the raw response before classifying the
+result as instrument-specific absence; a validation failure can also
+indicate schema drift.
 
 Evidence: 2026-07-05.
 

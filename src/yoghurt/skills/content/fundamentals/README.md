@@ -25,7 +25,7 @@ uv run yoghurt quote-summary AAPL --modules price,summaryDetail,financialsTempla
 ```
 
 The full module list (41 modules, with descriptions) is in
-`yoghurt quote-summary --help`.
+`yoghurt quote-summary --help --verbose`.
 
 ## Fundamentals timeseries
 
@@ -47,7 +47,7 @@ CLI equivalent:
 uv run yoghurt timeseries AAPL
 ```
 
-The observed `--type` reference is in `yoghurt timeseries --help`. See
+The observed `--type` reference is in `yoghurt timeseries --help --verbose`. See
 [SHARP-EDGES.md](SHARP-EDGES.md) before requesting
 `spEarningsReleaseEvents`.
 
@@ -78,10 +78,53 @@ different type/module selection is required.
 
 ## Parameters
 
-Full parameter lists, module names, and type names live in `--help`:
+Use ordinary help for parameters and verbose help for full module/type catalogs:
 
 ```bash
-uv run yoghurt quote-summary --help
-uv run yoghurt timeseries --help
+uv run yoghurt quote-summary --help --verbose
+uv run yoghurt timeseries --help --verbose
 uv run yoghurt financial-analysis --help
 ```
+
+## Workflow: financial tables and currencies
+
+Prerequisites: install `yoghurt`, allow Yahoo access, and use a writable directory.
+This example uses an operating company; an ETF may have empty statement tables.
+
+```python
+import yoghurt
+
+company = yoghurt.Ticker("AAPL")
+quote = company.quote()
+analysis = company.financial_analysis()
+tables = {
+    "income_statement": analysis.income_statement,
+    "cash_flow": analysis.cash_flow,
+    "valuation_history": analysis.valuation_history,
+}
+for name, table in tables.items():
+    table.save_parquet(f"{name}.parquet")
+income = tables["income_statement"].to_polars()
+trading_currency = quote.currency
+reporting_currencies = (
+    income.get_column("currency_code").drop_nulls().unique().to_list()
+)
+```
+
+`analysis` contains 17 frames. The three selected tables have `type`,
+`as_of_date`, `period_type`, `currency_code`, and `value` columns. Each file is
+independent; the bundle itself has no `save_parquet()` method. Empty tables
+retain their schema. Missing fields/values remain missing, not zero earnings.
+
+Compare `trading_currency` with each row's `currency_code`; a listing's trading
+currency need not be its reporting currency. No foreign-exchange conversion or
+unit normalization is performed. Monetary amounts, per-share amounts, share
+counts, and valuation ratios coexist under different `type` values: select a
+metric and period before summing or comparing. Do not assume values are millions
+or every numeric field is money. Currency metadata may itself be absent.
+
+`financial_analysis()` makes two source requests; a Yahoo/transport failure or
+invalid source shape raises a typed error instead of returning a partial bundle.
+Use `timeseries()`/`quote_summary()` to inspect sources and request narrower
+selections. Empty tables can mean instrument-specific absence, not failed
+transport; inspect the source before concluding the company has no data.

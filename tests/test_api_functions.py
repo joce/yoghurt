@@ -12,10 +12,10 @@ import pytest
 
 import yoghurt._core as core
 from yoghurt import api
+from yoghurt._history import HISTORY_REQUEST_BATCH_SIZE
 from yoghurt.commands import COMMANDS_BY_NAME
 from yoghurt.exceptions import YahooApiError
 from yoghurt.frames import Frame, History
-from yoghurt.history import HISTORY_REQUEST_BATCH_SIZE
 from yoghurt.models import (
     LookupResult,
     MarketInfoResult,
@@ -232,7 +232,6 @@ def test_lookup_returns_typed_result_and_empty_documents(
         type="equity",
         start=5,
         count=10,
-        formatted=True,
         fetch_pricing_data=False,
     )
 
@@ -245,7 +244,7 @@ def test_lookup_returns_typed_result_and_empty_documents(
         "type": "equity",
         "start": 5,
         "count": 10,
-        "formatted": True,
+        "formatted": False,
         "fetchPricingData": False,
         "lang": "en-US",
         "region": "US",

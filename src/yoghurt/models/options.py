@@ -37,6 +37,11 @@ refresh. Reconciliation notes:
   ``expirationDate`` is the same calendar-date epoch shape as
   ``OptionContract.expiration`` (verified midnight-UTC-aligned) and is
   likewise typed ``datetime.date``.
+- The 2026-09-05 straddle captures in ``options/variants/`` (AAPL, MSFT,
+  SPY, OKLO) replace ``calls`` and ``puts`` with ``straddles``. Collection
+  fields are therefore optional, with validation requiring either the
+  ordinary pair or the straddle collection. Individual paired call and put
+  legs can be absent; ``strike`` is universal across the captured pairs.
 - ``OptionChain``'s six top-level keys are universal across all 3
   captures' ``optionChain.result[0]`` records, including the embedded
   ``quote``, which validates as :class:`~yoghurt.models.quote.Quote` with
@@ -55,6 +60,8 @@ refresh. Reconciliation notes:
 from __future__ import annotations
 
 import datetime  # ruff:ignore[typing-only-standard-library-import] - required at runtime for pydantic field resolution
+
+from pydantic import model_validator
 
 from yoghurt.models._base import YahooModel
 from yoghurt.models.quote import (
@@ -153,12 +160,43 @@ class OptionContract(YahooModel):
     """
 
 
+class OptionStraddle(YahooModel):
+    """Contracts paired by strike, captured on AAPL/MSFT/SPY/OKLO 2026-09-05.
+
+    Both legs are independently absent on illiquid strikes in the variant corpus.
+    """
+
+    call: OptionContract | None = None
+    """Call leg, when Yahoo returns one for this strike."""
+
+    put: OptionContract | None = None
+    """Put leg, when Yahoo returns one for this strike."""
+
+    strike: float
+    """Strike price shared by the paired contracts."""
+
+    @model_validator(mode="after")
+    def require_leg(self) -> OptionStraddle:
+        """Reject a pair with neither contract.
+
+        Returns:
+            OptionStraddle: The validated pair.
+
+        Raises:
+            ValueError: If neither leg is present.
+        """
+        if self.call is None and self.put is None:
+            message = "straddle must contain a call or put"
+            raise ValueError(message)
+        return self
+
+
 class OptionExpiration(YahooModel):
     """One expiration date's full set of call and put contracts."""
 
-    calls: list[OptionContract]
+    calls: list[OptionContract] | None = None
     """
-    Call contracts for this expiration date.
+    Call contracts; absent in straddle responses (AAPL/MSFT/SPY/OKLO, 2026-09-05).
     """
 
     expiration_date: datetime.date
@@ -176,10 +214,32 @@ class OptionExpiration(YahooModel):
     standard contract) are available for this expiration date.
     """
 
-    puts: list[OptionContract]
+    puts: list[OptionContract] | None = None
     """
-    Put contracts for this expiration date.
+    Put contracts; absent in straddle responses (AAPL/MSFT/SPY/OKLO, 2026-09-05).
     """
+
+    straddles: list[OptionStraddle] | None = None
+    """Paired contracts, present only when requesting the straddle response."""
+
+    @model_validator(mode="after")
+    def require_response_family(self) -> OptionExpiration:
+        """Require the ordinary pair of collections or the straddle collection.
+
+        Returns:
+            OptionExpiration: The validated expiration.
+
+        Raises:
+            ValueError: If collections are missing or mix response families.
+        """
+        ordinary = self.calls is not None and self.puts is not None
+        paired = self.straddles is not None
+        if not (ordinary or paired) or (
+            paired and (self.calls is not None or self.puts is not None)
+        ):
+            message = "expiration must contain calls and puts, or straddles"
+            raise ValueError(message)
+        return self
 
 
 class OptionChain(YahooModel):

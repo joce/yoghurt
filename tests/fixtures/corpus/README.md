@@ -29,10 +29,9 @@ JSON.
 `timeseries/AAPL_economicEventsLong.json` are surgical single-case captures:
 hand-added `tools/probe.py` cases requesting one event type over a long
 (2020-01-01 onward) window, rather than results carried by the all-types
-sweep. The probe plan also includes a dedicated `AAPL_spEarnings` case; Yahoo
-currently serves malformed JSON for `spEarningsReleaseEvents` on every
-symbol, so that case is expected to record a manifest `status: "error"`
-(no corpus file) on full probe runs, not a probe bug. Retested live
+sweep. The probe plan also includes a dedicated `AAPL_spEarnings` case.
+Historical malformed responses record manifest `status: "error"` (no corpus
+file); a future run may instead capture valid JSON. Retested live
 2026-07-05 (P4-1): still corrupt, same invalid-JSON-escape failure as the
 original 2026-07-04 capture. Retested again later on 2026-07-05 after a
 session reported the feed fixed: two independent pulls returned byte-identical
@@ -43,8 +42,11 @@ JSON. `tools/probe.py` now records such bodies as `status: "error"` with no
 file, so a manifest `"ok"` always means the capture parses; judge feed health
 only by `json.loads` on the raw bytes. Retested 2026-07-06 through the
 probe's own `_run_case` (one live call): still corrupt — HTTP 200 with the
-same invalid `\` escape at char 8893. Next retest should be opportunistic
-(no fixed date), on the next corpus refresh.
+same invalid `\` escape at char 8893. A scoped 2026-09-05 retest recovered
+valid responses for AAPL and metadata-only SPY results; see the packaged
+[fundamentals evidence note](../../../src/yoghurt/skills/content/fundamentals/SHARP-EDGES.md)
+for request dates, combinations, and observation counts. These older raw files
+remain unchanged as historical evidence.
 
 **2026-07-05 surgical addition (P4-1, corpus reinforcement):** invalid-symbol
 (`ZZZZXYZQ`) cases added for the seven endpoints that previously lacked one
