@@ -202,10 +202,8 @@ def test_expiration_fields_are_all_present_in_every_capture() -> None:
         if field_info.is_required()
     }
     assert required_aliases == {
-        "calls",
         "expirationDate",
         "hasMiniOptions",
-        "puts",
     }
 
 

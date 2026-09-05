@@ -321,6 +321,19 @@ failures raise `YahooApiError`, empty queries return empty collections or
 frames, and transport failures raise `YahooRequestError` or
 `YahooUnavailableError`.
 
+Typed `quote()` and `quotes()` return complete `Quote` objects. For exact field
+projections, use `raw("/v7/finance/quote", {"symbols": "AAPL", "fields":
+"symbol,regularMarketPrice"})` or the CLI `--fields` option. Typed methods
+always request unformatted values; CLI and `raw()` retain formatting control.
+`Ticker.options(straddle=True)` returns paired `straddles` on each expiration;
+either contract leg can be absent. Ordinary responses contain `calls` and `puts`.
+
+Models and frame wrappers are shallowly frozen: nested lists, dictionaries,
+and the underlying Polars frame can still be mutated. History rejects incomplete
+adjustment data, including a latest bar without adjusted close, rather than
+mixing raw and adjusted prices. Initialize the shared client after a POSIX fork;
+using an already initialized client in a forked child is unsupported.
+
 ### Pandas-wide history
 
 Multi-symbol history is long-form by default. Pivot it after conversion when

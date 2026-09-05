@@ -232,7 +232,6 @@ def test_lookup_returns_typed_result_and_empty_documents(
         type="equity",
         start=5,
         count=10,
-        formatted=True,
         fetch_pricing_data=False,
     )
 
@@ -245,7 +244,7 @@ def test_lookup_returns_typed_result_and_empty_documents(
         "type": "equity",
         "start": 5,
         "count": 10,
-        "formatted": True,
+        "formatted": False,
         "fetchPricingData": False,
         "lang": "en-US",
         "region": "US",

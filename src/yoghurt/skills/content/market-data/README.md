@@ -54,6 +54,12 @@ CLI equivalent (comma-separated symbols, raw JSON to stdout):
 uv run yoghurt quote AAPL,MSFT,NVDA
 ```
 
+Typed quote methods return complete models and do not accept `fields` or
+`formatted`. Use CLI `--fields` or `raw()` for exact projections and formatted
+responses. `Ticker.options(straddle=True)` returns `straddles` per expiration;
+either call or put leg may be absent. Ordinary responses contain `calls` and
+`puts`, with `straddles` absent.
+
 `Ticker.quote()` raises `SymbolNotFoundError` when Yahoo has no record for
 the symbol; `quotes()` silently drops unrecognized symbols from the
 returned list instead of raising.

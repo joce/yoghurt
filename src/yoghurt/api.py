@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Any, Final, TypeAlias
+from typing import TYPE_CHECKING, Any, Final, TypeAlias, cast
 
 import polars as pl
 
@@ -165,8 +165,6 @@ class Ticker:
     def quote(  # ruff:ignore[too-many-arguments] - one keyword-only arg per quote wire param.
         self,
         *,
-        fields: list[str] | None = None,
-        formatted: bool | None = None,
         include_private_companies: bool | None = None,
         overnight_price: bool | None = None,
         top_pick_this_month: bool | None = None,
@@ -192,8 +190,7 @@ class Ticker:
                 symbol=self.symbol,
                 values=_values(
                     symbols=self.symbol,
-                    fields=fields,
-                    formatted=formatted,
+                    formatted=False,
                     enablePrivateCompany=include_private_companies,
                     overnightPrice=overnight_price,
                     topPickThisMonth=top_pick_this_month,
@@ -330,7 +327,16 @@ class Ticker:
         results = payload["spark"]["result"]
         if not results:
             raise SymbolNotFoundError(self.symbol)
-        responses = results[0]["response"]
+        responses_raw = results[0].get("response")
+        if not isinstance(responses_raw, list) or any(
+            not isinstance(response, dict)
+            for response in cast("list[Any]", responses_raw)
+        ):
+            raise YahooApiError(
+                code="malformed-response",
+                description="spark result requires a response list",
+            )
+        responses = cast("list[dict[str, Any]]", responses_raw)
         if not responses:
             raise SymbolNotFoundError(self.symbol)
         response = responses[0]
@@ -346,7 +352,6 @@ class Ticker:
     def quote_type(
         self,
         *,
-        formatted: bool | None = None,
         include_private_companies: bool | None = None,
         overnight_price: bool | None = None,
     ) -> QuoteTypeResult:
@@ -368,7 +373,7 @@ class Ticker:
                 symbol=self.symbol,
                 values=_values(
                     symbol=self.symbol,
-                    formatted=formatted,
+                    formatted=False,
                     enablePrivateCompany=include_private_companies,
                     overnightPrice=overnight_price,
                 ),
@@ -383,7 +388,6 @@ class Ticker:
         self,
         *,
         modules: list[str] | None = None,
-        formatted: bool | None = None,
         include_private_companies: bool | None = None,
         include_expanded_earnings: bool | None = None,
         overnight_price: bool | None = None,
@@ -417,7 +421,7 @@ class Ticker:
                 values=_values(
                     symbol=self.symbol,
                     modules=modules,
-                    formatted=formatted,
+                    formatted=False,
                     enablePrivateCompany=include_private_companies,
                     enableQSPExpandedEarnings=include_expanded_earnings,
                     overnightPrice=overnight_price,
@@ -433,7 +437,6 @@ class Ticker:
         self,
         *,
         date: DateLike | None = None,
-        formatted: bool | None = None,
         straddle: bool | None = None,
     ) -> OptionChain:
         """Fetch the option chain for this symbol.
@@ -453,7 +456,7 @@ class Ticker:
                 values=_values(
                     symbol=self.symbol,
                     date=date,
-                    formatted=formatted,
+                    formatted=False,
                     straddle=straddle,
                 ),
             )
@@ -666,7 +669,6 @@ class Ticker:
         self,
         *,
         disable_related_reports: bool | None = None,
-        formatted: bool | None = None,
         get_all_research_reports: bool | None = None,
         reports_count: int | None = None,
         ssl: bool | None = None,
@@ -694,7 +696,7 @@ class Ticker:
                 values=_values(
                     symbols=self.symbol,
                     disableRelatedReports=disable_related_reports,
-                    formatted=formatted,
+                    formatted=False,
                     getAllResearchReports=get_all_research_reports,
                     reportsCount=reports_count,
                     ssl=ssl,
@@ -792,7 +794,10 @@ def _tabular_frame(payload: dict[str, Any], route: str) -> Frame:
         raise YahooApiError(
             code="unsupported-response-shape", description=message
         ) from exc
-    df = build_tabular_frame(column_data, columns) if columns else pl.DataFrame()
+    try:
+        df = build_tabular_frame(column_data, columns) if columns else pl.DataFrame()
+    except TabularShapeError as exc:
+        raise YahooApiError(code="malformed-response", description=str(exc)) from exc
     return Frame(df=df, fetched_at=_now_utc())
 
 
@@ -879,8 +884,6 @@ def history(  # ruff:ignore[too-many-arguments] - history's five orthogonal cont
 def quotes(  # ruff:ignore[too-many-arguments] - one keyword-only arg per quote wire param.
     symbols: list[str],
     *,
-    fields: list[str] | None = None,
-    formatted: bool | None = None,
     include_private_companies: bool | None = None,
     overnight_price: bool | None = None,
     top_pick_this_month: bool | None = None,
@@ -910,8 +913,7 @@ def quotes(  # ruff:ignore[too-many-arguments] - one keyword-only arg per quote 
             "quote",
             values=_values(
                 symbols=",".join(symbols),
-                fields=fields,
-                formatted=formatted,
+                formatted=False,
                 enablePrivateCompany=include_private_companies,
                 overnightPrice=overnight_price,
                 topPickThisMonth=top_pick_this_month,
@@ -970,7 +972,7 @@ def search(  # ruff:ignore[too-many-arguments] - one keyword-only arg per wire c
     return validate_model(SearchResult, payload)
 
 
-def lookup(  # ruff:ignore[too-many-arguments] - one keyword-only arg per wire control.
+def lookup(
     query: str,
     *,
     type: (  # ruff:ignore[builtin-argument-shadowing] - mirrors Yahoo's wire/CLI name
@@ -978,15 +980,14 @@ def lookup(  # ruff:ignore[too-many-arguments] - one keyword-only arg per wire c
     ) = None,
     start: int | None = None,
     count: int | None = None,
-    formatted: bool | None = None,
     fetch_pricing_data: bool | None = None,
 ) -> LookupResult:
     """Look up a page of instruments, optionally filtered by asset type.
 
     Known ``type`` values are ``all``, ``equity``, ``mutualfund``, ``etf``,
     ``index``, ``future``, ``currency``, and ``cryptocurrency``. The value
-    remains open-ended because Yahoo defines the vocabulary. With
-    ``formatted=True``, wrapped pricing values are still exposed as their
+    remains open-ended because Yahoo defines the vocabulary.
+    Wrapped pricing values are exposed as their
     typed raw numbers. An unmatched query returns an empty ``documents`` list.
 
     Returns:
@@ -1001,7 +1002,7 @@ def lookup(  # ruff:ignore[too-many-arguments] - one keyword-only arg per wire c
                 type=type,
                 start=start,
                 count=count,
-                formatted=formatted,
+                formatted=False,
                 fetchPricingData=fetch_pricing_data,
             ),
         )
@@ -1046,7 +1047,6 @@ def screener_predefined(  # ruff:ignore[too-many-arguments] - one keyword-only a
     *,
     count: int | None = None,
     start: int | None = None,
-    formatted: bool | None = None,
     use_records_response: bool | None = None,
     sort_field: str | None = None,
     sort_type: str | None = None,
@@ -1074,7 +1074,7 @@ def screener_predefined(  # ruff:ignore[too-many-arguments] - one keyword-only a
                 scrIds=",".join(scr_ids),
                 count=count,
                 start=start,
-                formatted=formatted,
+                formatted=False,
                 useRecordsResponse=use_records_response,
                 sortField=sort_field,
                 sortType=sort_type,
@@ -1110,14 +1110,13 @@ def _spec_default_str(command_name: str, param_name: str) -> str:
 _TRENDING_DEFAULT_REGION: Final[str] = _spec_default_str("trending", "region")
 
 
-def trending(  # ruff:ignore[too-many-arguments] - one keyword-only arg per wire param.
+def trending(
     region: str | None = None,
     *,
     count: int | None = None,
     use_quotes: bool | None = None,
     fields: list[str] | None = None,
     quote_type: str | None = None,
-    formatted: bool | None = None,
 ) -> TrendingResult:
     """List trending tickers for a region.
 
@@ -1141,7 +1140,7 @@ def trending(  # ruff:ignore[too-many-arguments] - one keyword-only arg per wire
                 useQuotes=use_quotes,
                 fields=fields,
                 quoteType=quote_type,
-                formatted=formatted,
+                formatted=False,
             ),
         )
     )
@@ -1181,7 +1180,6 @@ def sector(
     slug: str,
     *,
     with_returns: bool | None = None,
-    formatted: bool | None = None,
 ) -> SectorResult:
     """Fetch sector overview, performance, top holdings, and industries.
 
@@ -1199,14 +1197,14 @@ def sector(
             values=_values(
                 sector=slug,
                 withReturns=with_returns,
-                formatted=formatted,
+                formatted=False,
             ),
         )
     )
     return validate_model(SectorResult, payload["data"])
 
 
-def market_summary(*, formatted: bool | None = None) -> list[MarketSummaryQuote]:
+def market_summary() -> list[MarketSummaryQuote]:
     """Fetch a global market summary: indices, futures, forex, crypto.
 
     Returns:
@@ -1217,7 +1215,7 @@ def market_summary(*, formatted: bool | None = None) -> list[MarketSummaryQuote]
     payload = run(
         _core.call_endpoint(
             "market-summary",
-            values=_values(formatted=formatted),
+            values=_values(formatted=False),
         )
     )
     return [
@@ -1247,7 +1245,6 @@ def market_info(*, modules: list[str] | None = None) -> MarketInfoResult:
 
 def market_time(
     *,
-    formatted: bool | None = None,
     key: str | None = None,
 ) -> MarketTimeResult:
     """Show current market hours and session status.
@@ -1259,7 +1256,7 @@ def market_time(
     payload = run(
         _core.call_endpoint(
             "market-time",
-            values=_values(formatted=formatted, key=key),
+            values=_values(formatted=False, key=key),
         )
     )
     return validate_model(MarketTimeResult, payload["finance"])
@@ -1316,7 +1313,6 @@ def screener_discover(
     *,
     modules: list[str] | None = None,
     count: int | None = None,
-    formatted: bool | None = None,
 ) -> ScreenerDiscoverResult:
     """Discover investment ideas from Yahoo screener modules.
 
@@ -1330,7 +1326,7 @@ def screener_discover(
     payload = run(
         _core.call_endpoint(
             "screener-discover",
-            values=_values(modules=modules, count=count, formatted=formatted),
+            values=_values(modules=modules, count=count, formatted=False),
         )
     )
     return validate_model(ScreenerDiscoverResult, payload["finance"]["result"])

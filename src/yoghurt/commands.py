@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from yoghurt._urls import YAHOO_FINANCE_QUERY_URL
 from yoghurt.params import CHART_INTERVALS, CHART_RANGES, ParamKind, ParamSpec
 
 
@@ -40,7 +41,7 @@ class CommandSpec:
     common_types: tuple[str, ...] = ()
     notes: tuple[str, ...] = ()
     use_crumb: bool = True
-    base_url: str = "https://query1.finance.yahoo.com"
+    base_url: str = YAHOO_FINANCE_QUERY_URL
 
     @property
     def yahoo_url(self) -> str:

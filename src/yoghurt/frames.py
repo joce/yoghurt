@@ -1,4 +1,4 @@
-"""Immutable tabular results with one conversion vocabulary."""
+"""Shallowly frozen tabular results with one conversion vocabulary."""
 
 # pandas/pyarrow are optional (the yoghurt[pandas] extra) and absent from the
 # base dev environment, so pyright sees their types as Unknown in this module.
@@ -10,11 +10,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from datetime import datetime
-    from pathlib import Path
 
     import pandas as pd  # pyright: ignore[reportMissingImports, reportMissingTypeStubs]
     import polars as pl
@@ -33,8 +33,8 @@ class Frame:
     def to_polars(self) -> pl.DataFrame:
         """Return the underlying polars DataFrame.
 
-        The frame is returned directly, not copied; polars operations
-        produce new frames, so aliasing is safe.
+        The frame is returned directly, not copied. In-place polars operations
+        can mutate it; freezing only prevents reassigning wrapper attributes.
 
         Returns:
             pl.DataFrame: The result table.
@@ -90,7 +90,11 @@ class Frame:
     def save_parquet(self, path: Path | str) -> None:
         """Write the table to a Parquet file (snappy)."""
 
-        self.df.write_parquet(path, compression="snappy")
+        from yoghurt.parquet_writer import (  # ruff:ignore[import-outside-top-level] - lazy writer import
+            _write_frame,  # pyright: ignore[reportPrivateUsage]
+        )
+
+        _write_frame(self.df, Path(path), {})
 
 
 @dataclass(frozen=True, slots=True)

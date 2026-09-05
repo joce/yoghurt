@@ -10,15 +10,41 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from datetime import date
-from typing import Any, Final
+from functools import wraps
+from typing import TYPE_CHECKING, Any, Final, ParamSpec, TypeVar
 
 import polars as pl
 
 from yoghurt.exceptions import YoghurtError
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
 
 class TabularShapeError(YoghurtError):
     """Raised when a Yahoo response cannot be flattened into a tabular shape."""
+
+
+_P = ParamSpec("_P")
+_R = TypeVar("_R")
+
+
+def _shape_errors(function: Callable[_P, _R]) -> Callable[_P, _R]:
+    """Translate scalar conversion failures at shared frame boundaries.
+
+    Returns:
+        Callable: The wrapped conversion with the shared error contract.
+    """
+
+    @wraps(function)
+    def convert(*args: _P.args, **kwargs: _P.kwargs) -> _R:
+        try:
+            return function(*args, **kwargs)
+        except (TypeError, ValueError, OverflowError, pl.exceptions.PolarsError) as exc:
+            message = f"invalid tabular value: {exc}"
+            raise TabularShapeError(message) from exc
+
+    return convert
 
 
 def parse_chart_result(chart_json_text: str) -> dict[str, Any]:
@@ -42,6 +68,9 @@ def parse_chart_result(chart_json_text: str) -> dict[str, Any]:
     except (KeyError, IndexError, TypeError) as exc:
         message = "chart response missing chart.result[0]"
         raise TabularShapeError(message) from exc
+    if not isinstance(result, dict):
+        message = "chart.result[0] must be an object"
+        raise TabularShapeError(message)
     return result
 
 
@@ -59,19 +88,31 @@ def extract_chart_columns(
             indicator array has the wrong shape.
     """
 
-    timestamps = result.get("timestamp") or []
+    timestamps = result.get("timestamp", [])
     if not isinstance(timestamps, list):
         message = "chart.result[0].timestamp must be a list"
         raise TabularShapeError(message)
 
-    indicators = result.get("indicators") or {}
-    quote_blocks = indicators.get("quote") or [{}]
+    indicators = result.get("indicators", {})
+    if not isinstance(indicators, dict):
+        message = "chart indicators must be an object"
+        raise TabularShapeError(message)
+    quote_blocks = indicators.get("quote", [{}])
+    if not isinstance(quote_blocks, list):
+        message = "chart indicators.quote must be a list"
+        raise TabularShapeError(message)
     quote = quote_blocks[0] if quote_blocks else {}
     if not isinstance(quote, dict):
         message = "chart.result[0].indicators.quote[0] must be an object"
         raise TabularShapeError(message)
 
     adjclose_block = indicators.get("adjclose")
+    if adjclose_block is not None and (
+        not isinstance(adjclose_block, list)
+        or any(not isinstance(block, dict) for block in adjclose_block)
+    ):
+        message = "chart indicators.adjclose must be a list of objects"
+        raise TabularShapeError(message)
     if adjclose_block:
         adj_closes = adjclose_block[0].get("adjclose", [])
     else:
@@ -101,6 +142,7 @@ def extract_chart_columns(
     return list(timestamps), columns
 
 
+@_shape_errors
 def build_chart_frame(
     timestamps: list[int],
     columns: dict[str, list[Any]],
@@ -139,6 +181,7 @@ def build_chart_frame(
     )
 
 
+@_shape_errors
 def build_spark_frame(response: dict[str, Any]) -> pl.DataFrame:
     """Construct the spark ``pl.DataFrame`` (``ts``, ``close``) from one spark response.
 
@@ -155,13 +198,19 @@ def build_spark_frame(response: dict[str, Any]) -> pl.DataFrame:
             ``close`` array has the wrong shape.
     """
 
-    timestamps = response.get("timestamp") or []
+    timestamps = response.get("timestamp", [])
     if not isinstance(timestamps, list):
         message = "spark response.timestamp must be a list"
         raise TabularShapeError(message)
 
-    indicators = response.get("indicators") or {}
-    quote_blocks = indicators.get("quote") or [{}]
+    indicators = response.get("indicators", {})
+    if not isinstance(indicators, dict):
+        message = "spark indicators must be an object"
+        raise TabularShapeError(message)
+    quote_blocks = indicators.get("quote", [{}])
+    if not isinstance(quote_blocks, list):
+        message = "spark indicators.quote must be a list"
+        raise TabularShapeError(message)
     quote = quote_blocks[0] if quote_blocks else {}
     if not isinstance(quote, dict):
         message = "spark response.indicators.quote[0] must be an object"
@@ -337,10 +386,14 @@ def _timeseries_entry_rows(
     """
 
     try:
-        type_name = entry["meta"]["type"][0]
+        types = entry["meta"]["type"]
     except (KeyError, IndexError, TypeError) as exc:
         message = f"timeseries.result[{index}] missing meta.type[0]"
         raise TabularShapeError(message) from exc
+    if not isinstance(types, list) or not types:
+        message = f"timeseries.result[{index}] meta.type must be a nonempty list"
+        raise TabularShapeError(message)
+    type_name = types[0]
     if not isinstance(type_name, str):
         message = f"timeseries.result[{index}] meta.type[0] must be a string"
         raise TabularShapeError(message)
@@ -469,6 +522,9 @@ def _fundamentals_records(
     Returns:
         tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         ``(fundamentals_records, segment_records)``.
+
+    Raises:
+        TabularShapeError: If a reported value is not an object or null.
     """
 
     fundamentals: list[dict[str, Any]] = []
@@ -476,6 +532,9 @@ def _fundamentals_records(
     for row in rows:
         as_of_date = _timeseries_as_of_date(row.get("asOfDate"), type_name)
         reported = row.get("reportedValue")
+        if reported is not None and not isinstance(reported, dict):
+            message = f"timeseries type {type_name!r} reportedValue must be an object"
+            raise TabularShapeError(message)
         value = reported.get("raw") if isinstance(reported, dict) else None
         fundamentals.append(
             {
@@ -585,6 +644,7 @@ def _timeseries_table(
     return pl.DataFrame(data, schema=schema)
 
 
+@_shape_errors
 def build_timeseries_frames(payload: dict[str, Any]) -> TimeseriesTables:
     """Flatten a timeseries payload into four typed tables.
 
@@ -744,13 +804,19 @@ def parse_tabular_payload(
         raise TabularShapeError(message)
 
     try:
-        result = payload["finance"]["result"][0]
-    except (KeyError, IndexError, TypeError):
-        result = {}
-
-    records_raw = result.get(record_key) if isinstance(result, dict) else None
-    if records_raw is None:
-        records_raw = []
+        results = payload["finance"]["result"]
+    except (KeyError, TypeError) as exc:
+        message = f"{command} response missing finance.result"
+        raise TabularShapeError(message) from exc
+    if not isinstance(results, list) or any(
+        not isinstance(row, dict) for row in results
+    ):
+        message = f"{command} response finance.result must be a list of objects"
+        raise TabularShapeError(message)
+    if not results:
+        return [], 0, None
+    result = results[0]
+    records_raw = result.get(record_key)
 
     schema_hint: list[str] | None = None
     records: list[dict[str, Any]]
@@ -867,6 +933,7 @@ def _build_column(values: list[Any], dtype: Any) -> list[Any]:  # ruff:ignore[an
     return values  # Boolean / Int64 pass through
 
 
+@_shape_errors
 def build_tabular_frame(
     column_data: dict[str, list[Any]],
     columns: list[str],
@@ -911,9 +978,9 @@ def resolve_column_order(
         ``[]`` when the response had no schema information to draw from.
     """
 
-    for record in records:
-        if record:
-            return list(record.keys())
+    columns = list(dict.fromkeys(key for record in records for key in record))
+    if columns:
+        return columns
     if schema_hint is not None:
         return list(schema_hint)
     return []

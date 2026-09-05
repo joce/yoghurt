@@ -69,8 +69,8 @@ empty frame, while `'Software—Application'` returns SAP/SHOP/CRM/ADBE/INTU.
 
 **Severity:** low
 
-The `screener()` route only responds with `formatted=true` (yoghurt sets
-this by default) and returns camelCase record keys (`marketCap`,
+The `screener()` route requests unformatted values and returns camelCase
+record keys (`marketCap`,
 `peRatioLtm`). The `visualization()` route returns snake_case or dotted
 keys (`intradaymarketcap`, `peratio.lasttwelvemonths`) matching what you
 wrote in `SELECT`.

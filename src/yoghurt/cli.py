@@ -20,6 +20,7 @@ from typing import TYPE_CHECKING, Any, Final, Protocol, TextIO, cast
 from typing_extensions import override
 
 from yoghurt import __version__
+from yoghurt._urls import YAHOO_FINANCE_QUERY_URL
 from yoghurt.client import YahooClient
 from yoghurt.commands import COMMANDS, COMMANDS_BY_NAME, CommandSpec, FieldReference
 from yoghurt.exceptions import YoghurtError
@@ -92,6 +93,8 @@ class _HelpFormatter(
         if help_text is None:
             help_text = ""
         if action.default is argparse.SUPPRESS or action.default is None:
+            return help_text
+        if action.nargs == 0 and isinstance(action.default, bool):
             return help_text
         if "%(default)" in help_text:
             return help_text
@@ -847,7 +850,7 @@ def _add_skills_command_group(skills_parser: argparse.ArgumentParser) -> None:
 
 _VISUALIZATION_EPILOG: Final[str] = """\
 Yahoo endpoint:
-  https://query1.finance.yahoo.com/v1/finance/visualization
+  {YAHOO_FINANCE_QUERY_URL}/v1/finance/visualization
 
 Grammar: SELECT cols FROM entities [WHERE expr] [ORDER BY field] [LIMIT n]
          AGGREGATE date_hist(field, 'interval') FROM entities [WHERE expr]
@@ -898,11 +901,13 @@ Premium data:
   Four entities return 401 on direct query (analyst_ratings,
   tradingcentral_event_info, institutional_interest, institutional_holdings).
   See `yoghurt screener-predefined --help` for curated presets that surface
-  slices on the free tier."""
+  slices on the free tier.""".replace(
+    "{YAHOO_FINANCE_QUERY_URL}", YAHOO_FINANCE_QUERY_URL
+)
 
 _SCREENER_EPILOG: Final[str] = """\
 Yahoo endpoint:
-  https://query1.finance.yahoo.com/v1/finance/screener
+  {YAHOO_FINANCE_QUERY_URL}/v1/finance/screener
 
 Grammar: SELECT cols FROM quote_type [WHERE expr] [ORDER BY field] [LIMIT n]
 Run `yoghurt screener --help-verbose` for the full DSL reference.
@@ -940,7 +945,9 @@ Premium data:
   Many quoteTypes include isPremium=true fields that 401 when filtered.
   Premium-data entities (analyst_ratings, tradingcentral_event_info,
   institutional_interest, institutional_holdings) are reachable on the free
-  tier only through curated `screener-predefined` presets."""
+  tier only through curated `screener-predefined` presets.""".replace(
+    "{YAHOO_FINANCE_QUERY_URL}", YAHOO_FINANCE_QUERY_URL
+)
 
 
 def _add_query_command_options(parser: argparse.ArgumentParser, *, route: str) -> None:

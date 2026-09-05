@@ -13,7 +13,7 @@ import pytest
 from yoghurt.cli import main
 from yoghurt.history import HISTORY_REQUEST_BATCH_SIZE
 
-from .test_cli import StubClient, assert_formatted_default_false
+from .test_cli import StubClient, assert_formatted_toggle_help
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -887,10 +887,10 @@ def test_chart_help_documents_format_and_out(
     assert "Required when --format parquet" in out
 
 
-def test_screener_help_documents_format_and_out_and_formatted_default_false(
+def test_screener_help_documents_format_and_out_and_formatted_toggle(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """Screener --help shows the parquet flags and the new --formatted default."""
+    """Screener --help shows the Parquet flags and the --formatted toggle."""
 
     with pytest.raises(SystemExit) as exc_info:
         main(["screener", "--help"])
@@ -898,7 +898,7 @@ def test_screener_help_documents_format_and_out_and_formatted_default_false(
     out = capsys.readouterr().out
     assert "--format {json,parquet}" in out
     assert "--out PATH" in out
-    assert_formatted_default_false(out)
+    assert_formatted_toggle_help(out)
 
 
 def test_visualization_help_documents_format_and_out(

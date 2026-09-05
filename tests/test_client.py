@@ -3,19 +3,171 @@
 from __future__ import annotations
 
 import time
+import traceback
 from typing import TYPE_CHECKING
 
 import httpx2 as httpx
 import pytest
 
 from yoghurt.client import YahooClient
-from yoghurt.exceptions import YahooRequestError
+from yoghurt.exceptions import YahooRequestError, YahooUnavailableError
 from yoghurt.session_cache import save_session_cache
 
 if TYPE_CHECKING:
     from pathlib import Path
 
 REQUEST_ATTEMPTS = 3
+SESSION_ATTEMPTS = 2
+
+
+@pytest.mark.parametrize(
+    "cookie_case", ["empty", "missing", "expired", "wrong-domain", "non-ascii"]
+)
+@pytest.mark.asyncio
+async def test_unusable_cached_cookie_reinitializes_session(
+    tmp_path: Path, cookie_case: str
+) -> None:
+    """A future crumb expiry cannot make an unusable A3 cookie valid."""
+    cache = tmp_path / "session.json"
+    cookies = httpx.Cookies()
+    if cookie_case != "empty":
+        name = "OTHER" if cookie_case == "missing" else "A3"
+        domain = ".example.com" if cookie_case == "wrong-domain" else ".yahoo.com"
+        value = "caf\u00e9" if cookie_case == "non-ascii" else "synthetic"
+        cookies.set(name, value, domain=domain, path="/")
+        if cookie_case == "expired":
+            for cookie in cookies.jar:
+                cookie.expires = int(time.time()) - 1
+    save_session_cache(cache, cookies, "old", time.time() + 3600)
+    requests: list[str] = []
+
+    def handle(request: httpx.Request) -> httpx.Response:
+        requests.append(request.url.path)
+        if request.url.path == "/":
+            return httpx.Response(
+                200, headers={"set-cookie": "A3=test; Domain=.yahoo.com; Path=/"}
+            )
+        return httpx.Response(200, text="ok")
+
+    client = YahooClient(
+        transport=httpx.MockTransport(handle), session_cache_path=cache
+    )
+    try:
+        assert await client.get("/endpoint", {}) == "ok"
+    finally:
+        await client.aclose()
+    assert requests == ["/", "/v1/test/getcrumb", "/endpoint"]
+
+
+@pytest.mark.parametrize("description", [[], {}, None, 1])
+@pytest.mark.asyncio
+async def test_malformed_auth_description_keeps_http_error(description: object) -> None:
+    """Unhashable error descriptions cannot escape the request error contract."""
+    requests: list[str] = []
+
+    def handle(request: httpx.Request) -> httpx.Response:
+        requests.append(request.url.path)
+        if request.url.path == "/":
+            return httpx.Response(
+                200, headers={"set-cookie": "A3=test; Domain=.yahoo.com; Path=/"}
+            )
+        if request.url.path.endswith("getcrumb"):
+            return httpx.Response(200, text="synthetic")
+        return httpx.Response(
+            401, json={"finance": {"error": {"description": description}}}
+        )
+
+    client = YahooClient(transport=httpx.MockTransport(handle), use_session_cache=False)
+    try:
+        with pytest.raises(YahooRequestError, match="HTTP 401"):
+            await client.get("/endpoint", {})
+    finally:
+        await client.aclose()
+    assert requests == ["/", "/v1/test/getcrumb", "/endpoint"]
+
+
+@pytest.mark.parametrize("failure", ["rejected", "transport"])
+@pytest.mark.asyncio
+async def test_refresh_failure_and_replay_exhaustion(failure: str) -> None:
+    """Authentication recovery is bounded even when refresh or replay fails."""
+    paths: list[str] = []
+
+    def handle(request: httpx.Request) -> httpx.Response:
+        paths.append(request.url.path)
+        if request.url.path == "/":
+            return httpx.Response(
+                200, headers={"set-cookie": "A3=test; Domain=.yahoo.com; Path=/"}
+            )
+        if request.url.path.endswith("getcrumb"):
+            if failure == "transport" and paths.count("/v1/test/getcrumb") > 1:
+                message = "synthetic-cookie synthetic-crumb"
+                raise httpx.ConnectError(message, request=request)
+            return httpx.Response(200, text="synthetic-crumb")
+        return httpx.Response(
+            401, json={"finance": {"error": {"description": "Invalid Crumb"}}}
+        )
+
+    client = YahooClient(transport=httpx.MockTransport(handle), use_session_cache=False)
+    try:
+        with pytest.raises((YahooRequestError, YahooUnavailableError)) as error:
+            await client.post("/endpoint", {}, {})
+    finally:
+        await client.aclose()
+    trace = "".join(traceback.format_exception(error.value))
+    assert "synthetic-cookie" not in trace
+    assert "synthetic-crumb" not in trace
+    expected_requests = 2 if failure == "rejected" else 1
+    assert paths.count("/endpoint") == expected_requests
+    assert paths.count("/") == SESSION_ATTEMPTS
+
+
+@pytest.mark.parametrize("valid", [True, False])
+@pytest.mark.asyncio
+async def test_eu_consent_flow_and_safe_failure(*, valid: bool) -> None:
+    """EU consent handles redirects and redacts consent tokens on failure."""
+    finance_requests = 0
+
+    def handle(request: httpx.Request) -> httpx.Response:
+        nonlocal finance_requests
+        if request.url.host == "finance.yahoo.com":
+            finance_requests += 1
+            return httpx.Response(
+                302,
+                headers={
+                    "location": "https://guce.yahoo.com/consent?gcrumb=synthetic-csrf"
+                },
+            )
+        if request.url.host == "guce.yahoo.com":
+            return httpx.Response(
+                302,
+                headers={
+                    "location": "https://consent.yahoo.com/collect?sessionId=synthetic-session",
+                    "set-cookie": "GUCS=synthetic-cookie; Domain=.yahoo.com; Path=/",
+                },
+            )
+        if request.url.host == "consent.yahoo.com":
+            headers: dict[str, str] = {}
+            if request.method == "POST" and valid:
+                headers["set-cookie"] = "A3=synthetic-a3; Domain=.yahoo.com; Path=/"
+            return httpx.Response(200, headers=headers)
+        if request.url.path.endswith("getcrumb"):
+            return httpx.Response(200, text="synthetic-crumb")
+        return httpx.Response(200, text="ok")
+
+    client = YahooClient(transport=httpx.MockTransport(handle), use_session_cache=False)
+    try:
+        if valid:
+            assert await client.get("/endpoint", {}) == "ok"
+        else:
+            with pytest.raises(YahooRequestError, match="A3 cookie missing") as error:
+                await client.get("/endpoint", {})
+            trace = "".join(traceback.format_exception(error.value))
+            assert "synthetic-session" not in trace
+            assert "synthetic-csrf" not in trace
+            assert "synthetic-cookie" not in trace
+    finally:
+        await client.aclose()
+    assert finance_requests == SESSION_ATTEMPTS
 
 
 class Httpx2Mock:

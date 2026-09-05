@@ -132,6 +132,7 @@ FINANCIAL_ANALYSIS_TIMESERIES_TYPES: Final[tuple[str, ...]] = _types_for_metrics
 # request containing only inapplicable equity modules instead of returning them empty.
 FINANCIAL_ANALYSIS_QUOTE_SUMMARY_MODULES: Final[tuple[str, ...]] = (
     "quoteType",
+    "price",
     "earningsHistory",
     "earningsTrend",
     "financialData",
@@ -448,7 +449,9 @@ def build_financial_analysis(
         ):
             price_targets.append(
                 {
-                    "currency": data.financial_currency,
+                    "currency": (
+                        summary.price.currency if summary.price is not None else None
+                    ),
                     "current_price": data.current_price,
                     "target_low_price": data.target_low_price,
                     "target_mean_price": data.target_mean_price,

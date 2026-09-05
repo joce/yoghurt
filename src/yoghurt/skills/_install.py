@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 import shutil
+import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -98,21 +99,50 @@ def install(roots: list[Path]) -> list[TargetReport]:
 
     Returns:
         list[TargetReport]: One report per requested root.
+
+    Raises:
+        OSError: If staging or replacement fails.
+        ValueError: If the staged skill is invalid.
     """
     reports: list[TargetReport] = []
     for root in roots:
         skill_dir = root / SKILL_DIR_NAME
-        if skill_dir.exists() and _installed_name(skill_dir) != SKILL_DIR_NAME:
+        if skill_dir.is_symlink() or (
+            skill_dir.exists() and _installed_name(skill_dir) != SKILL_DIR_NAME
+        ):
             reports.append(
                 TargetReport(
                     root, "refused", "existing directory is not the yoghurt skill"
                 )
             )
             continue
-        if skill_dir.exists():
-            shutil.rmtree(skill_dir)
-        shutil.copytree(CONTENT_DIR, skill_dir)
-        _stamp_version(skill_dir / "SKILL.md")
+        root.mkdir(parents=True, exist_ok=True)
+        temporary = Path(tempfile.mkdtemp(dir=root))
+        stage = temporary / "new"
+        backup = temporary / "previous"
+        installed = False
+        try:
+            shutil.copytree(CONTENT_DIR, stage)
+            _stamp_version(stage / "SKILL.md")
+            if (
+                _installed_name(stage) != SKILL_DIR_NAME
+                or _installed_version(stage) != __version__
+            ):
+                message = "staged yoghurt skill is invalid"
+                raise ValueError(message)
+            if skill_dir.exists():
+                skill_dir.rename(backup)
+            try:
+                stage.rename(skill_dir)
+            except OSError:
+                if backup.exists():
+                    backup.rename(skill_dir)
+                raise
+            installed = True
+        finally:
+            # Preserve the old copy if restoring it also fails.
+            if installed or not backup.exists():
+                shutil.rmtree(temporary)
         reports.append(TargetReport(root, "installed", __version__))
     return reports
 

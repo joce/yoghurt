@@ -68,12 +68,14 @@ class StubClient:
         self.closed = True
 
 
-def assert_formatted_default_false(help_text: str) -> None:
-    """Assert endpoint help documents the --formatted toggle default."""
+def assert_formatted_toggle_help(help_text: str) -> None:
+    """Assert endpoint help describes the flag without an internal bool default."""
 
     assert "--formatted" in help_text
     assert "--formatted BOOL" not in help_text
-    assert "Request Yahoo formatted values. (default: False)" in help_text
+    assert "Request Yahoo formatted values." in help_text
+    assert "(default: False)" not in help_text
+    assert "(default: True)" not in help_text
 
 
 def test_top_level_help_lists_quote_endpoint(
@@ -191,7 +193,7 @@ def test_quote_help_includes_endpoint_params_and_examples(
     assert "SYMBOL[,SYMBOL...]" in captured.out
     assert "1 to 10 comma-separated Yahoo symbols" in captured.out
     assert "--fields" in captured.out
-    assert_formatted_default_false(captured.out)
+    assert_formatted_toggle_help(captured.out)
     assert "--disable-private-company" in captured.out
     assert "--top-pick-this-month" in captured.out
     assert "Common --fields values" not in captured.out
@@ -405,7 +407,7 @@ def test_lookup_help_documents_types_and_pricing_switch(
     assert "--start OFFSET" in captured
     assert "--count COUNT" in captured
     assert "--no-pricing-data" in captured
-    assert_formatted_default_false(captured)
+    assert_formatted_toggle_help(captured)
     assert "--lang LANG" in captured
     assert "--region REGION" in captured
     assert "all, equity, mutualfund, etf, index, future, currency" in captured
@@ -681,7 +683,7 @@ def test_options_help_includes_endpoint_params_and_examples(
     assert "SYMBOL" in captured.out
     assert "--date" in captured.out
     assert "YYYY-MM-DD" in captured.out
-    assert_formatted_default_false(captured.out)
+    assert_formatted_toggle_help(captured.out)
     assert "--straddle" in captured.out
     assert "--lang" in captured.out
     assert "--region" in captured.out
@@ -777,7 +779,7 @@ def test_quote_type_help_includes_endpoint_params_and_examples(
         captured.out
     )
     assert "SYMBOL" in captured.out
-    assert_formatted_default_false(captured.out)
+    assert_formatted_toggle_help(captured.out)
     assert "--lang" in captured.out
     assert "--region" in captured.out
     assert "--disable-private-company" in captured.out
@@ -886,7 +888,7 @@ def test_quote_summary_help_includes_modules_and_probe_notes(
     assert "earningsCallTranscripts" in captured.out
     assert "earningsGaap" in captured.out
     assert "earningsNonGaap" in captured.out
-    assert_formatted_default_false(captured.out)
+    assert_formatted_toggle_help(captured.out)
     assert "Yoghurt does" in captured.out
     assert "not validate module names" in captured.out
     assert "Common --modules values" not in captured.out
@@ -1763,7 +1765,7 @@ def test_insights_help_includes_params_and_probe_notes(
     )
     assert "SYMBOL[,SYMBOL...]" in captured.out
     assert "--enable-related-reports" in captured.out
-    assert_formatted_default_false(captured.out)
+    assert_formatted_toggle_help(captured.out)
     assert "--skip-all-research-reports" in captured.out
     assert "--reports-count" in captured.out
     assert "--no-ssl" in captured.out
@@ -1866,7 +1868,7 @@ def test_screener_help_includes_params_and_probe_notes(
     assert "--count" in captured.out
     assert "--start" in captured.out
     assert "--fields" not in captured.out
-    assert_formatted_default_false(captured.out)
+    assert_formatted_toggle_help(captured.out)
     assert "--no-records-response" in captured.out
     assert "--sort-field" in captured.out
     assert "--sort-type" in captured.out
@@ -2455,7 +2457,7 @@ def test_screener_help_shows_grammar_examples(
     assert "EQUITY" in captured.out
     assert "MUTUALFUND" in captured.out
     assert "--no-records-response" in captured.out
-    assert_formatted_default_false(captured.out)
+    assert_formatted_toggle_help(captured.out)
 
 
 def test_visualization_query_translates_to_post_body() -> None:

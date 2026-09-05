@@ -38,6 +38,7 @@ Entity identifiers are barewords (case-preserved): ``EQUITY``, ``ETF``,
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Final
@@ -278,11 +279,19 @@ def _classify_identifier(ident: str, position: int) -> _Token:
     return _Token("IDENT", ident, position)
 
 
-def _coerce_number(value: str) -> int | float:
+def _coerce_number(value: str, position: int) -> int | float:
     try:
         return int(value)
     except ValueError:
-        return float(value)
+        try:
+            number = float(value)
+        except ValueError:
+            message = f"Invalid number at position {position}"
+            raise QueryError(message) from None
+        if not math.isfinite(number):
+            message = f"Number must be finite at position {position}"
+            raise QueryError(message) from None
+        return number
 
 
 @dataclass(slots=True)
@@ -446,10 +455,19 @@ def _parse_optional_limit(cursor: _Cursor, builder: _StatementBuilder) -> None:
     if cursor.peek().kind != "LIMIT":
         return
     cursor.consume("LIMIT")
-    builder.limit = int(cursor.consume("NUMBER").value)
+    builder.limit = _pagination_number(cursor, minimum=1)
     if cursor.peek().kind == "OFFSET":
         cursor.consume("OFFSET")
-        builder.offset = int(cursor.consume("NUMBER").value)
+        builder.offset = _pagination_number(cursor, minimum=0)
+
+
+def _pagination_number(cursor: _Cursor, *, minimum: int) -> int:
+    token = cursor.consume("NUMBER")
+    value = _coerce_number(token.value, token.position)
+    if not isinstance(value, int) or value < minimum:
+        message = f"Expected integer >= {minimum} at position {token.position}"
+        raise QueryError(message)
+    return value
 
 
 def _parse_select_fields(cursor: _Cursor, builder: _StatementBuilder) -> None:
@@ -595,7 +613,7 @@ def _parse_literal(cursor: _Cursor) -> _LiteralValue:
         return head.value
     if head.kind == "NUMBER":
         cursor.consume("NUMBER")
-        return _coerce_number(head.value)
+        return _coerce_number(head.value, head.position)
     if head.kind == "IDENT":
         cursor.consume("IDENT")
         return head.value
