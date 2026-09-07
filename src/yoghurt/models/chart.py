@@ -116,7 +116,10 @@ class TradingPeriod(YahooModel):
         Availability mirrors ``start``.
         """
 
-        return datetime.datetime.fromtimestamp(self.start, self._fixed_offset())
+        epoch = datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc)
+        return (epoch + datetime.timedelta(seconds=self.start)).astimezone(
+            self._fixed_offset()
+        )
 
     @cached_property
     def end_datetime(self) -> datetime.datetime:
@@ -130,7 +133,10 @@ class TradingPeriod(YahooModel):
         Availability mirrors ``end``.
         """
 
-        return datetime.datetime.fromtimestamp(self.end, self._fixed_offset())
+        epoch = datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc)
+        return (epoch + datetime.timedelta(seconds=self.end)).astimezone(
+            self._fixed_offset()
+        )
 
     def _fixed_offset(self) -> datetime.timezone:
         """Build the fixed-offset timezone backing this period's datetimes.
@@ -443,7 +449,8 @@ class ChartMeta(YahooModel):
         """
 
         tz_info = ZoneInfo(self.exchange_timezone_name)
-        return datetime.datetime.fromtimestamp(timestamp, tz_info)
+        epoch = datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc)
+        return (epoch + datetime.timedelta(seconds=timestamp)).astimezone(tz_info)
 
     def __repr__(self) -> str:
         """Return a compact developer-friendly representation."""

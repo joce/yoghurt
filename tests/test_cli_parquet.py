@@ -275,6 +275,24 @@ def test_history_json_adjusts_and_combines_symbols() -> None:
     assert all(call[1]["interval"] == "1d" for call in client.calls)
 
 
+def test_history_cli_rejects_non_finite_adjusted_close() -> None:
+    """The CLI translates non-finite adjustment data into a concise error."""
+
+    payload = json.loads(_chart_body_json())
+    payload["chart"]["result"][0]["indicators"]["adjclose"][0]["adjclose"][0] = float(
+        "inf"
+    )
+    client = StubClient(body=json.dumps(payload))
+    stdout = StringIO()
+    stderr = StringIO()
+
+    exit_code = main(["history", "MSFT"], stdout=stdout, stderr=stderr, client=client)
+
+    assert exit_code == 1
+    assert not stdout.getvalue()
+    assert "without usable adjusted close" in stderr.getvalue()
+
+
 def test_history_cli_bounds_concurrent_requests() -> None:
     """The history CLI never has more than one request batch in flight."""
 
@@ -844,6 +862,20 @@ def test_quote_rejects_format_parquet(tmp_path: Path) -> None:
     assert "chart" in err
     assert "screener" in err
     assert "visualization" in err
+
+
+def test_quote_rejects_unknown_format_before_http(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Hidden format guards accept only formats the CLI recognizes."""
+
+    client = StubClient()
+    with pytest.raises(SystemExit) as exc_info:
+        main(["quote", "AAPL", "--format", "csv"], client=client)
+
+    assert exc_info.value.code == ARGPARSE_ERROR
+    assert "invalid choice" in capsys.readouterr().err
+    assert not client.calls
 
 
 def test_quote_rejects_out_alone(tmp_path: Path) -> None:

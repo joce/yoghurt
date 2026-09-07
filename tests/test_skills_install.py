@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
@@ -22,6 +23,9 @@ from yoghurt.skills import (
     status,
     uninstall,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 CONTENT = Path(__file__).parent.parent / "src" / "yoghurt" / "skills" / "content"
 DOMAIN_FILES = [
@@ -299,6 +303,79 @@ def test_install_refuses_foreign_dir_with_no_skill_md(tmp_path: Path) -> None:
     # Refused, not deleted.
     assert (foreign_dir / "some-other-file.txt").is_file()
     assert not (foreign_dir / "SKILL.md").exists()
+
+
+@pytest.mark.parametrize("operation", [install, uninstall])
+def test_body_only_name_does_not_establish_skill_ownership(
+    tmp_path: Path,
+    operation: Callable[[list[Path]], list[TargetReport]],
+) -> None:
+    """A body example naming yoghurt cannot authorize replacement or removal."""
+
+    root = tmp_path / "root"
+    skill_md = root / "yoghurt" / "SKILL.md"
+    skill_md.parent.mkdir(parents=True)
+    original = "# Foreign skill\n\n```yaml\nname: yoghurt\n```\n"
+    skill_md.write_text(original, encoding="utf-8")
+
+    reports = operation([root])
+
+    assert reports == [
+        TargetReport(root, "refused", "existing directory is not the yoghurt skill")
+    ]
+    assert skill_md.read_text(encoding="utf-8") == original
+
+
+@pytest.mark.parametrize(
+    "frontmatter",
+    [
+        "name:yoghurt",
+        "name: yoghurt\nname: other",
+        "name: yoghurt\nname: yoghurt",
+        "name: other # valid foreign name\nname: yoghurt",
+        "name: yoghurt\ndescription: [unterminated",
+        "name: yoghurt\ndescription:  [unterminated",
+        "name: yoghurt\ndescription: text: malformed mapping",
+        "name: yoghurt\ndescription: text:\tmalformed mapping",
+        "name: yoghurt\ndescription: trailing colon:",
+        "name: yoghurt\ndescription: embedded\x00control",
+        "name: yoghurt\ndescription: embedded" + chr(11) + "control",
+        "name: yoghurt\ndescription: embedded" + chr(12) + "control",
+    ],
+)
+@pytest.mark.parametrize("operation", [install, uninstall])
+def test_malformed_or_duplicate_frontmatter_does_not_establish_ownership(
+    tmp_path: Path,
+    frontmatter: str,
+    operation: Callable[[list[Path]], list[TargetReport]],
+) -> None:
+    """Only one correctly separated frontmatter name can authorize replacement."""
+
+    root = tmp_path / "root"
+    skill_md = root / "yoghurt" / "SKILL.md"
+    skill_md.parent.mkdir(parents=True)
+    original = f"---\n{frontmatter}\n---\nforeign\n"
+    skill_md.write_text(original, encoding="utf-8")
+
+    assert operation([root])[0].action == "refused"
+    assert skill_md.read_text(encoding="utf-8") == original
+
+
+@pytest.mark.parametrize("operation", [install, uninstall])
+def test_undecodable_skill_metadata_does_not_establish_ownership(
+    tmp_path: Path,
+    operation: Callable[[list[Path]], list[TargetReport]],
+) -> None:
+    """Invalid UTF-8 is foreign content and remains untouched."""
+
+    root = tmp_path / "root"
+    skill_md = root / "yoghurt" / "SKILL.md"
+    skill_md.parent.mkdir(parents=True)
+    original = b"---\nname: yoghurt\ndescription: \xff\n---\nforeign\n"
+    skill_md.write_bytes(original)
+
+    assert operation([root])[0].action == "refused"
+    assert skill_md.read_bytes() == original
 
 
 def test_install_refused_target_does_not_block_other_targets(tmp_path: Path) -> None:

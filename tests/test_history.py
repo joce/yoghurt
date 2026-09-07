@@ -76,6 +76,41 @@ def test_history_rejects_any_price_row_without_adjusted_close() -> None:
         frame_from_chart_result(result, "TEST")
 
 
+@pytest.mark.parametrize("bad_value", [float("nan"), float("inf"), float("-inf")])
+def test_history_rejects_non_finite_price_adjustments(bad_value: float) -> None:
+    """Non-finite inputs cannot escape as adjusted history prices."""
+
+    result = {
+        "timestamp": [1],
+        "indicators": {
+            "quote": [
+                {
+                    "open": [90.0],
+                    "high": [110.0],
+                    "low": [80.0],
+                    "close": [100.0],
+                    "volume": [1000],
+                }
+            ],
+            "adjclose": [{"adjclose": [bad_value]}],
+        },
+    }
+
+    with pytest.raises(TabularShapeError, match="usable adjusted close"):
+        frame_from_chart_result(result, "TEST")
+
+
+def test_history_rejects_non_finite_adjusted_close_in_corpus_record() -> None:
+    """A corrupted real chart shape cannot emit non-finite adjusted prices."""
+
+    path = Path(__file__).parent / "fixtures" / "corpus" / "chart" / "MSFT.json"
+    result = json.loads(path.read_text(encoding="utf-8"))["chart"]["result"][0]
+    result["indicators"]["adjclose"][0]["adjclose"][0] = float("nan")
+
+    with pytest.raises(TabularShapeError, match="usable adjusted close"):
+        frame_from_chart_result(result, "MSFT")
+
+
 def test_history_allows_empty_response_without_adjusted_close() -> None:
     """An empty Yahoo history remains an empty adjusted History frame."""
 

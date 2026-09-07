@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import asyncio
 import time
 import traceback
+from datetime import datetime, timezone
+from email.utils import format_datetime
 from typing import TYPE_CHECKING
 
 import httpx2 as httpx
@@ -18,6 +21,7 @@ if TYPE_CHECKING:
 
 REQUEST_ATTEMPTS = 3
 SESSION_ATTEMPTS = 2
+TOO_MANY_REQUESTS = 429
 
 
 @pytest.mark.parametrize(
@@ -325,3 +329,274 @@ async def test_get_uses_cached_session_without_refreshing(
     assert [request.url.host for request in httpx_mock.requests] == [
         "query1.finance.yahoo.com"
     ]
+
+
+@pytest.mark.asyncio
+async def test_cold_public_chart_skips_session_bootstrap() -> None:
+    """A healthy public chart request does not depend on Yahoo's homepage."""
+
+    requests: list[str] = []
+
+    def handle(request: httpx.Request) -> httpx.Response:
+        requests.append(request.url.path)
+        assert request.url.path == "/v8/finance/chart/AAPL"
+        return httpx.Response(200, text='{"chart":true}')
+
+    client = YahooClient(transport=httpx.MockTransport(handle), use_session_cache=False)
+    try:
+        body = await client.get("/v8/finance/chart/AAPL", {}, use_crumb=False)
+    finally:
+        await client.aclose()
+
+    assert body == '{"chart":true}'
+    assert requests == ["/v8/finance/chart/AAPL"]
+
+
+@pytest.mark.asyncio
+async def test_public_chart_uses_cached_cookie_without_refreshing(
+    tmp_path: Path,
+) -> None:
+    """A cached session remains available to a direct public chart call."""
+
+    cache_path = tmp_path / "session.json"
+    cookies = httpx.Cookies()
+    cookies.set("A3", "token", domain=".yahoo.com", path="/")
+    save_session_cache(cache_path, cookies, "crumb-token", time.time() + 3600)
+    requests: list[str] = []
+
+    def handle(request: httpx.Request) -> httpx.Response:
+        requests.append(request.url.path)
+        assert "A3=token" in request.headers.get("Cookie", "")
+        return httpx.Response(200, text="ok")
+
+    client = YahooClient(
+        session_cache_path=cache_path, transport=httpx.MockTransport(handle)
+    )
+    try:
+        assert await client.get("/v8/finance/chart/AAPL", {}, use_crumb=False) == "ok"
+    finally:
+        await client.aclose()
+
+    assert requests == ["/v8/finance/chart/AAPL"]
+
+
+@pytest.mark.asyncio
+async def test_public_chart_refresh_switch_still_bootstraps_session() -> None:
+    """Explicit refresh keeps its documented session-refresh behavior."""
+
+    requests: list[str] = []
+
+    def handle(request: httpx.Request) -> httpx.Response:
+        requests.append(request.url.path)
+        if request.url.path == "/":
+            return httpx.Response(
+                200, headers={"set-cookie": "A3=test; Domain=.yahoo.com; Path=/"}
+            )
+        return httpx.Response(200, text="ok")
+
+    client = YahooClient(
+        transport=httpx.MockTransport(handle),
+        use_session_cache=False,
+        refresh_session=True,
+    )
+    try:
+        assert await client.get("/v8/finance/chart/AAPL", {}, use_crumb=False) == "ok"
+    finally:
+        await client.aclose()
+
+    assert requests == ["/", "/v8/finance/chart/AAPL"]
+
+
+@pytest.mark.asyncio
+async def test_public_chart_auth_rejection_bootstraps_and_retries() -> None:
+    """A direct chart auth rejection gets one authenticated fallback."""
+
+    requests: list[str] = []
+
+    def handle(request: httpx.Request) -> httpx.Response:
+        requests.append(request.url.path)
+        if requests == ["/v8/finance/chart/AAPL"]:
+            return httpx.Response(401)
+        if request.url.path == "/":
+            return httpx.Response(
+                200, headers={"set-cookie": "A3=test; Domain=.yahoo.com; Path=/"}
+            )
+        return httpx.Response(200, text="ok")
+
+    client = YahooClient(transport=httpx.MockTransport(handle), use_session_cache=False)
+    try:
+        assert await client.get("/v8/finance/chart/AAPL", {}, use_crumb=False) == "ok"
+    finally:
+        await client.aclose()
+
+    assert requests == ["/v8/finance/chart/AAPL", "/", "/v8/finance/chart/AAPL"]
+
+
+@pytest.mark.asyncio
+async def test_concurrent_public_chart_auth_fallback_refreshes_once() -> None:
+    """Concurrent direct failures share the existing session refresh lock."""
+
+    homepage_requests = 0
+
+    def handle(request: httpx.Request) -> httpx.Response:
+        nonlocal homepage_requests
+        if request.url.path == "/":
+            homepage_requests += 1
+            return httpx.Response(
+                200, headers={"set-cookie": "A3=test; Domain=.yahoo.com; Path=/"}
+            )
+        if "A3=test" not in request.headers.get("Cookie", ""):
+            return httpx.Response(401)
+        return httpx.Response(200, text="ok")
+
+    client = YahooClient(transport=httpx.MockTransport(handle), use_session_cache=False)
+    try:
+        results = await asyncio.gather(
+            client.get("/v8/finance/chart/AAPL", {}, use_crumb=False),
+            client.get("/v8/finance/chart/MSFT", {}, use_crumb=False),
+        )
+    finally:
+        await client.aclose()
+
+    assert results == ["ok", "ok"]
+    assert homepage_requests == 1
+
+
+@pytest.mark.asyncio
+async def test_chart_cookie_refresh_replenishes_crumb_for_authenticated_replay(
+    tmp_path: Path,
+) -> None:
+    """A chart refresh cannot leave an in-flight authenticated replay crumb-free."""
+
+    cache_path = tmp_path / "session.json"
+    cookies = httpx.Cookies()
+    cookies.set("A3", "old-cookie", domain=".yahoo.com", path="/")
+    save_session_cache(cache_path, cookies, "old-crumb", time.time() + 3600)
+    quote_started = asyncio.Event()
+    chart_finished = asyncio.Event()
+    paths: list[str] = []
+    chart_attempts = 0
+    quote_attempts = 0
+
+    async def handle(request: httpx.Request) -> httpx.Response:
+        nonlocal chart_attempts, quote_attempts
+        paths.append(request.url.path)
+        if request.url.path == "/v7/finance/quote":
+            quote_attempts += 1
+            if quote_attempts == 1:
+                assert request.url.params["crumb"] == "old-crumb"
+                quote_started.set()
+                await chart_finished.wait()
+                return httpx.Response(
+                    401,
+                    json={"finance": {"error": {"description": "Invalid Crumb"}}},
+                )
+            assert request.url.params["crumb"] == "new-crumb"
+            return httpx.Response(200, text="quote-ok")
+        if request.url.path == "/v8/finance/chart/AAPL":
+            chart_attempts += 1
+            if chart_attempts == 1:
+                await quote_started.wait()
+                return httpx.Response(401)
+            chart_finished.set()
+            return httpx.Response(200, text="chart-ok")
+        if request.url.path == "/":
+            return httpx.Response(
+                200,
+                headers={"set-cookie": "A3=new-cookie; Domain=.yahoo.com; Path=/"},
+            )
+        if request.url.path == "/v1/test/getcrumb":
+            return httpx.Response(200, text="new-crumb")
+        raise AssertionError(request.url.path)
+
+    client = YahooClient(
+        session_cache_path=cache_path, transport=httpx.MockTransport(handle)
+    )
+    try:
+        quote, chart = await asyncio.gather(
+            client.get("/v7/finance/quote", {}),
+            client.get("/v8/finance/chart/AAPL", {}, use_crumb=False),
+        )
+    finally:
+        await client.aclose()
+
+    assert (quote, chart) == ("quote-ok", "chart-ok")
+    assert paths == [
+        "/v7/finance/quote",
+        "/v8/finance/chart/AAPL",
+        "/",
+        "/v8/finance/chart/AAPL",
+        "/v1/test/getcrumb",
+        "/v7/finance/quote",
+    ]
+
+
+@pytest.mark.parametrize(
+    ("header", "expected_delay"),
+    [
+        ("2", 2.0),
+        (format_datetime(datetime.fromtimestamp(1003, timezone.utc), usegmt=True), 3.0),
+        ("not-a-delay", 0.25),
+        ("NaN", 0.25),
+        ("-2", 0.0),
+    ],
+)
+@pytest.mark.asyncio
+async def test_retry_after_controls_retry_delay(
+    monkeypatch: pytest.MonkeyPatch, header: str, expected_delay: float
+) -> None:
+    """Numeric/date delays are honored; malformed and past values stay safe."""
+
+    sleeps: list[float] = []
+    real_sleep = asyncio.sleep
+
+    async def fake_sleep(delay: float) -> None:
+        await real_sleep(0)
+        sleeps.append(delay)
+
+    responses = iter(
+        [httpx.Response(503, headers={"Retry-After": header}), httpx.Response(200)]
+    )
+    monkeypatch.setattr("yoghurt.client.time.time", lambda: 1000.0)
+    monkeypatch.setattr("yoghurt.client.asyncio.sleep", fake_sleep)
+    client = YahooClient(
+        transport=httpx.MockTransport(lambda _request: next(responses)),
+        use_session_cache=False,
+    )
+    try:
+        await client.get("/v8/finance/chart/AAPL", {}, use_crumb=False)
+    finally:
+        await client.aclose()
+
+    assert sleeps == [expected_delay]
+
+
+@pytest.mark.asyncio
+async def test_retry_after_beyond_bound_surfaces_without_early_retry(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A server delay beyond the wait budget is not clamped into an early replay."""
+
+    requests = 0
+    real_sleep = asyncio.sleep
+
+    def handle(_request: httpx.Request) -> httpx.Response:
+        nonlocal requests
+        requests += 1
+        return httpx.Response(TOO_MANY_REQUESTS, headers={"Retry-After": "120"})
+
+    async def fail_sleep(_delay: float) -> None:
+        await real_sleep(0)
+        message = "must not sleep or replay"
+        raise AssertionError(message)
+
+    monkeypatch.setattr("yoghurt.client.asyncio.sleep", fail_sleep)
+    client = YahooClient(transport=httpx.MockTransport(handle), use_session_cache=False)
+    try:
+        with pytest.raises(YahooRequestError) as exc_info:
+            await client.get("/v8/finance/chart/AAPL", {}, use_crumb=False)
+    finally:
+        await client.aclose()
+
+    assert exc_info.value.status_code == TOO_MANY_REQUESTS
+    assert requests == 1

@@ -10,7 +10,7 @@ from zoneinfo import ZoneInfo
 import pytest
 
 from yoghurt.models import QuoteType
-from yoghurt.models.chart import ChartEvents, ChartMeta
+from yoghurt.models.chart import ChartEvents, ChartMeta, TradingPeriod
 
 _CORPUS_CHART_DIR = (
     Path(__file__).resolve().parent.parent / "fixtures" / "corpus" / "chart"
@@ -196,6 +196,19 @@ def test_trading_period_datetimes_carry_fixed_gmtoffset() -> None:
     )
     assert period.start_datetime is period.start_datetime
     assert period.end_datetime is period.end_datetime
+
+
+def test_trading_period_negative_epochs_are_portable() -> None:
+    """Valid pre-1970 periods convert without the Windows C runtime."""
+
+    period = TradingPeriod(end=0, gmtoffset=3600, start=-1, timezone="CET")
+
+    assert period.start_datetime == datetime.datetime(
+        1970, 1, 1, 0, 59, 59, tzinfo=datetime.timezone(datetime.timedelta(hours=1))
+    )
+    assert period.end_datetime == datetime.datetime(
+        1970, 1, 1, 1, tzinfo=datetime.timezone(datetime.timedelta(hours=1))
+    )
 
 
 def test_chart_meta_repr_is_compact_and_symbol_forward() -> None:

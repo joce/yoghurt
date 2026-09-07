@@ -208,7 +208,8 @@ def parse_datetime_milliseconds(value: str) -> int:
     """
 
     stripped = value.strip()
-    if stripped.isdecimal() and len(stripped) >= _MILLISECONDS_TIMESTAMP_DIGITS:
+    digits = stripped.removeprefix("+").removeprefix("-")
+    if digits.isdecimal() and len(digits) >= _MILLISECONDS_TIMESTAMP_DIGITS:
         return int(stripped)
     return parse_datetime(value) * 1000
 
@@ -336,9 +337,9 @@ def _param_from_default(spec: ParamSpec, current_timestamp: int) -> ParamValue |
     ):
         return ""
     if spec.default == "today":
-        return datetime.now(timezone.utc).date().isoformat()
+        return _param_from_value(spec, datetime.now(timezone.utc).date())
     if spec.default is not None:
-        return spec.default
+        return _param_from_value(spec, spec.default)
     return None
 
 
@@ -357,6 +358,12 @@ def _param_from_value(spec: ParamSpec, value: object) -> ParamValue | None:
     if value is None or spec.path_param:
         return None
     if isinstance(value, bool | int | float):
+        if (
+            isinstance(value, int)
+            and not isinstance(value, bool)
+            and spec.kind is ParamKind.DATETIME_MILLISECONDS
+        ):
+            return parse_datetime_milliseconds(str(value))
         return value
     if isinstance(value, date):
         if spec.kind is ParamKind.DATETIME:

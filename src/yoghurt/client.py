@@ -5,8 +5,11 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import math
 import time
 from contextvars import ContextVar
+from datetime import timezone
+from email.utils import parsedate_to_datetime
 from typing import TYPE_CHECKING, Any, Final, Literal, cast
 
 import httpx2 as httpx
@@ -92,6 +95,7 @@ class YahooClient:
     _REQUEST_ATTEMPTS: Final[int] = 3
     _RETRYABLE_STATUS_CODES: Final[frozenset[int]] = frozenset({429, 502, 503, 504})
     _RETRY_DELAY_SECONDS: Final[float] = 0.25
+    _MAX_RETRY_AFTER_SECONDS: Final[float] = 5.0
 
     def __init__(
         self,
@@ -175,9 +179,11 @@ class YahooClient:
                     and status_code in self._RETRYABLE_STATUS_CODES
                     and attempt < self._REQUEST_ATTEMPTS
                 ):
-                    await asyncio.sleep(self._RETRY_DELAY_SECONDS * attempt)
-                    attempt += 1
-                    continue
+                    delay = self._retry_delay(exc.response, attempt)
+                    if delay is not None:
+                        await asyncio.sleep(delay)
+                        attempt += 1
+                        continue
                 url_str = _redact_url(exc.request.url)
                 body = exc.response.text if exc.response else None
                 raise YahooRequestError(status_code, url_str, body=body) from None
@@ -189,6 +195,25 @@ class YahooClient:
                 raise YahooUnavailableError(context) from None
             else:
                 return response
+
+    def _retry_delay(self, response: httpx.Response, attempt: int) -> float | None:
+        retry_after = response.headers.get("Retry-After")
+        if retry_after is None:
+            return self._RETRY_DELAY_SECONDS * attempt
+        try:
+            delay = float(retry_after)
+        except ValueError:
+            delay = math.nan
+        if not math.isfinite(delay):
+            try:
+                retry_at = parsedate_to_datetime(retry_after)
+                if retry_at.tzinfo is None:
+                    retry_at = retry_at.replace(tzinfo=timezone.utc)
+                delay = retry_at.timestamp() - time.time()
+            except (TypeError, ValueError, OverflowError):
+                return self._RETRY_DELAY_SECONDS * attempt
+        delay = max(delay, 0.0)
+        return delay if delay <= self._MAX_RETRY_AFTER_SECONDS else None
 
     async def _refresh_cookies(self) -> None:
         def _is_eu_consent_redirect(response: httpx.Response) -> bool:
@@ -359,7 +384,11 @@ class YahooClient:
         base_url: str | None,
         **kwargs: Any,  # ruff:ignore[any-type]
     ) -> str:
-        await self._ensure_ready(use_crumb=use_crumb)
+        public_chart = (
+            method == "GET" and not use_crumb and path.startswith("/v8/finance/chart/")
+        )
+        if not public_chart or self._refresh_session:
+            await self._ensure_ready(use_crumb=use_crumb)
         for attempt in range(2):
             crumb = self._crumb
             generation = self._session_generation
@@ -375,18 +404,33 @@ class YahooClient:
                     **kwargs,
                 )
             except YahooRequestError as exc:
+                if public_chart and not attempt and exc.status_code in {401, 403}:
+                    async with self._refresh_lock:
+                        if self._session_generation == generation:
+                            await self._refresh_cookies()
+                            self._session_generation += 1
+                    continue
                 if attempt or not use_crumb or not self._is_stale_auth(exc):
                     raise
-                async with self._refresh_lock:
-                    if self._session_generation == generation:
-                        await self._refresh_cookies()
-                        await self._refresh_crumb()
-                        self._session_generation += 1
-                        self._save_cached_session()
+                await self._recover_stale_auth(generation)
             else:
                 return response.text
         message = "request replay exhausted"
         raise AssertionError(message)
+
+    async def _recover_stale_auth(self, generation: int) -> None:
+        """Refresh stale authenticated state without losing a concurrent crumb."""
+
+        async with self._refresh_lock:
+            if self._session_generation == generation:
+                await self._refresh_cookies()
+                await self._refresh_crumb()
+                self._session_generation += 1
+                self._save_cached_session()
+            elif not self._crumb:
+                await self._refresh_crumb()
+                self._session_generation += 1
+                self._save_cached_session()
 
     @staticmethod
     def _is_stale_auth(exc: YahooRequestError) -> bool:

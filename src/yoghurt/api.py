@@ -551,8 +551,8 @@ class Ticker:
         result populates; unrequested families are ``None``. ``earnings``/
         ``ipoEvents``/``secReports`` are empty unless ``start_date``/
         ``end_date`` cover a day the symbol actually had that kind of event
-        on; the default (window-less) request is always empty for all three
-        — live-confirmed 2026-07-05 (corpus:
+        on. The default rolling three-day window may contain no relevant
+        event; explicit windows populated all three in 2026-07-05 probes (corpus:
         ``calendar-events/IVF_earnings.json`` and siblings). An unrecognized
         symbol is not an error: Yahoo returns the same valid-empty
         ``{"earnings": []}`` shape as a recognized symbol with no scheduled
@@ -715,16 +715,11 @@ class Ticker:
     ) -> RecommendationsResult:
         """Fetch related-symbol recommendations for this symbol.
 
-        An unrecognized symbol surfaces as a model-validation failure
-        (``YahooApiError``, code ``"model-validation"``) rather than
-        ``SymbolNotFoundError``: Yahoo returns HTTP 200 with a valid-but-
-        empty ``{"result": []}`` shape, and ``RecommendationsResult``
-        requires both ``recommended_symbols``/``symbol`` on every record, so
-        validating the resulting ``{}`` fails — confirmed live 2026-07-05,
-        corpus: ``recommendations-by-symbol/ZZZZXYZQ.json``. Yahoo sends the
-        identical valid-empty shape (not an error) for some instrument types
-        with no recommendations to report (corpus-confirmed on the FUTURE
-        symbol ``ES=F``), which surfaces the same way.
+        Yahoo returns the same empty result list for some instrument types
+        with no coverage and for unrecognized symbols. Both return an empty
+        ``RecommendationsResult`` using the requested symbol; the response
+        does not distinguish those cases. Populated malformed records still
+        raise ``YahooApiError(code="model-validation")``.
 
         Returns:
             RecommendationsResult: The validated recommendations record.
@@ -738,18 +733,18 @@ class Ticker:
             )
         )
         results: list[dict[str, Any]] = payload["finance"]["result"]
-        record: dict[str, Any] = results[0] if results else {}
+        record: dict[str, Any] = (
+            results[0] if results else {"symbol": self.symbol, "recommendedSymbols": []}
+        )
         return validate_model(RecommendationsResult, record)
 
     def stock_recommender(self) -> StockRecommenderResult:
         """Fetch related-tickers peers for this equity symbol.
 
-        An unrecognized symbol's 404 is truly unmappable and propagates as
-        a bare ``YahooRequestError``: unlike every other endpoint in this
-        batch, the 404 body is ``{"message": "Not Found"}`` (no ``detail``
-        key), which ``yoghurt._core.map_http_error`` cannot map to
-        ``SymbolNotFoundError`` or any other typed error — confirmed live
-        2026-07-05, corpus: ``stock-recommender/ZZZZXYZQ.json``.
+        The endpoint's known unrecognized-symbol 404 body is
+        ``{"message": "Not Found"}``; yoghurt maps that exact shape to
+        ``SymbolNotFoundError`` (confirmed live 2026-07-05, corpus:
+        ``stock-recommender/ZZZZXYZQ.json``).
 
         Returns:
             StockRecommenderResult: The validated stock-recommender record.

@@ -19,6 +19,7 @@ from yoghurt.params import (
 IMAGE_SIZE = 50
 NOV_17_2017 = 1510876800
 NOV_17_2017_MS = NOV_17_2017 * 1000
+NOV_18_2017_MS = 1510963200000
 JAN_1_2026 = 1767225600
 
 
@@ -141,6 +142,32 @@ def test_parse_datetime_milliseconds_preserves_integer_milliseconds() -> None:
     )
 
     assert coerce_param(spec, "1510876800000") == NOV_17_2017_MS
+
+
+@pytest.mark.parametrize("value", [1510876800, "1510876800", "2017-11-17"])
+def test_calendar_integer_and_string_dates_build_identical_milliseconds(
+    value: object,
+) -> None:
+    """Library integer dates use the same Unix-second contract as CLI text."""
+
+    params = build_params(
+        COMMANDS_BY_NAME["calendar-events"],
+        {"tickersFilter": "AAPL", "startDate": value, "endDate": 1510963200},
+    )
+
+    assert params["startDate"] == NOV_17_2017_MS
+    assert params["endDate"] == NOV_18_2017_MS
+
+
+def test_static_chart_events_default_uses_normal_param_coercion() -> None:
+    """Omitted and explicit chart events build the same wire request."""
+
+    command = COMMANDS_BY_NAME["chart"]
+
+    assert build_params(command, {})["events"] == "div|split|earn"
+    assert build_params(command, {"events": "div,split,earn"})["events"] == (
+        "div|split|earn"
+    )
 
 
 def test_coerce_csv_param_validates_allowed_values() -> None:

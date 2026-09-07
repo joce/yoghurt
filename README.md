@@ -381,14 +381,16 @@ as TA-Lib.
 
 ## Parquet output
 
-`chart`, `history`, `screener`, and `visualization` can write a typed Parquet table
-instead of raw JSON. Parquet is built in — no extra install step needed.
+`chart`, `history`, `market-calendar`, `screener`, and `visualization` can write a
+typed Parquet table instead of JSON. Parquet is built in — no extra install step
+needed.
 
 Pass `--format parquet --out PATH`:
 
 ```powershell
 uv run yoghurt chart AAPL --interval 1d --format parquet --out aapl_1d.parquet
 uv run yoghurt history AAPL,MSFT --period 1y --format parquet --out history.parquet
+uv run yoghurt market-calendar earnings --format parquet --out calendar.parquet
 uv run yoghurt screener --query "SELECT ticker, intradaymarketcap FROM EQUITY \
   WHERE region = 'us' AND sector = 'Technology' ORDER BY intradaymarketcap DESC LIMIT 50" \
   --format parquet --out tech.parquet
@@ -398,7 +400,7 @@ uv run yoghurt visualization --query "SELECT ticker, startdatetime FROM sp_earni
 ```
 
 On success a single JSON descriptor line goes to stdout (the file format,
-out path, row count, byte size). Parquet writes are scoped to these four
+out path, row count, byte size). Parquet writes are scoped to these five
 intrinsically tabular commands; every other command stays JSON-only. The
 chart schema is fixed (`ts`, `open`, `high`, `low`, `close`, `volume`,
 `adj_close`). History uses `symbol`, `ts`, adjusted `open`, `high`, `low`,
@@ -575,8 +577,10 @@ when custom calendar fields or filters matter more than the stable schemas.
 
 ### Chart
 
-The `chart` command calls Yahoo's `/v8/finance/chart/{symbol}` endpoint without
-requesting a crumb:
+The `chart` command calls Yahoo's public `/v8/finance/chart/{symbol}` endpoint
+directly without requesting a crumb or requiring session bootstrap. An explicit
+`--refresh-session` still refreshes the session, and an authentication rejection
+gets one authenticated fallback:
 
 ```powershell
 uv run yoghurt chart AAPL
@@ -664,6 +668,7 @@ files are needed.
 Date and datetime parameters accept:
 
 - Unix timestamps, such as `1510876800`.
+- Unix-millisecond timestamps where the endpoint supports them.
 - Date-only values, such as `2017-11-17`.
 - ISO datetime values.
 
@@ -680,7 +685,9 @@ The wire-oriented `raw --param key=value` escape hatch accepts wire values.
 ## Session Cache
 
 Most Yahoo endpoints require a cookie and crumb. Yoghurt establishes that session
-state automatically and caches it for reuse across CLI calls.
+state automatically and caches it for reuse across CLI calls. Retryable GET
+responses honor a short `Retry-After`; delays beyond the bounded wait budget are
+returned as errors for the caller to retry later.
 
 Useful global options:
 
@@ -694,7 +701,9 @@ Yoghurt never prints cookies, crumbs, or full session-cache contents.
 
 ## Output Contract
 
-Endpoint commands write Yahoo response bodies to stdout exactly as returned.
+Endpoint commands preserve Yahoo's JSON structure and response text, followed by
+the CLI's normal text newline. This is text output, not a byte-for-byte archival
+capture.
 The derived `history`, `financial-analysis`, and `market-calendar` commands
 emit normalized analysis tables instead. Raw endpoint output remains easy to
 pipe into tools that expect JSON:

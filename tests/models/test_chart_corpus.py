@@ -45,6 +45,7 @@ _EXPECTED_SPARK_FILE_COUNT = 24
 _EXPECTED_SPARK_META_COUNT = 24
 _EXPECTED_COMBINED_META_COUNT = 48
 _EXPECTED_REQUIRED_FIELD_COUNT = 21
+_EPOCH_YEAR = 1970
 
 
 def _load_json(
@@ -159,6 +160,17 @@ def test_meta_validates_with_no_extra_fields(meta: dict[str, object]) -> None:
         f"ChartMeta gained unmodeled fields (drift alarm): {_flatten_extras(nested)}"
     )
     assert not nested, message
+
+
+@pytest.mark.parametrize("symbol", ["_GSPC", "_IRX", "_TNX"])
+def test_pre_epoch_first_trade_datetime_is_portable(symbol: str) -> None:
+    """Corpus timestamps before 1970 convert on Windows as aware datetimes."""
+
+    payload = _load_json(_CORPUS_CHART_DIR / f"{symbol}.json")
+    meta = ChartMeta.model_validate(payload["chart"]["result"][0]["meta"])
+
+    assert meta.first_trade_datetime.year < _EPOCH_YEAR
+    assert meta.first_trade_datetime.tzinfo is not None
 
 
 def test_combined_meta_stream_has_expected_record_count() -> None:

@@ -221,8 +221,68 @@ _TIMESERIES_QUARTERLY_TRAILING_METRICS: tuple[FieldReference, ...] = (
     FieldReference("ResearchAndDevelopment", "research and development expense"),
 )
 
+# Every name below returned quarterly observations in the dated cross-market
+# corpus quarterly_2026-09-07; descriptions reuse the annual catalog.
+_TIMESERIES_QUARTERLY_STATEMENT_METRICS = tuple(
+    metric
+    for metric in _TIMESERIES_ANNUAL_METRICS
+    if metric.name
+    in {
+        "AccountsPayable",
+        "AccountsReceivable",
+        "BeginningCashPosition",
+        "CapitalExpenditure",
+        "CapitalLeaseObligations",
+        "CashCashEquivalentsAndShortTermInvestments",
+        "CashDividendsPaid",
+        "CashFlowFromContinuingFinancingActivities",
+        "ChangeInAccountPayable",
+        "ChangeInCashSupplementalAsReported",
+        "ChangeInInventory",
+        "ChangeInWorkingCapital",
+        "ChangesInAccountReceivables",
+        "CommonStockIssuance",
+        "CurrentAssets",
+        "CurrentLiabilities",
+        "DeferredIncomeTax",
+        "DepreciationAndAmortization",
+        "EndCashPosition",
+        "FreeCashFlow",
+        "Goodwill",
+        "GoodwillAndOtherIntangibleAssets",
+        "Inventory",
+        "InvestedCapital",
+        "InvestingCashFlow",
+        "LongTermDebt",
+        "NetDebt",
+        "NetOtherFinancingCharges",
+        "NetOtherInvestingChanges",
+        "NetPPE",
+        "OperatingCashFlow",
+        "OtherNonCashItems",
+        "PurchaseOfBusiness",
+        "PurchaseOfInvestment",
+        "RepaymentOfDebt",
+        "RepurchaseOfCapitalStock",
+        "SaleOfInvestment",
+        "StockBasedCompensation",
+        "StockholdersEquity",
+        "TangibleBookValue",
+        "TotalAssets",
+        "TotalDebt",
+        "TotalLiabilitiesNetMinorityInterest",
+        "TotalNonCurrentAssets",
+        "TotalNonCurrentLiabilitiesNetMinorityInterest",
+        "WorkingCapital",
+    }
+)
+
 TIMESERIES_TYPE_REFERENCES: tuple[FieldReference, ...] = (
     *_TIMESERIES_EVENTS,
+    *_prefixed_field_references(
+        (FieldReference("quarterly", "Quarterly"),),
+        _TIMESERIES_QUARTERLY_STATEMENT_METRICS,
+    ),
     *_prefixed_field_references(
         _TIMESERIES_QUARTERLY_TRAILING_PREFIXES,
         _TIMESERIES_VALUATION_METRICS,

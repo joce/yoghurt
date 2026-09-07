@@ -113,7 +113,12 @@ _CASH_FLOW_METRICS: Final[frozenset[str]] = frozenset(
 
 
 def _matches(type_name: str, metrics: frozenset[str]) -> bool:
-    return any(type_name.endswith(metric) for metric in metrics)
+    metric = type_name
+    for prefix in ("annual", "quarterly", "trailing"):
+        if metric.startswith(prefix):
+            metric = metric.removeprefix(prefix)
+            break
+    return type_name in metrics or metric in metrics
 
 
 def _types_for_metrics(metrics: frozenset[str]) -> tuple[str, ...]:

@@ -313,7 +313,8 @@ def _coerce_date(value: object, name: str) -> date:
         raise TypeError(message)
     try:
         milliseconds = parse_datetime_milliseconds(str(value))
-        return datetime.fromtimestamp(milliseconds / 1000, timezone.utc).date()
+        epoch = datetime(1970, 1, 1, tzinfo=timezone.utc)
+        return (epoch + timedelta(milliseconds=milliseconds)).date()
     except (OSError, OverflowError, ValueError) as exc:
         message = f"invalid {name}: {value!r}"
         raise ValueError(message) from exc

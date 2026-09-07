@@ -130,3 +130,61 @@ quote, analysis, statistics, and fundamentals-timeseries surfaces.
 | `quarterlySellingAndMarketingExpense` | `trailingSellingAndMarketingExpense` | Quarterly and trailing selling and marketing expense. |
 | `quarterlySellingGeneralAndAdministration` | `trailingSellingGeneralAndAdministration` | Quarterly and trailing selling, general, and administrative expense. |
 | `quarterlyResearchAndDevelopment` | `trailingResearchAndDevelopment` | Quarterly and trailing research and development expense. |
+
+## Quarterly Balance Sheet and Cash Flow
+
+Observed on 2026-09-07 across AAPL, MSFT, RY.TO, 0700.HK, 7203.T, and
+SHEL.L over 2024-01-01 through 2026-09-07. Availability varies by symbol;
+these names do not promise every metric on every equity. Captures and request
+provenance: `tests/fixtures/corpus/quarterly_2026-09-07/`. The five non-equity
+probes returned no observations. Quarterly net income was already cataloged
+and remains in the income statement; cash flow retains annual net income.
+
+| Type | Description |
+| --- | --- |
+| `quarterlyAccountsPayable` | Quarterly accounts payable. |
+| `quarterlyAccountsReceivable` | Quarterly accounts receivable. |
+| `quarterlyBeginningCashPosition` | Quarterly beginning cash position. |
+| `quarterlyCapitalExpenditure` | Quarterly capital expenditure. |
+| `quarterlyCapitalLeaseObligations` | Quarterly capital lease obligations. |
+| `quarterlyCashCashEquivalentsAndShortTermInvestments` | Quarterly cash, cash equivalents, and short-term investments. |
+| `quarterlyCashDividendsPaid` | Quarterly cash dividends paid. |
+| `quarterlyCashFlowFromContinuingFinancingActivities` | Quarterly cash flow from continuing financing activities. |
+| `quarterlyChangeInAccountPayable` | Quarterly change in account payable. |
+| `quarterlyChangeInCashSupplementalAsReported` | Quarterly supplemental change in cash as reported. |
+| `quarterlyChangeInInventory` | Quarterly change in inventory. |
+| `quarterlyChangeInWorkingCapital` | Quarterly change in working capital. |
+| `quarterlyChangesInAccountReceivables` | Quarterly changes in account receivables. |
+| `quarterlyCommonStockIssuance` | Quarterly common stock issuance. |
+| `quarterlyCurrentAssets` | Quarterly current assets. |
+| `quarterlyCurrentLiabilities` | Quarterly current liabilities. |
+| `quarterlyDeferredIncomeTax` | Quarterly deferred income tax. |
+| `quarterlyDepreciationAndAmortization` | Quarterly depreciation and amortization. |
+| `quarterlyEndCashPosition` | Quarterly ending cash position. |
+| `quarterlyFreeCashFlow` | Quarterly free cash flow. |
+| `quarterlyGoodwill` | Quarterly goodwill. |
+| `quarterlyGoodwillAndOtherIntangibleAssets` | Quarterly goodwill and other intangible assets. |
+| `quarterlyInventory` | Quarterly inventory. |
+| `quarterlyInvestedCapital` | Quarterly invested capital. |
+| `quarterlyInvestingCashFlow` | Quarterly investing cash flow. |
+| `quarterlyLongTermDebt` | Quarterly long-term debt. |
+| `quarterlyNetDebt` | Quarterly net debt. |
+| `quarterlyNetOtherFinancingCharges` | Quarterly net other financing charges. |
+| `quarterlyNetOtherInvestingChanges` | Quarterly net other investing changes. |
+| `quarterlyNetPPE` | Quarterly net property, plant, and equipment. |
+| `quarterlyOperatingCashFlow` | Quarterly operating cash flow. |
+| `quarterlyOtherNonCashItems` | Quarterly other non-cash items. |
+| `quarterlyPurchaseOfBusiness` | Quarterly business purchases. |
+| `quarterlyPurchaseOfInvestment` | Quarterly investment purchases. |
+| `quarterlyRepaymentOfDebt` | Quarterly debt repayments. |
+| `quarterlyRepurchaseOfCapitalStock` | Quarterly capital stock repurchases. |
+| `quarterlySaleOfInvestment` | Quarterly investment sales. |
+| `quarterlyStockBasedCompensation` | Quarterly stock-based compensation. |
+| `quarterlyStockholdersEquity` | Quarterly stockholders' equity. |
+| `quarterlyTangibleBookValue` | Quarterly tangible book value. |
+| `quarterlyTotalAssets` | Quarterly total assets. |
+| `quarterlyTotalDebt` | Quarterly total debt. |
+| `quarterlyTotalLiabilitiesNetMinorityInterest` | Quarterly total liabilities net minority interest. |
+| `quarterlyTotalNonCurrentAssets` | Quarterly total non-current assets. |
+| `quarterlyTotalNonCurrentLiabilitiesNetMinorityInterest` | Quarterly total non-current liabilities net minority interest. |
+| `quarterlyWorkingCapital` | Quarterly working capital. |

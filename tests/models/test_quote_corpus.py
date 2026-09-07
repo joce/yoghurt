@@ -30,6 +30,7 @@ _CORPUS_FILES = sorted(_CORPUS_QUOTE_DIR.glob("*.json"))
 _EXPECTED_CORPUS_FILE_COUNT = 26
 _EXPECTED_CORPUS_RECORD_COUNT = 28
 _EXPECTED_MULTI_JSON_RECORD_COUNT = 4
+_EPOCH_YEAR = 1970
 
 
 def _records_in(path: Path) -> list[dict[str, object]]:
@@ -106,6 +107,17 @@ def test_record_validates_with_no_extra_fields(record: dict[str, object]) -> Non
     nested = collect_nested_extras(quote)
     message = f"Quote gained unmodeled fields (drift alarm): {_flatten_extras(nested)}"
     assert not nested, message
+
+
+@pytest.mark.parametrize("symbol", ["_GSPC", "_IRX", "_TNX"])
+def test_pre_epoch_first_trade_datetime_is_portable(symbol: str) -> None:
+    """Corpus timestamps before 1970 convert on Windows as aware datetimes."""
+
+    quote = Quote.model_validate(_records_in(_CORPUS_QUOTE_DIR / f"{symbol}.json")[0])
+
+    assert quote.first_trade_datetime is not None
+    assert quote.first_trade_datetime.year < _EPOCH_YEAR
+    assert quote.first_trade_datetime.tzinfo is not None
 
 
 def test_nested_extras_walker_sees_below_top_level() -> None:

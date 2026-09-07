@@ -107,6 +107,19 @@ def test_raw_http_error_without_recognizable_body_reraises_original() -> None:
         map_http_error("raw", request_error)
 
 
+def test_stock_recommender_bare_not_found_maps_for_symbol_lookup() -> None:
+    """The endpoint-specific bare 404 maps narrowly when a symbol is known."""
+
+    request_error = YahooRequestError(
+        _HTTP_NOT_FOUND, "https://x", body='{"message": "Not Found"}'
+    )
+
+    with pytest.raises(SymbolNotFoundError) as exc_info:
+        map_http_error("stock-recommender", request_error, symbol="ZZZZXYZQ")
+
+    assert exc_info.value.symbol == "ZZZZXYZQ"
+
+
 @pytest.mark.parametrize(
     "rel",
     ["chart/ZZZZXYZQ.json", "spark/ZZZZXYZQ.json"],

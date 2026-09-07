@@ -15,8 +15,11 @@ import json
 from pathlib import Path
 from typing import Any
 
+import pytest
+
 from yoghurt.models.summary_identity import (
     AssetProfile,
+    CorporateActionMeta,
     CorporateActions,
     PageViews,
     Price,
@@ -92,6 +95,20 @@ def test_summary_quote_type_first_trade_datetime_localizes_via_timezone() -> Non
     )
 
 
+@pytest.mark.parametrize("filename", ["_GSPC.json", "_IRX.json", "_TNX.json"])
+def test_summary_quote_type_pre_epoch_first_trade_datetime_is_portable(
+    filename: str,
+) -> None:
+    """Real pre-1970 summary epochs convert on Windows as aware datetimes."""
+
+    quote_type = SummaryQuoteType.model_validate(_load_module(filename, "quoteType"))
+
+    first_trade = quote_type.first_trade_datetime
+    assert first_trade is not None
+    assert first_trade < datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc)
+    assert first_trade.tzinfo is not None
+
+
 def test_corporate_actions_populated_example_validates_ry_to() -> None:
     """RY.TO's corporateActions is the corpus's sole populated example."""
 
@@ -117,6 +134,14 @@ def test_corporate_actions_empty_for_aapl() -> None:
     )
 
     assert corporate_actions.corporate_actions == []
+
+
+def test_corporate_action_negative_epoch_date_is_portable() -> None:
+    """A valid pre-1970 millisecond epoch converts without fromtimestamp."""
+
+    meta = CorporateActionMeta(amount="1.00", date_epoch_ms=-1, event_type="DIVIDEND")
+
+    assert meta.date == datetime.date(1969, 12, 31)
 
 
 def test_summary_detail_ex_dividend_date_is_calendar_date() -> None:

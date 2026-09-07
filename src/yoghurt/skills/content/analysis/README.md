@@ -57,13 +57,12 @@ related = Ticker("AAPL").recommendations()
 ```
 
 `recommendations()` fetches related-symbol recommendations. See
-[SHARP-EDGES.md](SHARP-EDGES.md#recommendations-empty-result-surfaces-as-a-validation-error)
-— some instrument types have none to report, and that surfaces
-differently than a normal empty result.
+[SHARP-EDGES.md](SHARP-EDGES.md#recommendations-cannot-distinguish-absence-from-an-unknown-symbol)
+— an empty result can mean no coverage or an unknown symbol.
 
 `stock_recommender()` fetches related-ticker peers for an equity symbol;
 see
-[SHARP-EDGES.md](SHARP-EDGES.md#stockrecommenders-404-is-unmappable)
+[SHARP-EDGES.md](SHARP-EDGES.md#stockrecommender-maps-its-unusual-404)
 for its unusual 404 behavior.
 
 ## Price insights and research insights

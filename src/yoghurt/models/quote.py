@@ -1213,7 +1213,8 @@ class Quote(YahooModel):
             return None
 
         tz_info = ZoneInfo(self.exchange_timezone_name)
-        return datetime.datetime.fromtimestamp(timestamp, tz_info)
+        epoch = datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc)
+        return (epoch + datetime.timedelta(seconds=timestamp)).astimezone(tz_info)
 
     def __repr__(self) -> str:
         """Return a compact developer-friendly representation.

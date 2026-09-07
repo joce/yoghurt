@@ -1,7 +1,7 @@
 """Parquet writers for the CLI's tabular commands.
 
-This module is a documented, scoped exception to the ``AGENTS.md`` rule that
-yoghurt prints Yahoo bodies to stdout exactly as returned. The exception
+This module is a documented, scoped exception to endpoint commands preserving
+Yahoo's JSON structure and response text in normal CLI text output. The exception
 applies only when the user opts in to Parquet output on a supported tabular
 command. ``history`` and ``market-calendar`` are already derived tables in
 both output formats.

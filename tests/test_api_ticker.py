@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from datetime import date
+from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -41,6 +41,8 @@ _CORPUS_ROOT = Path(__file__).parent / "fixtures" / "corpus"
 _IMG_SIZE = 50
 _JAN_1_2025_EPOCH = 1_735_689_600
 _JAN_1_2026_EPOCH = 1_767_225_600
+_NOV_17_2017_MS = 1510876800000
+_NOV_18_2017_MS = 1510963200000
 
 
 def _corpus_text(relative_path: str) -> str:
@@ -242,14 +244,15 @@ def test_ticker_chart_builds_typed_bars(monkeypatch: pytest.MonkeyPatch) -> None
     assert chart.events is None
 
 
-def test_ticker_chart_all_defaults_sends_interval(
+def test_ticker_chart_all_defaults_sends_coerced_static_defaults(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """An all-defaults chart() call still sends the spec's static interval."""
+    """Library omission and explicit CLI defaults use the same wire values."""
     fake = _install_fake(monkeypatch, _corpus_text("chart/AAPL.json"))
     Ticker("AAPL").chart()
     _, params = fake.calls[0]
     assert params["interval"] == "1m"
+    assert params["events"] == "div|split|earn"
 
 
 def test_ticker_chart_accepts_relative_range(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -744,6 +747,23 @@ def test_ticker_calendar_events_returns_typed_result(
     assert path == "/ws/screeners/v1/finance/calendar-events"
 
 
+def test_ticker_calendar_events_normalizes_integer_and_aware_datetime_bounds(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Public calendar requests send Unix milliseconds for every date form."""
+
+    fake = _install_fake(monkeypatch, _corpus_text("calendar-events/AAPL.json"))
+
+    Ticker("AAPL").calendar_events(
+        start_date=1510876800,
+        end_date=datetime(2017, 11, 18, tzinfo=timezone.utc),
+    )
+
+    _, params = fake.calls[0]
+    assert params["startDate"] == _NOV_17_2017_MS
+    assert params["endDate"] == _NOV_18_2017_MS
+
+
 def test_ticker_calendar_events_model_violation_raises_yahoo_api_error(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -861,22 +881,37 @@ def test_ticker_recommendations_returns_typed_result(
     assert path == "/v6/finance/recommendationsbysymbol/AAPL"
 
 
-def test_ticker_recommendations_model_violation_raises_yahoo_api_error(
+def test_ticker_recommendations_empty_result_returns_stable_empty_model(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """An empty recommendations result list surfaces as YahooApiError."""
+    """A legitimate no-coverage result keeps the stable typed return shape."""
     payload = json.loads(_corpus_text("recommendations-by-symbol/AAPL.json"))
     payload["finance"]["result"] = []
     _install_fake(monkeypatch, json.dumps(payload))
+    result = Ticker("AAPL").recommendations()
+    assert result.symbol == "AAPL"
+    assert result.recommended_symbols == []
+
+
+def test_ticker_recommendations_malformed_record_still_fails_validation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Normalization applies only to an empty result list, not corrupt rows."""
+
+    payload = json.loads(_corpus_text("recommendations-by-symbol/AAPL.json"))
+    payload["finance"]["result"] = [{}]
+    _install_fake(monkeypatch, json.dumps(payload))
+
     with pytest.raises(YahooApiError) as exc_info:
         Ticker("AAPL").recommendations()
+
     assert exc_info.value.code == "model-validation"
 
 
-def test_ticker_recommendations_invalid_symbol_raises_yahoo_api_error(
+def test_ticker_recommendations_invalid_symbol_returns_empty_model(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """An unrecognized symbol surfaces as a model-validation failure, not a 404.
+    """An unrecognized symbol has Yahoo's indistinguishable empty result shape.
 
     Corpus-confirmed live 2026-07-05 (P4-1): Yahoo returns HTTP 200 with
     ``{"result": []}``, the same valid-but-empty shape it uses for
@@ -884,12 +919,12 @@ def test_ticker_recommendations_invalid_symbol_raises_yahoo_api_error(
     below). See ``yoghurt.api.Ticker.recommendations``'s docstring.
     """
     _install_fake(monkeypatch, _corpus_text("recommendations-by-symbol/ZZZZXYZQ.json"))
-    with pytest.raises(YahooApiError) as exc_info:
-        Ticker("ZZZZXYZQ").recommendations()
-    assert exc_info.value.code == "model-validation"
+    result = Ticker("ZZZZXYZQ").recommendations()
+    assert result.symbol == "ZZZZXYZQ"
+    assert result.recommended_symbols == []
 
 
-def test_ticker_recommendations_future_symbol_raises_yahoo_api_error(
+def test_ticker_recommendations_future_symbol_returns_empty_model(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """A FUTURE symbol with no recommendations gets the identical empty shape.
@@ -899,9 +934,9 @@ def test_ticker_recommendations_future_symbol_raises_yahoo_api_error(
     ``RecommendationsResult`` requires ``recommended_symbols``/``symbol``.
     """
     _install_fake(monkeypatch, _corpus_text("recommendations-by-symbol/ES_F.json"))
-    with pytest.raises(YahooApiError) as exc_info:
-        Ticker("ES=F").recommendations()
-    assert exc_info.value.code == "model-validation"
+    result = Ticker("ES=F").recommendations()
+    assert result.symbol == "ES=F"
+    assert result.recommended_symbols == []
 
 
 def test_ticker_stock_recommender_returns_typed_result(
@@ -928,10 +963,10 @@ def test_ticker_stock_recommender_model_violation_raises_yahoo_api_error(
     assert exc_info.value.code == "model-validation"
 
 
-def test_ticker_stock_recommender_not_found_raises_bare_yahoo_request_error(
+def test_ticker_stock_recommender_not_found_raises_symbol_not_found(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """An unrecognized symbol's 404 is truly unmappable: a bare YahooRequestError.
+    """The endpoint's known bare 404 body maps to the symbol lookup error.
 
     Corpus-confirmed live 2026-07-05 (P4-1): the 404 body is
     ``{"message": "Not Found"}`` — no ``detail`` key, unlike every other
@@ -940,5 +975,6 @@ def test_ticker_stock_recommender_not_found_raises_bare_yahoo_request_error(
     ``yoghurt.api.Ticker.stock_recommender``'s docstring.
     """
     _install_fake_error(monkeypatch, _corpus_text("stock-recommender/ZZZZXYZQ.json"))
-    with pytest.raises(YahooRequestError):
+    with pytest.raises(SymbolNotFoundError) as exc_info:
         Ticker("ZZZZXYZQ").stock_recommender()
+    assert exc_info.value.symbol == "ZZZZXYZQ"

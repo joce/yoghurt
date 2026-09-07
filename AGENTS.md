@@ -7,7 +7,7 @@ Yoghurt exposes Yahoo Finance HTTP endpoints as a typed Python library and an LL
 Python 3.10+, uv, httpx2, argparse, pytest, ruff, pyright, tox, hatchling.
 
 ## Parquet
-Parquet is written with **polars** (a core dependency); chart/history/screener/visualization only.
+Parquet is written with **polars** (a core dependency); chart/history/screener/visualization/market-calendar only.
 
 ## Commands
 - Install/sync: `uv sync --all-groups`
