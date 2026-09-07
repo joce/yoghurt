@@ -6,6 +6,45 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-09-07
+
+### Added
+
+- Quarterly balance-sheet and cash-flow coverage with 46 additional timeseries types.
+- Typed option straddle responses with optionally absent call and put legs.
+- Generated Python API reference, executable workflows, opt-in live contract probes,
+  and installed-wheel release checks.
+
+### Changed
+
+- **Breaking:** `Ticker.quote()` and `quotes()` no longer accept `fields`;
+  use CLI projections or `raw()` for selected fields.
+- **Breaking:** typed wrappers no longer accept `formatted` and request
+  unformatted values. CLI and raw requests retain formatting controls.
+- **Breaking:** `TrendingResult.job_timestamp` is now a timezone-aware UTC
+  `datetime`; use `.timestamp()` for an epoch value.
+- **Breaking:** replace `--help-verbose` with `--help --verbose` or `-h -v`.
+
+### Fixed
+
+- Quote and options response handling, trading-currency metadata, financial metric
+  classification, and screener columns that first appear in later records.
+- Malformed-response and missing-symbol errors, and empty recommendation results.
+- Millisecond date inputs, pre-1970 timestamps, chart event defaults, and rejection
+  of non-finite history values.
+- Concurrent authentication recovery, bounded retries, public chart startup,
+  and credential redaction in diagnostics.
+- Cache, Parquet, and skill replacement safety, POSIX Parquet permissions,
+  and protection of foreign skill files.
+- Public `history()` import collision and early rejection of unsupported formats.
+
+## [0.5.1] - 2026-09-05
+
+### Changed
+
+- Updated runtime and development dependencies and the setup-uv CI action.
+- Simplified README onboarding while retaining CLI, Python, and screener examples.
+
 ## [0.5.0] - 2026-08-02
 
 Minor release adding analysis-ready history, financial analysis, instrument
@@ -403,7 +442,9 @@ First PyPI release.
 - Reusable Yahoo session cache for faster one-shot calls.
 - `raw` escape hatch for query paths yoghurt doesn't model yet.
 
-[Unreleased]: https://github.com/joce/yoghurt/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/joce/yoghurt/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/joce/yoghurt/compare/v0.5.1...v0.6.0
+[0.5.1]: https://github.com/joce/yoghurt/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/joce/yoghurt/compare/v0.4.2...v0.5.0
 [0.4.2]: https://github.com/joce/yoghurt/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/joce/yoghurt/compare/v0.4.0...v0.4.1
