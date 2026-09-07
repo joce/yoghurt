@@ -83,10 +83,15 @@ def frame_from_chart_result(result: dict[str, Any], symbol: str) -> pl.DataFrame
 
     timestamps, columns = extract_chart_columns(result)
     chart = build_chart_frame(timestamps, columns)
+    price_columns = ("open", "high", "low", "close", "adj_close")
+    factor = pl.col("adj_close") / pl.col("close")
     usable_factor = (
         pl.col("close").is_not_null()
         & (pl.col("close") != 0)
+        & pl.col("close").is_finite()
         & pl.col("adj_close").is_not_null()
+        & pl.col("adj_close").is_finite()
+        & factor.is_finite()
     )
     price_bearing = pl.any_horizontal(
         pl.col("open").is_not_null(),
@@ -95,15 +100,20 @@ def frame_from_chart_result(result: dict[str, Any], symbol: str) -> pl.DataFrame
         pl.col("close").is_not_null(),
         pl.col("adj_close").is_not_null(),
     )
-    if chart.filter(price_bearing & ~usable_factor).height:
+    invalid_price = pl.any_horizontal(
+        *(
+            pl.col(name).is_not_null() & ~pl.col(name).is_finite()
+            for name in price_columns
+        )
+    )
+    if chart.filter(invalid_price | (price_bearing & ~usable_factor)).height:
         message = (
             f"{symbol}: history response has price rows without usable adjusted close"
         )
         raise TabularShapeError(message)
-    factor = pl.col("adj_close") / pl.col("close")
     # ponytail: no heuristic price repair. Add it only after corpus-backed
     # Yahoo defects demonstrate which anomalies are safe to change.
-    return chart.select(
+    adjusted = chart.select(
         pl.lit(symbol).alias("symbol"),
         "ts",
         (pl.col("open") * factor).alias("open"),
@@ -112,6 +122,14 @@ def frame_from_chart_result(result: dict[str, Any], symbol: str) -> pl.DataFrame
         pl.col("adj_close").alias("close"),
         "volume",
     )
+    if adjusted.filter(
+        pl.any_horizontal(
+            *(~pl.col(name).is_finite() for name in ("open", "high", "low", "close"))
+        )
+    ).height:
+        message = f"{symbol}: history adjustment produced non-finite prices"
+        raise TabularShapeError(message)
+    return adjusted
 
 
 def concat_frames(frames: list[pl.DataFrame]) -> pl.DataFrame:

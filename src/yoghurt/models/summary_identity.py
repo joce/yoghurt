@@ -837,7 +837,10 @@ class SummaryQuoteType(YahooModel):
         if self.first_trade_date_epoch_utc is None:
             return None
         tz_info = ZoneInfo(self.time_zone_full_name)
-        return datetime.datetime.fromtimestamp(self.first_trade_date_epoch_utc, tz_info)
+        epoch = datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc)
+        return (
+            epoch + datetime.timedelta(seconds=self.first_trade_date_epoch_utc)
+        ).astimezone(tz_info)
 
     def __repr__(self) -> str:
         """Return a compact developer-friendly representation."""
@@ -2030,9 +2033,8 @@ class CorporateActionMeta(YahooModel):
         midnight-UTC-aligned against the sole corpus example.
         """
 
-        return datetime.datetime.fromtimestamp(
-            self.date_epoch_ms // 1000, datetime.timezone.utc
-        ).date()
+        epoch = datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc)
+        return (epoch + datetime.timedelta(milliseconds=self.date_epoch_ms)).date()
 
 
 class SummaryCorporateAction(YahooModel):

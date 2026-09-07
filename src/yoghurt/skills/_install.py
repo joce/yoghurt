@@ -12,6 +12,8 @@ from yoghurt import __version__
 
 SKILL_DIR_NAME = "yoghurt"
 CONTENT_DIR = Path(__file__).parent / "content"
+_BASE_HEADER_LINES = 2
+_VERSIONED_HEADER_LINES = 4
 
 AGENT_TARGETS: dict[str, tuple[str, str]] = {
     # name -> (user-level root relative to home, project-level root relative
@@ -68,22 +70,88 @@ def _installed_name(skill_dir: Path) -> str | None:
     skill_md = skill_dir / "SKILL.md"
     if not skill_md.is_file():
         return None
-    match = re.search(
-        r"^name:\s*(\S+)", skill_md.read_text(encoding="utf-8"), flags=re.MULTILINE
-    )
-    return match.group(1) if match else None
+    frontmatter = _frontmatter(skill_md)
+    if frontmatter is None:
+        return None
+    matches = re.findall(r"^name:[ \t]+(\S+)[ \t]*$", frontmatter, re.MULTILINE)
+    return matches[0] if len(matches) == 1 else None
 
 
 def _installed_version(skill_dir: Path) -> str | None:
     skill_md = skill_dir / "SKILL.md"
     if not skill_md.is_file():
         return None
-    match = re.search(
-        r"^\s+version:\s*(\S+)",
-        skill_md.read_text(encoding="utf-8"),
+    frontmatter = _frontmatter(skill_md)
+    if frontmatter is None:
+        return None
+    matches = re.findall(
+        r"^[ \t]+version:[ \t]+(\S+)[ \t]*$",
+        frontmatter,
         flags=re.MULTILINE,
     )
-    return match.group(1) if match else None
+    return matches[0] if len(matches) == 1 else None
+
+
+def _frontmatter(skill_md: Path) -> str | None:
+    """Return the conservative frontmatter subset written by this installer."""
+
+    try:
+        text = skill_md.read_text(encoding="utf-8")
+    except UnicodeError:
+        return None
+    match = re.match(
+        r"\A---\r?\n(.*?)\r?\n---(?:\r?\n|\Z)",
+        text,
+        flags=re.DOTALL,
+    )
+    if match is None or not _is_supported_frontmatter(match.group(1)):
+        return None
+    return match.group(1)
+
+
+def _is_supported_frontmatter(frontmatter: str) -> bool:
+    """Accept only the two header shapes emitted by yoghurt releases.
+
+    Returns:
+        Whether the complete block matches an unstamped or stamped header.
+    """
+
+    if any(
+        character != "\n" and not character.isprintable() for character in frontmatter
+    ):
+        return False
+    lines = frontmatter.split("\n")
+    if len(lines) not in {_BASE_HEADER_LINES, _VERSIONED_HEADER_LINES}:
+        return False
+    if _plain_scalar(lines[0], "name") is None:
+        return False
+    if _plain_scalar(lines[1], "description") is None:
+        return False
+    return len(lines) == _BASE_HEADER_LINES or (
+        lines[2] == "metadata:" and _plain_scalar(lines[3], "  version") is not None
+    )
+
+
+def _plain_scalar(line: str, key: str) -> str | None:
+    """Extract the narrow YAML plain-scalar form written by the installer.
+
+    Returns:
+        The scalar value, or ``None`` when the line is outside the subset.
+    """
+
+    prefix = f"{key}:"
+    if not line.startswith(prefix):
+        return None
+    remainder = line[len(prefix) :]
+    if not remainder or remainder[0] != " ":
+        return None
+    value = remainder.strip(" ")
+    invalid_start = "-?:,[]{}#&*!|>'\"%@`"
+    if not value or value[0] in invalid_start:
+        return None
+    if ":" in value or "#" in value:
+        return None
+    return value
 
 
 def _stamp_version(skill_md: Path) -> None:

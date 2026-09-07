@@ -13,10 +13,14 @@ import pytest
 import yoghurt._core as core
 from yoghurt.api import Ticker
 from yoghurt.cli import main
+from yoghurt.commands import TIMESERIES_TYPE_REFERENCES
 from yoghurt.financial_analysis import (
+    _BALANCE_SHEET_METRICS,  # pyright: ignore[reportPrivateUsage]
+    _CASH_FLOW_METRICS,  # pyright: ignore[reportPrivateUsage]
     FINANCIAL_ANALYSIS_QUOTE_SUMMARY_MODULES,
     FINANCIAL_ANALYSIS_TIMESERIES_TYPES,
     FinancialAnalysis,
+    _matches,  # pyright: ignore[reportPrivateUsage]
 )
 
 if TYPE_CHECKING:
@@ -412,3 +416,87 @@ def test_financial_analysis_help_order(capsys: pytest.CaptureFixture[str]) -> No
         < help_text.index("\n    financial-analysis ")
         < help_text.index("\n    calendar-events ")
     )
+
+
+_QUARTERLY_CAPTURE = _CORPUS_ROOT / "quarterly_2026-09-07"
+
+
+@pytest.mark.parametrize(
+    "symbol",
+    [
+        "AAPL",
+        "MSFT",
+        "RY.TO",
+        "0700.HK",
+        "7203.T",
+        "SHEL.L",
+        "SPY",
+        "ES_F",
+        "EURUSD_X",
+        "_GSPC",
+        "BTC-USD",
+    ],
+)
+def test_quarterly_statement_corpus_preserves_source_rows(
+    monkeypatch: pytest.MonkeyPatch,
+    symbol: str,
+) -> None:
+    """Every observed quarterly value retains date, period, currency and statement."""
+    body = (_QUARTERLY_CAPTURE / "timeseries" / f"{symbol}.json").read_text(
+        encoding="utf-8"
+    )
+    fake = _FakeClient(timeseries_body=body)
+    monkeypatch.setattr(core, "_get_client", lambda: fake)
+    ticker = Ticker(symbol)
+    bundle = ticker.financial_analysis()
+    direct = ticker.timeseries().fundamentals.to_dicts()
+    payload = json.loads(body)
+    for frame, metrics in (
+        (bundle.balance_sheet, _BALANCE_SHEET_METRICS),
+        (bundle.cash_flow, _CASH_FLOW_METRICS - {"NetIncome"}),
+    ):
+        expected = [row for row in direct if row["type"][len("quarterly") :] in metrics]
+        assert frame.to_dicts() == expected
+        assert all(row["period_type"] == "3M" for row in expected)
+        for row in expected:
+            raw = next(
+                value
+                for series in payload["timeseries"]["result"]
+                for value in series.get(row["type"], [])
+                if value and value["asOfDate"] == row["as_of_date"].isoformat()
+            )
+            assert row["value"] == raw["reportedValue"]["raw"]
+            assert row["currency_code"] == raw["currencyCode"]
+    assert bundle.balance_sheet.to_polars().columns == _FUNDAMENTALS_COLUMNS
+    assert bundle.cash_flow.to_polars().columns == _FUNDAMENTALS_COLUMNS
+
+
+def test_quarterly_catalog_has_returned_evidence_for_every_added_name() -> None:
+    """The cross-market union proves the catalog; prefix guessing does not."""
+    manifest = json.loads(
+        (_QUARTERLY_CAPTURE / "manifest.json").read_text(encoding="utf-8")
+    )
+    observed = {
+        series["meta"]["type"][0]
+        for path in (_QUARTERLY_CAPTURE / "timeseries").glob("*.json")
+        for series in json.loads(path.read_text(encoding="utf-8"))["timeseries"][
+            "result"
+        ]
+        if any(
+            value and value.get("reportedValue", {}).get("raw") is not None
+            for value in series.get(series["meta"]["type"][0], [])
+        )
+    }
+    assert observed == set(manifest["candidates"])
+    assert observed <= {reference.name for reference in TIMESERIES_TYPE_REFERENCES}
+    assert observed <= set(FINANCIAL_ANALYSIS_TIMESERIES_TYPES)
+
+
+@pytest.mark.parametrize("prefix", ["annual", "quarterly", "trailing"])
+def test_statement_metrics_match_exactly_after_period_prefix(prefix: str) -> None:
+    """Cash changes never masquerade as balance-sheet stocks by suffix."""
+    assert not _matches(prefix + "ChangeInInventory", _BALANCE_SHEET_METRICS)
+    assert not _matches(prefix + "ChangeInWorkingCapital", _BALANCE_SHEET_METRICS)
+    assert _matches(prefix + "Inventory", _BALANCE_SHEET_METRICS)
+    assert _matches(prefix + "WorkingCapital", _BALANCE_SHEET_METRICS)
+    assert not _matches(prefix + "TotalNonCurrentAssets", frozenset({"CurrentAssets"}))

@@ -84,12 +84,13 @@ yoghurt's history return shape.
 
 ## Parquet from the CLI
 
-`chart`, `history`, `screener`, and `visualization` can write Parquet directly instead
-of JSON:
+`chart`, `history`, `market-calendar`, `screener`, and `visualization` can write
+Parquet directly instead of JSON:
 
 ```bash
 uv run yoghurt chart AAPL --interval 1d --format parquet --out aapl_1d.parquet
 uv run yoghurt history AAPL,MSFT --period 1y --format parquet --out history.parquet
+uv run yoghurt market-calendar earnings --format parquet --out earnings.parquet
 ```
 
 The derived `financial-analysis` CLI is JSON-only. In Python, call
@@ -141,7 +142,8 @@ are within each security's quote units, not a currency-converted portfolio retur
 ## Python reference
 
 Use these signatures for accepted kwargs; CLI flag names describe the CLI only.
-`DateLike` accepts Unix seconds, date/datetime objects, and documented ISO date
+`DateLike` accepts Unix seconds, supported Unix milliseconds, date/datetime
+objects, and documented ISO date
 strings. Omitted `None` endpoint arguments use command defaults. Python typed
 wrappers use default locales; `lang` and locale `region` are per-call CLI/raw controls. The explicit
 `trending(region=...)` parameter selects a regional route rather than a locale.

@@ -22,7 +22,7 @@ captures each requested one non-default module in isolation — all also
 empty except ``economicEvents``. That thinness turned out to be a probing
 gap, not an endpoint limitation: the endpoint needs an explicit
 ``--start-date``/``--end-date`` window covering a day with real events;
-the default (window-less, ``now-3d``..``now``) request has simply never
+the default rolling ``now-3d``..``now`` request had simply never
 landed on such a day. Live UI cross-checking (2026-07-05) found real
 windows for all three, since surgically captured (18 new files, per the
 978eead precedent):
@@ -64,7 +64,7 @@ ever populates more than one module key at once (the default request
 returns only ``earnings``; each ``--modules`` probe returns only that one
 module's key), so there is no evidence either way for multi-module
 requests, but nothing rules them out. The deliberate invalid-symbol probe
-(``ZZZZXYZQ``, window-less) is likewise ``{"earnings": []}`` — byte-for-byte
+(``ZZZZXYZQ``, default rolling window) is likewise ``{"earnings": []}`` — byte-for-byte
 the same valid-empty shape as an unremarkable symbol with no scheduled
 events, not an error; ``Ticker.calendar_events()`` returns a normally-typed
 (all-optional) result rather than raising, confirmed live 2026-07-05.
@@ -93,9 +93,9 @@ recommended-symbol rows, every row carrying the same two fields. Two of the
 []}`` shape rather than an error — corpus-confirmed 2026-07-05 for the
 live-observed "some instrument types have no recommendations to report"
 behavior documented on :meth:`~yoghurt.api.Ticker.recommendations`; both
-surface identically as a ``RecommendationsResult`` model-validation
-failure (``recommendedSymbols``/``symbol`` missing from ``{}``), mapped to
-``YahooApiError(code="model-validation")``.
+surface identically as an empty ``RecommendationsResult`` carrying the
+requested symbol; Yahoo's response cannot distinguish no coverage from an
+unrecognized symbol.
 
 **stock-recommender** (endpoint noun: "stock-recommender records"). A bare
 (non-enveloped) payload, distinct in shape from every other endpoint in this
@@ -105,9 +105,8 @@ uniform shape, plus the deliberate ``ZZZZXYZQ`` invalid-symbol probe (a
 4th file, excluded from :func:`~tools.fields_report.stock_recommender_records`):
 unlike every other endpoint in this batch, its 404 body is
 ``{"message": "Not Found"}`` — no ``detail`` key — so
-``yoghurt._core.map_http_error`` cannot map it to ``SymbolNotFoundError``
-or any other typed error; it is truly unmappable and propagates as a bare
-``YahooRequestError``, confirmed live 2026-07-05.
+``yoghurt._core.map_http_error`` maps this exact endpoint-specific shape to
+``SymbolNotFoundError``, confirmed live 2026-07-05.
 """
 
 from __future__ import annotations
@@ -604,16 +603,16 @@ class CalendarEventsResult(YahooModel):
     ``--modules`` probe returns only that one requested module's key). See
     the module docstring for how ``earnings``/``ipo_events``/``sec_reports``
     were finally populated — they need an explicit ``--start-date``/
-    ``--end-date`` window over a day with real events; the default
-    (window-less) request is always empty for all three.
+    ``--end-date`` window over a day with real events. The rolling default
+    window may contain no relevant event.
     """
 
     earnings: list[EarningsEventDay] | None = None
     """
     Earnings-calendar events for this symbol, bucketed by day.
 
-    Empty list on the default request (no window covers a real earnings
-    day); populated when ``--start-date``/``--end-date`` cover a day the
+    Empty in the dated default-window captures; populated when
+    ``--start-date``/``--end-date`` cover a day the
     symbol actually reported on. See :class:`EarningsEventDay`.
     """
 

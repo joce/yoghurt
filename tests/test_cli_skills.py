@@ -93,6 +93,26 @@ def test_skills_install_requires_agent_or_to(
     assert "--to" in message
 
 
+def test_skills_filesystem_error_is_reported_without_traceback(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Expected installer filesystem failures become concise CLI errors."""
+
+    def fail(_roots: list[Path]) -> object:
+        message = "replacement failed; previous copy remains at backup"
+        raise OSError(message)
+
+    monkeypatch.setattr("yoghurt.cli.skills_install", fail)
+    stderr = StringIO()
+
+    exit_code = main(["skills", "install", "--to", str(tmp_path)], stderr=stderr)
+
+    assert exit_code == 1
+    assert stderr.getvalue() == (
+        "yoghurt: error: replacement failed; previous copy remains at backup\n"
+    )
+
+
 def test_skills_install_bogus_agent_names_offender_and_known_agents(
     home_and_cwd: tuple[Path, Path],
 ) -> None:

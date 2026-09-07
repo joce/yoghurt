@@ -1,0 +1,16 @@
+{
+  "checked_at": "2026-09-07T22:44:41.463769+00:00",
+  "argv": [
+    "chart",
+    "BTC-USD",
+    "--period1",
+    "2026-01-01",
+    "--period2",
+    "2026-08-01",
+    "--interval",
+    "1d"
+  ],
+  "session_cache": false,
+  "observation": "One bar exactly at end timestamp, none after; public history does not promise exclusive-end filtering.",
+  "file": "BTC-USD.json"
+}

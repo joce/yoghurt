@@ -39,34 +39,30 @@ raise `SymbolNotFoundError` for unknown symbols); never infer validity from
 
 Evidence: 2026-07-05.
 
-## `stock_recommender`'s 404 is unmappable
+## `stock_recommender` maps its unusual 404
 
 **Severity:** medium
 
 `stock_recommender()`'s unknown-symbol 404 body carries no `detail` key
-(just `{"message": "Not Found"}`), so yoghurt's error mapping cannot turn
-it into `SymbolNotFoundError`. It surfaces as a bare `YahooRequestError`
-instead.
+(just `{"message": "Not Found"}`). Yoghurt recognizes that exact shape for
+this endpoint and raises `SymbolNotFoundError`.
 
-Right way: catch `YahooRequestError` (not `SymbolNotFoundError`) around
-`stock_recommender()` calls when symbol validity is uncertain.
+Right way: catch `SymbolNotFoundError` around `stock_recommender()` calls
+when symbol validity is uncertain.
 
 Evidence: 2026-07-05.
 
-## Recommendations empty result surfaces as a validation error
+## Recommendations cannot distinguish absence from an unknown symbol
 
 **Severity:** medium
 
 Some instrument types (for example futures) have no recommendations to
-report. Yahoo answers with a valid-but-empty shape that fails
-`RecommendationsResult`'s required fields, so it surfaces as
-`YahooApiError(code="model-validation")` rather than an empty result or
-`SymbolNotFoundError`.
+report. Yahoo answers with the same empty result list for those instruments
+and unknown symbols. Yoghurt returns an empty `RecommendationsResult` with
+the requested symbol for both cases.
 
-Right way: catch `YahooApiError` with `code == "model-validation"` around
-`recommendations()` and inspect the raw response before classifying the
-result as instrument-specific absence; a validation failure can also
-indicate schema drift.
+Right way: treat an empty `recommended_symbols` list as no recommendation
+data, not proof that the symbol exists.
 
 Evidence: 2026-07-05.
 

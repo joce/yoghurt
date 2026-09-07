@@ -63,19 +63,21 @@ def _child_models(value: object) -> list[tuple[str, YahooModel]]:
         no model members.
     """
 
+    if isinstance(value, YahooModel):
+        return [("", value)]
     if isinstance(value, (list, tuple)):
         items = cast("tuple[object, ...]", value)
         return [
-            (f"[{index}]", item)
-            for index, item in enumerate(items)
-            if isinstance(item, YahooModel)
+            (f"[{index}]{suffix}", item)
+            for index, value in enumerate(items)
+            for suffix, item in _child_models(value)
         ]
     if isinstance(value, dict):
         mapping = cast("dict[object, object]", value)
         return [
-            (f"[{key!r}]", item)
-            for key, item in mapping.items()
-            if isinstance(item, YahooModel)
+            (f"[{key!r}]{suffix}", item)
+            for key, value in mapping.items()
+            for suffix, item in _child_models(value)
         ]
     return []
 
@@ -111,6 +113,18 @@ def test_nested_extras_walker_traverses_dict_valued_fields() -> None:
         "amount": 0.83,
         "surpriseField": "new",
     }
+
+
+class _NestedListHolder(YahooModel):
+    items: list[list[YahooModel]]
+
+
+def test_nested_extras_walker_traverses_nested_containers() -> None:
+    """The drift gate reaches models below arbitrary collection nesting."""
+
+    holder = _NestedListHolder.model_validate({"items": [[{"knownOnlyToYahoo": True}]]})
+
+    assert collect_nested_extras(holder) == {"items[0][0]": {"knownOnlyToYahoo": True}}
 
 
 @pytest.fixture(scope="session")

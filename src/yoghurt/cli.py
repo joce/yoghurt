@@ -381,6 +381,7 @@ def _add_parquet_negative_guards(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--format",
         dest="output_format",
+        choices=("json", "parquet"),
         default="json",
         help=argparse.SUPPRESS,
     )
@@ -1759,7 +1760,11 @@ def main(
         parser.print_help(error_output)
         return 2
     if namespace.command_kind == "skills":
-        return _dispatch_skills(namespace, output, error_output)
+        try:
+            return _dispatch_skills(namespace, output, error_output)
+        except OSError as exc:
+            error_output.write(f"yoghurt: error: {exc}\n")
+            return 1
     _enforce_parquet_arg_pairing(parser, namespace, error_output)
 
     _configure_logging(verbose=namespace.verbose)

@@ -1,0 +1,219 @@
+{
+  "checked_at": "2026-09-07T22:31:45.398189+00:00",
+  "candidates": [
+    "quarterlyAccountsPayable",
+    "quarterlyAccountsReceivable",
+    "quarterlyBeginningCashPosition",
+    "quarterlyCapitalExpenditure",
+    "quarterlyCapitalLeaseObligations",
+    "quarterlyCashCashEquivalentsAndShortTermInvestments",
+    "quarterlyCashDividendsPaid",
+    "quarterlyCashFlowFromContinuingFinancingActivities",
+    "quarterlyChangeInAccountPayable",
+    "quarterlyChangeInCashSupplementalAsReported",
+    "quarterlyChangeInInventory",
+    "quarterlyChangeInWorkingCapital",
+    "quarterlyChangesInAccountReceivables",
+    "quarterlyCommonStockIssuance",
+    "quarterlyCurrentAssets",
+    "quarterlyCurrentLiabilities",
+    "quarterlyDeferredIncomeTax",
+    "quarterlyDepreciationAndAmortization",
+    "quarterlyEndCashPosition",
+    "quarterlyFreeCashFlow",
+    "quarterlyGoodwill",
+    "quarterlyGoodwillAndOtherIntangibleAssets",
+    "quarterlyInventory",
+    "quarterlyInvestedCapital",
+    "quarterlyInvestingCashFlow",
+    "quarterlyLongTermDebt",
+    "quarterlyNetDebt",
+    "quarterlyNetIncome",
+    "quarterlyNetOtherFinancingCharges",
+    "quarterlyNetOtherInvestingChanges",
+    "quarterlyNetPPE",
+    "quarterlyOperatingCashFlow",
+    "quarterlyOtherNonCashItems",
+    "quarterlyPurchaseOfBusiness",
+    "quarterlyPurchaseOfInvestment",
+    "quarterlyRepaymentOfDebt",
+    "quarterlyRepurchaseOfCapitalStock",
+    "quarterlySaleOfInvestment",
+    "quarterlyStockBasedCompensation",
+    "quarterlyStockholdersEquity",
+    "quarterlyTangibleBookValue",
+    "quarterlyTotalAssets",
+    "quarterlyTotalDebt",
+    "quarterlyTotalLiabilitiesNetMinorityInterest",
+    "quarterlyTotalNonCurrentAssets",
+    "quarterlyTotalNonCurrentLiabilitiesNetMinorityInterest",
+    "quarterlyWorkingCapital"
+  ],
+  "cases": {
+    "AAPL": {
+      "argv": [
+        "timeseries",
+        "AAPL",
+        "--type",
+        "quarterlyAccountsPayable,quarterlyAccountsReceivable,quarterlyBeginningCashPosition,quarterlyCapitalExpenditure,quarterlyCapitalLeaseObligations,quarterlyCashCashEquivalentsAndShortTermInvestments,quarterlyCashDividendsPaid,quarterlyCashFlowFromContinuingFinancingActivities,quarterlyChangeInAccountPayable,quarterlyChangeInCashSupplementalAsReported,quarterlyChangeInInventory,quarterlyChangeInWorkingCapital,quarterlyChangesInAccountReceivables,quarterlyCommonStockIssuance,quarterlyCurrentAssets,quarterlyCurrentLiabilities,quarterlyDeferredIncomeTax,quarterlyDepreciationAndAmortization,quarterlyEndCashPosition,quarterlyFreeCashFlow,quarterlyGoodwill,quarterlyGoodwillAndOtherIntangibleAssets,quarterlyInventory,quarterlyInvestedCapital,quarterlyInvestingCashFlow,quarterlyLongTermDebt,quarterlyNetDebt,quarterlyNetIncome,quarterlyNetOtherFinancingCharges,quarterlyNetOtherInvestingChanges,quarterlyNetPPE,quarterlyOperatingCashFlow,quarterlyOtherNonCashItems,quarterlyPurchaseOfBusiness,quarterlyPurchaseOfInvestment,quarterlyRepaymentOfDebt,quarterlyRepurchaseOfCapitalStock,quarterlySaleOfInvestment,quarterlyStockBasedCompensation,quarterlyStockholdersEquity,quarterlyTangibleBookValue,quarterlyTotalAssets,quarterlyTotalDebt,quarterlyTotalLiabilitiesNetMinorityInterest,quarterlyTotalNonCurrentAssets,quarterlyTotalNonCurrentLiabilitiesNetMinorityInterest,quarterlyWorkingCapital",
+        "--period1",
+        "2024-01-01",
+        "--period2",
+        "2026-09-07"
+      ],
+      "status": "ok",
+      "http_status": 200,
+      "file": "timeseries/AAPL.json"
+    },
+    "MSFT": {
+      "argv": [
+        "timeseries",
+        "MSFT",
+        "--type",
+        "quarterlyAccountsPayable,quarterlyAccountsReceivable,quarterlyBeginningCashPosition,quarterlyCapitalExpenditure,quarterlyCapitalLeaseObligations,quarterlyCashCashEquivalentsAndShortTermInvestments,quarterlyCashDividendsPaid,quarterlyCashFlowFromContinuingFinancingActivities,quarterlyChangeInAccountPayable,quarterlyChangeInCashSupplementalAsReported,quarterlyChangeInInventory,quarterlyChangeInWorkingCapital,quarterlyChangesInAccountReceivables,quarterlyCommonStockIssuance,quarterlyCurrentAssets,quarterlyCurrentLiabilities,quarterlyDeferredIncomeTax,quarterlyDepreciationAndAmortization,quarterlyEndCashPosition,quarterlyFreeCashFlow,quarterlyGoodwill,quarterlyGoodwillAndOtherIntangibleAssets,quarterlyInventory,quarterlyInvestedCapital,quarterlyInvestingCashFlow,quarterlyLongTermDebt,quarterlyNetDebt,quarterlyNetIncome,quarterlyNetOtherFinancingCharges,quarterlyNetOtherInvestingChanges,quarterlyNetPPE,quarterlyOperatingCashFlow,quarterlyOtherNonCashItems,quarterlyPurchaseOfBusiness,quarterlyPurchaseOfInvestment,quarterlyRepaymentOfDebt,quarterlyRepurchaseOfCapitalStock,quarterlySaleOfInvestment,quarterlyStockBasedCompensation,quarterlyStockholdersEquity,quarterlyTangibleBookValue,quarterlyTotalAssets,quarterlyTotalDebt,quarterlyTotalLiabilitiesNetMinorityInterest,quarterlyTotalNonCurrentAssets,quarterlyTotalNonCurrentLiabilitiesNetMinorityInterest,quarterlyWorkingCapital",
+        "--period1",
+        "2024-01-01",
+        "--period2",
+        "2026-09-07"
+      ],
+      "status": "ok",
+      "http_status": 200,
+      "file": "timeseries/MSFT.json"
+    },
+    "RY.TO": {
+      "argv": [
+        "timeseries",
+        "RY.TO",
+        "--type",
+        "quarterlyAccountsPayable,quarterlyAccountsReceivable,quarterlyBeginningCashPosition,quarterlyCapitalExpenditure,quarterlyCapitalLeaseObligations,quarterlyCashCashEquivalentsAndShortTermInvestments,quarterlyCashDividendsPaid,quarterlyCashFlowFromContinuingFinancingActivities,quarterlyChangeInAccountPayable,quarterlyChangeInCashSupplementalAsReported,quarterlyChangeInInventory,quarterlyChangeInWorkingCapital,quarterlyChangesInAccountReceivables,quarterlyCommonStockIssuance,quarterlyCurrentAssets,quarterlyCurrentLiabilities,quarterlyDeferredIncomeTax,quarterlyDepreciationAndAmortization,quarterlyEndCashPosition,quarterlyFreeCashFlow,quarterlyGoodwill,quarterlyGoodwillAndOtherIntangibleAssets,quarterlyInventory,quarterlyInvestedCapital,quarterlyInvestingCashFlow,quarterlyLongTermDebt,quarterlyNetDebt,quarterlyNetIncome,quarterlyNetOtherFinancingCharges,quarterlyNetOtherInvestingChanges,quarterlyNetPPE,quarterlyOperatingCashFlow,quarterlyOtherNonCashItems,quarterlyPurchaseOfBusiness,quarterlyPurchaseOfInvestment,quarterlyRepaymentOfDebt,quarterlyRepurchaseOfCapitalStock,quarterlySaleOfInvestment,quarterlyStockBasedCompensation,quarterlyStockholdersEquity,quarterlyTangibleBookValue,quarterlyTotalAssets,quarterlyTotalDebt,quarterlyTotalLiabilitiesNetMinorityInterest,quarterlyTotalNonCurrentAssets,quarterlyTotalNonCurrentLiabilitiesNetMinorityInterest,quarterlyWorkingCapital",
+        "--period1",
+        "2024-01-01",
+        "--period2",
+        "2026-09-07"
+      ],
+      "status": "ok",
+      "http_status": 200,
+      "file": "timeseries/RY.TO.json"
+    },
+    "0700.HK": {
+      "argv": [
+        "timeseries",
+        "0700.HK",
+        "--type",
+        "quarterlyAccountsPayable,quarterlyAccountsReceivable,quarterlyBeginningCashPosition,quarterlyCapitalExpenditure,quarterlyCapitalLeaseObligations,quarterlyCashCashEquivalentsAndShortTermInvestments,quarterlyCashDividendsPaid,quarterlyCashFlowFromContinuingFinancingActivities,quarterlyChangeInAccountPayable,quarterlyChangeInCashSupplementalAsReported,quarterlyChangeInInventory,quarterlyChangeInWorkingCapital,quarterlyChangesInAccountReceivables,quarterlyCommonStockIssuance,quarterlyCurrentAssets,quarterlyCurrentLiabilities,quarterlyDeferredIncomeTax,quarterlyDepreciationAndAmortization,quarterlyEndCashPosition,quarterlyFreeCashFlow,quarterlyGoodwill,quarterlyGoodwillAndOtherIntangibleAssets,quarterlyInventory,quarterlyInvestedCapital,quarterlyInvestingCashFlow,quarterlyLongTermDebt,quarterlyNetDebt,quarterlyNetIncome,quarterlyNetOtherFinancingCharges,quarterlyNetOtherInvestingChanges,quarterlyNetPPE,quarterlyOperatingCashFlow,quarterlyOtherNonCashItems,quarterlyPurchaseOfBusiness,quarterlyPurchaseOfInvestment,quarterlyRepaymentOfDebt,quarterlyRepurchaseOfCapitalStock,quarterlySaleOfInvestment,quarterlyStockBasedCompensation,quarterlyStockholdersEquity,quarterlyTangibleBookValue,quarterlyTotalAssets,quarterlyTotalDebt,quarterlyTotalLiabilitiesNetMinorityInterest,quarterlyTotalNonCurrentAssets,quarterlyTotalNonCurrentLiabilitiesNetMinorityInterest,quarterlyWorkingCapital",
+        "--period1",
+        "2024-01-01",
+        "--period2",
+        "2026-09-07"
+      ],
+      "status": "ok",
+      "http_status": 200,
+      "file": "timeseries/0700.HK.json"
+    },
+    "7203.T": {
+      "argv": [
+        "timeseries",
+        "7203.T",
+        "--type",
+        "quarterlyAccountsPayable,quarterlyAccountsReceivable,quarterlyBeginningCashPosition,quarterlyCapitalExpenditure,quarterlyCapitalLeaseObligations,quarterlyCashCashEquivalentsAndShortTermInvestments,quarterlyCashDividendsPaid,quarterlyCashFlowFromContinuingFinancingActivities,quarterlyChangeInAccountPayable,quarterlyChangeInCashSupplementalAsReported,quarterlyChangeInInventory,quarterlyChangeInWorkingCapital,quarterlyChangesInAccountReceivables,quarterlyCommonStockIssuance,quarterlyCurrentAssets,quarterlyCurrentLiabilities,quarterlyDeferredIncomeTax,quarterlyDepreciationAndAmortization,quarterlyEndCashPosition,quarterlyFreeCashFlow,quarterlyGoodwill,quarterlyGoodwillAndOtherIntangibleAssets,quarterlyInventory,quarterlyInvestedCapital,quarterlyInvestingCashFlow,quarterlyLongTermDebt,quarterlyNetDebt,quarterlyNetIncome,quarterlyNetOtherFinancingCharges,quarterlyNetOtherInvestingChanges,quarterlyNetPPE,quarterlyOperatingCashFlow,quarterlyOtherNonCashItems,quarterlyPurchaseOfBusiness,quarterlyPurchaseOfInvestment,quarterlyRepaymentOfDebt,quarterlyRepurchaseOfCapitalStock,quarterlySaleOfInvestment,quarterlyStockBasedCompensation,quarterlyStockholdersEquity,quarterlyTangibleBookValue,quarterlyTotalAssets,quarterlyTotalDebt,quarterlyTotalLiabilitiesNetMinorityInterest,quarterlyTotalNonCurrentAssets,quarterlyTotalNonCurrentLiabilitiesNetMinorityInterest,quarterlyWorkingCapital",
+        "--period1",
+        "2024-01-01",
+        "--period2",
+        "2026-09-07"
+      ],
+      "status": "ok",
+      "http_status": 200,
+      "file": "timeseries/7203.T.json"
+    },
+    "SHEL.L": {
+      "argv": [
+        "timeseries",
+        "SHEL.L",
+        "--type",
+        "quarterlyAccountsPayable,quarterlyAccountsReceivable,quarterlyBeginningCashPosition,quarterlyCapitalExpenditure,quarterlyCapitalLeaseObligations,quarterlyCashCashEquivalentsAndShortTermInvestments,quarterlyCashDividendsPaid,quarterlyCashFlowFromContinuingFinancingActivities,quarterlyChangeInAccountPayable,quarterlyChangeInCashSupplementalAsReported,quarterlyChangeInInventory,quarterlyChangeInWorkingCapital,quarterlyChangesInAccountReceivables,quarterlyCommonStockIssuance,quarterlyCurrentAssets,quarterlyCurrentLiabilities,quarterlyDeferredIncomeTax,quarterlyDepreciationAndAmortization,quarterlyEndCashPosition,quarterlyFreeCashFlow,quarterlyGoodwill,quarterlyGoodwillAndOtherIntangibleAssets,quarterlyInventory,quarterlyInvestedCapital,quarterlyInvestingCashFlow,quarterlyLongTermDebt,quarterlyNetDebt,quarterlyNetIncome,quarterlyNetOtherFinancingCharges,quarterlyNetOtherInvestingChanges,quarterlyNetPPE,quarterlyOperatingCashFlow,quarterlyOtherNonCashItems,quarterlyPurchaseOfBusiness,quarterlyPurchaseOfInvestment,quarterlyRepaymentOfDebt,quarterlyRepurchaseOfCapitalStock,quarterlySaleOfInvestment,quarterlyStockBasedCompensation,quarterlyStockholdersEquity,quarterlyTangibleBookValue,quarterlyTotalAssets,quarterlyTotalDebt,quarterlyTotalLiabilitiesNetMinorityInterest,quarterlyTotalNonCurrentAssets,quarterlyTotalNonCurrentLiabilitiesNetMinorityInterest,quarterlyWorkingCapital",
+        "--period1",
+        "2024-01-01",
+        "--period2",
+        "2026-09-07"
+      ],
+      "status": "ok",
+      "http_status": 200,
+      "file": "timeseries/SHEL.L.json"
+    },
+    "SPY": {
+      "argv": [
+        "timeseries",
+        "SPY",
+        "--type",
+        "quarterlyAccountsPayable,quarterlyAccountsReceivable,quarterlyBeginningCashPosition,quarterlyCapitalExpenditure,quarterlyCapitalLeaseObligations,quarterlyCashCashEquivalentsAndShortTermInvestments,quarterlyCashDividendsPaid,quarterlyCashFlowFromContinuingFinancingActivities,quarterlyChangeInAccountPayable,quarterlyChangeInCashSupplementalAsReported,quarterlyChangeInInventory,quarterlyChangeInWorkingCapital,quarterlyChangesInAccountReceivables,quarterlyCommonStockIssuance,quarterlyCurrentAssets,quarterlyCurrentLiabilities,quarterlyDeferredIncomeTax,quarterlyDepreciationAndAmortization,quarterlyEndCashPosition,quarterlyFreeCashFlow,quarterlyGoodwill,quarterlyGoodwillAndOtherIntangibleAssets,quarterlyInventory,quarterlyInvestedCapital,quarterlyInvestingCashFlow,quarterlyLongTermDebt,quarterlyNetDebt,quarterlyNetIncome,quarterlyNetOtherFinancingCharges,quarterlyNetOtherInvestingChanges,quarterlyNetPPE,quarterlyOperatingCashFlow,quarterlyOtherNonCashItems,quarterlyPurchaseOfBusiness,quarterlyPurchaseOfInvestment,quarterlyRepaymentOfDebt,quarterlyRepurchaseOfCapitalStock,quarterlySaleOfInvestment,quarterlyStockBasedCompensation,quarterlyStockholdersEquity,quarterlyTangibleBookValue,quarterlyTotalAssets,quarterlyTotalDebt,quarterlyTotalLiabilitiesNetMinorityInterest,quarterlyTotalNonCurrentAssets,quarterlyTotalNonCurrentLiabilitiesNetMinorityInterest,quarterlyWorkingCapital",
+        "--period1",
+        "2024-01-01",
+        "--period2",
+        "2026-09-07"
+      ],
+      "status": "ok",
+      "http_status": 200,
+      "file": "timeseries/SPY.json"
+    },
+    "ES=F": {
+      "argv": [
+        "timeseries",
+        "ES=F",
+        "--type",
+        "quarterlyAccountsPayable,quarterlyAccountsReceivable,quarterlyBeginningCashPosition,quarterlyCapitalExpenditure,quarterlyCapitalLeaseObligations,quarterlyCashCashEquivalentsAndShortTermInvestments,quarterlyCashDividendsPaid,quarterlyCashFlowFromContinuingFinancingActivities,quarterlyChangeInAccountPayable,quarterlyChangeInCashSupplementalAsReported,quarterlyChangeInInventory,quarterlyChangeInWorkingCapital,quarterlyChangesInAccountReceivables,quarterlyCommonStockIssuance,quarterlyCurrentAssets,quarterlyCurrentLiabilities,quarterlyDeferredIncomeTax,quarterlyDepreciationAndAmortization,quarterlyEndCashPosition,quarterlyFreeCashFlow,quarterlyGoodwill,quarterlyGoodwillAndOtherIntangibleAssets,quarterlyInventory,quarterlyInvestedCapital,quarterlyInvestingCashFlow,quarterlyLongTermDebt,quarterlyNetDebt,quarterlyNetIncome,quarterlyNetOtherFinancingCharges,quarterlyNetOtherInvestingChanges,quarterlyNetPPE,quarterlyOperatingCashFlow,quarterlyOtherNonCashItems,quarterlyPurchaseOfBusiness,quarterlyPurchaseOfInvestment,quarterlyRepaymentOfDebt,quarterlyRepurchaseOfCapitalStock,quarterlySaleOfInvestment,quarterlyStockBasedCompensation,quarterlyStockholdersEquity,quarterlyTangibleBookValue,quarterlyTotalAssets,quarterlyTotalDebt,quarterlyTotalLiabilitiesNetMinorityInterest,quarterlyTotalNonCurrentAssets,quarterlyTotalNonCurrentLiabilitiesNetMinorityInterest,quarterlyWorkingCapital",
+        "--period1",
+        "2024-01-01",
+        "--period2",
+        "2026-09-07"
+      ],
+      "status": "ok",
+      "http_status": 200,
+      "file": "timeseries/ES_F.json"
+    },
+    "EURUSD=X": {
+      "argv": [
+        "timeseries",
+        "EURUSD=X",
+        "--type",
+        "quarterlyAccountsPayable,quarterlyAccountsReceivable,quarterlyBeginningCashPosition,quarterlyCapitalExpenditure,quarterlyCapitalLeaseObligations,quarterlyCashCashEquivalentsAndShortTermInvestments,quarterlyCashDividendsPaid,quarterlyCashFlowFromContinuingFinancingActivities,quarterlyChangeInAccountPayable,quarterlyChangeInCashSupplementalAsReported,quarterlyChangeInInventory,quarterlyChangeInWorkingCapital,quarterlyChangesInAccountReceivables,quarterlyCommonStockIssuance,quarterlyCurrentAssets,quarterlyCurrentLiabilities,quarterlyDeferredIncomeTax,quarterlyDepreciationAndAmortization,quarterlyEndCashPosition,quarterlyFreeCashFlow,quarterlyGoodwill,quarterlyGoodwillAndOtherIntangibleAssets,quarterlyInventory,quarterlyInvestedCapital,quarterlyInvestingCashFlow,quarterlyLongTermDebt,quarterlyNetDebt,quarterlyNetIncome,quarterlyNetOtherFinancingCharges,quarterlyNetOtherInvestingChanges,quarterlyNetPPE,quarterlyOperatingCashFlow,quarterlyOtherNonCashItems,quarterlyPurchaseOfBusiness,quarterlyPurchaseOfInvestment,quarterlyRepaymentOfDebt,quarterlyRepurchaseOfCapitalStock,quarterlySaleOfInvestment,quarterlyStockBasedCompensation,quarterlyStockholdersEquity,quarterlyTangibleBookValue,quarterlyTotalAssets,quarterlyTotalDebt,quarterlyTotalLiabilitiesNetMinorityInterest,quarterlyTotalNonCurrentAssets,quarterlyTotalNonCurrentLiabilitiesNetMinorityInterest,quarterlyWorkingCapital",
+        "--period1",
+        "2024-01-01",
+        "--period2",
+        "2026-09-07"
+      ],
+      "status": "ok",
+      "http_status": 200,
+      "file": "timeseries/EURUSD_X.json"
+    },
+    "^GSPC": {
+      "argv": [
+        "timeseries",
+        "^GSPC",
+        "--type",
+        "quarterlyAccountsPayable,quarterlyAccountsReceivable,quarterlyBeginningCashPosition,quarterlyCapitalExpenditure,quarterlyCapitalLeaseObligations,quarterlyCashCashEquivalentsAndShortTermInvestments,quarterlyCashDividendsPaid,quarterlyCashFlowFromContinuingFinancingActivities,quarterlyChangeInAccountPayable,quarterlyChangeInCashSupplementalAsReported,quarterlyChangeInInventory,quarterlyChangeInWorkingCapital,quarterlyChangesInAccountReceivables,quarterlyCommonStockIssuance,quarterlyCurrentAssets,quarterlyCurrentLiabilities,quarterlyDeferredIncomeTax,quarterlyDepreciationAndAmortization,quarterlyEndCashPosition,quarterlyFreeCashFlow,quarterlyGoodwill,quarterlyGoodwillAndOtherIntangibleAssets,quarterlyInventory,quarterlyInvestedCapital,quarterlyInvestingCashFlow,quarterlyLongTermDebt,quarterlyNetDebt,quarterlyNetIncome,quarterlyNetOtherFinancingCharges,quarterlyNetOtherInvestingChanges,quarterlyNetPPE,quarterlyOperatingCashFlow,quarterlyOtherNonCashItems,quarterlyPurchaseOfBusiness,quarterlyPurchaseOfInvestment,quarterlyRepaymentOfDebt,quarterlyRepurchaseOfCapitalStock,quarterlySaleOfInvestment,quarterlyStockBasedCompensation,quarterlyStockholdersEquity,quarterlyTangibleBookValue,quarterlyTotalAssets,quarterlyTotalDebt,quarterlyTotalLiabilitiesNetMinorityInterest,quarterlyTotalNonCurrentAssets,quarterlyTotalNonCurrentLiabilitiesNetMinorityInterest,quarterlyWorkingCapital",
+        "--period1",
+        "2024-01-01",
+        "--period2",
+        "2026-09-07"
+      ],
+      "status": "ok",
+      "http_status": 200,
+      "file": "timeseries/_GSPC.json"
+    },
+    "BTC-USD": {
+      "argv": [
+        "timeseries",
+        "BTC-USD",
+        "--type",
+        "quarterlyAccountsPayable,quarterlyAccountsReceivable,quarterlyBeginningCashPosition,quarterlyCapitalExpenditure,quarterlyCapitalLeaseObligations,quarterlyCashCashEquivalentsAndShortTermInvestments,quarterlyCashDividendsPaid,quarterlyCashFlowFromContinuingFinancingActivities,quarterlyChangeInAccountPayable,quarterlyChangeInCashSupplementalAsReported,quarterlyChangeInInventory,quarterlyChangeInWorkingCapital,quarterlyChangesInAccountReceivables,quarterlyCommonStockIssuance,quarterlyCurrentAssets,quarterlyCurrentLiabilities,quarterlyDeferredIncomeTax,quarterlyDepreciationAndAmortization,quarterlyEndCashPosition,quarterlyFreeCashFlow,quarterlyGoodwill,quarterlyGoodwillAndOtherIntangibleAssets,quarterlyInventory,quarterlyInvestedCapital,quarterlyInvestingCashFlow,quarterlyLongTermDebt,quarterlyNetDebt,quarterlyNetIncome,quarterlyNetOtherFinancingCharges,quarterlyNetOtherInvestingChanges,quarterlyNetPPE,quarterlyOperatingCashFlow,quarterlyOtherNonCashItems,quarterlyPurchaseOfBusiness,quarterlyPurchaseOfInvestment,quarterlyRepaymentOfDebt,quarterlyRepurchaseOfCapitalStock,quarterlySaleOfInvestment,quarterlyStockBasedCompensation,quarterlyStockholdersEquity,quarterlyTangibleBookValue,quarterlyTotalAssets,quarterlyTotalDebt,quarterlyTotalLiabilitiesNetMinorityInterest,quarterlyTotalNonCurrentAssets,quarterlyTotalNonCurrentLiabilitiesNetMinorityInterest,quarterlyWorkingCapital",
+        "--period1",
+        "2024-01-01",
+        "--period2",
+        "2026-09-07"
+      ],
+      "status": "ok",
+      "http_status": 200,
+      "file": "timeseries/BTC-USD.json"
+    }
+  }
+}

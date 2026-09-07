@@ -15,6 +15,7 @@ reused (zero extras, but 8 of its 34 required fields are not universal).
 
 from __future__ import annotations
 
+import datetime
 import json
 from typing import TYPE_CHECKING, Any
 
@@ -139,6 +140,18 @@ def test_trending_validates_with_no_extra_fields(
     assert not nested, message
 
 
+def test_trending_epoch_fields_follow_public_datetime_convention() -> None:
+    """Timezone-bearing quote epochs localize; the job timestamp is aware UTC."""
+
+    result = TrendingResult.model_validate(_trending_cases()[0][1])
+    quote = result.quotes[0]
+
+    assert result.job_timestamp.tzinfo == datetime.timezone.utc
+    assert quote.first_trade_datetime.tzinfo is not None
+    assert quote.regular_market_datetime.tzinfo is not None
+    assert "first_trade_datetime" not in quote.model_dump()
+
+
 def _trending_quote_kind(record: Mapping[str, Any]) -> str:
     return str(record.get("quoteType", ""))
 
@@ -211,6 +224,17 @@ def test_market_summary_required_field_set_matches_corpus_universal_keys() -> No
 
     assert len(universal_keys) == _EXPECTED_MARKET_SUMMARY_REQUIRED_FIELD_COUNT
     assert required_aliases == universal_keys
+
+
+def test_market_summary_timezone_epochs_have_localized_accessors() -> None:
+    """Market-summary retains wire integers and exposes localized conveniences."""
+
+    quote = MarketSummaryQuote.model_validate(_market_summary_cases()[0][1])
+
+    assert isinstance(quote.first_trade_date_milliseconds, int)
+    assert isinstance(quote.regular_market_time, int)
+    assert quote.first_trade_datetime.tzinfo is not None
+    assert quote.regular_market_datetime.tzinfo is not None
 
 
 def test_market_summary_rows_have_no_extras_against_quote() -> None:

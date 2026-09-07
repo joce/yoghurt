@@ -94,7 +94,9 @@ every other row carries them. ``SectorResearchReport.investment_rating``/
 
 from __future__ import annotations
 
-import datetime  # ruff:ignore[typing-only-standard-library-import] - pydantic needs this at runtime to resolve annotations
+import datetime
+from functools import cached_property
+from zoneinfo import ZoneInfo
 
 from pydantic import Field
 
@@ -104,6 +106,14 @@ from yoghurt.models.enums import (  # ruff:ignore[typing-only-first-party-import
     PriceAlertConfidence,
     QuoteType,
 )
+
+
+def _localized_datetime(timestamp: float, timezone_name: str) -> datetime.datetime:
+    epoch = datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc)
+    return (epoch + datetime.timedelta(seconds=timestamp)).astimezone(
+        ZoneInfo(timezone_name)
+    )
+
 
 # ---------------------------------------------------------------------------
 # trending
@@ -260,6 +270,23 @@ class TrendingQuote(YahooModel):
     ``"Cryptocurrency"``, ``"Index"``).
     """
 
+    @cached_property
+    def first_trade_datetime(self) -> datetime.datetime:
+        """First trade time localized to ``exchange_timezone_name``."""
+
+        return _localized_datetime(
+            self.first_trade_date_milliseconds / 1000,
+            self.exchange_timezone_name,
+        )
+
+    @cached_property
+    def regular_market_datetime(self) -> datetime.datetime:
+        """Most recent regular-market time localized to the exchange."""
+
+        return _localized_datetime(
+            self.regular_market_time, self.exchange_timezone_name
+        )
+
 
 class TrendingResult(YahooModel):
     """The ``trending`` endpoint's ``finance.result[0]`` payload."""
@@ -270,10 +297,10 @@ class TrendingResult(YahooModel):
     capture.
     """
 
-    job_timestamp: int = Field(alias="jobTimestamp")
+    job_timestamp: datetime.datetime = Field(alias="jobTimestamp")
     """
-    Epoch-milliseconds timestamp of the batch job that computed this
-    trending list.
+    Aware UTC time of the batch job that computed this trending list. The
+    wire value is epoch milliseconds.
     """
 
     quotes: list[TrendingQuote]
@@ -488,6 +515,23 @@ class MarketSummaryQuote(YahooModel):
     """
     Human-readable display label for ``quote_type``.
     """
+
+    @cached_property
+    def first_trade_datetime(self) -> datetime.datetime:
+        """First trade time localized to ``exchange_timezone_name``."""
+
+        return _localized_datetime(
+            self.first_trade_date_milliseconds / 1000,
+            self.exchange_timezone_name,
+        )
+
+    @cached_property
+    def regular_market_datetime(self) -> datetime.datetime:
+        """Most recent regular-market time localized to the exchange."""
+
+        return _localized_datetime(
+            self.regular_market_time, self.exchange_timezone_name
+        )
 
 
 # ---------------------------------------------------------------------------

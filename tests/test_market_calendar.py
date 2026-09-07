@@ -199,6 +199,23 @@ def test_market_calendar_builds_inclusive_window_and_page() -> None:
     assert query.endswith("LIMIT 25 OFFSET 50")
 
 
+def test_market_calendar_pre_epoch_integer_matches_equivalent_date() -> None:
+    """Pre-1970 Unix seconds use portable UTC arithmetic on Windows."""
+
+    from_integer = build_market_calendar_query(
+        "earnings", start_date=-1, end_date="1970-01-01", limit=100, offset=0
+    )
+    from_date = build_market_calendar_query(
+        "earnings",
+        start_date=date(1969, 12, 31),
+        end_date="1970-01-01",
+        limit=100,
+        offset=0,
+    )
+
+    assert from_integer == from_date
+
+
 @pytest.mark.parametrize(
     ("kwargs", "message"),
     [

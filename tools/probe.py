@@ -8,30 +8,59 @@ and diffing the corpus is the Yahoo schema-drift detector.
 
 For report-only earnings checks without changing the corpus:
 uv run python -m tools.probe --claims --report .tox/claims-report.json
+
+For public API contracts (54 checks, at most 58 data requests plus authentication
+and bounded client retries), with persistent session caching disabled:
+uv run python -m tools.probe --contracts --report .tox/contracts-report.json
+
+Contracts exit 0 only when all pass, 1 for any contract failure, and 2 when
+blocked without a contract failure. Mixed failures/blocks exit 1; both counts
+remain in the report. Calendar emptiness is valid. Missing equity financial or
+history evidence is blocked. FinancialAnalysis retains its all-history request;
+comparison to bounded direct retrieval uses only rows inside the report window.
+History permits a bar exactly at the end timestamp: Yahoo returned that boundary
+for BTC-USD on 2026-09-07; the public API does not promise exclusive-end filtering.
 """
 
 from __future__ import annotations
 
+# Runtime public-contract checks intentionally verify annotated return types.
+# pyright: reportUnnecessaryIsInstance=false
 import argparse
 import asyncio
 import io
 import json
+import math
 import re
 import sys
+import time
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
+from http import HTTPStatus
+from operator import itemgetter
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Final, cast
 
-from yoghurt._market_calendar import build_market_calendar_query
+from yoghurt import _core, api
+from yoghurt._bridge import run as bridge_run
+from yoghurt._market_calendar import _CALENDARS, build_market_calendar_query
 from yoghurt.cli import _dispatch_command, build_parser
 from yoghurt.client import YahooClient
 from yoghurt.commands import COMMANDS_BY_NAME
-from yoghurt.exceptions import YahooRequestError, YoghurtError
+from yoghurt.exceptions import (
+    SymbolNotFoundError,
+    YahooApiError,
+    YahooRequestError,
+    YahooUnavailableError,
+    YoghurtError,
+)
+from yoghurt.frames import Chart, Frame, History
+from yoghurt.models import ChartMeta, Quote
 from yoghurt.types import MARKET_CALENDAR_KINDS
 
 if TYPE_CHECKING:
     from yoghurt.cli import _YahooClientProtocol
+    from yoghurt.types import MarketCalendarKind
 
 REPO_ROOT: Final[Path] = Path(__file__).resolve().parents[1]
 CORPUS_DIR: Final[Path] = REPO_ROOT / "tests" / "fixtures" / "corpus"
@@ -1120,6 +1149,342 @@ def _write_claim_report(path: Path) -> int:
     return int(changed)
 
 
+# Public contract checks are deliberately a small fixed developer-only matrix.
+_CONTRACT_SYMBOLS = SYMBOLS[:17]
+_CONTRACT_START = "2026-01-01"
+_CONTRACT_END = "2026-08-01"
+_CONTRACT_FINANCIAL_TYPES = (
+    "quarterlyTotalAssets",
+    "quarterlyTotalDebt",
+    "quarterlyOperatingCashFlow",
+    "quarterlyFreeCashFlow",
+)
+
+
+def _require_contract(condition: object, invariant: str = "public_shape") -> None:
+    if not condition:
+        raise _ContractError(invariant)
+
+
+class _ContractError(Exception):
+    """A returned public value violates a stable invariant."""
+
+
+def _contract_plan() -> list[tuple[str, str, dict[str, object], str]]:
+    window: dict[str, object] = {"period1": _CONTRACT_START, "period2": _CONTRACT_END}
+    cases = [
+        (
+            kind,
+            symbol,
+            {} if kind == "quote" else {**window, "interval": "1d"},
+            "typed result with matching symbol",
+        )
+        for symbol in _CONTRACT_SYMBOLS
+        for kind in ("quote", "chart")
+    ]
+    cases.extend(
+        (
+            "history",
+            symbol,
+            {"start": _CONTRACT_START, "end": _CONTRACT_END, "interval": "1d"},
+            "nonempty adjusted OHLCV, finite prices, ordered unique timestamps",
+        )
+        for symbol in ("AAPL", "RY.TO", "BTC-USD")
+    )
+    cases.extend(
+        (
+            "financial",
+            symbol,
+            {
+                **window,
+                "types": list(_CONTRACT_FINANCIAL_TYPES),
+                "bundle_period1": 0,
+                "bundle_period2": "request time; comparison filtered to window",
+            },
+            "quarterly statements equal direct rows by type/date/period/currency/value",
+        )
+        for symbol in ("AAPL", "RY.TO")
+    )
+    cases.extend(
+        (
+            "empty",
+            symbol,
+            {**window, "types": list(_CONTRACT_FINANCIAL_TYPES)},
+            "inapplicable fundamentals return an empty Frame",
+        )
+        for symbol in _CROSS_ASSET_SYMBOLS
+    )
+    cases.extend(
+        (
+            "unknown_" + kind,
+            INVALID_SYMBOL,
+            {} if kind == "quote" else window,
+            "SymbolNotFoundError",
+        )
+        for kind in ("quote", "chart")
+    )
+    cases.extend(
+        (
+            "calendar",
+            kind,
+            {"start_date": start, "end_date": end, "limit": 5, "offset": 0},
+            (
+                "stable schema, at most five ordered events inside inclusive window; "
+                "emptiness valid"
+            ),
+        )
+        for kind in MARKET_CALENDAR_KINDS
+        for start, end in (
+            (_CONTRACT_START, _CONTRACT_END),
+            ("2100-01-01", "2100-01-02"),
+        )
+    )
+    return cases
+
+
+def _financial_contract(ticker: api.Ticker) -> dict[str, object]:
+    direct = ticker.timeseries(
+        type=list(_CONTRACT_FINANCIAL_TYPES),
+        period1=_CONTRACT_START,
+        period2=_CONTRACT_END,
+    ).fundamentals.to_dicts()
+    if not direct:
+        return {"status": "blocked", "classification": "upstream_data_unavailable"}
+    bundle = ticker.financial_analysis()
+    start, end = date.fromisoformat(_CONTRACT_START), date.fromisoformat(_CONTRACT_END)
+    for frame, types in (
+        (bundle.balance_sheet, _CONTRACT_FINANCIAL_TYPES[:2]),
+        (bundle.cash_flow, _CONTRACT_FINANCIAL_TYPES[2:]),
+    ):
+        expected = [
+            row
+            for row in direct
+            if row["type"] in types and start <= row["as_of_date"] < end
+        ]
+        actual = [
+            row
+            for row in frame.to_dicts()
+            if row["type"] in types and start <= row["as_of_date"] < end
+        ]
+        if not expected:
+            return {"status": "blocked", "classification": "upstream_data_unavailable"}
+        _require_contract(
+            all(
+                row["period_type"] == "3M"
+                and (row["value"] is None or math.isfinite(row["value"]))
+                for row in expected
+            )
+        )
+        key = itemgetter("type", "as_of_date", "period_type", "currency_code", "value")
+        _require_contract(
+            sorted(map(key, actual)) == sorted(map(key, expected)),
+            "financial_source_agreement",
+        )
+    return {
+        "status": "pass",
+        "classification": "source_agreement",
+        "observations": len(direct),
+    }
+
+
+def _history_contract(ticker: api.Ticker) -> dict[str, object]:
+    frame = ticker.history(start=_CONTRACT_START, end=_CONTRACT_END)
+    _require_contract(isinstance(frame, History))
+    rows = frame.to_dicts()
+    _require_contract(
+        frame.to_polars().columns
+        == ["symbol", "ts", "open", "high", "low", "close", "volume"]
+    )
+    if not rows:
+        return {"status": "blocked", "classification": "upstream_data_unavailable"}
+    stamps = [row["ts"] for row in rows]
+    _require_contract(stamps == sorted(set(stamps)), "history_timestamp_order")
+    start = datetime.fromisoformat(_CONTRACT_START).replace(tzinfo=timezone.utc)
+    end = datetime.fromisoformat(_CONTRACT_END).replace(tzinfo=timezone.utc)
+    for row in rows:
+        _require_contract(
+            row["symbol"] == ticker.symbol
+            and row["ts"].tzinfo is not None
+            and start <= row["ts"] <= end,
+            "history_window",
+        )
+        _require_contract(
+            all(
+                row[name] is None or math.isfinite(row[name])
+                for name in ("open", "high", "low", "close", "volume")
+            )
+        )
+    return {
+        "status": "pass",
+        "classification": "adjusted_history",
+        "observations": len(rows),
+    }
+
+
+def _public_contract(
+    kind: str, symbol: str, parameters: dict[str, Any]
+) -> dict[str, object]:
+    ticker = api.Ticker(symbol)
+    if kind.startswith("unknown_"):
+        try:
+            if kind == "unknown_quote":
+                ticker.quote()
+            else:
+                ticker.chart(period1=_CONTRACT_START, period2=_CONTRACT_END)
+        except SymbolNotFoundError:
+            return {"status": "pass", "classification": "unknown_symbol"}
+        raise _ContractError
+    if kind == "quote":
+        result = ticker.quote()
+        _require_contract(isinstance(result, Quote) and result.symbol == symbol)
+    elif kind == "chart":
+        chart = ticker.chart(
+            period1=_CONTRACT_START, period2=_CONTRACT_END, interval="1d"
+        )
+        _require_contract(
+            isinstance(chart, Chart)
+            and isinstance(chart.meta, ChartMeta)
+            and chart.meta.symbol == symbol
+        )
+    elif kind == "history":
+        return _history_contract(ticker)
+    elif kind == "financial":
+        return _financial_contract(ticker)
+    elif kind == "empty":
+        frame = ticker.timeseries(
+            type=list(_CONTRACT_FINANCIAL_TYPES),
+            period1=_CONTRACT_START,
+            period2=_CONTRACT_END,
+        ).fundamentals
+        _require_contract(isinstance(frame, Frame) and not frame.to_dicts())
+    else:
+        calendar_kind = cast("MarketCalendarKind", symbol)
+        frame = api.market_calendar(calendar_kind, **parameters)
+        _require_contract(
+            isinstance(frame, Frame)
+            and frame.to_polars().schema == _CALENDARS[calendar_kind].schema
+        )
+        rows = frame.to_dicts()
+        _require_contract(len(rows) <= parameters["limit"])
+        date_column = _CALENDARS[calendar_kind].names["startdatetime"]
+        stamps = [row[date_column] for row in rows]
+        _require_contract(
+            all(
+                stamp is not None
+                and stamp.tzinfo is not None
+                and parameters["start_date"]
+                <= stamp.date().isoformat()
+                <= parameters["end_date"]
+                for stamp in stamps
+            )
+        )
+        _require_contract(stamps == sorted(stamps))
+    return {
+        "status": "pass",
+        "classification": "valid_empty" if kind == "empty" else "valid_contract",
+    }
+
+
+def _contract_error(exc: Exception) -> dict[str, object]:
+    if isinstance(exc, _ContractError):
+        return {
+            "status": "failure",
+            "classification": "contract_violation",
+            "invariant": str(exc) or "unknown_symbol_error",
+        }
+    if isinstance(exc, YahooUnavailableError):
+        return {"status": "blocked", "classification": "transport"}
+    if isinstance(exc, (YahooRequestError, YahooApiError)):
+        status = (
+            exc.status_code if isinstance(exc, YahooRequestError) else exc.http_status
+        )
+        if status in {
+            HTTPStatus.UNAUTHORIZED,
+            HTTPStatus.FORBIDDEN,
+            HTTPStatus.TOO_MANY_REQUESTS,
+        } or (status is not None and status >= HTTPStatus.INTERNAL_SERVER_ERROR):
+            classification = "upstream_unavailable"
+            if status == HTTPStatus.TOO_MANY_REQUESTS:
+                classification = "throttled"
+            elif status in {HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN}:
+                classification = "access_restricted"
+            return {
+                "status": "blocked",
+                "classification": classification,
+                "http_status": status,
+            }
+        if (
+            isinstance(exc, YahooApiError)
+            and exc.code
+            not in {
+                "model-validation",
+                "malformed-response",
+                "unsupported-response-shape",
+            }
+            and not isinstance(exc, SymbolNotFoundError)
+        ):
+            return {
+                "status": "blocked",
+                "classification": "upstream_api_error",
+                "http_status": status,
+            }
+    return {
+        "status": "failure",
+        "classification": "contract_violation",
+        "exception_type": type(exc).__name__,
+    }
+
+
+def _check_contracts() -> dict[str, object]:
+    cases: list[dict[str, Any]] = []
+    for kind, symbol, parameters, expected in _contract_plan():
+        checked_at = datetime.now(timezone.utc).isoformat()
+        try:
+            actual = _public_contract(kind, symbol, parameters)
+        except (YoghurtError, _ContractError, ValueError, TypeError, KeyError) as exc:
+            actual = _contract_error(exc)
+        cases.append(
+            {
+                "check": kind,
+                "symbol": symbol,
+                "parameters": parameters,
+                "checked_at": checked_at,
+                "expected": expected,
+                "actual": actual,
+            }
+        )
+        print(f"{kind}/{symbol}: {actual['status']}", file=sys.stderr)
+        time.sleep(POLITENESS_DELAY_SECONDS)
+    summary = {
+        status: sum(case["actual"]["status"] == status for case in cases)
+        for status in ("pass", "failure", "blocked")
+    }
+    return {
+        "checked_at": datetime.now(timezone.utc).isoformat(),
+        "summary": summary,
+        "case_count": len(cases),
+        "maximum_logical_data_requests": len(cases) + 4,
+        "all_passed": summary["pass"] == len(cases),
+        "cases": cases,
+    }
+
+
+def _write_contract_report(path: Path) -> int:
+    _core.configure(use_session_cache=False)
+    try:
+        report = _check_contracts()
+    finally:
+        # Developer tool owns this standalone process and closes its bridge client.
+        bridge_run(_core._get_client().aclose())  # ruff: ignore[private-member-access]
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    summary = cast("dict[str, int]", report["summary"])
+    print(f"Contract report: {path} ({summary})")
+    return 1 if summary["failure"] else 2 if summary["blocked"] else 0
+
+
 def main() -> int:
     """Run a corpus refresh or opt-in, report-only claim checks.
 
@@ -1127,7 +1492,13 @@ def main() -> int:
         int: Zero for unchanged claims, one for changes, or corpus success.
     """
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
+    modes = parser.add_mutually_exclusive_group()
+    modes.add_argument(
+        "--contracts",
+        action="store_true",
+        help="Check public contracts; exit 0 passed, 1 failed, 2 blocked.",
+    )
+    modes.add_argument(
         "--claims",
         action="store_true",
         help="Check the four fixed earnings claims without updating the corpus.",
@@ -1135,9 +1506,15 @@ def main() -> int:
     parser.add_argument(
         "--report",
         type=Path,
-        help="JSON claim report destination (required with --claims).",
+        help="JSON report destination (required with --claims or --contracts).",
     )
     args = parser.parse_args()
+    if args.contracts:
+        if args.report is None:
+            parser.error("--contracts requires --report PATH")
+        if args.report.resolve().is_relative_to(CORPUS_DIR.resolve()):
+            parser.error("Contract reports must be outside the historical corpus")
+        return _write_contract_report(args.report)
     if args.claims:
         if args.report is None:
             parser.error("--claims requires --report PATH")
@@ -1145,7 +1522,7 @@ def main() -> int:
             parser.error("Claim reports must be outside the historical corpus")
         return _write_claim_report(args.report)
     if args.report is not None:
-        parser.error("--report requires --claims")
+        parser.error("--report requires --claims or --contracts")
     asyncio.run(_run_all(build_cases(), CORPUS_DIR))
     return 0
 

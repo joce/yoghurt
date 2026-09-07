@@ -245,6 +245,17 @@ def map_http_error(
                 error, symbol=symbol, http_status=exc.status_code, cause=exc
             )
         payload_dict = _as_object_dict(payload)
+        if (
+            command == "stock-recommender"
+            and symbol is not None
+            and exc.status_code == _HTTP_NOT_FOUND
+            and payload_dict == {"message": _NOT_FOUND_CODE}
+        ):
+            raise SymbolNotFoundError(
+                symbol,
+                description=_NOT_FOUND_CODE,
+                http_status=exc.status_code,
+            ) from exc
         detail = payload_dict.get("detail") if payload_dict is not None else None
         if isinstance(detail, str):
             # A 404 with a bare {"detail": ...} body on a symbol-bound call is
