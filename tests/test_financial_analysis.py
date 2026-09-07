@@ -399,6 +399,9 @@ def test_financial_analysis_help_is_derived_json_only(
     assert "derived command combines" in help_text
     assert "Output is JSON only" in help_text
     assert "income_statement:" in help_text
+    table_text = " ".join(help_text.split())
+    assert "balance_sheet: Annual and quarterly balance-sheet rows." in table_text
+    assert "cash_flow: Annual and quarterly cash-flow rows." in table_text
     assert "insider_purchase_activity:" in help_text
     assert "--format" not in help_text
     assert "Yahoo endpoint:" not in help_text

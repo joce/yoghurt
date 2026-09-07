@@ -409,8 +409,8 @@ Notes:
 
 _FINANCIAL_ANALYSIS_TABLES: Final[tuple[FieldReference, ...]] = (
     FieldReference("income_statement", "Annual, quarterly, and trailing income rows."),
-    FieldReference("balance_sheet", "Annual balance-sheet rows."),
-    FieldReference("cash_flow", "Annual cash-flow rows."),
+    FieldReference("balance_sheet", "Annual and quarterly balance-sheet rows."),
+    FieldReference("cash_flow", "Annual and quarterly cash-flow rows."),
     FieldReference("valuation_history", "Quarterly and trailing valuation rows."),
     FieldReference("earnings_estimates", "Forward analyst EPS estimates."),
     FieldReference("revenue_estimates", "Forward analyst revenue estimates."),
