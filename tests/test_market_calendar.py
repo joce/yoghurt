@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from io import StringIO
 from pathlib import Path
 from typing import TYPE_CHECKING, cast
@@ -190,7 +190,7 @@ def test_market_calendar_builds_inclusive_window_and_page() -> None:
     query = build_market_calendar_query(
         "earnings",
         start_date=date(2026, 7, 20),
-        end_date=datetime(2026, 7, 25, 23, tzinfo=timezone.utc),
+        end_date=datetime(2026, 7, 25, 23, tzinfo=UTC),
         limit=25,
         offset=50,
     )

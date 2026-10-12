@@ -20,7 +20,7 @@ _AAPL_CALL_STRIKE = 240.0
 _AAPL_CALL_ASK = 70.2
 _AAPL_CALL_LAST_TRADE_DATE_EPOCH = 1782492175
 _AAPL_CALL_LAST_TRADE_DATE = datetime.datetime.fromtimestamp(
-    _AAPL_CALL_LAST_TRADE_DATE_EPOCH, tz=datetime.timezone.utc
+    _AAPL_CALL_LAST_TRADE_DATE_EPOCH, tz=datetime.UTC
 )
 _AAPL_OTM_STRIKE = 310.0
 
@@ -93,9 +93,7 @@ def test_option_contract_expiration_equals_utc_date_of_raw_epoch() -> None:
     record = _load_chain("AAPL.json")
     raw_call = record["options"][0]["calls"][0]  # type: ignore[index]
     raw_epoch = cast("int", raw_call["expiration"])
-    expected = datetime.datetime.fromtimestamp(
-        raw_epoch, tz=datetime.timezone.utc
-    ).date()
+    expected = datetime.datetime.fromtimestamp(raw_epoch, tz=datetime.UTC).date()
 
     chain = OptionChain.model_validate(record)
     assert chain.options[0].calls is not None
@@ -114,9 +112,7 @@ def test_option_expiration_date_equals_utc_date_of_raw_epoch() -> None:
         "int",
         record["options"][0]["expirationDate"],  # type: ignore[index]
     )
-    expected = datetime.datetime.fromtimestamp(
-        raw_epoch, tz=datetime.timezone.utc
-    ).date()
+    expected = datetime.datetime.fromtimestamp(raw_epoch, tz=datetime.UTC).date()
 
     chain = OptionChain.model_validate(record)
 
@@ -131,7 +127,7 @@ def test_option_chain_expiration_dates_equal_utc_dates_of_raw_epochs() -> None:
     record = _load_chain("AAPL.json")
     raw_epochs: list[int] = record["expirationDates"]  # type: ignore[assignment]
     expected = [
-        datetime.datetime.fromtimestamp(epoch, tz=datetime.timezone.utc).date()
+        datetime.datetime.fromtimestamp(epoch, tz=datetime.UTC).date()
         for epoch in raw_epochs
     ]
 
@@ -160,7 +156,7 @@ def test_option_contract_last_trade_date_is_aware_utc() -> None:
     assert chain.options[0].calls is not None
     call = chain.options[0].calls[0]
 
-    assert call.last_trade_date.tzinfo == datetime.timezone.utc
+    assert call.last_trade_date.tzinfo == datetime.UTC
 
 
 def test_option_chain_msft_and_spy_records_also_validate() -> None:

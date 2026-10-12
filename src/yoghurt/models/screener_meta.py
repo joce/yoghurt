@@ -124,7 +124,7 @@ open-ended-id-keyed row data.
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 
 from pydantic import Field
 
@@ -140,7 +140,7 @@ from yoghurt.models.enums import (  # ruff:ignore[typing-only-first-party-import
 # ---------------------------------------------------------------------------
 
 
-class ScreenerFieldType(str, Enum):
+class ScreenerFieldType(StrEnum):
     """Wire data type of a screener field, per :class:`ScreenerField.type`.
 
     All four members are observed across the 1666-field-spec corpus.
@@ -157,7 +157,7 @@ class ScreenerFieldType(str, Enum):
     BOOLEAN = "BOOLEAN"
 
 
-class ScreenerCriteriaOperator(str, Enum):
+class ScreenerCriteriaOperator(StrEnum):
     """Comparison operator of a :class:`ScreenerFieldCriteria`.
 
     All five members are observed across the 3597 quick-pick filter chips

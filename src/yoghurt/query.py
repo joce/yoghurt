@@ -40,7 +40,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 from typing import Any, Final
 
 _LiteralValue = int | float | str
@@ -50,7 +50,7 @@ class QueryError(ValueError):
     """Raised when a query string cannot be parsed."""
 
 
-class _StmtKind(str, Enum):
+class _StmtKind(StrEnum):
     SELECT = "select"
     AGGREGATE = "aggregate"
 

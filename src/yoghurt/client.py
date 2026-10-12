@@ -2,13 +2,17 @@
 
 from __future__ import annotations
 
+# Deferred until first use on Python 3.15+ (PEP 810) so ``--help`` and
+# ``import yoghurt`` skip their import cost; ignored on older interpreters.
+__lazy_modules__ = ["asyncio", "email.utils", "httpx2"]
+
 import asyncio
 import json
 import logging
 import math
 import time
 from contextvars import ContextVar
-from datetime import timezone
+from datetime import UTC
 from email.utils import parsedate_to_datetime
 from typing import TYPE_CHECKING, Any, Final, Literal, cast
 
@@ -172,7 +176,7 @@ class YahooClient:
                     _YAHOO_REQUEST.reset(token)
                 if response.is_error:
                     response.raise_for_status()
-            except httpx.HTTPStatusError as exc:  # ruff:ignore[try-except-in-loop]
+            except httpx.HTTPStatusError as exc:
                 status_code = exc.response.status_code if exc.response else -1
                 if (
                     method == "GET"
@@ -208,7 +212,7 @@ class YahooClient:
             try:
                 retry_at = parsedate_to_datetime(retry_after)
                 if retry_at.tzinfo is None:
-                    retry_at = retry_at.replace(tzinfo=timezone.utc)
+                    retry_at = retry_at.replace(tzinfo=UTC)
                 delay = retry_at.timestamp() - time.time()
             except (TypeError, ValueError, OverflowError):
                 return self._RETRY_DELAY_SECONDS * attempt

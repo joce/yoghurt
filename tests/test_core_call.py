@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from typing import TYPE_CHECKING, Any, cast
 
 import pytest
@@ -98,7 +98,7 @@ async def test_call_endpoint_serializes_dates_and_bools(
         values={
             "symbol": "AAPL",
             "period1": date(2026, 1, 1),
-            "period2": datetime(2026, 1, 5, tzinfo=timezone.utc),
+            "period2": datetime(2026, 1, 5, tzinfo=UTC),
             "interval": "1d",
         },
     )

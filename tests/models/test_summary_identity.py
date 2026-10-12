@@ -105,7 +105,7 @@ def test_summary_quote_type_pre_epoch_first_trade_datetime_is_portable(
 
     first_trade = quote_type.first_trade_datetime
     assert first_trade is not None
-    assert first_trade < datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc)
+    assert first_trade < datetime.datetime(1970, 1, 1, tzinfo=datetime.UTC)
     assert first_trade.tzinfo is not None
 
 

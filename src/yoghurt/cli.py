@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+# Deferred until first use on Python 3.15+ (PEP 810) so ``--help`` and
+# ``import yoghurt`` skip their import cost; ignored on older interpreters.
+__lazy_modules__ = ["asyncio", "importlib.resources"]
+
 import argparse
 import asyncio
 import json

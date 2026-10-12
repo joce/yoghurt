@@ -5,8 +5,8 @@ from __future__ import annotations
 import argparse
 import time
 from dataclasses import dataclass
-from datetime import date, datetime, timezone
-from enum import Enum
+from datetime import UTC, date, datetime
+from enum import StrEnum
 from string import Formatter
 from typing import TYPE_CHECKING, Final
 from urllib.parse import quote
@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from yoghurt.types import ParamValue
 
 
-class ParamKind(str, Enum):
+class ParamKind(StrEnum):
     """Supported CLI parameter kinds."""
 
     STRING = "string"
@@ -187,16 +187,16 @@ def parse_datetime(value: str) -> int:
         pass
 
     try:
-        parsed = datetime.fromisoformat(stripped.replace("Z", "+00:00"))
+        parsed = datetime.fromisoformat(stripped)
     except ValueError as exc:
         message = (
             f"expected Unix timestamp, YYYY-MM-DD date, or ISO datetime; got {value!r}"
         )
         raise ValueError(message) from exc
     if parsed.tzinfo is None:
-        parsed = parsed.replace(tzinfo=timezone.utc)
+        parsed = parsed.replace(tzinfo=UTC)
     else:
-        parsed = parsed.astimezone(timezone.utc)
+        parsed = parsed.astimezone(UTC)
     return int(parsed.timestamp())
 
 
@@ -268,7 +268,7 @@ def default_for_param(param: ParamSpec) -> object:
     if param.default in {"now", "now-3d"}:
         return argparse.SUPPRESS
     if param.default == "today":
-        return datetime.now(timezone.utc).date().isoformat()
+        return datetime.now(UTC).date().isoformat()
     if (
         param.allow_empty_default
         and isinstance(param.default, str)
@@ -337,7 +337,7 @@ def _param_from_default(spec: ParamSpec, current_timestamp: int) -> ParamValue |
     ):
         return ""
     if spec.default == "today":
-        return _param_from_value(spec, datetime.now(timezone.utc).date())
+        return _param_from_value(spec, datetime.now(UTC).date())
     if spec.default is not None:
         return _param_from_value(spec, spec.default)
     return None

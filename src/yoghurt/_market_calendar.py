@@ -7,7 +7,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 from typing import TYPE_CHECKING, Final, TypeAlias
 
 import polars as pl
@@ -280,7 +280,7 @@ def _calendar_spec(kind: MarketCalendarKind | str) -> _CalendarSpec:
 def _resolve_window(
     start_value: DateLike | None, end_value: DateLike | None
 ) -> tuple[date, date]:
-    today = datetime.now(timezone.utc).date()
+    today = datetime.now(UTC).date()
     start = (
         _coerce_date(start_value, "start_date") if start_value is not None else today
     )
@@ -304,8 +304,8 @@ def _coerce_date(value: object, name: str) -> date:
         message = f"{name} must be a date, datetime, string, or Unix timestamp"
         raise TypeError(message)
     if isinstance(value, datetime):
-        parsed = value.replace(tzinfo=timezone.utc) if value.tzinfo is None else value
-        return parsed.astimezone(timezone.utc).date()
+        parsed = value.replace(tzinfo=UTC) if value.tzinfo is None else value
+        return parsed.astimezone(UTC).date()
     if isinstance(value, date):
         return value
     if not isinstance(value, int | str):
@@ -313,7 +313,7 @@ def _coerce_date(value: object, name: str) -> date:
         raise TypeError(message)
     try:
         milliseconds = parse_datetime_milliseconds(str(value))
-        epoch = datetime(1970, 1, 1, tzinfo=timezone.utc)
+        epoch = datetime(1970, 1, 1, tzinfo=UTC)
         return (epoch + timedelta(milliseconds=milliseconds)).date()
     except (OSError, OverflowError, ValueError) as exc:
         message = f"invalid {name}: {value!r}"

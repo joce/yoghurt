@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+# Deferred until first use on Python 3.15+ (PEP 810) so ``--help`` and
+# ``import yoghurt`` skip their import cost; ignored on older interpreters.
+__lazy_modules__ = ["http.cookiejar", "http.cookies", "httpx2", "tempfile"]
+
 import json
 import math
 import tempfile
@@ -10,18 +14,23 @@ from dataclasses import dataclass
 from http.cookiejar import Cookie
 from http.cookies import CookieError, SimpleCookie
 from pathlib import Path
-from typing import Any, Final, cast
+from typing import TYPE_CHECKING, Any, Final, cast
 
 import httpx2 as httpx
 
 from yoghurt._urls import YAHOO_FINANCE_QUERY_URL
+
+if TYPE_CHECKING:
+    # Bare name, not ``httpx.Cookies``: dataclasses resolves dotted string
+    # annotations at class creation, which would load httpx2 eagerly.
+    from httpx2 import Cookies
 
 
 @dataclass(frozen=True, slots=True)
 class CachedSession:
     """Cookie and crumb data loaded from disk."""
 
-    cookies: httpx.Cookies
+    cookies: Cookies
     crumb: str
     expiry: float
 

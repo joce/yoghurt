@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -756,7 +756,7 @@ def test_ticker_calendar_events_normalizes_integer_and_aware_datetime_bounds(
 
     Ticker("AAPL").calendar_events(
         start_date=1510876800,
-        end_date=datetime(2017, 11, 18, tzinfo=timezone.utc),
+        end_date=datetime(2017, 11, 18, tzinfo=UTC),
     )
 
     _, params = fake.calls[0]

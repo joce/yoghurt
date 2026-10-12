@@ -1,15 +1,11 @@
-"""Enumerated types for Yahoo! Finance quote data.
-
-``str, Enum`` rather than ``StrEnum``: the project floor is Python 3.10,
-and ``enum.StrEnum`` only ships from 3.11 onward.
-"""
+"""Enumerated types for Yahoo! Finance quote data."""
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 
 
-class QuoteType(str, Enum):
+class QuoteType(StrEnum):
     """Classification of financial instruments supported by Yahoo! Finance.
 
     Members: EQUITY, INDEX, OPTION, CURRENCY, CRYPTOCURRENCY, FUTURE, ETF,
@@ -36,7 +32,7 @@ class QuoteType(str, Enum):
     PRIVATE_COMPANY = "PRIVATE_COMPANY"
 
 
-class MarketState(str, Enum):
+class MarketState(StrEnum):
     """Trading session phases for financial markets in Yahoo! Finance.
 
     PREPRE and POSTPOST bracket the wider extended-hours window; PRE runs
@@ -59,7 +55,7 @@ class MarketState(str, Enum):
     CLOSED = "CLOSED"
 
 
-class OptionsType(str, Enum):
+class OptionsType(StrEnum):
     """Classification of option contracts by the right they grant.
 
     Values carry Yahoo's wire casing for the ``optionsType`` quote key,
@@ -72,7 +68,7 @@ class OptionsType(str, Enum):
     PUT = "Put"
 
 
-class PriceAlertConfidence(str, Enum):
+class PriceAlertConfidence(StrEnum):
     """Confidence level for Yahoo! Finance's internal price alert feature.
 
     Members: NONE (no confidence), LOW, and HIGH.

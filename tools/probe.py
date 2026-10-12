@@ -35,7 +35,7 @@ import re
 import sys
 import time
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 from http import HTTPStatus
 from operator import itemgetter
 from pathlib import Path
@@ -125,7 +125,7 @@ def sanitize(name: str) -> str:
 
 
 def _utc_today() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def _yesterday_iso() -> str:
@@ -943,7 +943,7 @@ def _write_manifest(
     """Attach the run metadata and write manifest.json to the corpus dir."""
 
     manifest["_meta"] = {
-        "fetched_at": datetime.now(timezone.utc).isoformat(),
+        "fetched_at": datetime.now(UTC).isoformat(),
         "case_count": case_count,
     }
     corpus_dir.mkdir(parents=True, exist_ok=True)
@@ -1125,7 +1125,7 @@ async def _check_claims(client: _YahooClientProtocol) -> dict[str, object]:
     return {
         "changed": sum(case["changed"] is True for case in cases),
         "baseline_date": _CLAIM_BASELINE_DATE,
-        "checked_at": datetime.now(timezone.utc).isoformat(),
+        "checked_at": datetime.now(UTC).isoformat(),
         "cases": cases,
     }
 
@@ -1299,8 +1299,8 @@ def _history_contract(ticker: api.Ticker) -> dict[str, object]:
         return {"status": "blocked", "classification": "upstream_data_unavailable"}
     stamps = [row["ts"] for row in rows]
     _require_contract(stamps == sorted(set(stamps)), "history_timestamp_order")
-    start = datetime.fromisoformat(_CONTRACT_START).replace(tzinfo=timezone.utc)
-    end = datetime.fromisoformat(_CONTRACT_END).replace(tzinfo=timezone.utc)
+    start = datetime.fromisoformat(_CONTRACT_START).replace(tzinfo=UTC)
+    end = datetime.fromisoformat(_CONTRACT_END).replace(tzinfo=UTC)
     for row in rows:
         _require_contract(
             row["symbol"] == ticker.symbol
@@ -1438,7 +1438,7 @@ def _contract_error(exc: Exception) -> dict[str, object]:
 def _check_contracts() -> dict[str, object]:
     cases: list[dict[str, Any]] = []
     for kind, symbol, parameters, expected in _contract_plan():
-        checked_at = datetime.now(timezone.utc).isoformat()
+        checked_at = datetime.now(UTC).isoformat()
         try:
             actual = _public_contract(kind, symbol, parameters)
         except (YoghurtError, _ContractError, ValueError, TypeError, KeyError) as exc:
@@ -1460,7 +1460,7 @@ def _check_contracts() -> dict[str, object]:
         for status in ("pass", "failure", "blocked")
     }
     return {
-        "checked_at": datetime.now(timezone.utc).isoformat(),
+        "checked_at": datetime.now(UTC).isoformat(),
         "summary": summary,
         "case_count": len(cases),
         "maximum_logical_data_requests": len(cases) + 4,

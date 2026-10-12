@@ -6,6 +6,25 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Python 3.15 support. On 3.15 yoghurt requires polars 2.x, and the `pandas`
+  extra resolves to pandas 3.x and pyarrow 26; older interpreters keep the
+  existing ranges.
+
+### Changed
+
+- Closed-vocabulary enums such as `QuoteType` are now `enum.StrEnum`, so
+  `str()` and `format()` of a member return its wire value rather than
+  `QuoteType.EQUITY`.
+- Widened the `polars` range to allow 2.x.
+- On Python 3.15 the HTTP and async stacks load on first use, cutting
+  `yoghurt --help` startup by roughly 40%.
+
+### Removed
+
+- Python 3.10 support. Yoghurt now requires Python 3.11 or newer.
+
 ## [0.6.1] - 2026-10-12
 
 ### Changed
