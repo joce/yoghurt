@@ -6,6 +6,13 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-10-12
+
+### Changed
+
+- Updated locked runtime and development dependencies and the setup-uv CI action.
+- Widened the development `isort` range to allow 9.x.
+
 ## [0.6.0] - 2026-09-07
 
 ### Added
@@ -442,7 +449,8 @@ First PyPI release.
 - Reusable Yahoo session cache for faster one-shot calls.
 - `raw` escape hatch for query paths yoghurt doesn't model yet.
 
-[Unreleased]: https://github.com/joce/yoghurt/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/joce/yoghurt/compare/v0.6.1...HEAD
+[0.6.1]: https://github.com/joce/yoghurt/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/joce/yoghurt/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/joce/yoghurt/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/joce/yoghurt/compare/v0.4.2...v0.5.0
