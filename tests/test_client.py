@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import time
 import traceback
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from email.utils import format_datetime
 from typing import TYPE_CHECKING
 
@@ -535,7 +535,7 @@ async def test_chart_cookie_refresh_replenishes_crumb_for_authenticated_replay(
     ("header", "expected_delay"),
     [
         ("2", 2.0),
-        (format_datetime(datetime.fromtimestamp(1003, timezone.utc), usegmt=True), 3.0),
+        (format_datetime(datetime.fromtimestamp(1003, UTC), usegmt=True), 3.0),
         ("not-a-delay", 0.25),
         ("NaN", 0.25),
         ("-2", 0.0),

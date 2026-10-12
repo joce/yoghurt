@@ -104,3 +104,28 @@ def test_history_remains_callable_after_ticker_import() -> None:
         ],
         check=True,
     )
+
+
+@pytest.mark.skipif(
+    sys.version_info < (3, 15), reason="lazy imports (PEP 810) need Python 3.15+"
+)
+def test_help_path_defers_network_stack() -> None:
+    """Building the parser and printing help never loads the HTTP or async stack.
+
+    Guards the ``__lazy_modules__`` declarations: any new module-level use of
+    a deferred module would silently bring the startup cost back.
+    """
+    code = (
+        "import sys\n"
+        "from yoghurt.cli import main\n"
+        "try:\n"
+        "    main(['--help'])\n"
+        "except SystemExit:\n"
+        "    pass\n"
+        "deferred = ('asyncio', 'http.cookiejar', 'httpx2', 'polars', 'pydantic')\n"
+        "loaded = [name for name in deferred if name in sys.modules]\n"
+        "assert not loaded, loaded\n"
+    )
+    subprocess.run(  # ruff:ignore[subprocess-without-shell-equals-true] - fixed argv, no untrusted input
+        [sys.executable, "-c", code], check=True, capture_output=True
+    )

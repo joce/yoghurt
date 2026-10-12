@@ -8,7 +8,7 @@
 from __future__ import annotations
 
 import json
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any
 
@@ -66,7 +66,7 @@ def _epoch_ms(value: int) -> datetime:
         datetime: The UTC instant.
     """
 
-    return datetime.fromtimestamp(value / 1000, tz=timezone.utc)
+    return datetime.fromtimestamp(value / 1000, tz=UTC)
 
 
 def test_default_capture_economic_rows_and_empty_types() -> None:

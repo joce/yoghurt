@@ -7,7 +7,7 @@ import os
 import stat
 import subprocess  # ruff:ignore[suspicious-subprocess-import] - isolated permission tests.
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 import polars as pl
@@ -128,11 +128,11 @@ def test_chart_writer_happy_path(tmp_path: Path) -> None:
     # The ``ts`` column round-trips as tz-aware UTC datetimes that match the
     # original epoch-second inputs exactly.
     expected_datetimes = [
-        datetime(2024, 1, 1, tzinfo=timezone.utc),
-        datetime(2024, 1, 2, tzinfo=timezone.utc),
-        datetime(2024, 1, 3, tzinfo=timezone.utc),
-        datetime(2024, 1, 4, tzinfo=timezone.utc),
-        datetime(2024, 1, 5, tzinfo=timezone.utc),
+        datetime(2024, 1, 1, tzinfo=UTC),
+        datetime(2024, 1, 2, tzinfo=UTC),
+        datetime(2024, 1, 3, tzinfo=UTC),
+        datetime(2024, 1, 4, tzinfo=UTC),
+        datetime(2024, 1, 5, tzinfo=UTC),
     ]
     assert df.get_column("ts").to_list() == expected_datetimes
 
@@ -1004,7 +1004,7 @@ def test_replacing_parquet_preserves_existing_permissions(
     path = tmp_path / "rows.parquet"
     path.write_bytes(b"old")
     path.chmod(mode)
-    Frame(pl.DataFrame({"x": [1]}), datetime.now(timezone.utc)).save_parquet(path)
+    Frame(pl.DataFrame({"x": [1]}), datetime.now(UTC)).save_parquet(path)
     assert stat.S_IMODE(path.stat().st_mode) == mode
     assert pl.read_parquet(path).to_dicts() == [{"x": 1}]
     assert list(tmp_path.iterdir()) == [path]
@@ -1014,7 +1014,7 @@ def test_parquet_success_replaces_and_cleans_staging(tmp_path: Path) -> None:
     """Replacement and staging cleanup work on Windows as well as POSIX."""
     path = tmp_path / "rows.parquet"
     path.write_bytes(b"old")
-    Frame(pl.DataFrame({"x": [1]}), datetime.now(timezone.utc)).save_parquet(path)
+    Frame(pl.DataFrame({"x": [1]}), datetime.now(UTC)).save_parquet(path)
     assert pl.read_parquet(path).to_dicts() == [{"x": 1}]
     assert list(tmp_path.iterdir()) == [path]
 
@@ -1027,9 +1027,7 @@ def test_readonly_windows_target_failure_cleans_staging(tmp_path: Path) -> None:
     path.chmod(stat.S_IREAD)
     try:
         with pytest.raises(ParquetWriterError):
-            Frame(pl.DataFrame({"x": [1]}), datetime.now(timezone.utc)).save_parquet(
-                path
-            )
+            Frame(pl.DataFrame({"x": [1]}), datetime.now(UTC)).save_parquet(path)
         assert path.read_bytes() == b"old"
         assert list(tmp_path.iterdir()) == [path]
     finally:

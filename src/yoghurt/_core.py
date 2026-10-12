@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import atexit
-import concurrent.futures
 import contextlib
 import json
 import threading
@@ -341,14 +340,11 @@ def _close_default_client() -> None:
 
     The wait is bounded: at interpreter exit the bridge's daemon loop
     thread may already be dead, and an unbounded ``future.result()`` would
-    hang forever. ``concurrent.futures.TimeoutError`` is suppressed
-    explicitly — it subclasses ``Exception`` on all supported versions
-    (a distinct ``Exception`` subclass on 3.10; an alias of the builtin
-    ``TimeoutError`` on 3.11+), but spelling it out guarantees the exit
-    path can never raise or hang regardless of interpreter version.
+    hang forever. The resulting ``TimeoutError`` is suppressed along with
+    every other ``Exception`` so the exit path can never raise or hang.
     """
     if _client is not None:
-        with contextlib.suppress(Exception, concurrent.futures.TimeoutError):
+        with contextlib.suppress(Exception):
             run(_client.aclose(), timeout=_CLOSE_TIMEOUT_SECONDS)
 
 

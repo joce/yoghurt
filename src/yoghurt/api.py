@@ -10,7 +10,7 @@ source of truth for accepted kwargs.
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any, Final, TypeAlias, cast
 
 import polars as pl
@@ -93,7 +93,7 @@ def _values(**kwargs: object) -> dict[str, object]:
 
 
 def _now_utc() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def _chart_from_payload(payload: dict[str, Any], fetched_at: datetime) -> Chart:

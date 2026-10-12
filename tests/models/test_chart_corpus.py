@@ -287,7 +287,7 @@ def test_events_dividends_are_keyed_by_epoch_string() -> None:
     for key, dividend in chart_events.dividends.items():
         assert key.isdigit()
         assert dividend.date == datetime.datetime.fromtimestamp(
-            int(key), tz=datetime.timezone.utc
+            int(key), tz=datetime.UTC
         )
         assert dividend.date.tzinfo is not None
         assert isinstance(dividend.amount, float)

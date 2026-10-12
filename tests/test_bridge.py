@@ -1,7 +1,6 @@
 """Tests for the background-loop sync bridge."""
 
 import asyncio
-import concurrent.futures
 import time
 
 import pytest
@@ -50,6 +49,6 @@ def test_run_with_timeout_returns_fast_result() -> None:
 def test_run_with_timeout_raises_instead_of_hanging() -> None:
     """A slow coroutine raises the timeout error promptly; the wait is bounded."""
     started = time.monotonic()
-    with pytest.raises(concurrent.futures.TimeoutError):
+    with pytest.raises(TimeoutError):
         run(asyncio.sleep(_LONG_SLEEP_SECONDS), timeout=_SHORT_TIMEOUT_SECONDS)
     assert time.monotonic() - started < _WELL_UNDER_A_SECOND

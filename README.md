@@ -52,7 +52,7 @@ Known limitations and their evidence live alongside the recipes:
 
 ## Install
 
-Yoghurt requires Python 3.10+.
+Yoghurt requires Python 3.11+.
 
 ```powershell
 pip install yoghurt

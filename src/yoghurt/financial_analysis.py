@@ -318,7 +318,7 @@ def _frame(
 
 def _timeseries_frame(timeseries: Timeseries, metrics: frozenset[str]) -> Frame:
     source = timeseries.fundamentals.to_polars()
-    # Polars' Python 3.10 stub leaves DataFrame.filter partially Unknown.
+    # Polars' stub leaves DataFrame.filter partially Unknown.
     table = source.filter(  # pyright: ignore[reportUnknownMemberType]
         pl.col("type").is_in(_types_for_metrics(metrics))
     )

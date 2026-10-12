@@ -837,7 +837,7 @@ class SummaryQuoteType(YahooModel):
         if self.first_trade_date_epoch_utc is None:
             return None
         tz_info = ZoneInfo(self.time_zone_full_name)
-        epoch = datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc)
+        epoch = datetime.datetime(1970, 1, 1, tzinfo=datetime.UTC)
         return (
             epoch + datetime.timedelta(seconds=self.first_trade_date_epoch_utc)
         ).astimezone(tz_info)
@@ -2033,7 +2033,7 @@ class CorporateActionMeta(YahooModel):
         midnight-UTC-aligned against the sole corpus example.
         """
 
-        epoch = datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc)
+        epoch = datetime.datetime(1970, 1, 1, tzinfo=datetime.UTC)
         return (epoch + datetime.timedelta(milliseconds=self.date_epoch_ms)).date()
 
 

@@ -20,7 +20,7 @@ some equities. An unmatched query is a valid result with an empty
 from __future__ import annotations
 
 import datetime  # ruff:ignore[typing-only-standard-library-import] - pydantic resolves annotations at runtime
-from enum import Enum
+from enum import StrEnum
 
 from pydantic import Field
 
@@ -30,7 +30,7 @@ from yoghurt.models.enums import (  # ruff:ignore[typing-only-first-party-import
 )
 
 
-class LookupQuoteType(str, Enum):
+class LookupQuoteType(StrEnum):
     """Lowercase quote types observed in lookup documents."""
 
     CRYPTOCURRENCY = "cryptocurrency"

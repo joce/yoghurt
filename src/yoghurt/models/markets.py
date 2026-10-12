@@ -109,7 +109,7 @@ from yoghurt.models.enums import (  # ruff:ignore[typing-only-first-party-import
 
 
 def _localized_datetime(timestamp: float, timezone_name: str) -> datetime.datetime:
-    epoch = datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc)
+    epoch = datetime.datetime(1970, 1, 1, tzinfo=datetime.UTC)
     return (epoch + datetime.timedelta(seconds=timestamp)).astimezone(
         ZoneInfo(timezone_name)
     )

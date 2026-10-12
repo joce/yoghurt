@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import builtins
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -37,7 +37,7 @@ def _frame() -> Frame:
     """
 
     df = pl.DataFrame({"a": [1, 2], "b": ["x", "y"]})
-    return Frame(df=df, fetched_at=datetime(2026, 7, 4, tzinfo=timezone.utc))
+    return Frame(df=df, fetched_at=datetime(2026, 7, 4, tzinfo=UTC))
 
 
 def test_to_polars_returns_the_dataframe() -> None:
@@ -125,7 +125,7 @@ def test_chart_is_a_frame_with_typed_meta() -> None:
 
     chart = Chart(
         df=pl.DataFrame({"ts": [1]}),
-        fetched_at=datetime(2026, 7, 4, tzinfo=timezone.utc),
+        fetched_at=datetime(2026, 7, 4, tzinfo=UTC),
         meta=_aapl_chart_meta(),
         events=None,
     )
@@ -139,7 +139,7 @@ def test_spark_is_a_frame_with_typed_meta() -> None:
 
     spark = Spark(
         df=pl.DataFrame({"ts": [1], "close": [1.5]}),
-        fetched_at=datetime(2026, 7, 4, tzinfo=timezone.utc),
+        fetched_at=datetime(2026, 7, 4, tzinfo=UTC),
         meta=_aapl_chart_meta(),
     )
     assert spark.meta.currency == "USD"
@@ -149,7 +149,7 @@ def test_spark_is_a_frame_with_typed_meta() -> None:
 def test_timeseries_holds_four_frames_and_bookkeeping() -> None:
     """Timeseries aggregates four Frames plus the type-name tuples."""
 
-    fetched_at = datetime(2026, 7, 4, tzinfo=timezone.utc)
+    fetched_at = datetime(2026, 7, 4, tzinfo=UTC)
     empty = Frame(df=pl.DataFrame(), fetched_at=fetched_at)
     ts = Timeseries(
         fundamentals=_frame(),
