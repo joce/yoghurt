@@ -1458,7 +1458,7 @@ requires-dist = [
     { name = "httpx2", specifier = ">=2.5,<3.0" },
     { name = "pandas", marker = "python_full_version >= '3.15' and extra == 'pandas'", specifier = ">=3.0.6,<4.0" },
     { name = "pandas", marker = "python_full_version < '3.15' and extra == 'pandas'", specifier = ">=2.2,<3.0" },
-    { name = "polars", specifier = ">=1.42.1,<3.0" },
+    { name = "polars", specifier = ">=2.0,<3.0" },
     { name = "polars", marker = "python_full_version >= '3.15'", specifier = ">=2.0,<3.0" },
     { name = "pyarrow", marker = "python_full_version >= '3.15' and extra == 'pandas'", specifier = ">=26,<27" },
     { name = "pyarrow", marker = "python_full_version < '3.15' and extra == 'pandas'", specifier = ">=17,<26" },
