@@ -116,7 +116,7 @@ Reconciliation notes:
 
 from __future__ import annotations
 
-import datetime  # ruff:ignore[typing-only-standard-library-import] - pydantic needs this at runtime to resolve annotations
+import datetime as dt  # ruff:ignore[typing-only-standard-library-import] - pydantic needs this at runtime to resolve annotations
 
 from pydantic import Field
 
@@ -179,7 +179,7 @@ class EarningsChartQuarter(YahooModel):
     calendar.
     """
 
-    period_end_date: datetime.date
+    period_end_date: dt.date
     """
     Last calendar day of this fiscal quarter.
 
@@ -188,7 +188,7 @@ class EarningsChartQuarter(YahooModel):
     corpus value).
     """
 
-    reported_date: datetime.datetime | None = None
+    reported_date: dt.datetime | None = None
     """
     Date and time this quarter's earnings were reported.
 
@@ -222,7 +222,7 @@ class EarningsChart(YahooModel):
     Label of the current fiscal quarter (for example ``"3Q2026"``).
     """
 
-    current_period_end_date: datetime.date
+    current_period_end_date: dt.date
     """
     Last calendar day of the current fiscal quarter.
 
@@ -250,7 +250,7 @@ class EarningsChart(YahooModel):
     Calendar year of the current quarter estimate.
     """
 
-    earnings_date: list[datetime.datetime]
+    earnings_date: list[dt.datetime]
     """
     Scheduled date(s) and time(s) of the upcoming earnings announcement.
 
@@ -712,7 +712,7 @@ class EarningsTrendEntry(YahooModel):
     Consensus EPS estimate details for this period.
     """
 
-    end_date: datetime.date
+    end_date: dt.date
     """
     Last calendar day of this period.
 
@@ -783,7 +783,7 @@ class EarningsTrend(YahooModel):
 class EarningsCallTranscript(YahooModel):
     """One entry in the ``earningsCallTranscripts`` module's ``transcripts`` list."""
 
-    date: datetime.datetime
+    date: dt.datetime
     """
     Date and time of the earnings call.
 
@@ -847,7 +847,7 @@ class EarningsCallTranscript(YahooModel):
     closed vocabulary, so this stays plain ``str``.
     """
 
-    updated: datetime.datetime
+    updated: dt.datetime
     """
     Date and time this transcript record was last updated.
 

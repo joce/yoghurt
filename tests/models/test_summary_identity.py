@@ -10,7 +10,7 @@ dispatch: RawFmt unwrapping in ``CompanyOfficer``, the ``SummaryQuoteType``/
 
 from __future__ import annotations
 
-import datetime
+import datetime as dt
 import json
 from pathlib import Path
 from typing import Any
@@ -89,7 +89,7 @@ def test_summary_quote_type_first_trade_datetime_localizes_via_timezone() -> Non
     first_trade = quote_type.first_trade_datetime
     assert first_trade is not None
     assert first_trade.tzinfo is not None
-    assert first_trade == datetime.datetime.fromtimestamp(
+    assert first_trade == dt.datetime.fromtimestamp(
         quote_type.first_trade_date_epoch_utc,
         tz=first_trade.tzinfo,
     )
@@ -105,7 +105,7 @@ def test_summary_quote_type_pre_epoch_first_trade_datetime_is_portable(
 
     first_trade = quote_type.first_trade_datetime
     assert first_trade is not None
-    assert first_trade < datetime.datetime(1970, 1, 1, tzinfo=datetime.UTC)
+    assert first_trade < dt.datetime(1970, 1, 1, tzinfo=dt.UTC)
     assert first_trade.tzinfo is not None
 
 
@@ -123,7 +123,7 @@ def test_corporate_actions_populated_example_validates_ry_to() -> None:
     assert action.meta.amount == _RY_TO_DIVIDEND_AMOUNT
     assert isinstance(action.meta.amount, str)
     assert action.meta.date_epoch_ms == _RY_TO_DATE_EPOCH_MS
-    assert action.meta.date == datetime.date(2026, 7, 27)
+    assert action.meta.date == dt.date(2026, 7, 27)
 
 
 def test_corporate_actions_empty_for_aapl() -> None:
@@ -141,7 +141,7 @@ def test_corporate_action_negative_epoch_date_is_portable() -> None:
 
     meta = CorporateActionMeta(amount="1.00", date_epoch_ms=-1, event_type="DIVIDEND")
 
-    assert meta.date == datetime.date(1969, 12, 31)
+    assert meta.date == dt.date(1969, 12, 31)
 
 
 def test_summary_detail_ex_dividend_date_is_calendar_date() -> None:
@@ -151,8 +151,8 @@ def test_summary_detail_ex_dividend_date_is_calendar_date() -> None:
         _load_module("AAPL.json", "summaryDetail")
     )
 
-    assert isinstance(summary_detail.ex_dividend_date, datetime.date)
-    assert not isinstance(summary_detail.ex_dividend_date, datetime.datetime)
+    assert isinstance(summary_detail.ex_dividend_date, dt.date)
+    assert not isinstance(summary_detail.ex_dividend_date, dt.datetime)
 
 
 def test_summary_detail_yield_field_uses_wire_alias() -> None:

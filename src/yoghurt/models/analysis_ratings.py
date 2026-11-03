@@ -76,7 +76,7 @@ wire string that pydantic parses directly into :class:`datetime.date` (no
 
 from __future__ import annotations
 
-import datetime  # ruff:ignore[typing-only-standard-library-import] - pydantic needs this at runtime to resolve annotations
+import datetime as dt  # ruff:ignore[typing-only-standard-library-import] - pydantic needs this at runtime to resolve annotations
 
 from pydantic import Field
 
@@ -160,7 +160,7 @@ class OptionsAnalysisKeyTakeaways(YahooModel):
 class OptionsAnalysis(YahooModel):
     """The ``options_analysis`` block of an :class:`AnalystResult`."""
 
-    created_at: datetime.datetime = Field(alias="created_at")
+    created_at: dt.datetime = Field(alias="created_at")
     """
     Timestamp this analysis was generated.
     """
@@ -228,7 +228,7 @@ class OptionsAnalysis(YahooModel):
     Matches ``id`` on every corpus record.
     """
 
-    updated_at: datetime.datetime = Field(alias="updated_at")
+    updated_at: dt.datetime = Field(alias="updated_at")
     """
     Timestamp this analysis was last updated.
 
@@ -266,7 +266,7 @@ class InsiderActivity(YahooModel):
 class HoldingsInsights(YahooModel):
     """The ``holdings_insights`` block of an :class:`AnalystResult`."""
 
-    created_at: datetime.datetime = Field(alias="created_at")
+    created_at: dt.datetime = Field(alias="created_at")
     """
     Timestamp this analysis was generated.
     """
@@ -306,7 +306,7 @@ class HoldingsInsights(YahooModel):
     Matches ``id`` on every corpus record.
     """
 
-    updated_at: datetime.datetime = Field(alias="updated_at")
+    updated_at: dt.datetime = Field(alias="updated_at")
     """
     Timestamp this analysis was last updated.
 
@@ -340,7 +340,7 @@ class AnalystOverview(YahooModel):
     :class:`InsiderActivity`'s field of the same name.
     """
 
-    created_at: datetime.datetime = Field(alias="created_at")
+    created_at: dt.datetime = Field(alias="created_at")
     """
     Timestamp this analysis was generated.
     """
@@ -393,7 +393,7 @@ class AnalystOverview(YahooModel):
     Matches ``id`` on every corpus record.
     """
 
-    updated_at: datetime.datetime = Field(alias="updated_at")
+    updated_at: dt.datetime = Field(alias="updated_at")
     """
     Timestamp this analysis was last updated.
 
@@ -447,7 +447,7 @@ class Rtr(YahooModel):
     Holds an AI-generated ratings/price-target summary.
     """
 
-    created_at: datetime.datetime = Field(alias="created_at")
+    created_at: dt.datetime = Field(alias="created_at")
     """
     Timestamp this analysis was generated.
     """
@@ -459,7 +459,7 @@ class Rtr(YahooModel):
     Always an empty ``{}`` in the corpus.
     """
 
-    generation_start_time: datetime.datetime = Field(alias="generation_start_time")
+    generation_start_time: dt.datetime = Field(alias="generation_start_time")
     """
     Timestamp generation of this summary began.
     """
@@ -488,7 +488,7 @@ class Rtr(YahooModel):
     Matches ``id`` on every corpus record.
     """
 
-    updated_at: datetime.datetime = Field(alias="updated_at")
+    updated_at: dt.datetime = Field(alias="updated_at")
     """
     Timestamp this summary was last updated.
     """
@@ -497,7 +497,7 @@ class Rtr(YahooModel):
 class FinancialInsightsEarningsCalendarEntry(YahooModel):
     """One entry in ``financial_insights.earnings_calendar``."""
 
-    earnings_release: datetime.datetime = Field(alias="earnings_release")
+    earnings_release: dt.datetime = Field(alias="earnings_release")
     """
     Point-in-time earnings release timestamp.
 
@@ -525,7 +525,7 @@ class FinancialInsightsEarningsCalendarEntry(YahooModel):
 class LatestEarningsMetadata(YahooModel):
     """The ``financial_insights.latest_earnings_metadata`` block."""
 
-    earnings_disclosed_at: datetime.date = Field(alias="earnings_disclosed_at")
+    earnings_disclosed_at: dt.date = Field(alias="earnings_disclosed_at")
     """
     Calendar date the latest earnings were disclosed, as a bare
     ``"YYYY-MM-DD"`` wire string.
@@ -545,13 +545,13 @@ class LatestEarningsMetadata(YahooModel):
     that field's docstring for the sibling block's differing wire type.
     """
 
-    period_end_date: datetime.date = Field(alias="period_end_date")
+    period_end_date: dt.date = Field(alias="period_end_date")
     """
     Calendar date the latest disclosed fiscal period ended, as a bare
     ``"YYYY-MM-DD"`` wire string.
     """
 
-    period_start_date: datetime.date = Field(alias="period_start_date")
+    period_start_date: dt.date = Field(alias="period_start_date")
     """
     Calendar date the latest disclosed fiscal period started, as a bare
     ``"YYYY-MM-DD"`` wire string.
@@ -568,7 +568,7 @@ class FinancialInsights(YahooModel):
     ``"Profitability"``, ``"Growth Metrics"``) rather than a fixed key set.
     """
 
-    created_at: datetime.datetime = Field(alias="created_at")
+    created_at: dt.datetime = Field(alias="created_at")
     """
     Timestamp this analysis was generated.
     """
@@ -618,7 +618,7 @@ class FinancialInsights(YahooModel):
     Matches ``id`` on every corpus record.
     """
 
-    updated_at: datetime.datetime = Field(alias="updated_at")
+    updated_at: dt.datetime = Field(alias="updated_at")
     """
     Timestamp this analysis was last updated.
 
@@ -757,7 +757,7 @@ class EarningsAnalysis(YahooModel):
 class EarningsTranscriptsInsights(YahooModel):
     """The ``earnings_transcripts_insights`` block of an :class:`AnalystResult`."""
 
-    created_at: datetime.datetime = Field(alias="created_at")
+    created_at: dt.datetime = Field(alias="created_at")
     """
     Timestamp this analysis was generated.
     """
@@ -808,7 +808,7 @@ class EarningsTranscriptsInsights(YahooModel):
     Matches ``id`` on every corpus record.
     """
 
-    updated_at: datetime.datetime = Field(alias="updated_at")
+    updated_at: dt.datetime = Field(alias="updated_at")
     """
     Timestamp this analysis was last updated.
 
@@ -915,7 +915,7 @@ class AnalystRatingRow(YahooModel):
     Name of the rating firm (for example ``"CLSA"``, ``"Bernstein"``).
     """
 
-    announcement_date: datetime.date = Field(alias="announcement_date")
+    announcement_date: dt.date = Field(alias="announcement_date")
     """
     Calendar date this rating was announced, as a bare ``"YYYY-MM-DD"``
     wire string.

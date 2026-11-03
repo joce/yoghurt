@@ -93,7 +93,7 @@ together, despite the similar English name.
 
 from __future__ import annotations
 
-import datetime  # ruff:ignore[typing-only-standard-library-import] - pydantic needs this at runtime to resolve annotations
+import datetime as dt  # ruff:ignore[typing-only-standard-library-import] - pydantic needs this at runtime to resolve annotations
 from typing import Annotated
 
 from pydantic import Field
@@ -269,7 +269,7 @@ class PriceInsightsNewsArticle(YahooModel):
     Present but empty-string on both corpus rows.
     """
 
-    pub_date: datetime.datetime
+    pub_date: dt.datetime
     """
     Publication timestamp.
 
@@ -328,7 +328,7 @@ class PriceMovementArticle(YahooModel):
     Publisher's home page URL.
     """
 
-    published_date: datetime.datetime = Field(alias="published_date")
+    published_date: dt.datetime = Field(alias="published_date")
     """
     Publication timestamp.
 
@@ -477,7 +477,7 @@ class PriceMovementExplanation(YahooModel):
 class PriceMovement(YahooModel):
     """The ``price_movement`` block of an :class:`AiAnalysisData`."""
 
-    created_at: datetime.datetime = Field(alias="created_at")
+    created_at: dt.datetime = Field(alias="created_at")
     """
     Timestamp this analysis was generated.
     """
@@ -538,7 +538,7 @@ class PriceMovement(YahooModel):
     Tracing identifier for this analysis request.
     """
 
-    updated_at: datetime.datetime = Field(alias="updated_at")
+    updated_at: dt.datetime = Field(alias="updated_at")
     """
     Timestamp this analysis was last updated.
 
@@ -626,7 +626,7 @@ class NewsSummaryArticleInfo(YahooModel):
     Publisher's home page URL.
     """
 
-    published_date: datetime.datetime = Field(alias="published_date")
+    published_date: dt.datetime = Field(alias="published_date")
     """
     Publication timestamp.
 
@@ -658,7 +658,7 @@ class NewsSummaryBlock(YahooModel):
     Source articles backing this news summary.
     """
 
-    created_at: datetime.datetime = Field(alias="created_at")
+    created_at: dt.datetime = Field(alias="created_at")
     """
     Timestamp this summary was generated.
     """
@@ -675,7 +675,7 @@ class NewsSummaryBlock(YahooModel):
     Suggested AI follow-up questions about this summary.
     """
 
-    generation_start_time: datetime.datetime = Field(alias="generation_start_time")
+    generation_start_time: dt.datetime = Field(alias="generation_start_time")
     """
     Timestamp generation of this summary began.
     """
@@ -712,7 +712,7 @@ class NewsSummaryBlock(YahooModel):
     Tracing identifier for this summary request.
     """
 
-    updated_at: datetime.datetime = Field(alias="updated_at")
+    updated_at: dt.datetime = Field(alias="updated_at")
     """
     Timestamp this summary was last updated.
     """
@@ -1179,7 +1179,7 @@ class ResearchReport(YahooModel):
     corpus).
     """
 
-    report_date: datetime.datetime = Field(alias="reportDate")
+    report_date: dt.datetime = Field(alias="reportDate")
     """
     Publication timestamp.
 
@@ -1218,7 +1218,7 @@ class UpsellSearchDD(YahooModel):
 class InsightsEvent(YahooModel):
     """One entry in an :class:`Insights`'s ``events`` list."""
 
-    end_date: datetime.datetime = Field(alias="endDate")
+    end_date: dt.datetime = Field(alias="endDate")
     """
     Point-in-time end of this technical event's window.
 
@@ -1243,7 +1243,7 @@ class InsightsEvent(YahooModel):
     ``"D"``, daily).
     """
 
-    start_date: datetime.datetime = Field(alias="startDate")
+    start_date: dt.datetime = Field(alias="startDate")
     """
     Point-in-time start of this technical event's window.
 
@@ -1290,7 +1290,7 @@ class InsightsReport(YahooModel):
     Source of this report (always ``"Argus Research"`` in the corpus).
     """
 
-    report_date: datetime.datetime = Field(alias="reportDate")
+    report_date: dt.datetime = Field(alias="reportDate")
     """
     Publication timestamp.
 
@@ -1330,7 +1330,7 @@ class InsightsReport(YahooModel):
 class SignificantDevelopment(YahooModel):
     """One entry in an :class:`Insights`'s ``sigDevs`` list."""
 
-    date: datetime.date
+    date: dt.date
     """
     Calendar date of this development, as a bare ``"YYYY-MM-DD"`` wire
     string.
@@ -1387,7 +1387,7 @@ class InsightsSecReport(YahooModel):
     Individual documents attached to this filing.
     """
 
-    filing_date: datetime.date = Field(alias="filingDate")
+    filing_date: dt.date = Field(alias="filingDate")
     """
     Calendar date the filing was made.
 

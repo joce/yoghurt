@@ -111,7 +111,7 @@ unlike every other endpoint in this batch, its 404 body is
 
 from __future__ import annotations
 
-import datetime  # ruff:ignore[typing-only-standard-library-import] - pydantic needs this at runtime to resolve annotations
+import datetime as dt  # ruff:ignore[typing-only-standard-library-import] - pydantic needs this at runtime to resolve annotations
 
 from pydantic import Field
 
@@ -180,7 +180,7 @@ class EarningsEvent(YahooModel):
     Yahoo's internal ranking/priority value for this release.
     """
 
-    start_date_time: datetime.datetime
+    start_date_time: dt.datetime
     """
     Point-in-time timestamp of the earnings release.
 
@@ -223,7 +223,7 @@ class EarningsEventDay(YahooModel):
     Earnings releases scheduled or reported for this day.
     """
 
-    timestamp: datetime.datetime
+    timestamp: dt.datetime
     """
     Point-in-time timestamp for this day bucket.
 
@@ -289,7 +289,7 @@ class IpoEvent(YahooModel):
     than a meaningful per-row value.
     """
 
-    start_date_time: datetime.datetime
+    start_date_time: dt.datetime
     """
     Point-in-time timestamp of the IPO pricing.
 
@@ -325,7 +325,7 @@ class IpoEventDay(YahooModel):
     IPO pricings scheduled or completed for this day.
     """
 
-    timestamp: datetime.datetime
+    timestamp: dt.datetime
     """
     Point-in-time timestamp for this day bucket.
 
@@ -406,7 +406,7 @@ class SecReport(YahooModel):
     Individual documents attached to this filing.
     """
 
-    filing_date: datetime.date
+    filing_date: dt.date
     """
     Calendar date the filing was made.
 
@@ -460,7 +460,7 @@ class SecReportDay(YahooModel):
     SEC filings made on this day.
     """
 
-    timestamp: datetime.datetime
+    timestamp: dt.datetime
     """
     Point-in-time timestamp for this day bucket.
 
@@ -523,7 +523,7 @@ class EconomicEvent(YahooModel):
     ``"CPI YY"``).
     """
 
-    event_time: datetime.datetime
+    event_time: dt.datetime
     """
     Point-in-time release timestamp.
 
@@ -564,7 +564,7 @@ class EconomicEventDay(YahooModel):
     Economic releases scheduled or reported for this day.
     """
 
-    timestamp: datetime.datetime
+    timestamp: dt.datetime
     """
     Point-in-time timestamp for this day bucket.
 
@@ -820,7 +820,7 @@ class StockRecommenderFields(YahooModel):
     Related ticker symbols, in Yahoo's returned order.
     """
 
-    related_tickers_ts: datetime.datetime
+    related_tickers_ts: dt.datetime
     """
     Point-in-time timestamp the related-tickers list was computed at.
 

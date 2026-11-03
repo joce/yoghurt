@@ -9,7 +9,7 @@ bucket-vs-row field-name collision.
 
 from __future__ import annotations
 
-import datetime
+import datetime as dt
 import json
 from pathlib import Path
 from typing import Any
@@ -141,7 +141,7 @@ def test_ratings_top_announcement_date_parses_as_date() -> None:
     payload = _load("ratings-top/AAPL.json")
     result = TopRatingsResult.model_validate(payload)
 
-    assert result.pt.announcement_date == datetime.date(2025, 9, 10)
+    assert result.pt.announcement_date == dt.date(2025, 9, 10)
 
 
 def test_ratings_top_all_four_buckets_present() -> None:

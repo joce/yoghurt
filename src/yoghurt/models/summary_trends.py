@@ -74,7 +74,7 @@ Reconciliation notes:
 
 from __future__ import annotations
 
-import datetime  # ruff:ignore[typing-only-standard-library-import] - pydantic needs this at runtime to resolve annotations
+import datetime as dt  # ruff:ignore[typing-only-standard-library-import] - pydantic needs this at runtime to resolve annotations
 
 from yoghurt.models._base import YahooModel
 
@@ -105,7 +105,7 @@ class SecFilingExhibit(YahooModel):
 class SecFiling(YahooModel):
     """One entry in the ``secFilings`` module's ``filings`` list."""
 
-    date: datetime.date
+    date: dt.date
     """
     Calendar date the filing was made, as a bare ISO ``"YYYY-MM-DD"``
     string.
@@ -120,7 +120,7 @@ class SecFiling(YahooModel):
     URL of the filing's Yahoo Finance SEC-filing page.
     """
 
-    epoch_date: datetime.date
+    epoch_date: dt.date
     """
     Calendar date the filing was made.
 
@@ -240,7 +240,7 @@ class UpgradeDowngradeEntry(YahooModel):
     Analyst's price target after this action.
     """
 
-    epoch_grade_date: datetime.datetime
+    epoch_grade_date: dt.datetime
     """
     Date and time this ratings action was recorded.
 

@@ -11,7 +11,7 @@ and the not-yet-reported quarter's outright-absent fields (``OKLO``).
 
 from __future__ import annotations
 
-import datetime
+import datetime as dt
 import json
 from pathlib import Path
 from typing import Any
@@ -67,9 +67,9 @@ def test_earnings_chart_quarter_period_end_date_is_calendar_date() -> None:
     earnings = EarningsModule.model_validate(_load_module("AAPL.json", "earnings"))
 
     first_quarter = earnings.earnings_chart.quarterly[0]
-    assert first_quarter.period_end_date == datetime.date(2025, 6, 30)
-    assert isinstance(first_quarter.period_end_date, datetime.date)
-    assert not isinstance(first_quarter.period_end_date, datetime.datetime)
+    assert first_quarter.period_end_date == dt.date(2025, 6, 30)
+    assert isinstance(first_quarter.period_end_date, dt.date)
+    assert not isinstance(first_quarter.period_end_date, dt.datetime)
 
 
 def test_earnings_chart_quarter_reported_date_is_session_anchored_datetime() -> None:
@@ -80,7 +80,7 @@ def test_earnings_chart_quarter_reported_date_is_session_anchored_datetime() -> 
     first_quarter = earnings.earnings_chart.quarterly[0]
     assert first_quarter.reported_date is not None
     assert first_quarter.reported_date.tzinfo is not None
-    assert first_quarter.reported_date.time() != datetime.time(0, 0, 0)
+    assert first_quarter.reported_date.time() != dt.time(0, 0, 0)
 
 
 def test_earnings_chart_quarter_missing_actual_for_unreported_quarter() -> None:
@@ -118,8 +118,8 @@ def test_earnings_history_unwraps_raw_fmt_wrapper_from_real_capture() -> None:
     assert first_entry.eps_actual == _AAPL_EPS_ACTUAL
     assert isinstance(first_entry.eps_actual, float)
     assert first_entry.eps_estimate == _AAPL_EPS_ESTIMATE
-    assert first_entry.quarter == datetime.date(2025, 6, 30)
-    assert isinstance(first_entry.quarter, datetime.date)
+    assert first_entry.quarter == dt.date(2025, 6, 30)
+    assert isinstance(first_entry.quarter, dt.date)
 
 
 def test_earnings_history_missing_actual_for_unreported_quarter() -> None:
@@ -143,7 +143,7 @@ def test_earnings_trend_end_date_parses_bare_iso_string() -> None:
 
     first_entry = trend.trend[0]
     assert first_entry.period == "0q"
-    assert first_entry.end_date == datetime.date(2026, 6, 30)
+    assert first_entry.end_date == dt.date(2026, 6, 30)
 
 
 def test_earnings_trend_eps_revisions_down_last_90_days_is_always_none() -> None:
@@ -187,4 +187,4 @@ def test_earnings_call_transcripts_dates_are_session_anchored_datetimes() -> Non
     first_transcript = transcripts.transcripts[0]
     assert first_transcript.date.tzinfo is not None
     assert first_transcript.updated.tzinfo is not None
-    assert first_transcript.date.time() != datetime.time(0, 0, 0)
+    assert first_transcript.date.time() != dt.time(0, 0, 0)
