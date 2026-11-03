@@ -9,7 +9,7 @@ tier-3 session-anchored ``calendarEvents.earnings`` timestamps.
 
 from __future__ import annotations
 
-import datetime
+import datetime as dt
 import json
 from pathlib import Path
 from typing import Any
@@ -82,9 +82,9 @@ def test_default_key_statistics_epoch_fields_are_calendar_dates() -> None:
         _load_module("AAPL.json", "defaultKeyStatistics")
     )
 
-    assert stats.last_fiscal_year_end == datetime.date(2025, 9, 27)
-    assert isinstance(stats.last_fiscal_year_end, datetime.date)
-    assert not isinstance(stats.last_fiscal_year_end, datetime.datetime)
+    assert stats.last_fiscal_year_end == dt.date(2025, 9, 27)
+    assert isinstance(stats.last_fiscal_year_end, dt.date)
+    assert not isinstance(stats.last_fiscal_year_end, dt.datetime)
 
 
 def test_calendar_events_ex_dividend_date_is_calendar_date() -> None:
@@ -94,9 +94,9 @@ def test_calendar_events_ex_dividend_date_is_calendar_date() -> None:
         _load_module("AAPL.json", "calendarEvents")
     )
 
-    assert calendar_events.ex_dividend_date == datetime.date(2026, 5, 11)
-    assert isinstance(calendar_events.ex_dividend_date, datetime.date)
-    assert not isinstance(calendar_events.ex_dividend_date, datetime.datetime)
+    assert calendar_events.ex_dividend_date == dt.date(2026, 5, 11)
+    assert isinstance(calendar_events.ex_dividend_date, dt.date)
+    assert not isinstance(calendar_events.ex_dividend_date, dt.datetime)
 
 
 def test_calendar_events_earnings_dates_are_session_anchored_datetimes() -> None:
@@ -111,9 +111,9 @@ def test_calendar_events_earnings_dates_are_session_anchored_datetimes() -> None
     )
 
     earnings_date = calendar_events.earnings.earnings_date[0]
-    assert isinstance(earnings_date, datetime.datetime)
+    assert isinstance(earnings_date, dt.datetime)
     assert earnings_date.tzinfo is not None
-    assert earnings_date.time() != datetime.time(0, 0, 0)
+    assert earnings_date.time() != dt.time(0, 0, 0)
 
 
 def test_financials_template_code_round_trips() -> None:

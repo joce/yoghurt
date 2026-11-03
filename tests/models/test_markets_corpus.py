@@ -15,7 +15,7 @@ reused (zero extras, but 8 of its 34 required fields are not universal).
 
 from __future__ import annotations
 
-import datetime
+import datetime as dt
 import json
 from typing import TYPE_CHECKING, Any
 
@@ -146,7 +146,7 @@ def test_trending_epoch_fields_follow_public_datetime_convention() -> None:
     result = TrendingResult.model_validate(_trending_cases()[0][1])
     quote = result.quotes[0]
 
-    assert result.job_timestamp.tzinfo == datetime.UTC
+    assert result.job_timestamp.tzinfo == dt.UTC
     assert quote.first_trade_datetime.tzinfo is not None
     assert quote.regular_market_datetime.tzinfo is not None
     assert "first_trade_datetime" not in quote.model_dump()

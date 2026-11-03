@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import datetime
+import datetime as dt
 import json
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -47,7 +47,7 @@ def test_quote_validates_aapl_record_with_representative_fields() -> None:
     assert quote.custom_price_alert_confidence is PriceAlertConfidence.HIGH
     assert quote.forward_pe == pytest.approx(_AAPL_FORWARD_PE)
     assert quote.trailing_pe == pytest.approx(_AAPL_TRAILING_PE)
-    assert quote.dividend_date == datetime.date(2026, 5, 14)
+    assert quote.dividend_date == dt.date(2026, 5, 14)
     assert quote.industry == "Consumer Electronics"
     assert quote.morningstar_industry == "Consumer Electronics"
     assert quote.regular_market_price == pytest.approx(_AAPL_REGULAR_MARKET_PRICE)
@@ -78,7 +78,7 @@ def test_quote_validates_option_contract_record() -> None:
 
     assert quote.quote_type is QuoteType.OPTION
     assert quote.options_type is OptionsType.CALL
-    assert quote.expire_date == datetime.date(2026, 7, 6)
+    assert quote.expire_date == dt.date(2026, 7, 6)
     assert quote.underlying_symbol == "AAPL"
     assert quote.model_extra in (None, {})
 
@@ -108,26 +108,26 @@ def test_datetime_conveniences_convert_epoch_to_aware_datetime() -> None:
     tz = ZoneInfo(quote.exchange_timezone_name)
 
     assert quote.earnings_timestamp is not None
-    assert quote.earnings_datetime == datetime.datetime.fromtimestamp(
+    assert quote.earnings_datetime == dt.datetime.fromtimestamp(
         quote.earnings_timestamp, tz
     )
     assert quote.earnings_timestamp_end is not None
-    assert quote.earnings_datetime_end == datetime.datetime.fromtimestamp(
+    assert quote.earnings_datetime_end == dt.datetime.fromtimestamp(
         quote.earnings_timestamp_end, tz
     )
     assert quote.earnings_timestamp_start is not None
-    assert quote.earnings_datetime_start == datetime.datetime.fromtimestamp(
+    assert quote.earnings_datetime_start == dt.datetime.fromtimestamp(
         quote.earnings_timestamp_start, tz
     )
     assert quote.first_trade_date_milliseconds is not None
-    assert quote.first_trade_datetime == datetime.datetime.fromtimestamp(
+    assert quote.first_trade_datetime == dt.datetime.fromtimestamp(
         quote.first_trade_date_milliseconds // 1000, tz
     )
     assert quote.post_market_time is not None
-    assert quote.post_market_datetime == datetime.datetime.fromtimestamp(
+    assert quote.post_market_datetime == dt.datetime.fromtimestamp(
         quote.post_market_time, tz
     )
-    assert quote.regular_market_datetime == datetime.datetime.fromtimestamp(
+    assert quote.regular_market_datetime == dt.datetime.fromtimestamp(
         quote.regular_market_time, tz
     )
     assert quote.regular_market_datetime.tzinfo is not None
@@ -147,13 +147,13 @@ def test_earnings_call_datetime_conveniences_match_quote_style_localization() ->
 
     assert quote.earnings_call_timestamp_start is not None
     assert quote.earnings_call_datetime_start is not None
-    assert quote.earnings_call_datetime_start == datetime.datetime.fromtimestamp(
+    assert quote.earnings_call_datetime_start == dt.datetime.fromtimestamp(
         quote.earnings_call_timestamp_start, tz
     )
     assert quote.earnings_call_datetime_start.tzinfo is not None
     assert quote.earnings_call_timestamp_end is not None
     assert quote.earnings_call_datetime_end is not None
-    assert quote.earnings_call_datetime_end == datetime.datetime.fromtimestamp(
+    assert quote.earnings_call_datetime_end == dt.datetime.fromtimestamp(
         quote.earnings_call_timestamp_end, tz
     )
     assert quote.earnings_call_datetime_end.tzinfo is not None

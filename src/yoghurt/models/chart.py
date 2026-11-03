@@ -53,7 +53,7 @@ corpus refresh. Reconciliation notes:
 
 from __future__ import annotations
 
-import datetime
+import datetime as dt
 from functools import cached_property
 from zoneinfo import ZoneInfo
 
@@ -105,7 +105,7 @@ class TradingPeriod(YahooModel):
     # --- Convenience accessors (not part of the wire model) ---
 
     @cached_property
-    def start_datetime(self) -> datetime.datetime:
+    def start_datetime(self) -> dt.datetime:
         """Start of the trading period as an aware datetime.
 
         ``timezone`` is a short abbreviation (for example ``"EDT"``) that
@@ -116,13 +116,13 @@ class TradingPeriod(YahooModel):
         Availability mirrors ``start``.
         """
 
-        epoch = datetime.datetime(1970, 1, 1, tzinfo=datetime.UTC)
-        return (epoch + datetime.timedelta(seconds=self.start)).astimezone(
+        epoch = dt.datetime(1970, 1, 1, tzinfo=dt.UTC)
+        return (epoch + dt.timedelta(seconds=self.start)).astimezone(
             self._fixed_offset()
         )
 
     @cached_property
-    def end_datetime(self) -> datetime.datetime:
+    def end_datetime(self) -> dt.datetime:
         """End of the trading period as an aware datetime.
 
         ``timezone`` is a short abbreviation (for example ``"EDT"``) that
@@ -133,12 +133,10 @@ class TradingPeriod(YahooModel):
         Availability mirrors ``end``.
         """
 
-        epoch = datetime.datetime(1970, 1, 1, tzinfo=datetime.UTC)
-        return (epoch + datetime.timedelta(seconds=self.end)).astimezone(
-            self._fixed_offset()
-        )
+        epoch = dt.datetime(1970, 1, 1, tzinfo=dt.UTC)
+        return (epoch + dt.timedelta(seconds=self.end)).astimezone(self._fixed_offset())
 
-    def _fixed_offset(self) -> datetime.timezone:
+    def _fixed_offset(self) -> dt.timezone:
         """Build the fixed-offset timezone backing this period's datetimes.
 
         Returns:
@@ -146,7 +144,7 @@ class TradingPeriod(YahooModel):
             ``timezone`` is a short abbreviation ZoneInfo cannot resolve.
         """
 
-        return datetime.timezone(datetime.timedelta(seconds=self.gmtoffset))
+        return dt.timezone(dt.timedelta(seconds=self.gmtoffset))
 
 
 class CurrentTradingPeriod(YahooModel):
@@ -421,7 +419,7 @@ class ChartMeta(YahooModel):
     # --- Convenience accessors (not part of the wire model) ---
 
     @cached_property
-    def regular_market_datetime(self) -> datetime.datetime:
+    def regular_market_datetime(self) -> dt.datetime:
         """Date and time of the most recent trade in the regular trading session.
 
         Availability mirrors ``regular_market_time``.
@@ -430,7 +428,7 @@ class ChartMeta(YahooModel):
         return self._get_datetime(self.regular_market_time)
 
     @cached_property
-    def first_trade_datetime(self) -> datetime.datetime:
+    def first_trade_datetime(self) -> dt.datetime:
         """Date and time of the first trade of this security.
 
         Availability mirrors ``first_trade_date``.
@@ -438,7 +436,7 @@ class ChartMeta(YahooModel):
 
         return self._get_datetime(self.first_trade_date)
 
-    def _get_datetime(self, timestamp: int) -> datetime.datetime:
+    def _get_datetime(self, timestamp: int) -> dt.datetime:
         """Convert an epoch timestamp in seconds to an aware datetime.
 
         Args:
@@ -449,8 +447,8 @@ class ChartMeta(YahooModel):
         """
 
         tz_info = ZoneInfo(self.exchange_timezone_name)
-        epoch = datetime.datetime(1970, 1, 1, tzinfo=datetime.UTC)
-        return (epoch + datetime.timedelta(seconds=timestamp)).astimezone(tz_info)
+        epoch = dt.datetime(1970, 1, 1, tzinfo=dt.UTC)
+        return (epoch + dt.timedelta(seconds=timestamp)).astimezone(tz_info)
 
     def __repr__(self) -> str:
         """Return a compact developer-friendly representation."""
@@ -472,7 +470,7 @@ class ChartDividend(YahooModel):
     Not observed in the corpus; known from prior use on EQUITY charts.
     """
 
-    date: datetime.datetime
+    date: dt.datetime
     """
     Date and time of the dividend event.
 
@@ -493,7 +491,7 @@ class ChartSplit(YahooModel):
     shape ready the day Yahoo returns one.
     """
 
-    date: datetime.datetime
+    date: dt.datetime
     """
     Date and time of the split event, timezone-aware in UTC.
 

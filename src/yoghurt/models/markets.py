@@ -94,7 +94,7 @@ every other row carries them. ``SectorResearchReport.investment_rating``/
 
 from __future__ import annotations
 
-import datetime
+import datetime as dt
 from functools import cached_property
 from zoneinfo import ZoneInfo
 
@@ -108,11 +108,9 @@ from yoghurt.models.enums import (  # ruff:ignore[typing-only-first-party-import
 )
 
 
-def _localized_datetime(timestamp: float, timezone_name: str) -> datetime.datetime:
-    epoch = datetime.datetime(1970, 1, 1, tzinfo=datetime.UTC)
-    return (epoch + datetime.timedelta(seconds=timestamp)).astimezone(
-        ZoneInfo(timezone_name)
-    )
+def _localized_datetime(timestamp: float, timezone_name: str) -> dt.datetime:
+    epoch = dt.datetime(1970, 1, 1, tzinfo=dt.UTC)
+    return (epoch + dt.timedelta(seconds=timestamp)).astimezone(ZoneInfo(timezone_name))
 
 
 # ---------------------------------------------------------------------------
@@ -271,7 +269,7 @@ class TrendingQuote(YahooModel):
     """
 
     @cached_property
-    def first_trade_datetime(self) -> datetime.datetime:
+    def first_trade_datetime(self) -> dt.datetime:
         """First trade time localized to ``exchange_timezone_name``."""
 
         return _localized_datetime(
@@ -280,7 +278,7 @@ class TrendingQuote(YahooModel):
         )
 
     @cached_property
-    def regular_market_datetime(self) -> datetime.datetime:
+    def regular_market_datetime(self) -> dt.datetime:
         """Most recent regular-market time localized to the exchange."""
 
         return _localized_datetime(
@@ -297,7 +295,7 @@ class TrendingResult(YahooModel):
     capture.
     """
 
-    job_timestamp: datetime.datetime = Field(alias="jobTimestamp")
+    job_timestamp: dt.datetime = Field(alias="jobTimestamp")
     """
     Aware UTC time of the batch job that computed this trending list. The
     wire value is epoch milliseconds.
@@ -517,7 +515,7 @@ class MarketSummaryQuote(YahooModel):
     """
 
     @cached_property
-    def first_trade_datetime(self) -> datetime.datetime:
+    def first_trade_datetime(self) -> dt.datetime:
         """First trade time localized to ``exchange_timezone_name``."""
 
         return _localized_datetime(
@@ -526,7 +524,7 @@ class MarketSummaryQuote(YahooModel):
         )
 
     @cached_property
-    def regular_market_datetime(self) -> datetime.datetime:
+    def regular_market_datetime(self) -> dt.datetime:
         """Most recent regular-market time localized to the exchange."""
 
         return _localized_datetime(
@@ -628,7 +626,7 @@ class MarketTimeZone(YahooModel):
 class MarketTimeEntry(YahooModel):
     """One named market/exchange group in a :class:`MarketTimeResult`."""
 
-    close: datetime.datetime
+    close: dt.datetime
     """
     This session's close time.
 
@@ -652,7 +650,7 @@ class MarketTimeEntry(YahooModel):
     Display name of the market group (for example ``"U.S. markets"``).
     """
 
-    open: datetime.datetime
+    open: dt.datetime
     """
     This session's open time.
 
@@ -668,7 +666,7 @@ class MarketTimeEntry(YahooModel):
     type as a closed-vocabulary enum.
     """
 
-    time: datetime.datetime
+    time: dt.datetime
     """
     Point-in-time timestamp this record was computed at.
 
@@ -1078,7 +1076,7 @@ class SectorResearchReport(YahooModel):
     Research provider name (for example ``"Morningstar"``).
     """
 
-    report_date: datetime.datetime = Field(alias="reportDate")
+    report_date: dt.datetime = Field(alias="reportDate")
     """
     Publication timestamp.
 

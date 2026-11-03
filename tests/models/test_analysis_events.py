@@ -10,7 +10,7 @@ stock-recommender row shapes.
 
 from __future__ import annotations
 
-import datetime
+import datetime as dt
 import json
 from pathlib import Path
 from typing import Any
@@ -180,7 +180,7 @@ def test_calendar_events_sec_reports_multi_day_bucket_and_exhibits() -> None:
     )
     quarterly_filing = quarterly_day.records[0]
     assert quarterly_filing.category == "Periodic Financial Reports"
-    assert quarterly_filing.filing_date == datetime.date(2026, 5, 1)
+    assert quarterly_filing.filing_date == dt.date(2026, 5, 1)
     assert any(exhibit.type == "EX-31.1" for exhibit in quarterly_filing.exhibits)
 
 

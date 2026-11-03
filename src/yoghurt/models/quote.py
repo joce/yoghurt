@@ -38,7 +38,7 @@ Overall reconciliation notes:
 
 from __future__ import annotations
 
-import datetime
+import datetime as dt
 from functools import cached_property
 from typing import overload
 from zoneinfo import ZoneInfo
@@ -215,7 +215,7 @@ class Quote(YahooModel):
     Observed on: EQUITY quotes.
     """
 
-    dividend_date: datetime.date | None = None
+    dividend_date: dt.date | None = None
     """
     Date when the company is expected to pay its next dividend.
 
@@ -334,7 +334,7 @@ class Quote(YahooModel):
     OPTION quotes.
     """
 
-    expire_date: datetime.date | None = None
+    expire_date: dt.date | None = None
     """
     Date on which the option contract expires.
 
@@ -547,7 +547,7 @@ class Quote(YahooModel):
     Observed on: EQUITY quotes.
     """
 
-    ipo_expected_date: datetime.date | None = None
+    ipo_expected_date: dt.date | None = None
     """
     Expected date of the initial public offering (IPO).
 
@@ -635,7 +635,7 @@ class Quote(YahooModel):
     Observed on: EQUITY quotes.
     """
 
-    name_change_date: datetime.date | None = None
+    name_change_date: dt.date | None = None
     """
     Date on which the company last changed its name.
 
@@ -888,7 +888,7 @@ class Quote(YahooModel):
     OPTION quotes.
     """
 
-    start_date: datetime.date | None = None
+    start_date: dt.date | None = None
     """
     Date on which the coin started trading.
 
@@ -1102,7 +1102,7 @@ class Quote(YahooModel):
     # --- Convenience accessors (not part of the wire model) ---
 
     @cached_property
-    def earnings_call_datetime_end(self) -> datetime.datetime | None:
+    def earnings_call_datetime_end(self) -> dt.datetime | None:
         """Date and time of the end of the company's earnings call.
 
         Availability mirrors ``earnings_call_timestamp_end``.
@@ -1111,7 +1111,7 @@ class Quote(YahooModel):
         return self._get_datetime(self.earnings_call_timestamp_end)
 
     @cached_property
-    def earnings_call_datetime_start(self) -> datetime.datetime | None:
+    def earnings_call_datetime_start(self) -> dt.datetime | None:
         """Date and time of the start of the company's earnings call.
 
         Availability mirrors ``earnings_call_timestamp_start``.
@@ -1120,7 +1120,7 @@ class Quote(YahooModel):
         return self._get_datetime(self.earnings_call_timestamp_start)
 
     @cached_property
-    def earnings_datetime(self) -> datetime.datetime | None:
+    def earnings_datetime(self) -> dt.datetime | None:
         """Date and time of the company's earnings announcement.
 
         Availability mirrors ``earnings_timestamp``.
@@ -1129,7 +1129,7 @@ class Quote(YahooModel):
         return self._get_datetime(self.earnings_timestamp)
 
     @cached_property
-    def earnings_datetime_end(self) -> datetime.datetime | None:
+    def earnings_datetime_end(self) -> dt.datetime | None:
         """Date and time of the end of the company's earnings announcement.
 
         Availability mirrors ``earnings_timestamp_end``.
@@ -1138,7 +1138,7 @@ class Quote(YahooModel):
         return self._get_datetime(self.earnings_timestamp_end)
 
     @cached_property
-    def earnings_datetime_start(self) -> datetime.datetime | None:
+    def earnings_datetime_start(self) -> dt.datetime | None:
         """Date and time of the start of the company's earnings announcement.
 
         Availability mirrors ``earnings_timestamp_start``.
@@ -1147,7 +1147,7 @@ class Quote(YahooModel):
         return self._get_datetime(self.earnings_timestamp_start)
 
     @cached_property
-    def first_trade_datetime(self) -> datetime.datetime | None:
+    def first_trade_datetime(self) -> dt.datetime | None:
         """Date and time of the first trade of this security.
 
         Unlike Doubloon's ``YQuote``, this is optional: the source field
@@ -1165,7 +1165,7 @@ class Quote(YahooModel):
         return self._get_datetime(timestamp_seconds)
 
     @cached_property
-    def post_market_datetime(self) -> datetime.datetime | None:
+    def post_market_datetime(self) -> dt.datetime | None:
         """Date and time of the most recent post-market trade.
 
         Observed on: EQUITY, ETF quotes.
@@ -1174,7 +1174,7 @@ class Quote(YahooModel):
         return self._get_datetime(self.post_market_time)
 
     @cached_property
-    def pre_market_datetime(self) -> datetime.datetime | None:
+    def pre_market_datetime(self) -> dt.datetime | None:
         """Date and time of the most recent pre-market trade.
 
         Not observed in the corpus; known from prior use on EQUITY quotes.
@@ -1183,7 +1183,7 @@ class Quote(YahooModel):
         return self._get_datetime(self.pre_market_time)
 
     @cached_property
-    def regular_market_datetime(self) -> datetime.datetime:
+    def regular_market_datetime(self) -> dt.datetime:
         """Date and time of the most recent trade in the regular trading session.
 
         Observed on: CRYPTOCURRENCY, CURRENCY, EQUITY, ETF, FUTURE, INDEX,
@@ -1193,12 +1193,12 @@ class Quote(YahooModel):
         return self._get_datetime(self.regular_market_time)
 
     @overload
-    def _get_datetime(self, timestamp: int) -> datetime.datetime: ...
+    def _get_datetime(self, timestamp: int) -> dt.datetime: ...
 
     @overload
     def _get_datetime(self, timestamp: None) -> None: ...
 
-    def _get_datetime(self, timestamp: int | None) -> datetime.datetime | None:
+    def _get_datetime(self, timestamp: int | None) -> dt.datetime | None:
         """Convert an epoch timestamp in seconds to an aware datetime.
 
         Args:
@@ -1213,8 +1213,8 @@ class Quote(YahooModel):
             return None
 
         tz_info = ZoneInfo(self.exchange_timezone_name)
-        epoch = datetime.datetime(1970, 1, 1, tzinfo=datetime.UTC)
-        return (epoch + datetime.timedelta(seconds=timestamp)).astimezone(tz_info)
+        epoch = dt.datetime(1970, 1, 1, tzinfo=dt.UTC)
+        return (epoch + dt.timedelta(seconds=timestamp)).astimezone(tz_info)
 
     def __repr__(self) -> str:
         """Return a compact developer-friendly representation.

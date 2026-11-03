@@ -10,7 +10,7 @@ universal-but-always-``{}`` line items).
 
 from __future__ import annotations
 
-import datetime
+import datetime as dt
 import json
 from pathlib import Path
 from typing import Any
@@ -51,8 +51,8 @@ def test_balance_sheet_history_rows_carry_only_end_date_and_max_age() -> None:
     )
 
     first_statement = history.balance_sheet_statements[0]
-    assert first_statement.end_date == datetime.date(2025, 9, 30)
-    assert isinstance(first_statement.end_date, datetime.date)
+    assert first_statement.end_date == dt.date(2025, 9, 30)
+    assert isinstance(first_statement.end_date, dt.date)
     assert first_statement.max_age == 1
 
 
@@ -78,7 +78,7 @@ def test_income_statement_history_unwraps_raw_fmt_wrapper_for_real_line_items() 
     first_statement = history.income_statement_history[0]
     assert first_statement.total_revenue == _AAPL_TOTAL_REVENUE
     assert isinstance(first_statement.total_revenue, float)
-    assert first_statement.end_date == datetime.date(2025, 9, 30)
+    assert first_statement.end_date == dt.date(2025, 9, 30)
 
 
 def test_income_statement_history_empty_wrappers_unwrap_to_none_for_0700_hk() -> None:

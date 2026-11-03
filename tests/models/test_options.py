@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import datetime
+import datetime as dt
 import json
 from pathlib import Path
 from typing import cast
@@ -19,8 +19,8 @@ _CORPUS_OPTIONS_DIR = (
 _AAPL_CALL_STRIKE = 240.0
 _AAPL_CALL_ASK = 70.2
 _AAPL_CALL_LAST_TRADE_DATE_EPOCH = 1782492175
-_AAPL_CALL_LAST_TRADE_DATE = datetime.datetime.fromtimestamp(
-    _AAPL_CALL_LAST_TRADE_DATE_EPOCH, tz=datetime.UTC
+_AAPL_CALL_LAST_TRADE_DATE = dt.datetime.fromtimestamp(
+    _AAPL_CALL_LAST_TRADE_DATE_EPOCH, tz=dt.UTC
 )
 _AAPL_OTM_STRIKE = 310.0
 
@@ -40,10 +40,8 @@ def test_option_chain_validates_aapl_record() -> None:
     assert chain.underlying_symbol == "AAPL"
     assert chain.has_mini_options is False
     assert isinstance(chain.expiration_dates, list)
-    assert all(isinstance(date, datetime.date) for date in chain.expiration_dates)
-    assert not any(
-        isinstance(date, datetime.datetime) for date in chain.expiration_dates
-    )
+    assert all(isinstance(date, dt.date) for date in chain.expiration_dates)
+    assert not any(isinstance(date, dt.datetime) for date in chain.expiration_dates)
     assert isinstance(chain.strikes, list)
     assert all(isinstance(strike, float) for strike in chain.strikes)
     assert chain.model_extra in (None, {})
@@ -93,15 +91,15 @@ def test_option_contract_expiration_equals_utc_date_of_raw_epoch() -> None:
     record = _load_chain("AAPL.json")
     raw_call = record["options"][0]["calls"][0]  # type: ignore[index]
     raw_epoch = cast("int", raw_call["expiration"])
-    expected = datetime.datetime.fromtimestamp(raw_epoch, tz=datetime.UTC).date()
+    expected = dt.datetime.fromtimestamp(raw_epoch, tz=dt.UTC).date()
 
     chain = OptionChain.model_validate(record)
     assert chain.options[0].calls is not None
     call = chain.options[0].calls[0]
 
     assert call.expiration == expected
-    assert isinstance(call.expiration, datetime.date)
-    assert not isinstance(call.expiration, datetime.datetime)
+    assert isinstance(call.expiration, dt.date)
+    assert not isinstance(call.expiration, dt.datetime)
 
 
 def test_option_expiration_date_equals_utc_date_of_raw_epoch() -> None:
@@ -112,13 +110,13 @@ def test_option_expiration_date_equals_utc_date_of_raw_epoch() -> None:
         "int",
         record["options"][0]["expirationDate"],  # type: ignore[index]
     )
-    expected = datetime.datetime.fromtimestamp(raw_epoch, tz=datetime.UTC).date()
+    expected = dt.datetime.fromtimestamp(raw_epoch, tz=dt.UTC).date()
 
     chain = OptionChain.model_validate(record)
 
     assert chain.options[0].expiration_date == expected
-    assert isinstance(chain.options[0].expiration_date, datetime.date)
-    assert not isinstance(chain.options[0].expiration_date, datetime.datetime)
+    assert isinstance(chain.options[0].expiration_date, dt.date)
+    assert not isinstance(chain.options[0].expiration_date, dt.datetime)
 
 
 def test_option_chain_expiration_dates_equal_utc_dates_of_raw_epochs() -> None:
@@ -127,8 +125,7 @@ def test_option_chain_expiration_dates_equal_utc_dates_of_raw_epochs() -> None:
     record = _load_chain("AAPL.json")
     raw_epochs: list[int] = record["expirationDates"]  # type: ignore[assignment]
     expected = [
-        datetime.datetime.fromtimestamp(epoch, tz=datetime.UTC).date()
-        for epoch in raw_epochs
+        dt.datetime.fromtimestamp(epoch, tz=dt.UTC).date() for epoch in raw_epochs
     ]
 
     chain = OptionChain.model_validate(record)
@@ -156,7 +153,7 @@ def test_option_contract_last_trade_date_is_aware_utc() -> None:
     assert chain.options[0].calls is not None
     call = chain.options[0].calls[0]
 
-    assert call.last_trade_date.tzinfo == datetime.UTC
+    assert call.last_trade_date.tzinfo == dt.UTC
 
 
 def test_option_chain_msft_and_spy_records_also_validate() -> None:

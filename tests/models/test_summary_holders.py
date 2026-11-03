@@ -9,7 +9,7 @@ and the always-empty ``majorDirectHolders`` placeholder.
 
 from __future__ import annotations
 
-import datetime
+import datetime as dt
 import json
 from pathlib import Path
 from typing import Any
@@ -46,7 +46,7 @@ def test_insider_holders_unwraps_raw_fmt_wrapper_for_direct_position() -> None:
     assert isinstance(first_holder.position_direct, int)
     assert first_holder.position_indirect is None
     assert first_holder.position_summary is None
-    assert isinstance(first_holder.latest_trans_date, datetime.date)
+    assert isinstance(first_holder.latest_trans_date, dt.date)
 
 
 def test_insider_holders_supports_indirect_and_summary_position_variants() -> None:
@@ -95,7 +95,7 @@ def test_institution_and_fund_ownership_share_the_same_row_type() -> None:
 
     assert type(institution.ownership_list[0]) is type(fund.ownership_list[0])
     assert institution.ownership_list[0].pct_held > 0
-    assert isinstance(institution.ownership_list[0].report_date, datetime.date)
+    assert isinstance(institution.ownership_list[0].report_date, dt.date)
 
 
 def test_major_direct_holders_is_empty_placeholder() -> None:
