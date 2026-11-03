@@ -6,6 +6,14 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-11-03
+
+### Changed
+
+- Yoghurt now requires polars 2.x on all supported Python versions. Previously
+  polars 1.42.1 or newer was accepted on Python 3.11–3.14, with 2.x required
+  only on 3.15. Yoghurt's own API and behavior are unchanged.
+
 ## [0.7.0] - 2026-10-12
 
 ### Added
@@ -470,7 +478,8 @@ First PyPI release.
 - Reusable Yahoo session cache for faster one-shot calls.
 - `raw` escape hatch for query paths yoghurt doesn't model yet.
 
-[Unreleased]: https://github.com/joce/yoghurt/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/joce/yoghurt/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/joce/yoghurt/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/joce/yoghurt/compare/v0.6.1...v0.7.0
 [0.6.1]: https://github.com/joce/yoghurt/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/joce/yoghurt/compare/v0.5.1...v0.6.0
