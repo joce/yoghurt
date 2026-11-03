@@ -19,7 +19,7 @@ some equities. An unmatched query is a valid result with an empty
 
 from __future__ import annotations
 
-import datetime  # ruff:ignore[typing-only-standard-library-import] - pydantic resolves annotations at runtime
+import datetime as dt  # ruff:ignore[typing-only-standard-library-import] - pydantic resolves annotations at runtime
 from enum import StrEnum
 
 from pydantic import Field
@@ -78,7 +78,7 @@ class SearchNews(YahooModel):
     Observed on: all search-news records.
     """
 
-    provider_publish_time: datetime.datetime
+    provider_publish_time: dt.datetime
     """
     Article publication time as an aware UTC datetime.
 
@@ -197,7 +197,7 @@ class SearchQuote(YahooModel):
     Observed on: non-finance search-quote records.
     """
 
-    name_change_date: datetime.date | None = None
+    name_change_date: dt.date | None = None
     """
     Effective calendar date of ``prev_name``.
 
@@ -451,7 +451,7 @@ class SearchResearchReport(YahooModel):
     Observed on: all search-research records.
     """
 
-    report_date: datetime.datetime
+    report_date: dt.datetime
     """
     Report publication time as an aware UTC datetime.
 

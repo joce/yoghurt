@@ -43,7 +43,7 @@ straight to :class:`datetime.date`.
 
 from __future__ import annotations
 
-import datetime
+import datetime as dt
 from typing import TYPE_CHECKING, Annotated, TypeVar, cast
 
 import pydantic
@@ -106,7 +106,7 @@ variant; use :data:`RawIntOrNone` instead where ``{}`` has been observed.
 See the module docstring for the unwrap rule.
 """
 
-RawDate = Annotated[datetime.date, BeforeValidator(_unwrap_raw)]
+RawDate = Annotated[dt.date, BeforeValidator(_unwrap_raw)]
 """A ``datetime.date`` that also accepts a ``{raw, fmt, longFmt}`` wrapper.
 
 The unwrapped ``raw`` value is epoch-seconds with calendar-date meaning
@@ -137,7 +137,7 @@ docstring for why this must be used (instead of plain ``RawInt | None``)
 whenever ``{}`` has been observed for a field.
 """
 
-RawDateOrNone = Annotated[datetime.date | None, BeforeValidator(_unwrap_raw)]
+RawDateOrNone = Annotated[dt.date | None, BeforeValidator(_unwrap_raw)]
 """A nullable ``datetime.date`` that also accepts a ``{raw, fmt,
 longFmt}`` wrapper or an empty-mapping ``{}`` (both resolve to ``None``).
 

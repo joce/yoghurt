@@ -121,7 +121,7 @@ Reconciliation notes:
 
 from __future__ import annotations
 
-import datetime  # ruff:ignore[typing-only-standard-library-import] - pydantic needs this at runtime to resolve annotations
+import datetime as dt  # ruff:ignore[typing-only-standard-library-import] - pydantic needs this at runtime to resolve annotations
 
 from yoghurt.models._base import YahooModel
 
@@ -154,7 +154,7 @@ class FundManagementInfo(YahooModel):
     Observed on: ETF, MUTUALFUND summaries.
     """
 
-    startdate: datetime.date | None = None
+    startdate: dt.date | None = None
     """
     Date the current manager began managing the fund.
 
@@ -389,7 +389,7 @@ class FundPerformanceOverview(YahooModel):
     docstring.
     """
 
-    as_of_date: datetime.date
+    as_of_date: dt.date
     """
     Date this performance snapshot was computed as of.
 
@@ -521,7 +521,7 @@ class TrailingReturns(YahooModel):
     docstring.
     """
 
-    as_of_date: datetime.date
+    as_of_date: dt.date
     """
     Date these trailing returns were computed as of.
 

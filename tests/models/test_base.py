@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import datetime
+import datetime as dt
 
 import pytest
 from pydantic import ValidationError
@@ -193,11 +193,11 @@ def test_raw_date_unwraps_epoch_to_calendar_date() -> None:
     holder = _RawFmtHolder.model_validate(
         {"rawDate": {"raw": _RAW_EPOCH_SECONDS, "fmt": "2025-01-01"}}
     )
-    assert holder.raw_date == datetime.date(2025, 1, 1)
+    assert holder.raw_date == dt.date(2025, 1, 1)
 
 
 def test_raw_date_accepts_bare_epoch() -> None:
     """RawDate also accepts a bare epoch-seconds int, unwrapped or not."""
 
     holder = _RawFmtHolder.model_validate({"rawDate": _RAW_EPOCH_SECONDS})
-    assert holder.raw_date == datetime.date(2025, 1, 1)
+    assert holder.raw_date == dt.date(2025, 1, 1)

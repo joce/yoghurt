@@ -59,7 +59,7 @@ refresh. Reconciliation notes:
 
 from __future__ import annotations
 
-import datetime  # ruff:ignore[typing-only-standard-library-import] - required at runtime for pydantic field resolution
+import datetime as dt  # ruff:ignore[typing-only-standard-library-import] - required at runtime for pydantic field resolution
 
 from pydantic import model_validator
 
@@ -102,7 +102,7 @@ class OptionContract(YahooModel):
     Currency in which the contract is quoted.
     """
 
-    expiration: datetime.date
+    expiration: dt.date
     """
     Expiration date of the contract.
 
@@ -127,7 +127,7 @@ class OptionContract(YahooModel):
     Price of the contract's most recent trade.
     """
 
-    last_trade_date: datetime.datetime
+    last_trade_date: dt.datetime
     """
     Date and time of the contract's most recent trade.
 
@@ -199,7 +199,7 @@ class OptionExpiration(YahooModel):
     Call contracts; absent in straddle responses (AAPL/MSFT/SPY/OKLO, 2026-09-05).
     """
 
-    expiration_date: datetime.date
+    expiration_date: dt.date
     """
     Expiration date for this set of contracts.
 
@@ -245,7 +245,7 @@ class OptionExpiration(YahooModel):
 class OptionChain(YahooModel):
     """The ``optionChain.result[0]`` record: a symbol's full option chain."""
 
-    expiration_dates: list[datetime.date]
+    expiration_dates: list[dt.date]
     """
     Every expiration date Yahoo offers for this symbol.
 

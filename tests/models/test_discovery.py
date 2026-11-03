@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import datetime
+import datetime as dt
 import json
 from pathlib import Path
 from typing import Any
@@ -34,7 +34,7 @@ def test_search_name_change_date_is_a_calendar_date() -> None:
 
     result = SearchResult.model_validate(_load("search/Appel_fuzzy.json"))
     renamed = next(quote for quote in result.quotes if quote.prev_name is not None)
-    assert isinstance(renamed.name_change_date, datetime.date)
+    assert isinstance(renamed.name_change_date, dt.date)
 
 
 def test_search_publication_times_are_aware_datetimes() -> None:

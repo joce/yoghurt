@@ -12,7 +12,7 @@ both a populated and an always-empty capture.
 
 from __future__ import annotations
 
-import datetime
+import datetime as dt
 import json
 from pathlib import Path
 from typing import Any
@@ -43,10 +43,10 @@ def test_sec_filings_epoch_date_and_date_agree_and_parse_as_calendar_dates() -> 
     filings = SecFilings.model_validate(_load_module("AAPL.json", "secFilings"))
 
     first_filing = filings.filings[0]
-    assert first_filing.epoch_date == datetime.date(2026, 5, 28)
-    assert first_filing.date == datetime.date(2026, 5, 28)
-    assert isinstance(first_filing.epoch_date, datetime.date)
-    assert not isinstance(first_filing.epoch_date, datetime.datetime)
+    assert first_filing.epoch_date == dt.date(2026, 5, 28)
+    assert first_filing.date == dt.date(2026, 5, 28)
+    assert isinstance(first_filing.epoch_date, dt.date)
+    assert not isinstance(first_filing.epoch_date, dt.datetime)
 
 
 def test_sec_filings_exhibit_download_url_is_optional() -> None:
@@ -98,7 +98,7 @@ def test_upgrade_downgrade_history_epoch_grade_date_is_session_anchored() -> Non
 
     first_entry = history.history[0]
     assert first_entry.epoch_grade_date.tzinfo is not None
-    assert first_entry.epoch_grade_date.time() != datetime.time(0, 0, 0)
+    assert first_entry.epoch_grade_date.time() != dt.time(0, 0, 0)
 
 
 def test_upgrade_downgrade_history_empty_strings_are_real_values() -> None:

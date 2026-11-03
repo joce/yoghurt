@@ -14,7 +14,7 @@ this module.
 
 from __future__ import annotations
 
-import datetime
+import datetime as dt
 import json
 from typing import Any
 
@@ -286,8 +286,6 @@ def test_events_dividends_are_keyed_by_epoch_string() -> None:
     assert chart_events.splits is None
     for key, dividend in chart_events.dividends.items():
         assert key.isdigit()
-        assert dividend.date == datetime.datetime.fromtimestamp(
-            int(key), tz=datetime.UTC
-        )
+        assert dividend.date == dt.datetime.fromtimestamp(int(key), tz=dt.UTC)
         assert dividend.date.tzinfo is not None
         assert isinstance(dividend.amount, float)

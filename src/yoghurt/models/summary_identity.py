@@ -113,7 +113,7 @@ Reconciliation notes:
 
 from __future__ import annotations
 
-import datetime
+import datetime as dt
 from functools import cached_property
 from zoneinfo import ZoneInfo
 
@@ -158,7 +158,7 @@ class PerformanceOverview(YahooModel):
     capture in the corpus (options have no return history to report).
     """
 
-    as_of_date: datetime.date
+    as_of_date: dt.date
     """
     Date this performance snapshot was computed as of.
 
@@ -828,7 +828,7 @@ class SummaryQuoteType(YahooModel):
     # --- Convenience accessors (not part of the wire model) ---
 
     @cached_property
-    def first_trade_datetime(self) -> datetime.datetime | None:
+    def first_trade_datetime(self) -> dt.datetime | None:
         """Date and time of the first trade of this security.
 
         Availability mirrors ``first_trade_date_epoch_utc``.
@@ -837,9 +837,9 @@ class SummaryQuoteType(YahooModel):
         if self.first_trade_date_epoch_utc is None:
             return None
         tz_info = ZoneInfo(self.time_zone_full_name)
-        epoch = datetime.datetime(1970, 1, 1, tzinfo=datetime.UTC)
+        epoch = dt.datetime(1970, 1, 1, tzinfo=dt.UTC)
         return (
-            epoch + datetime.timedelta(seconds=self.first_trade_date_epoch_utc)
+            epoch + dt.timedelta(seconds=self.first_trade_date_epoch_utc)
         ).astimezone(tz_info)
 
     def __repr__(self) -> str:
@@ -997,7 +997,7 @@ class SummaryDetail(YahooModel):
     Observed on: EQUITY, ETF summaries.
     """
 
-    ex_dividend_date: datetime.date | None = None
+    ex_dividend_date: dt.date | None = None
     """
     Date on which a buyer would no longer be entitled to the next dividend.
 
@@ -1008,7 +1008,7 @@ class SummaryDetail(YahooModel):
     Observed on: EQUITY, ETF summaries.
     """
 
-    expire_date: datetime.date | None = None
+    expire_date: dt.date | None = None
     """
     Expiration date of the contract.
 
@@ -1205,7 +1205,7 @@ class SummaryDetail(YahooModel):
     MUTUALFUND summaries.
     """
 
-    start_date: datetime.date | None = None
+    start_date: dt.date | None = None
     """
     Date on which the coin started trading.
 
@@ -1637,7 +1637,7 @@ class SummaryProfile(YahooModel):
     Observed on: EQUITY, ETF summaries.
     """
 
-    start_date: datetime.date | None = None
+    start_date: dt.date | None = None
     """
     Date on which the coin started trading.
 
@@ -1762,7 +1762,7 @@ class AssetProfile(YahooModel):
     Observed on: CRYPTOCURRENCY, EQUITY, ETF, MUTUALFUND summaries.
     """
 
-    compensation_as_of_epoch_date: datetime.date | None = None
+    compensation_as_of_epoch_date: dt.date | None = None
     """
     Date the officer compensation figures were current as of.
 
@@ -1815,7 +1815,7 @@ class AssetProfile(YahooModel):
     Observed on: EQUITY, ETF summaries.
     """
 
-    governance_epoch_date: datetime.date | None = None
+    governance_epoch_date: dt.date | None = None
     """
     Date the governance-risk scores were current as of.
 
@@ -1925,7 +1925,7 @@ class AssetProfile(YahooModel):
     Observed on: EQUITY summaries.
     """
 
-    start_date: datetime.date | None = None
+    start_date: dt.date | None = None
     """
     Date on which the coin started trading.
 
@@ -2024,7 +2024,7 @@ class CorporateActionMeta(YahooModel):
     # --- Convenience accessors (not part of the wire model) ---
 
     @cached_property
-    def date(self) -> datetime.date:
+    def date(self) -> dt.date:
         """The corporate action's effective date.
 
         ``date_epoch_ms`` is milliseconds; this divides by 1000 before
@@ -2033,8 +2033,8 @@ class CorporateActionMeta(YahooModel):
         midnight-UTC-aligned against the sole corpus example.
         """
 
-        epoch = datetime.datetime(1970, 1, 1, tzinfo=datetime.UTC)
-        return (epoch + datetime.timedelta(milliseconds=self.date_epoch_ms)).date()
+        epoch = dt.datetime(1970, 1, 1, tzinfo=dt.UTC)
+        return (epoch + dt.timedelta(milliseconds=self.date_epoch_ms)).date()
 
 
 class SummaryCorporateAction(YahooModel):

@@ -94,7 +94,7 @@ Reconciliation notes:
 
 from __future__ import annotations
 
-import datetime  # ruff:ignore[typing-only-standard-library-import] - pydantic needs this at runtime to resolve annotations
+import datetime as dt  # ruff:ignore[typing-only-standard-library-import] - pydantic needs this at runtime to resolve annotations
 
 from pydantic import Field
 
@@ -117,7 +117,7 @@ class Earnings(YahooModel):
     ``BAC-PL``); always accompanied by ``earnings_low``/``earnings_high``.
     """
 
-    earnings_call_date: list[datetime.datetime]
+    earnings_call_date: list[dt.datetime]
     """
     Scheduled date(s) and time(s) of the earnings call.
 
@@ -129,7 +129,7 @@ class Earnings(YahooModel):
     :class:`~yoghurt.models.chart.ChartDividend`'s precedent.
     """
 
-    earnings_date: list[datetime.datetime]
+    earnings_date: list[dt.datetime]
     """
     Scheduled date(s) and time(s) of the earnings announcement.
 
@@ -196,7 +196,7 @@ class Earnings(YahooModel):
 class CalendarEvents(YahooModel):
     """The ``calendarEvents`` module: upcoming earnings and dividend dates."""
 
-    dividend_date: datetime.date | None = None
+    dividend_date: dt.date | None = None
     """
     Date the next dividend is expected to be paid.
 
@@ -210,7 +210,7 @@ class CalendarEvents(YahooModel):
     Details of the upcoming earnings announcement and call.
     """
 
-    ex_dividend_date: datetime.date | None = None
+    ex_dividend_date: dt.date | None = None
     """
     Date on which a buyer would no longer be entitled to the next dividend.
 
@@ -487,7 +487,7 @@ class DefaultKeyStatistics(YahooModel):
     Observed on: EQUITY, ETF, INDEX, MUTUALFUND summaries.
     """
 
-    date_short_interest: datetime.date | None = None
+    date_short_interest: dt.date | None = None
     """
     Date the short-interest figures were current as of.
 
@@ -582,7 +582,7 @@ class DefaultKeyStatistics(YahooModel):
     Observed on: EQUITY, ETF, INDEX, MUTUALFUND summaries.
     """
 
-    fund_inception_date: datetime.date | None = None
+    fund_inception_date: dt.date | None = None
     """
     Date the fund was first offered to investors.
 
@@ -621,7 +621,7 @@ class DefaultKeyStatistics(YahooModel):
     Observed on: MUTUALFUND summaries.
     """
 
-    last_dividend_date: datetime.date | None = None
+    last_dividend_date: dt.date | None = None
     """
     Date of the most recent dividend payment.
 
@@ -639,7 +639,7 @@ class DefaultKeyStatistics(YahooModel):
     Observed on: EQUITY, MUTUALFUND summaries.
     """
 
-    last_fiscal_year_end: datetime.date | None = None
+    last_fiscal_year_end: dt.date | None = None
     """
     End date of the company's most recently completed fiscal year.
 
@@ -650,7 +650,7 @@ class DefaultKeyStatistics(YahooModel):
     Observed on: EQUITY summaries.
     """
 
-    last_split_date: datetime.date | None = None
+    last_split_date: dt.date | None = None
     """
     Date of the company's most recent stock split.
 
@@ -725,7 +725,7 @@ class DefaultKeyStatistics(YahooModel):
     Observed on: MUTUALFUND summaries.
     """
 
-    most_recent_quarter: datetime.date | None = None
+    most_recent_quarter: dt.date | None = None
     """
     End date of the company's most recently reported fiscal quarter.
 
@@ -743,7 +743,7 @@ class DefaultKeyStatistics(YahooModel):
     Observed on: EQUITY summaries.
     """
 
-    next_fiscal_year_end: datetime.date | None = None
+    next_fiscal_year_end: dt.date | None = None
     """
     End date of the company's next fiscal year.
 
@@ -816,7 +816,7 @@ class DefaultKeyStatistics(YahooModel):
     Observed on: EQUITY summaries.
     """
 
-    shares_short_previous_month_date: datetime.date | None = None
+    shares_short_previous_month_date: dt.date | None = None
     """
     Date the prior month's short-interest figures were current as of.
 
