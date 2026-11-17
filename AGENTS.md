@@ -19,7 +19,8 @@ Parquet is written with **polars** (a core dependency); chart/history/screener/v
 - Type check: `uv run pyright`
 - Spell check: `npm run spell` or `make spell` (inside a git worktree nested under a gitignored directory — as agent-tooling worktrees often are — cspell's gitignore walk hits the parent repo's ignore rules and checks 0 files; use `npx cspell . --no-gitignore` there. Normal checkouts and CI are unaffected)
 - Spell changed files: `npm run spell:changed` or `make spell-changed`
-- Full check: `uv run tox`
+- Full check: `uv run tox` (every Python version, spelling, the built wheel)
+- Before a push: `make pre-push` (black, ruff and pyright once, the tests once under coverage on every core, the spelling of changed files)
 
 ## Architecture
 - `src/yoghurt/client.py` -> Yahoo HTTP session, cookies, crumbs, retries, raw response retrieval.
