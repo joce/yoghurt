@@ -6,18 +6,6 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-## [0.8.1] - 2026-11-20
-
-Maintenance release. Yoghurt's API, CLI and published dependency ranges are
-unchanged from 0.8.0.
-
-### Changed
-
-- Releases are now published by pushing a `vX.Y.Z` tag: the full CI suite runs
-  on the tagged commit and the GitHub Release is created automatically after
-  the PyPI upload.
-- Development tooling and lockfile updates.
-
 ## [0.8.0] - 2026-11-03
 
 ### Changed
@@ -490,8 +478,7 @@ First PyPI release.
 - Reusable Yahoo session cache for faster one-shot calls.
 - `raw` escape hatch for query paths yoghurt doesn't model yet.
 
-[Unreleased]: https://github.com/joce/yoghurt/compare/v0.8.1...HEAD
-[0.8.1]: https://github.com/joce/yoghurt/compare/v0.8.0...v0.8.1
+[Unreleased]: https://github.com/joce/yoghurt/compare/v0.8.0...HEAD
 [0.8.0]: https://github.com/joce/yoghurt/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/joce/yoghurt/compare/v0.6.1...v0.7.0
 [0.6.1]: https://github.com/joce/yoghurt/compare/v0.6.0...v0.6.1
